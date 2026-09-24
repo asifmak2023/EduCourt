@@ -1,0 +1,67 @@
+# Education Information System
+
+A multi-campus information system for schools, colleges and universities with
+role-based dashboards for every stakeholder. Web and mobile clients share one
+Laravel API.
+
+## Repository
+
+```
+apps/api      Laravel 11 API (PHP 8.2, MySQL)
+apps/web      Next.js web application
+apps/mobile   Expo mobile application
+docs          Specification, architecture and runbook
+```
+
+## Documentation
+
+- `docs/SPECIFICATION.md` - consolidated, corrected specification
+- `docs/ARCHITECTURE.md` - stack, request lifecycle, tenancy, security
+- `docs/RUNBOOK.md` - setup, run and operations commands
+
+## Quick start
+
+See `docs/RUNBOOK.md`. In short:
+
+```bash
+# API
+cd apps/api
+cp .env.example .env
+php artisan key:generate
+composer install
+php artisan migrate:fresh --seed
+php artisan serve --host=127.0.0.1 --port=8000
+```
+
+## Status
+
+- Phase 1 delivered: tenancy, users, roles, permissions, scoped access,
+  authentication, audit logging and security headers.
+- Phase 2 delivered: academic years and terms, stages, classes, sections,
+  subjects and subject-to-class mapping, teaching assignments with slot and
+  workload guards, the academic calendar, periods and rooms, and timetable slots
+  with class/teacher/room conflict checks plus publish-gated views. Automatic
+  timetable generation remains.
+- Phase 3 started (finance): per-campus fiscal years, chart of accounts and a
+  balanced double-entry journal with draft/post, immutability and reversal, plus
+  trial balance and account ledger reports. Fee management delivered: fee
+  heads, class fee plans and installment schedules, per-student vouchers with
+  discount-aware lines, campus-numbered receipts, double-entry posting, and
+  void/reversal for both vouchers and payments. Late fees (per-plan policy),
+  advance payments with allocation, and refunds post to the ledger. Reporting
+  covers trial balance, account ledgers, receivable aging (defaulter lists),
+  per-student statements, per-class summaries and dated collection reports.
+  Budgeting is delivered with campus budgets, line items, a draft/approved
+  workflow and a budget-vs-actual report. Expenses and payables are delivered
+  with vendors, expense categories, vendor bills (approval posts to payables),
+  settlements with void/reversal, plus payables-aging and expense-summary
+  reports. Cash and bank management adds bank/cash/petty-cash accounts, a cash
+  book with running balances and reconciliation snapshots gated on a matching
+  balance.
+- Student records delivered: student profiles, guardians (many-to-many),
+  year-by-year class/section enrollment, withdrawal/transfer and promotion.
+  Fee billing now raises per-student vouchers and records receipts on top of
+  this; documents, admissions workflow, defaulter lists and the remaining
+  finance requirements are pending.
+
+See `docs/SPECIFICATION.md` section 14 for the phase plan.

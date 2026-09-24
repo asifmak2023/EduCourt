@@ -1,0 +1,12 @@
+{
+  "name": "education-information-system",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev:api": "php apps/api/artisan serve --host=127.0.0.1 --port=8000",
+    "dev:web": "pnpm --filter web dev",
+    "dev:mobile": "pnpm --filter mobile start",
+    "test:api": "php apps/api/artisan test",
+    "lint:api": "apps/api/vendor/bin/pint"
+  }
+}

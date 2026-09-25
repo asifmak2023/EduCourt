@@ -199,7 +199,7 @@ Priorities: M = Must, S = Should, C = Could.
 | --- | --- | --- | --- |
 | FR-4.1 | Fee schedule and fee heads per class | M | Delivered (API: fee heads linked to income accounts; class fee plans and line items) |
 | FR-4.2 | Fee plans with installment schedules and proration | M | Partially delivered (installment schedules, per-installment billing and discount allocation delivered; mid-year proration pending) |
-| FR-4.3 | Per-student status: due, received, discount, concession, scholarship | M | Partially delivered (API: per-student vouchers with unpaid/partial/paid status, paid amounts and annual discounts; concession/scholarship policy pending) |
+| FR-4.3 | Per-student status: due, received, discount, concession, scholarship | M | Partially delivered (API: per-student vouchers with unpaid/partial/paid status, paid amounts, annual discounts and automatic scholarship discounts; configurable concession policy pending) |
 | FR-4.4 | Vouchers and receipts with numbering and void/reversal | M | Delivered (API: campus-numbered vouchers and receipts, discount-aware lines, double-entry posting, void with reversal) |
 | FR-4.5 | Late fees, fines, advance balances and refunds | S | Partially delivered (API: per-plan late fee policy and application, advance payments and allocation, refunds with ledger posting; configurable fines and refund approval workflow pending) |
 | FR-4.6 | Defaulter lists and reminders | M | Partially delivered (API: aging defaulter list by student/class; reminders pending a notifications module) |
@@ -216,7 +216,7 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-5.5 | Student profile, guardians (many-to-many) and documents | M | Partially delivered (API: profile, guardians and admission documents; per-student document store pending) |
 | FR-5.6 | Year-by-year class and section history (enrollment) | M | Delivered (API) |
 | FR-5.7 | Academic, fee, attendance and conduct history | M | Pending (student foundation delivered; modules pending) |
-| FR-5.8 | Scholarship holder records and policy | M | Pending |
+| FR-5.8 | Scholarship holder records and policy | M | Delivered (API: scholarship catalogue by type/discount, per-student awards with override and revoke, automatic discount applied to fee vouchers) |
 | FR-5.9 | Promotion / rollover between academic years | M | Delivered (API) |
 
 ### 6.6 Attendance

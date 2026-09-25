@@ -262,6 +262,32 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   -X POST http://127.0.0.1:8000/api/v1/leave-requests/1/approve
 ```
 
+Scholarship quick check (campus admin token):
+
+```bash
+# Seeded scholarships: MERIT25 (25% merit) and NEED5000 (fixed 5000)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/scholarships
+
+# Seeded awards: ADM-00001 holds MERIT25, ADM-00002 holds NEED5000
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/scholarship-awards
+
+# Award a scholarship with a per-student value override
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"scholarship_id":1,"student_id":2,"academic_year_id":1,"value_override":5000}' \
+  http://127.0.0.1:8000/api/v1/scholarship-awards
+
+# Revoke an award
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/scholarship-awards/1/revoke
+```
+
+Fee voucher generation merges active scholarship discounts automatically; pass
+`apply_scholarships=false` to disable, and explicit `discounts` always take
+precedence over scholarship-derived amounts.
+
 Fee billing quick check (campus admin token):
 
 ```bash

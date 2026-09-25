@@ -30,6 +30,7 @@ return [
         'admission' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'student' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'attendance' => ['view', 'create', 'edit', 'approve', 'export'],
+        'scholarship' => ['view', 'create', 'edit', 'approve', 'delete'],
         'exam' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'hr' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'payroll' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
@@ -65,7 +66,7 @@ return [
             'campus.view', 'campus.edit',
             'user.*', 'role.view',
             'admission.*', 'student.*', 'attendance.*', 'exam.*',
-            'academic.*', 'timetable.*',
+            'academic.*', 'timetable.*', 'scholarship.*',
             'finance.*', 'fee.*',
             'hr.*', 'payroll.view',
             'inventory.*', 'library.*', 'lab.*', 'transport.*', 'hostel.*',
@@ -75,23 +76,25 @@ return [
 
         RoleName::Principal->value => [
             'student.view', 'attendance.view', 'exam.view', 'exam.approve',
-            'academic.view', 'timetable.view', 'timetable.approve',
+            'academic.view', 'timetable.view', 'timetable.approve', 'scholarship.view',
             'report.*', 'finance.view', 'hr.view', 'complaint.view',
             'student_affairs.view', 'circular.create', 'circular.approve',
         ],
 
         RoleName::FinanceHead->value => [
             'finance.*', 'fee.*', 'payroll.*', 'report.*', 'audit.view',
+            'scholarship.*',
         ],
 
         RoleName::Accountant->value => [
             'finance.view', 'finance.create', 'finance.edit', 'finance.export',
             'fee.view', 'fee.create', 'fee.edit', 'fee.export',
-            'report.view',
+            'report.view', 'scholarship.view',
         ],
 
         RoleName::AdmissionsOfficer->value => [
             'admission.*', 'student.view', 'student.create', 'report.view',
+            'scholarship.view',
         ],
 
         RoleName::HrOfficer->value => [

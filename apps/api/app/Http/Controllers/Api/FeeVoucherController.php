@@ -8,6 +8,7 @@ use App\Http\Resources\FeeVoucherResource;
 use App\Models\FeePlan;
 use App\Models\FeeVoucher;
 use App\Services\Accounting\FeeBillingService;
+use App\Services\Scholarships\ScholarshipService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -18,7 +19,10 @@ class FeeVoucherController extends Controller
 {
     use StampsAcademicTenant;
 
-    public function __construct(private readonly FeeBillingService $billing) {}
+    public function __construct(
+        private readonly FeeBillingService $billing,
+        private readonly ScholarshipService $scholarships,
+    ) {}
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -56,6 +60,7 @@ class FeeVoucherController extends Controller
             ],
             'discounts' => ['sometimes', 'array'],
             'discounts.*' => ['numeric', 'min:0'],
+            'apply_scholarships' => ['sometimes', 'boolean'],
         ]);
 
         $plan = FeePlan::query()->findOrFail($data['fee_plan_id']);
@@ -66,7 +71,20 @@ class FeeVoucherController extends Controller
             ]);
         }
 
-        $result = $this->billing->generateForClass($plan, $data['discounts'] ?? [], $request->user()->id);
+        $discounts = $data['discounts'] ?? [];
+
+        if ($request->boolean('apply_scholarships', true)) {
+            $annualGross = (float) $plan->items()->where('is_optional', false)->sum('amount');
+
+            $discounts = $this->scholarships->applyToDiscounts(
+                $plan->academic_year_id,
+                $plan->class_room_id,
+                $annualGross,
+                $discounts,
+            );
+        }
+
+        $result = $this->billing->generateForClass($plan, $discounts, $request->user()->id);
 
         $vouchers = FeeVoucher::query()
             ->with(['student', 'lines.feeHead', 'payments'])

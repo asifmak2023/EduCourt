@@ -34,6 +34,8 @@ use App\Http\Controllers\Api\MetaController;
 use App\Http\Controllers\Api\PeriodController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RoomController;
+use App\Http\Controllers\Api\ScholarshipAwardController;
+use App\Http\Controllers\Api\ScholarshipController;
 use App\Http\Controllers\Api\ScopeAssignmentController;
 use App\Http\Controllers\Api\SectionController;
 use App\Http\Controllers\Api\StaffAttendanceController;
@@ -299,6 +301,18 @@ Route::prefix('v1')->group(function () {
             Route::get('student-enrollments/{studentEnrollment}', [StudentEnrollmentController::class, 'show'])->middleware('permission:student.view');
             Route::put('student-enrollments/{studentEnrollment}', [StudentEnrollmentController::class, 'update'])->middleware('permission:student.edit');
             Route::delete('student-enrollments/{studentEnrollment}', [StudentEnrollmentController::class, 'destroy'])->middleware('permission:student.delete');
+
+            Route::get('scholarships', [ScholarshipController::class, 'index'])->middleware('permission:scholarship.view');
+            Route::post('scholarships', [ScholarshipController::class, 'store'])->middleware('permission:scholarship.create');
+            Route::get('scholarships/{scholarship}', [ScholarshipController::class, 'show'])->middleware('permission:scholarship.view');
+            Route::put('scholarships/{scholarship}', [ScholarshipController::class, 'update'])->middleware('permission:scholarship.edit');
+            Route::delete('scholarships/{scholarship}', [ScholarshipController::class, 'destroy'])->middleware('permission:scholarship.delete');
+
+            Route::get('scholarship-awards', [ScholarshipAwardController::class, 'index'])->middleware('permission:scholarship.view');
+            Route::post('scholarship-awards', [ScholarshipAwardController::class, 'store'])->middleware('permission:scholarship.create');
+            Route::get('scholarship-awards/{scholarshipAward}', [ScholarshipAwardController::class, 'show'])->middleware('permission:scholarship.view');
+            Route::post('scholarship-awards/{scholarshipAward}/revoke', [ScholarshipAwardController::class, 'revoke'])->middleware('permission:scholarship.approve');
+            Route::delete('scholarship-awards/{scholarshipAward}', [ScholarshipAwardController::class, 'destroy'])->middleware('permission:scholarship.delete');
 
             Route::get('admissions', [AdmissionController::class, 'index'])->middleware('permission:admission.view');
             Route::post('admissions', [AdmissionController::class, 'store'])->middleware('permission:admission.create');

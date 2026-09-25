@@ -74,6 +74,11 @@ php artisan serve --host=127.0.0.1 --port=8000
   (single or bulk marking, one record per student/day), per-class and
   per-student summaries, staff attendance with a per-staff report, and leave
   requests whose approval writes leave attendance across the requested days.
+  Scholarships are delivered: a campus scholarship catalogue (merit, need-based,
+  sports, sibling, staff-ward) with percentage or fixed discounts, per-student
+  awards with an optional value override, approve/revoke tracking, and automatic
+  scholarship discounts merged into fee voucher generation (explicit discounts
+  still win).
   Per-student documents, absence notifications and the remaining finance
   requirements are pending.
 

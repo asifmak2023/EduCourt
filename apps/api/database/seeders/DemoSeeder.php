@@ -23,6 +23,9 @@ use App\Enums\LiabilityType;
 use App\Enums\PaymentMethod;
 use App\Enums\ReconciliationStatus;
 use App\Enums\RoleName;
+use App\Enums\ScholarshipAwardStatus;
+use App\Enums\ScholarshipDiscountType;
+use App\Enums\ScholarshipType;
 use App\Enums\StudentStatus;
 use App\Enums\SubjectType;
 use App\Models\AcademicEvent;
@@ -52,6 +55,8 @@ use App\Models\LeaveRequest;
 use App\Models\Liability;
 use App\Models\Period;
 use App\Models\Room;
+use App\Models\Scholarship;
+use App\Models\ScholarshipAward;
 use App\Models\Section;
 use App\Models\StaffAttendance;
 use App\Models\Stage;
@@ -69,6 +74,7 @@ use App\Services\Accounting\DefaultChartOfAccounts;
 use App\Services\Accounting\ExpenseService;
 use App\Services\Accounting\FeeBillingService;
 use App\Services\Accounting\JournalService;
+use App\Services\Scholarships\ScholarshipService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
@@ -81,6 +87,7 @@ class DemoSeeder extends Seeder
         private readonly FeeBillingService $billing,
         private readonly ExpenseService $expenses,
         private readonly BankReconciliationService $bankBook,
+        private readonly ScholarshipService $scholarships,
     ) {}
 
     public function run(): void
@@ -167,6 +174,7 @@ class DemoSeeder extends Seeder
         $this->seedAcademics($institution, $campus, $teacher);
         $this->seedFinance($institution, $campus, $campusAdmin);
         $this->seedStudents($institution, $campus);
+        $this->seedScholarships($institution, $campus, $campusAdmin);
         $this->seedAdmissions($institution, $campus);
         $this->seedAttendance($institution, $campus, $campusAdmin, $teacher);
         $this->seedFeeBilling($campus, $campusAdmin);
@@ -567,6 +575,9 @@ class DemoSeeder extends Seeder
             ->first();
 
         $discounts = $scholarship !== null ? [$scholarship->id => 3000] : [];
+
+        $annualGross = (float) $plan->items()->where('is_optional', false)->sum('amount');
+        $discounts = $this->scholarships->applyToDiscounts($year->id, $class->id, $annualGross, $discounts);
 
         $this->billing->generateForClass($plan, $discounts, $campusAdmin->id);
 
@@ -999,6 +1010,78 @@ class DemoSeeder extends Seeder
                     'roll_number' => $entry['roll_number'],
                     'status' => EnrollmentStatus::Active,
                     'starts_on' => '2026-04-01',
+                ]
+            );
+        }
+    }
+
+    private function seedScholarships(Institution $institution, Campus $campus, User $campusAdmin): void
+    {
+        $tenant = ['institution_id' => $institution->id, 'campus_id' => $campus->id];
+
+        $year = AcademicYear::query()->where('campus_id', $campus->id)->where('is_current', true)->first();
+
+        $definitions = [
+            [
+                'code' => 'MERIT25',
+                'name' => 'Merit Excellence Award',
+                'type' => ScholarshipType::Merit,
+                'discount_type' => ScholarshipDiscountType::Percentage,
+                'value' => 25,
+                'sponsor' => 'EduCourt Endowment Fund',
+                'description' => 'Awarded to top-performing students each academic year.',
+                'student_admission_no' => 'ADM-00001',
+                'value_override' => null,
+            ],
+            [
+                'code' => 'NEED5000',
+                'name' => 'Need-Based Grant',
+                'type' => ScholarshipType::NeedBased,
+                'discount_type' => ScholarshipDiscountType::Fixed,
+                'value' => 5000,
+                'sponsor' => 'Community Welfare Trust',
+                'description' => 'Financial assistance for families with demonstrated need.',
+                'student_admission_no' => 'ADM-00002',
+                'value_override' => 3000,
+            ],
+        ];
+
+        foreach ($definitions as $definition) {
+            $scholarship = Scholarship::firstOrCreate(
+                ['campus_id' => $campus->id, 'code' => $definition['code']],
+                $tenant + [
+                    'name' => $definition['name'],
+                    'type' => $definition['type'],
+                    'discount_type' => $definition['discount_type'],
+                    'value' => $definition['value'],
+                    'academic_year_id' => $year?->id,
+                    'sponsor' => $definition['sponsor'],
+                    'description' => $definition['description'],
+                    'is_active' => true,
+                ]
+            );
+
+            $student = Student::query()
+                ->where('campus_id', $campus->id)
+                ->where('admission_no', $definition['student_admission_no'])
+                ->first();
+
+            if ($student === null) {
+                continue;
+            }
+
+            ScholarshipAward::firstOrCreate(
+                [
+                    'campus_id' => $campus->id,
+                    'scholarship_id' => $scholarship->id,
+                    'student_id' => $student->id,
+                    'academic_year_id' => $year?->id,
+                ],
+                $tenant + [
+                    'awarded_on' => '2026-09-01',
+                    'status' => ScholarshipAwardStatus::Active,
+                    'value_override' => $definition['value_override'],
+                    'approved_by' => $campusAdmin->id,
                 ]
             );
         }

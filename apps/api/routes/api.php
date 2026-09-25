@@ -38,6 +38,7 @@ use App\Http\Controllers\Api\ScholarshipAwardController;
 use App\Http\Controllers\Api\ScholarshipController;
 use App\Http\Controllers\Api\ScopeAssignmentController;
 use App\Http\Controllers\Api\SectionController;
+use App\Http\Controllers\Api\SessionController;
 use App\Http\Controllers\Api\StaffAttendanceController;
 use App\Http\Controllers\Api\StageController;
 use App\Http\Controllers\Api\StudentAttendanceController;
@@ -57,9 +58,25 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/login', [AuthController::class, 'login'])
         ->middleware('throttle:login');
 
+    Route::post('auth/forgot-password', [AuthController::class, 'forgotPassword'])
+        ->middleware('throttle:sensitive');
+    Route::post('auth/reset-password', [AuthController::class, 'resetPassword'])
+        ->middleware('throttle:sensitive');
+    Route::get('auth/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+        ->middleware('signed')->name('verification.verify');
+
     Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
         Route::get('auth/me', [ProfileController::class, 'show']);
         Route::post('auth/logout', [AuthController::class, 'logout']);
+
+        Route::get('auth/tokens', [SessionController::class, 'index']);
+        Route::delete('auth/tokens', [SessionController::class, 'destroyOthers']);
+        Route::delete('auth/tokens/{token}', [SessionController::class, 'destroy']);
+
+        Route::put('auth/password', [ProfileController::class, 'updatePassword']);
+
+        Route::post('auth/email/verification-notification', [AuthController::class, 'sendVerificationEmail'])
+            ->middleware('throttle:sensitive');
 
         Route::prefix('meta')->group(function () {
             Route::get('roles', [MetaController::class, 'roles']);

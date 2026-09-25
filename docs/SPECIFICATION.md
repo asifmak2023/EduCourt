@@ -156,7 +156,7 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-1.5 | All sensitive changes are audit logged | M | Delivered (API) |
 | FR-1.6 | Security headers on every response | M | Delivered (API) |
 | FR-1.7 | Two-factor authentication for admin, finance, HR | M | Fields + enforcement flag delivered; enrolment flow pending |
-| FR-1.8 | Password reset, email verification, session/device management | M | Pending |
+| FR-1.8 | Password reset, email verification, session/device management | M | Delivered (API: forgot/reset password, signed email verification, token/session list-revoke, password change) |
 | FR-1.9 | SSO (OIDC/SAML) for staff | C | Pending |
 
 ### 6.2 Academic structure

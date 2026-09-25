@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Enums\RoleName;
+use App\Notifications\ResetPasswordNotification;
 use App\Support\Concerns\BelongsToCampus;
 use App\Support\Concerns\BelongsToInstitution;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,7 +17,7 @@ use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use BelongsToCampus, BelongsToInstitution, HasApiTokens, HasFactory, HasRoles, LogsActivity, Notifiable;
 
@@ -76,6 +78,11 @@ class User extends Authenticatable
     public function hasTwoFactorEnabled(): bool
     {
         return $this->two_factor_confirmed_at !== null;
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token, $this->getEmailForPasswordReset()));
     }
 
     public function requiresTwoFactor(): bool

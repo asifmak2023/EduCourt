@@ -36,7 +36,9 @@ php artisan serve --host=127.0.0.1 --port=8000
 ## Status
 
 - Phase 1 delivered: tenancy, users, roles, permissions, scoped access,
-  authentication, audit logging and security headers.
+  authentication, audit logging and security headers. Account security adds
+  password reset, email verification, self-service password change and
+  per-device session listing/revocation.
 - Phase 2 delivered: academic years and terms, stages, classes, sections,
   subjects and subject-to-class mapping, teaching assignments with slot and
   workload guards, the academic calendar, periods and rooms, and timetable slots

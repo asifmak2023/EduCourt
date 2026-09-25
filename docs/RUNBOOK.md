@@ -79,6 +79,30 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8000/api/v1/finance/reports/trial-balance
 ```
 
+Account security quick check (campus admin token):
+
+```bash
+# Request a password reset link (delivered via the configured mailer)
+curl -s -H 'Accept: application/json' -H 'Content-Type: application/json' \
+  -d '{"email":"campusadmin@demo-eis.test"}' \
+  http://127.0.0.1:8000/api/v1/auth/forgot-password
+
+# List active sessions/devices and revoke every other session
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/auth/tokens
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X DELETE http://127.0.0.1:8000/api/v1/auth/tokens
+
+# Change the account password (other sessions are signed out)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"current_password":"password","password":"new-password-123","password_confirmation":"new-password-123"}' \
+  -X PUT http://127.0.0.1:8000/api/v1/auth/password
+```
+
+Password reset and email-verification links point at `FRONTEND_URL` (defaults to
+`APP_URL`), so the web client owns the reset and verification screens.
+
 Budget quick check (campus admin token):
 
 ```bash

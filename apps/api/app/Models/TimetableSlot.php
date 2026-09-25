@@ -7,6 +7,7 @@ use App\Support\Concerns\BelongsToInstitution;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -77,6 +78,11 @@ class TimetableSlot extends Model
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
+    }
+
+    public function substitutes(): HasMany
+    {
+        return $this->hasMany(SubstituteAssignment::class);
     }
 
     public function getActivitylogOptions(): LogOptions

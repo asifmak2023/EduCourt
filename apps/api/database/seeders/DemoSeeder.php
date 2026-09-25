@@ -28,6 +28,7 @@ use App\Enums\ScholarshipDiscountType;
 use App\Enums\ScholarshipType;
 use App\Enums\StudentStatus;
 use App\Enums\SubjectType;
+use App\Enums\SubstituteStatus;
 use App\Models\AcademicEvent;
 use App\Models\AcademicYear;
 use App\Models\AccountingPeriod;
@@ -64,6 +65,7 @@ use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Models\StudentEnrollment;
 use App\Models\Subject;
+use App\Models\SubstituteAssignment;
 use App\Models\TeachingAssignment;
 use App\Models\Term;
 use App\Models\TimetableSlot;
@@ -177,6 +179,7 @@ class DemoSeeder extends Seeder
         $this->seedScholarships($institution, $campus, $campusAdmin);
         $this->seedAdmissions($institution, $campus);
         $this->seedAttendance($institution, $campus, $campusAdmin, $teacher);
+        $this->seedSubstitutes($institution, $campus, $campusAdmin, $teacher);
         $this->seedFeeBilling($campus, $campusAdmin);
         $this->seedBudget($institution, $campus, $campusAdmin);
         $this->seedExpenses($institution, $campus, $campusAdmin);
@@ -1013,6 +1016,33 @@ class DemoSeeder extends Seeder
                 ]
             );
         }
+    }
+
+    private function seedSubstitutes(Institution $institution, Campus $campus, User $campusAdmin, User $teacher): void
+    {
+        $slot = TimetableSlot::query()
+            ->where('campus_id', $campus->id)
+            ->where('teacher_user_id', $teacher->id)
+            ->orderBy('id')
+            ->first();
+
+        if ($slot === null) {
+            return;
+        }
+
+        $date = CarbonImmutable::parse('2026-09-21')->addDays($slot->day_of_week - 1);
+
+        SubstituteAssignment::firstOrCreate(
+            ['timetable_slot_id' => $slot->id, 'date' => $date->toDateString()],
+            [
+                'institution_id' => $institution->id,
+                'campus_id' => $campus->id,
+                'substitute_user_id' => $campusAdmin->id,
+                'status' => SubstituteStatus::Scheduled,
+                'reason' => 'Original teacher on training.',
+                'created_by' => $campusAdmin->id,
+            ]
+        );
     }
 
     private function seedScholarships(Institution $institution, Campus $campus, User $campusAdmin): void

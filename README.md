@@ -44,7 +44,9 @@ php artisan serve --host=127.0.0.1 --port=8000
   workload guards, the academic calendar, periods and rooms, and timetable slots
   with class/teacher/room conflict checks plus publish-gated views. A greedy
   timetable generator fills weekly periods from teaching assignments (dry-run,
-  replace and unplaced reporting), with manual slots as override.
+  replace and unplaced reporting), with manual slots as override. Substitute and
+  cover assignments let a campus record who covers a slot on a given date, with
+  weekday, self-cover and period double-booking guards.
 - Phase 3 started (finance): per-campus fiscal years, chart of accounts and a
   balanced double-entry journal with draft/post, immutability and reversal, plus
   trial balance and account ledger reports. Fee management delivered: fee

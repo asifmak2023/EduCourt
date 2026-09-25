@@ -46,6 +46,7 @@ use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\StudentEnrollmentController;
 use App\Http\Controllers\Api\StudentHistoryController;
 use App\Http\Controllers\Api\SubjectController;
+use App\Http\Controllers\Api\SubstituteAssignmentController;
 use App\Http\Controllers\Api\TeachingAssignmentController;
 use App\Http\Controllers\Api\TermController;
 use App\Http\Controllers\Api\TimetableGenerationController;
@@ -163,6 +164,12 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:timetable.create');
             Route::delete('timetable/generate', [TimetableGenerationController::class, 'destroy'])
                 ->middleware('permission:timetable.delete');
+
+            Route::get('substitute-assignments', [SubstituteAssignmentController::class, 'index'])->middleware('permission:timetable.view');
+            Route::post('substitute-assignments', [SubstituteAssignmentController::class, 'store'])->middleware('permission:timetable.create');
+            Route::get('substitute-assignments/{substituteAssignment}', [SubstituteAssignmentController::class, 'show'])->middleware('permission:timetable.view');
+            Route::post('substitute-assignments/{substituteAssignment}/cancel', [SubstituteAssignmentController::class, 'cancel'])->middleware('permission:timetable.edit');
+            Route::delete('substitute-assignments/{substituteAssignment}', [SubstituteAssignmentController::class, 'destroy'])->middleware('permission:timetable.delete');
 
             Route::get('fiscal-years', [FiscalYearController::class, 'index'])->middleware('permission:finance.view');
             Route::post('fiscal-years', [FiscalYearController::class, 'store'])->middleware('permission:finance.create');

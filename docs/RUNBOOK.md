@@ -226,6 +226,26 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8000/api/v1/timetable/generate
 ```
 
+Substitute cover quick check (campus admin token):
+
+```bash
+# Seeded cover: Campus Admin covers slot 1 (Monday Period 1) on 2026-09-21
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'X-Campus-Id: 1' \
+  http://127.0.0.1:8000/api/v1/substitute-assignments
+
+# Schedule a substitute (date must match the slot weekday)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'X-Campus-Id: 1' -H 'Content-Type: application/json' \
+  -d '{"timetable_slot_id":1,"substitute_user_id":2,"date":"2026-09-28","reason":"Teacher on leave"}' \
+  http://127.0.0.1:8000/api/v1/substitute-assignments
+
+# Cancel a cover assignment
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'X-Campus-Id: 1' \
+  -X POST http://127.0.0.1:8000/api/v1/substitute-assignments/1/cancel
+```
+
 Admissions quick check (campus admin token):
 
 ```bash

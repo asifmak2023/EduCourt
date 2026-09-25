@@ -170,7 +170,7 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-2.5 | Syllabus, book list and lesson plans per class and subject | S | Pending |
 | FR-2.6 | Teacher x Subject x Class x Section x Year assignment matrix | M | Delivered (API) |
 | FR-2.7 | Workload limits and conflict checks (teacher and room) | M | Delivered (basic: slot conflict + weekly workload; room conflicts pending timetable) |
-| FR-2.8 | Substitute and cover management | S | Pending |
+| FR-2.8 | Substitute and cover management | S | Delivered (API: per-slot/date substitute cover with weekday, self-cover and period double-booking guards, cancel) |
 | FR-2.9 | Timetable generation (constraint solver) with manual override | S | Delivered (API: greedy generator with dry-run, replace, unplaced reporting; manual slots remain) |
 | FR-2.10 | Published timetable views for students, parents, teachers | M | Delivered (API: class, teacher, self views with publish control) |
 | FR-2.11 | Academic calendar: terms, holidays, exams, events | M | Delivered (API) |

@@ -382,6 +382,37 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8000/api/v1/fee-refunds
 ```
 
+Online payment quick check (campus admin token):
+
+```bash
+# List seeded payment intents (PAY-000001 pending on the manual gateway)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/online-payments
+
+# Start a checkout for an outstanding voucher and read the checkout_url
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"student_id":1,"fee_voucher_id":2,"amount":500}' \
+  http://127.0.0.1:8000/api/v1/online-payments
+
+# Poll the status by reference
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/online-payments/status?reference=PAY-000001"
+```
+
+Webhooks are unauthenticated but verified with an HMAC-SHA256 signature of the
+raw body using `PAYMENT_WEBHOOK_SECRET`. Confirmation is idempotent and posts a
+fee payment that settles the voucher.
+
+```bash
+# Post a paid webhook for a reference (sign the exact raw body)
+BODY='{"reference":"PAY-000001","status":"paid","amount":500}'
+SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$PAYMENT_WEBHOOK_SECRET" | awk '{print $2}')
+curl -s -H 'Accept: application/json' -H "X-Payment-Signature: $SIG" \
+  -H 'Content-Type: application/json' -d "$BODY" \
+  http://127.0.0.1:8000/api/v1/webhooks/payments/manual
+```
+
 ## Web (apps/web)
 
 ```bash

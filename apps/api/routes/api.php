@@ -31,6 +31,8 @@ use App\Http\Controllers\Api\JournalEntryController;
 use App\Http\Controllers\Api\LeaveRequestController;
 use App\Http\Controllers\Api\LiabilityController;
 use App\Http\Controllers\Api\MetaController;
+use App\Http\Controllers\Api\OnlinePaymentController;
+use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\PeriodController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RoomController;
@@ -66,6 +68,9 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:sensitive');
     Route::get('auth/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
         ->middleware('signed')->name('verification.verify');
+
+    Route::post('webhooks/payments/{gateway}', [PaymentWebhookController::class, 'handle'])
+        ->middleware('throttle:sensitive');
 
     Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
         Route::get('auth/me', [ProfileController::class, 'show']);
@@ -297,6 +302,12 @@ Route::prefix('v1')->group(function () {
             Route::get('fee-payments/{feePayment}', [FeePaymentController::class, 'show'])->middleware('permission:fee.view');
             Route::post('fee-payments/{feePayment}/void', [FeePaymentController::class, 'void'])->middleware('permission:fee.approve');
             Route::post('fee-payments/{feePayment}/apply', [FeePaymentController::class, 'apply'])->middleware('permission:fee.edit');
+
+            Route::get('online-payments', [OnlinePaymentController::class, 'index'])->middleware('permission:fee.view');
+            Route::post('online-payments', [OnlinePaymentController::class, 'initiate'])->middleware('permission:fee.create');
+            Route::get('online-payments/status', [OnlinePaymentController::class, 'status'])->middleware('permission:fee.view');
+            Route::get('online-payments/{paymentIntent}', [OnlinePaymentController::class, 'show'])->middleware('permission:fee.view');
+            Route::post('online-payments/{paymentIntent}/cancel', [OnlinePaymentController::class, 'cancel'])->middleware('permission:fee.edit');
 
             Route::get('fee-refunds', [FeeRefundController::class, 'index'])->middleware('permission:fee.view');
             Route::post('fee-refunds', [FeeRefundController::class, 'store'])->middleware('permission:fee.approve');

@@ -83,7 +83,10 @@ php artisan serve --host=127.0.0.1 --port=8000
   awards with an optional value override, approve/revoke tracking, and automatic
   scholarship discounts merged into fee voucher generation (explicit discounts
   still win). A consolidated per-student history endpoint rolls up the academic
-  timeline, attendance summary and fee/scholarship position.
+  timeline, attendance summary and fee/scholarship position. Online payments are
+  delivered: gateway-agnostic payment intents with a hosted checkout URL,
+  HMAC-signed webhooks, and idempotent confirmation that posts a fee payment and
+  settles the voucher (manual/test gateway driver behind a gateway interface).
   Per-student documents, absence notifications and the remaining finance
   requirements are pending.
 

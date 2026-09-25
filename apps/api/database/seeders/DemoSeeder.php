@@ -20,6 +20,7 @@ use App\Enums\LeaveStatus;
 use App\Enums\LeaveType;
 use App\Enums\LiabilityStatus;
 use App\Enums\LiabilityType;
+use App\Enums\PaymentIntentStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\ReconciliationStatus;
 use App\Enums\RoleName;
@@ -29,6 +30,7 @@ use App\Enums\ScholarshipType;
 use App\Enums\StudentStatus;
 use App\Enums\SubjectType;
 use App\Enums\SubstituteStatus;
+use App\Enums\VoucherStatus;
 use App\Models\AcademicEvent;
 use App\Models\AcademicYear;
 use App\Models\AccountingPeriod;
@@ -54,6 +56,7 @@ use App\Models\Institution;
 use App\Models\JournalEntry;
 use App\Models\LeaveRequest;
 use App\Models\Liability;
+use App\Models\PaymentIntent;
 use App\Models\Period;
 use App\Models\Room;
 use App\Models\Scholarship;
@@ -76,6 +79,7 @@ use App\Services\Accounting\DefaultChartOfAccounts;
 use App\Services\Accounting\ExpenseService;
 use App\Services\Accounting\FeeBillingService;
 use App\Services\Accounting\JournalService;
+use App\Services\Payments\Gateways\ManualGateway;
 use App\Services\Scholarships\ScholarshipService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
@@ -181,6 +185,7 @@ class DemoSeeder extends Seeder
         $this->seedAttendance($institution, $campus, $campusAdmin, $teacher);
         $this->seedSubstitutes($institution, $campus, $campusAdmin, $teacher);
         $this->seedFeeBilling($campus, $campusAdmin);
+        $this->seedOnlinePayments($campus, $campusAdmin);
         $this->seedBudget($institution, $campus, $campusAdmin);
         $this->seedExpenses($institution, $campus, $campusAdmin);
         $this->seedBankAccounts($institution, $campus, $campusAdmin);
@@ -619,6 +624,39 @@ class DemoSeeder extends Seeder
         ]);
 
         $this->billing->recordPayment($payment, $campusAdmin->id);
+    }
+
+    private function seedOnlinePayments(Campus $campus, User $campusAdmin): void
+    {
+        if (PaymentIntent::query()->where('campus_id', $campus->id)->exists()) {
+            return;
+        }
+
+        $voucher = FeeVoucher::query()
+            ->where('campus_id', $campus->id)
+            ->whereIn('status', [VoucherStatus::Unpaid->value, VoucherStatus::Partial->value])
+            ->orderByDesc('id')
+            ->first();
+
+        if ($voucher === null) {
+            return;
+        }
+
+        $intent = new PaymentIntent([
+            'institution_id' => $campus->institution_id,
+            'campus_id' => $campus->id,
+            'student_id' => $voucher->student_id,
+            'fee_voucher_id' => $voucher->id,
+            'gateway' => 'manual',
+            'reference' => 'PAY-000001',
+            'amount' => round((float) $voucher->amount - (float) $voucher->paid_amount, 2),
+            'currency' => (string) config('payments.currency', 'PKR'),
+            'status' => PaymentIntentStatus::Pending,
+            'created_by' => $campusAdmin->id,
+        ]);
+
+        $intent->checkout_url = (new ManualGateway)->createCheckout($intent);
+        $intent->save();
     }
 
     private function seedBudget(Institution $institution, Campus $campus, User $campusAdmin): void

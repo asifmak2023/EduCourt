@@ -203,7 +203,7 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-4.4 | Vouchers and receipts with numbering and void/reversal | M | Delivered (API: campus-numbered vouchers and receipts, discount-aware lines, double-entry posting, void with reversal) |
 | FR-4.5 | Late fees, fines, advance balances and refunds | S | Partially delivered (API: per-plan late fee policy and application, advance payments and allocation, refunds with ledger posting; configurable fines and refund approval workflow pending) |
 | FR-4.6 | Defaulter lists and reminders | M | Partially delivered (API: aging defaulter list by student/class; reminders pending a notifications module) |
-| FR-4.7 | Online payment gateway integration | S | Pending |
+| FR-4.7 | Online payment gateway integration | S | Delivered (API: gateway-agnostic payment intents with checkout URL, signed HMAC webhooks, idempotent confirmation that posts a fee payment and settles the voucher; manual/test gateway driver behind a PaymentGateway interface) |
 
 ### 6.5 Admissions and student records
 

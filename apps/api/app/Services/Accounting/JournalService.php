@@ -17,6 +17,8 @@ class JournalService
 {
     private const TOLERANCE = 0.005;
 
+    public function __construct(private readonly PeriodLockService $periods) {}
+
     public function nextReference(int $fiscalYearId, string $code): string
     {
         $sequence = JournalEntry::query()
@@ -32,6 +34,8 @@ class JournalService
         if (! $entry->isDraft()) {
             abort(409, 'Only draft journal entries can be posted.');
         }
+
+        $this->periods->assertOpen($entry->fiscal_year_id, $entry->entry_date);
 
         $lines = $entry->lines()->get();
         $this->assertBalanced($lines);

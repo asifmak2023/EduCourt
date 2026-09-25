@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\Api\AcademicEventController;
 use App\Http\Controllers\Api\AcademicYearController;
+use App\Http\Controllers\Api\AccountingPeriodController;
+use App\Http\Controllers\Api\AdmissionController;
+use App\Http\Controllers\Api\AdmissionDocumentController;
+use App\Http\Controllers\Api\AssetController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BankAccountController;
 use App\Http\Controllers\Api\BankReconciliationController;
@@ -24,6 +28,7 @@ use App\Http\Controllers\Api\FiscalYearController;
 use App\Http\Controllers\Api\GuardianController;
 use App\Http\Controllers\Api\InstitutionController;
 use App\Http\Controllers\Api\JournalEntryController;
+use App\Http\Controllers\Api\LiabilityController;
 use App\Http\Controllers\Api\MetaController;
 use App\Http\Controllers\Api\PeriodController;
 use App\Http\Controllers\Api\ProfileController;
@@ -204,6 +209,35 @@ Route::prefix('v1')->group(function () {
             Route::post('bank-reconciliations/{bankReconciliation}/complete', [BankReconciliationController::class, 'complete'])->middleware('permission:finance.approve');
             Route::delete('bank-reconciliations/{bankReconciliation}', [BankReconciliationController::class, 'destroy'])->middleware('permission:finance.delete');
 
+            Route::get('finance/reports/asset-register', [FinanceReportController::class, 'assetRegister'])->middleware('permission:finance.view');
+            Route::get('finance/reports/liability-register', [FinanceReportController::class, 'liabilityRegister'])->middleware('permission:finance.view');
+            Route::get('finance/reports/surplus-deficit', [FinanceReportController::class, 'surplusDeficit'])->middleware('permission:finance.view');
+            Route::get('finance/reports/consolidated', [FinanceReportController::class, 'consolidatedStatement'])->middleware('permission:finance.view');
+
+            Route::get('assets', [AssetController::class, 'index'])->middleware('permission:finance.view');
+            Route::post('assets', [AssetController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('assets/{asset}', [AssetController::class, 'show'])->middleware('permission:finance.view');
+            Route::put('assets/{asset}', [AssetController::class, 'update'])->middleware('permission:finance.edit');
+            Route::delete('assets/{asset}', [AssetController::class, 'destroy'])->middleware('permission:finance.delete');
+            Route::post('assets/{asset}/dispose', [AssetController::class, 'dispose'])->middleware('permission:finance.approve');
+
+            Route::get('liabilities', [LiabilityController::class, 'index'])->middleware('permission:finance.view');
+            Route::post('liabilities', [LiabilityController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('liabilities/{liability}', [LiabilityController::class, 'show'])->middleware('permission:finance.view');
+            Route::put('liabilities/{liability}', [LiabilityController::class, 'update'])->middleware('permission:finance.edit');
+            Route::delete('liabilities/{liability}', [LiabilityController::class, 'destroy'])->middleware('permission:finance.delete');
+            Route::post('liabilities/{liability}/settle', [LiabilityController::class, 'settle'])->middleware('permission:finance.approve');
+
+            Route::get('accounting-periods', [AccountingPeriodController::class, 'index'])->middleware('permission:finance.view');
+            Route::post('accounting-periods', [AccountingPeriodController::class, 'store'])->middleware('permission:finance.create');
+            Route::post('accounting-periods/generate', [AccountingPeriodController::class, 'generate'])->middleware('permission:finance.create');
+            Route::get('accounting-periods/{accountingPeriod}', [AccountingPeriodController::class, 'show'])->middleware('permission:finance.view');
+            Route::put('accounting-periods/{accountingPeriod}', [AccountingPeriodController::class, 'update'])->middleware('permission:finance.edit');
+            Route::delete('accounting-periods/{accountingPeriod}', [AccountingPeriodController::class, 'destroy'])->middleware('permission:finance.delete');
+            Route::post('accounting-periods/{accountingPeriod}/close', [AccountingPeriodController::class, 'close'])->middleware('permission:finance.approve');
+            Route::post('accounting-periods/{accountingPeriod}/reopen', [AccountingPeriodController::class, 'reopen'])->middleware('permission:finance.approve');
+            Route::post('accounting-periods/{accountingPeriod}/lock', [AccountingPeriodController::class, 'lock'])->middleware('permission:finance.approve');
+
             Route::get('fee-heads', [FeeHeadController::class, 'index'])->middleware('permission:fee.view');
             Route::post('fee-heads', [FeeHeadController::class, 'store'])->middleware('permission:fee.create');
             Route::get('fee-heads/{feeHead}', [FeeHeadController::class, 'show'])->middleware('permission:fee.view');
@@ -256,6 +290,21 @@ Route::prefix('v1')->group(function () {
             Route::get('student-enrollments/{studentEnrollment}', [StudentEnrollmentController::class, 'show'])->middleware('permission:student.view');
             Route::put('student-enrollments/{studentEnrollment}', [StudentEnrollmentController::class, 'update'])->middleware('permission:student.edit');
             Route::delete('student-enrollments/{studentEnrollment}', [StudentEnrollmentController::class, 'destroy'])->middleware('permission:student.delete');
+
+            Route::get('admissions', [AdmissionController::class, 'index'])->middleware('permission:admission.view');
+            Route::post('admissions', [AdmissionController::class, 'store'])->middleware('permission:admission.create');
+            Route::get('admissions/{admission}', [AdmissionController::class, 'show'])->middleware('permission:admission.view');
+            Route::put('admissions/{admission}', [AdmissionController::class, 'update'])->middleware('permission:admission.edit');
+            Route::delete('admissions/{admission}', [AdmissionController::class, 'destroy'])->middleware('permission:admission.delete');
+            Route::post('admissions/{admission}/submit', [AdmissionController::class, 'submit'])->middleware('permission:admission.edit');
+            Route::post('admissions/{admission}/approve', [AdmissionController::class, 'approve'])->middleware('permission:admission.approve');
+            Route::post('admissions/{admission}/reject', [AdmissionController::class, 'reject'])->middleware('permission:admission.approve');
+            Route::post('admissions/{admission}/enroll', [AdmissionController::class, 'enroll'])->middleware('permission:admission.approve');
+
+            Route::get('admissions/{admission}/documents', [AdmissionDocumentController::class, 'index'])->middleware('permission:admission.view');
+            Route::post('admissions/{admission}/documents', [AdmissionDocumentController::class, 'store'])->middleware('permission:admission.create');
+            Route::get('admissions/{admission}/documents/{document}/download', [AdmissionDocumentController::class, 'download'])->middleware('permission:admission.view');
+            Route::delete('admissions/{admission}/documents/{document}', [AdmissionDocumentController::class, 'destroy'])->middleware('permission:admission.delete');
         });
     });
 });

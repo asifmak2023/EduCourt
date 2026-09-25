@@ -2,20 +2,26 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\AccountType;
 use App\Enums\ExpenseStatus;
 use App\Enums\JournalStatus;
 use App\Enums\NormalBalance;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\BankAccountResource;
+use App\Models\Asset;
 use App\Models\BankAccount;
 use App\Models\Budget;
 use App\Models\ChartOfAccount;
 use App\Models\Expense;
 use App\Models\JournalLine;
+use App\Models\Liability;
 use App\Services\Accounting\BankReconciliationService;
+use App\Support\TenantContext;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class FinanceReportController extends Controller
@@ -393,5 +399,259 @@ class FinanceReportController extends Controller
                 'closing_balance' => number_format($rows->sum(fn (array $row) => (float) $row['closing_balance']), 2, '.', ''),
             ],
         ]);
+    }
+
+    public function assetRegister(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'as_of' => ['nullable', 'date'],
+            'status' => ['nullable', 'string'],
+            'category' => ['nullable', 'string'],
+        ]);
+
+        $asOf = isset($data['as_of']) ? CarbonImmutable::parse($data['as_of']) : CarbonImmutable::now();
+
+        $assets = Asset::query()
+            ->with('chartOfAccount')
+            ->when(! empty($data['status']), fn ($q) => $q->where('status', $data['status']))
+            ->when(! empty($data['category']), fn ($q) => $q->where('category', $data['category']))
+            ->orderBy('code')
+            ->get();
+
+        $rows = $assets->map(fn (Asset $asset) => [
+            'id' => $asset->id,
+            'code' => $asset->code,
+            'name' => $asset->name,
+            'category' => $asset->category,
+            'status' => $asset->status?->value,
+            'acquisition_date' => $asset->acquisition_date?->toDateString(),
+            'acquisition_cost' => number_format((float) $asset->acquisition_cost, 2, '.', ''),
+            'salvage_value' => number_format((float) $asset->salvage_value, 2, '.', ''),
+            'monthly_depreciation' => number_format($asset->monthlyDepreciation(), 2, '.', ''),
+            'accumulated_depreciation' => number_format($asset->accumulatedDepreciation($asOf), 2, '.', ''),
+            'book_value' => number_format($asset->bookValue($asOf), 2, '.', ''),
+            'chart_of_account_id' => $asset->chart_of_account_id,
+        ])->values();
+
+        $byCategory = $rows
+            ->groupBy(fn (array $row) => $row['category'] ?? 'Uncategorised')
+            ->map(fn (Collection $group, string $category) => [
+                'category' => $category,
+                'assets' => $group->count(),
+                'cost' => number_format($group->sum(fn (array $row) => (float) $row['acquisition_cost']), 2, '.', ''),
+                'accumulated_depreciation' => number_format($group->sum(fn (array $row) => (float) $row['accumulated_depreciation']), 2, '.', ''),
+                'book_value' => number_format($group->sum(fn (array $row) => (float) $row['book_value']), 2, '.', ''),
+            ])
+            ->values();
+
+        return response()->json([
+            'as_of' => $asOf->toDateString(),
+            'data' => $rows,
+            'by_category' => $byCategory,
+            'totals' => [
+                'assets' => $rows->count(),
+                'cost' => number_format($rows->sum(fn (array $row) => (float) $row['acquisition_cost']), 2, '.', ''),
+                'accumulated_depreciation' => number_format($rows->sum(fn (array $row) => (float) $row['accumulated_depreciation']), 2, '.', ''),
+                'book_value' => number_format($rows->sum(fn (array $row) => (float) $row['book_value']), 2, '.', ''),
+            ],
+        ]);
+    }
+
+    public function liabilityRegister(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'status' => ['nullable', 'string'],
+            'type' => ['nullable', 'string'],
+        ]);
+
+        $liabilities = Liability::query()
+            ->with('chartOfAccount')
+            ->when(! empty($data['status']), fn ($q) => $q->where('status', $data['status']))
+            ->when(! empty($data['type']), fn ($q) => $q->where('type', $data['type']))
+            ->orderBy('code')
+            ->get();
+
+        $rows = $liabilities->map(fn (Liability $liability) => [
+            'id' => $liability->id,
+            'code' => $liability->code,
+            'name' => $liability->name,
+            'type' => $liability->type?->value,
+            'lender' => $liability->lender,
+            'principal_amount' => number_format((float) $liability->principal_amount, 2, '.', ''),
+            'interest_rate' => $liability->interest_rate,
+            'starts_on' => $liability->starts_on?->toDateString(),
+            'matures_on' => $liability->matures_on?->toDateString(),
+            'installment_amount' => $liability->installment_amount,
+            'outstanding_amount' => number_format((float) $liability->outstanding_amount, 2, '.', ''),
+            'status' => $liability->status?->value,
+            'chart_of_account_id' => $liability->chart_of_account_id,
+        ])->values();
+
+        $byType = $rows
+            ->groupBy(fn (array $row) => $row['type'] ?? 'other')
+            ->map(fn (Collection $group, string $type) => [
+                'type' => $type,
+                'liabilities' => $group->count(),
+                'principal' => number_format($group->sum(fn (array $row) => (float) $row['principal_amount']), 2, '.', ''),
+                'outstanding' => number_format($group->sum(fn (array $row) => (float) $row['outstanding_amount']), 2, '.', ''),
+            ])
+            ->values();
+
+        return response()->json([
+            'data' => $rows,
+            'by_type' => $byType,
+            'totals' => [
+                'liabilities' => $rows->count(),
+                'principal' => number_format($rows->sum(fn (array $row) => (float) $row['principal_amount']), 2, '.', ''),
+                'outstanding' => number_format($rows->sum(fn (array $row) => (float) $row['outstanding_amount']), 2, '.', ''),
+            ],
+        ]);
+    }
+
+    public function surplusDeficit(Request $request): JsonResponse
+    {
+        $filters = $request->validate([
+            'fiscal_year_id' => ['nullable', 'integer', 'exists:fiscal_years,id'],
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date'],
+        ]);
+
+        $income = $this->accountBalances([AccountType::Income], $filters);
+        $expense = $this->accountBalances([AccountType::Expense], $filters);
+
+        $incomeTotal = $income->sum(fn (array $row) => (float) $row['balance']);
+        $expenseTotal = $expense->sum(fn (array $row) => (float) $row['balance']);
+        $net = $incomeTotal - $expenseTotal;
+
+        return response()->json([
+            'from' => $filters['from'] ?? null,
+            'to' => $filters['to'] ?? null,
+            'income' => $income,
+            'expense' => $expense,
+            'totals' => [
+                'income' => number_format($incomeTotal, 2, '.', ''),
+                'expense' => number_format($expenseTotal, 2, '.', ''),
+                'net' => number_format($net, 2, '.', ''),
+                'result' => $net >= 0 ? 'surplus' : 'deficit',
+            ],
+        ]);
+    }
+
+    public function consolidatedStatement(Request $request): JsonResponse
+    {
+        $filters = $request->validate([
+            'fiscal_year_id' => ['nullable', 'integer', 'exists:fiscal_years,id'],
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date'],
+        ]);
+
+        $income = $this->accountBalances([AccountType::Income], $filters);
+        $expense = $this->accountBalances([AccountType::Expense], $filters);
+        $assets = $this->accountBalances([AccountType::Asset], $filters);
+        $liabilities = $this->accountBalances([AccountType::Liability], $filters);
+        $equity = $this->accountBalances([AccountType::Equity], $filters);
+
+        $sum = fn (Collection $rows) => $rows->sum(fn (array $row) => (float) $row['balance']);
+
+        $incomeTotal = $sum($income);
+        $expenseTotal = $sum($expense);
+        $net = $incomeTotal - $expenseTotal;
+        $totalAssets = $sum($assets);
+        $totalLiabilities = $sum($liabilities);
+        $totalEquity = $sum($equity);
+        $funded = $totalLiabilities + $totalEquity + $net;
+
+        return response()->json([
+            'from' => $filters['from'] ?? null,
+            'to' => $filters['to'] ?? null,
+            'income_statement' => [
+                'income' => $income,
+                'expense' => $expense,
+                'totals' => [
+                    'income' => number_format($incomeTotal, 2, '.', ''),
+                    'expense' => number_format($expenseTotal, 2, '.', ''),
+                    'net' => number_format($net, 2, '.', ''),
+                    'result' => $net >= 0 ? 'surplus' : 'deficit',
+                ],
+            ],
+            'balance_sheet' => [
+                'assets' => $assets,
+                'liabilities' => $liabilities,
+                'equity' => $equity,
+                'totals' => [
+                    'assets' => number_format($totalAssets, 2, '.', ''),
+                    'liabilities' => number_format($totalLiabilities, 2, '.', ''),
+                    'equity' => number_format($totalEquity, 2, '.', ''),
+                    'current_result' => number_format($net, 2, '.', ''),
+                    'liabilities_and_equity' => number_format($funded, 2, '.', ''),
+                    'balanced' => abs($totalAssets - $funded) <= 0.005,
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * @param  array<int, AccountType>  $types
+     * @param  array<string, mixed>  $filters
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function accountBalances(array $types, array $filters): Collection
+    {
+        $query = JournalLine::query()
+            ->join('journal_entries', 'journal_entries.id', '=', 'journal_lines.journal_entry_id')
+            ->join('chart_of_accounts', 'chart_of_accounts.id', '=', 'journal_lines.chart_of_account_id')
+            ->whereIn('journal_entries.status', [JournalStatus::Posted->value, JournalStatus::Reversed->value])
+            ->whereIn('chart_of_accounts.account_type', array_map(fn (AccountType $type) => $type->value, $types))
+            ->when(! empty($filters['fiscal_year_id']), fn ($q) => $q->where('journal_entries.fiscal_year_id', $filters['fiscal_year_id']))
+            ->when(! empty($filters['from']), fn ($q) => $q->whereDate('journal_entries.entry_date', '>=', $filters['from']))
+            ->when(! empty($filters['to']), fn ($q) => $q->whereDate('journal_entries.entry_date', '<=', $filters['to']));
+
+        $this->applyCampusScope($query);
+
+        return $query
+            ->groupBy(
+                'chart_of_accounts.id',
+                'chart_of_accounts.code',
+                'chart_of_accounts.name',
+                'chart_of_accounts.account_type',
+                'chart_of_accounts.normal_balance',
+            )
+            ->orderBy('chart_of_accounts.code')
+            ->get([
+                'chart_of_accounts.id',
+                'chart_of_accounts.code',
+                'chart_of_accounts.name',
+                'chart_of_accounts.account_type',
+                'chart_of_accounts.normal_balance',
+                DB::raw('SUM(journal_lines.debit) as total_debit'),
+                DB::raw('SUM(journal_lines.credit) as total_credit'),
+            ])
+            ->map(function ($row) {
+                $debit = (float) $row->total_debit;
+                $credit = (float) $row->total_credit;
+                $normal = NormalBalance::from($row->normal_balance);
+                $balance = $normal === NormalBalance::Debit ? $debit - $credit : $credit - $debit;
+
+                return [
+                    'chart_of_account_id' => $row->id,
+                    'code' => $row->code,
+                    'name' => $row->name,
+                    'account_type' => $row->account_type,
+                    'normal_balance' => $row->normal_balance,
+                    'total_debit' => number_format($debit, 2, '.', ''),
+                    'total_credit' => number_format($credit, 2, '.', ''),
+                    'balance' => number_format($balance, 2, '.', ''),
+                ];
+            });
+    }
+
+    private function applyCampusScope(Builder $query, string $column = 'journal_entries.campus_id'): void
+    {
+        /** @var TenantContext $context */
+        $context = app(TenantContext::class);
+
+        if ($context->shouldEnforceCampus()) {
+            $query->where($column, $context->campusId());
+        }
     }
 }

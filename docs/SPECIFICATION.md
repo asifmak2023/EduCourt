@@ -184,12 +184,12 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-3.3 | Incomes: fees, charges, exam fees, sales, donations, commissions | M | Partially delivered (fee vouchers and receipts post to income via FR-4; other income sources pending) |
 | FR-3.4 | Expenses: salaries, utilities, wages, incentives, scholarships, purchases | M | Delivered (API: vendors, expense categories, vendor bills with lines, approval posting to payables, settlements, void/reversal) |
 | FR-3.5 | Petty cash as a separate account | M | Delivered (a `petty_cash` bank account linked to its own cash chart account; appears in the cash book) |
-| FR-3.6 | Assets and liabilities register | M | Pending (asset/liability account types delivered; register pending) |
+| FR-3.6 | Assets and liabilities register | M | Delivered (API: asset register with straight-line depreciation, book value and disposal; liability register with types, outstanding balances and settlement; register reports) |
 | FR-3.7 | Budgeting: annual, semi-annual, monthly, budget vs actual | M | Delivered (API: budget CRUD with line items, draft/approved workflow, budget-vs-actual report) |
 | FR-3.8 | Taxation rules and required documents | S | Pending |
-| FR-3.9 | Financial reports: surplus/deficit, receivables, payables, statements | M | Partially delivered (API: trial balance, account ledger, receivable aging, payables aging, expense summary and collection reports; surplus/deficit pending) |
-| FR-3.10 | Per-student, per-class and whole-school statements | M | Partially delivered (API: per-student statement and per-class billing/collection summary; whole-school consolidated statement pending) |
-| FR-3.11 | Period close and lock; reversal instead of edit/delete | M | Delivered (API: posted entries immutable; reversal creates an offsetting entry) |
+| FR-3.9 | Financial reports: surplus/deficit, receivables, payables, statements | M | Delivered (API: trial balance, account ledger, receivable aging, payables aging, expense summary, collection and surplus/deficit statements) |
+| FR-3.10 | Per-student, per-class and whole-school statements | M | Delivered (API: per-student statement, per-class billing/collection summary and a whole-school consolidated income/balance statement) |
+| FR-3.11 | Period close and lock; reversal instead of edit/delete | M | Delivered (API: posted entries immutable and reversed, not edited; monthly accounting periods can be generated, closed, reopened and locked, and posting is blocked in closed/locked periods) |
 | FR-3.12 | Approval workflows for financial edits | M | Partially delivered (`finance.approve` gates posting and reversal; configurable workflows pending) |
 | FR-3.13 | Full audit logging on all financial activity | M | Delivered (activity log on fiscal years, accounts and journal entries) |
 
@@ -209,11 +209,11 @@ Priorities: M = Must, S = Should, C = Could.
 
 | ID | Requirement | Priority | Status |
 | --- | --- | --- | --- |
-| FR-5.1 | Online admission form and enquiry tracking | M | Pending |
-| FR-5.2 | Document upload with validation and virus scanning | M | Pending |
-| FR-5.3 | Approval workflow with class and section allocation | M | Partially delivered (API: class/section allocation via enrollment; approval workflow pending) |
-| FR-5.4 | Admission and withdrawal records with dates | M | Partially delivered (API: admission details and dated withdrawal/transfer) |
-| FR-5.5 | Student profile, guardians (many-to-many) and documents | M | Partially delivered (API: profile and guardians; documents pending) |
+| FR-5.1 | Online admission form and enquiry tracking | M | Delivered (API: enquiry/applied/under-review/approved/rejected/enrolled statuses) |
+| FR-5.2 | Document upload with validation and virus scanning | M | Partially delivered (API: upload with type/size/MIME validation and download; virus scanning pending) |
+| FR-5.3 | Approval workflow with class and section allocation | M | Delivered (API: submit/approve/reject, then enroll into class and section) |
+| FR-5.4 | Admission and withdrawal records with dates | M | Delivered (API: dated application/decision/enrollment and dated withdrawal/transfer) |
+| FR-5.5 | Student profile, guardians (many-to-many) and documents | M | Partially delivered (API: profile, guardians and admission documents; per-student document store pending) |
 | FR-5.6 | Year-by-year class and section history (enrollment) | M | Delivered (API) |
 | FR-5.7 | Academic, fee, attendance and conduct history | M | Pending (student foundation delivered; modules pending) |
 | FR-5.8 | Scholarship holder records and policy | M | Pending |

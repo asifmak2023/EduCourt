@@ -3,6 +3,7 @@
 namespace App\Services\Accounting;
 
 use App\Enums\AccountType;
+use App\Enums\NormalBalance;
 use App\Models\Campus;
 use App\Models\ChartOfAccount;
 use Illuminate\Support\Collection;
@@ -35,7 +36,7 @@ class DefaultChartOfAccounts
                     'parent_id' => $parent?->id,
                     'name' => $node['name'],
                     'account_type' => $node['type'],
-                    'normal_balance' => $node['type']->normalBalance()->value,
+                    'normal_balance' => ($node['normal'] ?? $node['type']->normalBalance())->value,
                     'is_group' => $node['group'],
                     'is_active' => true,
                 ]
@@ -48,7 +49,7 @@ class DefaultChartOfAccounts
     }
 
     /**
-     * @return array<string, array{name: string, type: AccountType, group: bool, parent: ?string}>
+     * @return array<string, array{name: string, type: AccountType, group: bool, parent: ?string, normal?: NormalBalance}>
      */
     private function definition(): array
     {
@@ -63,10 +64,22 @@ class DefaultChartOfAccounts
 
             '1200' => ['name' => 'Prepaid Expenses', 'type' => AccountType::Asset, 'group' => false, 'parent' => null],
 
+            '1300' => ['name' => 'Fixed Assets', 'type' => AccountType::Asset, 'group' => true, 'parent' => null],
+            '1310' => ['name' => 'Furniture and Fixtures', 'type' => AccountType::Asset, 'group' => false, 'parent' => '1300'],
+            '1320' => ['name' => 'Office and IT Equipment', 'type' => AccountType::Asset, 'group' => false, 'parent' => '1300'],
+            '1330' => ['name' => 'Vehicles', 'type' => AccountType::Asset, 'group' => false, 'parent' => '1300'],
+            '1340' => ['name' => 'Buildings and Land', 'type' => AccountType::Asset, 'group' => false, 'parent' => '1300'],
+            '1350' => ['name' => 'Accumulated Depreciation', 'type' => AccountType::Asset, 'group' => false, 'parent' => '1300', 'normal' => NormalBalance::Credit],
+
             '2000' => ['name' => 'Payables', 'type' => AccountType::Liability, 'group' => true, 'parent' => null],
             '2010' => ['name' => 'Vendor Payable', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2000'],
             '2020' => ['name' => 'Accrued Salaries', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2000'],
             '2030' => ['name' => 'Fees Received in Advance', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2000'],
+
+            '2100' => ['name' => 'Long-term Liabilities', 'type' => AccountType::Liability, 'group' => true, 'parent' => null],
+            '2110' => ['name' => 'Bank Loan', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2100'],
+            '2120' => ['name' => 'Mortgage Payable', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2100'],
+            '2130' => ['name' => 'Other Liabilities', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2100'],
 
             '3000' => ['name' => 'Fund Balance', 'type' => AccountType::Equity, 'group' => true, 'parent' => null],
             '3010' => ['name' => 'Capital / Endowment', 'type' => AccountType::Equity, 'group' => false, 'parent' => '3000'],

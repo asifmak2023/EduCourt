@@ -3,14 +3,20 @@
 namespace Database\Seeders;
 
 use App\Enums\AcademicEventType;
+use App\Enums\AccountingPeriodStatus;
+use App\Enums\AdmissionStatus;
+use App\Enums\AssetStatus;
 use App\Enums\BankAccountType;
 use App\Enums\BudgetPeriodType;
 use App\Enums\BudgetStatus;
 use App\Enums\CampusType;
+use App\Enums\DepreciationMethod;
 use App\Enums\EnrollmentStatus;
 use App\Enums\ExpenseStatus;
 use App\Enums\Gender;
 use App\Enums\JournalStatus;
+use App\Enums\LiabilityStatus;
+use App\Enums\LiabilityType;
 use App\Enums\PaymentMethod;
 use App\Enums\ReconciliationStatus;
 use App\Enums\RoleName;
@@ -18,6 +24,9 @@ use App\Enums\StudentStatus;
 use App\Enums\SubjectType;
 use App\Models\AcademicEvent;
 use App\Models\AcademicYear;
+use App\Models\AccountingPeriod;
+use App\Models\Admission;
+use App\Models\Asset;
 use App\Models\BankAccount;
 use App\Models\BankReconciliation;
 use App\Models\Budget;
@@ -36,6 +45,7 @@ use App\Models\FiscalYear;
 use App\Models\Guardian;
 use App\Models\Institution;
 use App\Models\JournalEntry;
+use App\Models\Liability;
 use App\Models\Period;
 use App\Models\Room;
 use App\Models\Section;
@@ -53,6 +63,7 @@ use App\Services\Accounting\DefaultChartOfAccounts;
 use App\Services\Accounting\ExpenseService;
 use App\Services\Accounting\FeeBillingService;
 use App\Services\Accounting\JournalService;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 
@@ -150,10 +161,14 @@ class DemoSeeder extends Seeder
         $this->seedAcademics($institution, $campus, $teacher);
         $this->seedFinance($institution, $campus, $campusAdmin);
         $this->seedStudents($institution, $campus);
+        $this->seedAdmissions($institution, $campus);
         $this->seedFeeBilling($campus, $campusAdmin);
         $this->seedBudget($institution, $campus, $campusAdmin);
         $this->seedExpenses($institution, $campus, $campusAdmin);
         $this->seedBankAccounts($institution, $campus, $campusAdmin);
+        $this->seedAccountingPeriods($institution, $campus);
+        $this->seedAssetRegister($institution, $campus);
+        $this->seedLiabilities($institution, $campus);
 
         $this->command?->info('Demo users (password: password):');
         $this->command?->info('  superadmin@demo-eis.test  Super User / product owner (all institutions)');
@@ -789,6 +804,124 @@ class DemoSeeder extends Seeder
         ]);
     }
 
+    private function seedAccountingPeriods(Institution $institution, Campus $campus): void
+    {
+        $fiscalYear = FiscalYear::query()->where('campus_id', $campus->id)->first();
+
+        if ($fiscalYear === null || AccountingPeriod::query()->where('campus_id', $campus->id)->exists()) {
+            return;
+        }
+
+        $tenant = ['institution_id' => $institution->id, 'campus_id' => $campus->id];
+        $cursor = CarbonImmutable::parse($fiscalYear->starts_on)->startOfMonth();
+        $end = CarbonImmutable::parse($fiscalYear->ends_on);
+        $first = true;
+
+        while ($cursor->lessThanOrEqualTo($end)) {
+            AccountingPeriod::create($tenant + [
+                'fiscal_year_id' => $fiscalYear->id,
+                'name' => $cursor->format('M Y'),
+                'starts_on' => $cursor->toDateString(),
+                'ends_on' => $cursor->endOfMonth()->min($end)->toDateString(),
+                'status' => $first ? AccountingPeriodStatus::Closed : AccountingPeriodStatus::Open,
+                'closed_at' => $first ? now() : null,
+            ]);
+
+            $first = false;
+            $cursor = $cursor->addMonth()->startOfMonth();
+        }
+    }
+
+    private function seedAssetRegister(Institution $institution, Campus $campus): void
+    {
+        if (Asset::query()->where('campus_id', $campus->id)->exists()) {
+            return;
+        }
+
+        $tenant = ['institution_id' => $institution->id, 'campus_id' => $campus->id];
+        $accounts = $this->chart->seed($campus);
+
+        $rows = [
+            [
+                'code' => 'AST-0001', 'name' => 'Delivery Van', 'category' => 'Vehicles',
+                'chart' => '1330', 'serial_no' => 'VAN-2026-01', 'location' => 'Transport Yard',
+                'cost' => 2500000, 'salvage' => 250000, 'life' => 120,
+                'method' => DepreciationMethod::StraightLine,
+            ],
+            [
+                'code' => 'AST-0002', 'name' => 'Science Lab Equipment', 'category' => 'Equipment',
+                'chart' => '1320', 'serial_no' => 'LAB-2026-07', 'location' => 'Science Block',
+                'cost' => 800000, 'salvage' => 0, 'life' => 60,
+                'method' => DepreciationMethod::StraightLine,
+            ],
+            [
+                'code' => 'AST-0003', 'name' => 'Classroom Furniture', 'category' => 'Furniture',
+                'chart' => '1310', 'serial_no' => null, 'location' => 'Main Building',
+                'cost' => 450000, 'salvage' => 0, 'life' => 120,
+                'method' => DepreciationMethod::StraightLine,
+            ],
+        ];
+
+        foreach ($rows as $row) {
+            Asset::create($tenant + [
+                'chart_of_account_id' => $accounts->get($row['chart'])?->id,
+                'code' => $row['code'],
+                'name' => $row['name'],
+                'category' => $row['category'],
+                'serial_no' => $row['serial_no'],
+                'location' => $row['location'],
+                'acquisition_date' => '2026-05-01',
+                'acquisition_cost' => $row['cost'],
+                'salvage_value' => $row['salvage'],
+                'useful_life_months' => $row['life'],
+                'depreciation_method' => $row['method'],
+                'status' => AssetStatus::Active,
+            ]);
+        }
+    }
+
+    private function seedLiabilities(Institution $institution, Campus $campus): void
+    {
+        if (Liability::query()->where('campus_id', $campus->id)->exists()) {
+            return;
+        }
+
+        $tenant = ['institution_id' => $institution->id, 'campus_id' => $campus->id];
+        $accounts = $this->chart->seed($campus);
+
+        $rows = [
+            [
+                'code' => 'LIA-0001', 'name' => 'Demo Bank Term Loan', 'type' => LiabilityType::Loan,
+                'chart' => '2110', 'lender' => 'Demo Bank', 'principal' => 5000000,
+                'rate' => 9.5, 'starts_on' => '2026-01-01', 'matures_on' => '2031-01-01',
+                'installment' => 100000, 'outstanding' => 4600000,
+            ],
+            [
+                'code' => 'LIA-0002', 'name' => 'Vehicle Financing', 'type' => LiabilityType::Loan,
+                'chart' => '2110', 'lender' => 'Demo Leasing', 'principal' => 2000000,
+                'rate' => 12.0, 'starts_on' => '2026-03-01', 'matures_on' => '2029-03-01',
+                'installment' => 65000, 'outstanding' => 1650000,
+            ],
+        ];
+
+        foreach ($rows as $row) {
+            Liability::create($tenant + [
+                'chart_of_account_id' => $accounts->get($row['chart'])?->id,
+                'code' => $row['code'],
+                'name' => $row['name'],
+                'type' => $row['type'],
+                'lender' => $row['lender'],
+                'principal_amount' => $row['principal'],
+                'interest_rate' => $row['rate'],
+                'starts_on' => $row['starts_on'],
+                'matures_on' => $row['matures_on'],
+                'installment_amount' => $row['installment'],
+                'outstanding_amount' => $row['outstanding'],
+                'status' => LiabilityStatus::Active,
+            ]);
+        }
+    }
+
     private function seedStudents(Institution $institution, Campus $campus): void
     {
         $tenant = ['institution_id' => $institution->id, 'campus_id' => $campus->id];
@@ -859,6 +992,70 @@ class DemoSeeder extends Seeder
                     'roll_number' => $entry['roll_number'],
                     'status' => EnrollmentStatus::Active,
                     'starts_on' => '2026-04-01',
+                ]
+            );
+        }
+    }
+
+    private function seedAdmissions(Institution $institution, Campus $campus): void
+    {
+        $tenant = ['institution_id' => $institution->id, 'campus_id' => $campus->id];
+
+        $year = AcademicYear::query()->where('campus_id', $campus->id)->where('is_current', true)->first();
+        $class = ClassRoom::query()->where('campus_id', $campus->id)->where('code', 'C1')->first();
+
+        $applicants = [
+            [
+                'application_no' => 'APP-00001',
+                'first_name' => 'Hassan',
+                'last_name' => 'Iqbal',
+                'gender' => Gender::Male,
+                'date_of_birth' => '2016-05-12',
+                'guardian' => ['name' => 'Tariq Iqbal', 'phone' => '+92-300-1000001', 'email' => 'tariq@demo-eis.test'],
+                'guardian_relation' => 'father',
+                'status' => AdmissionStatus::Approved,
+                'applied_on' => '2026-08-01',
+            ],
+            [
+                'application_no' => 'APP-00002',
+                'first_name' => 'Ayesha',
+                'last_name' => 'Malik',
+                'gender' => Gender::Female,
+                'date_of_birth' => '2016-11-03',
+                'guardian' => ['name' => 'Nadia Malik', 'phone' => '+92-300-1000002', 'email' => 'nadia@demo-eis.test'],
+                'guardian_relation' => 'mother',
+                'status' => AdmissionStatus::UnderReview,
+                'applied_on' => '2026-08-05',
+            ],
+            [
+                'application_no' => 'APP-00003',
+                'first_name' => 'Bilal',
+                'last_name' => 'Ahmed',
+                'gender' => Gender::Male,
+                'date_of_birth' => '2016-02-20',
+                'guardian' => ['name' => 'Salman Ahmed', 'phone' => '+92-300-1000003', 'email' => 'salman@demo-eis.test'],
+                'guardian_relation' => 'father',
+                'status' => AdmissionStatus::Enquiry,
+                'applied_on' => '2026-08-10',
+            ],
+        ];
+
+        foreach ($applicants as $applicant) {
+            Admission::firstOrCreate(
+                ['campus_id' => $campus->id, 'application_no' => $applicant['application_no']],
+                $tenant + [
+                    'first_name' => $applicant['first_name'],
+                    'last_name' => $applicant['last_name'],
+                    'gender' => $applicant['gender'],
+                    'date_of_birth' => $applicant['date_of_birth'],
+                    'class_room_id' => $class?->id,
+                    'academic_year_id' => $year?->id,
+                    'guardian_name' => $applicant['guardian']['name'],
+                    'guardian_phone' => $applicant['guardian']['phone'],
+                    'guardian_email' => $applicant['guardian']['email'],
+                    'guardian_relation' => $applicant['guardian_relation'],
+                    'status' => $applicant['status'],
+                    'applied_on' => $applicant['applied_on'],
                 ]
             );
         }

@@ -58,8 +58,10 @@ discount for one student) and records one cash receipt, posting both to the
 ledger. It also approves a campus operating budget for the fiscal year, and
 seeds three vendors, five expense categories and three vendor bills (one paid,
 one partially paid, one outstanding) with their settlements. It also creates a
-bank account and a petty cash account, plus a completed bank reconciliation for
-the bank account.
+  bank account and a petty cash account, plus a completed bank reconciliation for
+  the bank account. It also seeds a monthly set of accounting periods for the
+  fiscal year (the first month closed, the rest open) and an asset and liability
+  register with depreciating fixed assets and two outstanding loans.
 
 Finance quick check (campus admin token):
 
@@ -140,6 +142,73 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8000/api/v1/bank-reconciliations
 ```
 
+Asset, liability and period quick check (campus admin token):
+
+```bash
+# Registers with computed depreciation / outstanding balances
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/assets
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/liabilities
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/finance/reports/asset-register?as_of=2026-09-30"
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/finance/reports/liability-register
+
+# Accounting periods for the seeded fiscal year (first month is closed)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/accounting-periods
+
+# Surplus/deficit and the whole-school consolidated statement
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/finance/reports/surplus-deficit?fiscal_year_id=1"
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/finance/reports/consolidated?fiscal_year_id=1"
+```
+
+Generate periods for a fiscal year, then close and lock a period. Posting into
+a closed or locked period is rejected.
+
+```bash
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"fiscal_year_id":1}' \
+  http://127.0.0.1:8000/api/v1/accounting-periods/generate
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/accounting-periods/2/close
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/accounting-periods/2/lock
+```
+
+Admissions quick check (campus admin token):
+
+```bash
+# Seeded applications: APP-00001 approved, APP-00002 under review, APP-00003 enquiry
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/admissions
+
+# Submit an enquiry for review, approve it, then enroll into a class and section
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/admissions/3/submit
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/admissions/3/approve
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"academic_year_id":1,"class_room_id":1,"section_id":1,"roll_number":"9"}' \
+  -X POST http://127.0.0.1:8000/api/v1/admissions/3/enroll
+
+# Upload and download an admission document
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -F type=birth_certificate -F title='Birth Certificate' \
+  -F file=@/path/to/birth.pdf \
+  http://127.0.0.1:8000/api/v1/admissions/1/documents
+curl -s -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/admissions/1/documents/1/download
+```
+
+Enrollment creates the student (with an auto admission number), links the
+guardian and places the student in the selected class and section.
+
 Fee billing quick check (campus admin token):
 
 ```bash
@@ -198,6 +267,15 @@ cd apps/mobile
 cp .env.example .env
 pnpm install
 pnpm start
+```
+
+For a browser preview (no simulator required), install the Expo web runtime and
+start the web target:
+
+```bash
+cd apps/mobile
+npx expo install react-dom react-native-web @expo/metro-runtime
+npx expo start --web --port 8081
 ```
 
 ## Operational notes

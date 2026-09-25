@@ -57,11 +57,19 @@ php artisan serve --host=127.0.0.1 --port=8000
   settlements with void/reversal, plus payables-aging and expense-summary
   reports. Cash and bank management adds bank/cash/petty-cash accounts, a cash
   book with running balances and reconciliation snapshots gated on a matching
-  balance.
+  balance. Assets and liabilities are tracked in registers with straight-line
+  depreciation, book values, disposal and settlement, backed by register reports.
+  Monthly accounting periods can be generated, closed, reopened and locked, with
+  posting blocked inside closed or locked periods. Financial reporting adds a
+  surplus/deficit statement and a whole-school consolidated income statement and
+  balance sheet.
 - Student records delivered: student profiles, guardians (many-to-many),
   year-by-year class/section enrollment, withdrawal/transfer and promotion.
   Fee billing now raises per-student vouchers and records receipts on top of
-  this; documents, admissions workflow, defaulter lists and the remaining
-  finance requirements are pending.
+  this. Admissions are delivered: campus-numbered applications, enquiry
+  tracking, document upload/download, a submit/approve/reject workflow and
+  one-step enrollment into a student with guardian link and class/section
+  placement. Per-student documents and the remaining finance requirements are
+  pending.
 
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

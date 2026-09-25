@@ -209,6 +209,37 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 Enrollment creates the student (with an auto admission number), links the
 guardian and places the student in the selected class and section.
 
+Attendance quick check (campus admin token):
+
+```bash
+# Seeded student attendance for five days, plus staff attendance
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/attendance/students
+
+# Class summary: total, boys, girls, present, leave, absent
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/attendance/students/report?from=2026-09-21&to=2026-09-25"
+
+# Mark a class roster in one call
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"attendance_date":"2026-09-26","class_room_id":1,"section_id":1,"records":[{"student_id":1,"status":"present"},{"student_id":2,"status":"absent"}]}' \
+  http://127.0.0.1:8000/api/v1/attendance/students/bulk
+
+# Staff attendance and its report
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/attendance/staff
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/attendance/staff/report?from=2026-09-21&to=2026-09-25"
+
+# Leave requests; approving one writes leave attendance for every day in range
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/leave-requests
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"decision_note":"Approved"}' \
+  -X POST http://127.0.0.1:8000/api/v1/leave-requests/1/approve
+```
+
 Fee billing quick check (campus admin token):
 
 ```bash

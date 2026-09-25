@@ -6,6 +6,7 @@ use App\Enums\AcademicEventType;
 use App\Enums\AccountingPeriodStatus;
 use App\Enums\AdmissionStatus;
 use App\Enums\AssetStatus;
+use App\Enums\AttendanceStatus;
 use App\Enums\BankAccountType;
 use App\Enums\BudgetPeriodType;
 use App\Enums\BudgetStatus;
@@ -15,6 +16,8 @@ use App\Enums\EnrollmentStatus;
 use App\Enums\ExpenseStatus;
 use App\Enums\Gender;
 use App\Enums\JournalStatus;
+use App\Enums\LeaveStatus;
+use App\Enums\LeaveType;
 use App\Enums\LiabilityStatus;
 use App\Enums\LiabilityType;
 use App\Enums\PaymentMethod;
@@ -45,12 +48,15 @@ use App\Models\FiscalYear;
 use App\Models\Guardian;
 use App\Models\Institution;
 use App\Models\JournalEntry;
+use App\Models\LeaveRequest;
 use App\Models\Liability;
 use App\Models\Period;
 use App\Models\Room;
 use App\Models\Section;
+use App\Models\StaffAttendance;
 use App\Models\Stage;
 use App\Models\Student;
+use App\Models\StudentAttendance;
 use App\Models\StudentEnrollment;
 use App\Models\Subject;
 use App\Models\TeachingAssignment;
@@ -162,6 +168,7 @@ class DemoSeeder extends Seeder
         $this->seedFinance($institution, $campus, $campusAdmin);
         $this->seedStudents($institution, $campus);
         $this->seedAdmissions($institution, $campus);
+        $this->seedAttendance($institution, $campus, $campusAdmin, $teacher);
         $this->seedFeeBilling($campus, $campusAdmin);
         $this->seedBudget($institution, $campus, $campusAdmin);
         $this->seedExpenses($institution, $campus, $campusAdmin);
@@ -1056,6 +1063,96 @@ class DemoSeeder extends Seeder
                     'guardian_relation' => $applicant['guardian_relation'],
                     'status' => $applicant['status'],
                     'applied_on' => $applicant['applied_on'],
+                ]
+            );
+        }
+    }
+
+    private function seedAttendance(Institution $institution, Campus $campus, User $campusAdmin, User $teacher): void
+    {
+        $tenant = ['institution_id' => $institution->id, 'campus_id' => $campus->id];
+
+        $year = AcademicYear::query()->where('campus_id', $campus->id)->where('is_current', true)->first();
+        $class = ClassRoom::query()->where('campus_id', $campus->id)->where('code', 'C1')->first();
+        $section = $class !== null
+            ? Section::query()->where('class_room_id', $class->id)->where('name', 'A')->first()
+            : null;
+        $students = Student::query()->where('campus_id', $campus->id)->orderBy('id')->get();
+
+        if ($year === null || $class === null || $students->isEmpty()) {
+            return;
+        }
+
+        $days = ['2026-09-21', '2026-09-22', '2026-09-23', '2026-09-24', '2026-09-25'];
+
+        foreach ($days as $dayIndex => $day) {
+            foreach ($students as $studentIndex => $student) {
+                $status = AttendanceStatus::Present;
+
+                if ($dayIndex === 1 && $studentIndex === 1) {
+                    $status = AttendanceStatus::Absent;
+                } elseif ($dayIndex === 2 && $studentIndex === 0) {
+                    $status = AttendanceStatus::Late;
+                } elseif ($dayIndex === 3 && $studentIndex === $students->count() - 1) {
+                    $status = AttendanceStatus::Leave;
+                }
+
+                StudentAttendance::updateOrCreate(
+                    ['student_id' => $student->id, 'attendance_date' => $day],
+                    $tenant + [
+                        'academic_year_id' => $year->id,
+                        'class_room_id' => $class->id,
+                        'section_id' => $section?->id,
+                        'status' => $status,
+                        'marked_by' => $campusAdmin->id,
+                    ]
+                );
+            }
+
+            foreach ([$teacher, $campusAdmin] as $staff) {
+                StaffAttendance::updateOrCreate(
+                    ['user_id' => $staff->id, 'attendance_date' => $day],
+                    $tenant + [
+                        'status' => AttendanceStatus::Present,
+                        'check_in' => '08:00',
+                        'check_out' => '14:00',
+                        'marked_by' => $campusAdmin->id,
+                    ]
+                );
+            }
+        }
+
+        LeaveRequest::firstOrCreate(
+            ['campus_id' => $campus->id, 'user_id' => $teacher->id, 'from_date' => '2026-09-28'],
+            $tenant + [
+                'leave_type' => LeaveType::Sick,
+                'to_date' => '2026-09-29',
+                'days' => 2,
+                'reason' => 'Fever and rest advised.',
+                'status' => LeaveStatus::Pending,
+            ]
+        );
+
+        $approved = LeaveRequest::firstOrCreate(
+            ['campus_id' => $campus->id, 'user_id' => $campusAdmin->id, 'from_date' => '2026-09-30'],
+            $tenant + [
+                'leave_type' => LeaveType::Casual,
+                'to_date' => '2026-09-30',
+                'days' => 1,
+                'reason' => 'Personal errand.',
+                'status' => LeaveStatus::Approved,
+                'decided_by' => $campusAdmin->id,
+                'decided_on' => '2026-09-25',
+            ]
+        );
+
+        if ($approved->wasRecentlyCreated) {
+            StaffAttendance::updateOrCreate(
+                ['user_id' => $campusAdmin->id, 'attendance_date' => '2026-09-30'],
+                $tenant + [
+                    'status' => AttendanceStatus::Leave,
+                    'remarks' => 'Approved leave: Casual Leave',
+                    'marked_by' => $campusAdmin->id,
                 ]
             );
         }

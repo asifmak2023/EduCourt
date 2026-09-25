@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\FiscalYearController;
 use App\Http\Controllers\Api\GuardianController;
 use App\Http\Controllers\Api\InstitutionController;
 use App\Http\Controllers\Api\JournalEntryController;
+use App\Http\Controllers\Api\LeaveRequestController;
 use App\Http\Controllers\Api\LiabilityController;
 use App\Http\Controllers\Api\MetaController;
 use App\Http\Controllers\Api\PeriodController;
@@ -35,7 +36,9 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\ScopeAssignmentController;
 use App\Http\Controllers\Api\SectionController;
+use App\Http\Controllers\Api\StaffAttendanceController;
 use App\Http\Controllers\Api\StageController;
+use App\Http\Controllers\Api\StudentAttendanceController;
 use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\StudentEnrollmentController;
 use App\Http\Controllers\Api\SubjectController;
@@ -305,6 +308,30 @@ Route::prefix('v1')->group(function () {
             Route::post('admissions/{admission}/documents', [AdmissionDocumentController::class, 'store'])->middleware('permission:admission.create');
             Route::get('admissions/{admission}/documents/{document}/download', [AdmissionDocumentController::class, 'download'])->middleware('permission:admission.view');
             Route::delete('admissions/{admission}/documents/{document}', [AdmissionDocumentController::class, 'destroy'])->middleware('permission:admission.delete');
+
+            Route::get('attendance/students', [StudentAttendanceController::class, 'index'])->middleware('permission:attendance.view');
+            Route::post('attendance/students', [StudentAttendanceController::class, 'store'])->middleware('permission:attendance.create');
+            Route::post('attendance/students/bulk', [StudentAttendanceController::class, 'bulkStore'])->middleware('permission:attendance.create');
+            Route::get('attendance/students/report', [StudentAttendanceController::class, 'report'])->middleware('permission:attendance.view');
+            Route::get('attendance/students/students/{student}/report', [StudentAttendanceController::class, 'studentReport'])->middleware('permission:attendance.view');
+            Route::put('attendance/students/{studentAttendance}', [StudentAttendanceController::class, 'update'])->middleware('permission:attendance.edit');
+            Route::delete('attendance/students/{studentAttendance}', [StudentAttendanceController::class, 'destroy'])->middleware('permission:attendance.edit');
+
+            Route::get('attendance/staff', [StaffAttendanceController::class, 'index'])->middleware('permission:attendance.view');
+            Route::post('attendance/staff', [StaffAttendanceController::class, 'store'])->middleware('permission:attendance.create');
+            Route::post('attendance/staff/bulk', [StaffAttendanceController::class, 'bulkStore'])->middleware('permission:attendance.create');
+            Route::get('attendance/staff/report', [StaffAttendanceController::class, 'report'])->middleware('permission:attendance.view');
+            Route::put('attendance/staff/{staffAttendance}', [StaffAttendanceController::class, 'update'])->middleware('permission:attendance.edit');
+            Route::delete('attendance/staff/{staffAttendance}', [StaffAttendanceController::class, 'destroy'])->middleware('permission:attendance.edit');
+
+            Route::get('leave-requests', [LeaveRequestController::class, 'index'])->middleware('permission:attendance.view');
+            Route::post('leave-requests', [LeaveRequestController::class, 'store'])->middleware('permission:attendance.create');
+            Route::get('leave-requests/{leaveRequest}', [LeaveRequestController::class, 'show'])->middleware('permission:attendance.view');
+            Route::put('leave-requests/{leaveRequest}', [LeaveRequestController::class, 'update'])->middleware('permission:attendance.edit');
+            Route::post('leave-requests/{leaveRequest}/approve', [LeaveRequestController::class, 'approve'])->middleware('permission:attendance.approve');
+            Route::post('leave-requests/{leaveRequest}/reject', [LeaveRequestController::class, 'reject'])->middleware('permission:attendance.approve');
+            Route::post('leave-requests/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel'])->middleware('permission:attendance.edit');
+            Route::delete('leave-requests/{leaveRequest}', [LeaveRequestController::class, 'destroy'])->middleware('permission:attendance.approve');
         });
     });
 });

@@ -221,13 +221,13 @@ Priorities: M = Must, S = Should, C = Could.
 
 ### 6.6 Attendance
 
-| ID | Requirement | Priority |
-| --- | --- | --- |
-| FR-6.1 | Daily class-wise student attendance | M |
-| FR-6.2 | Report by class: total, boys, girls, present, leave, absent | M |
-| FR-6.3 | Staff attendance and leave | M |
-| FR-6.4 | Automatic parent notification for absence | S |
-| FR-6.5 | Offline attendance capture with sync (mobile) | S |
+| ID | Requirement | Priority | Status |
+| --- | --- | --- | --- |
+| FR-6.1 | Daily class-wise student attendance | M | Delivered (API: single and bulk marking with unique student/day record) |
+| FR-6.2 | Report by class: total, boys, girls, present, leave, absent | M | Delivered (API: class summary and per-student summary) |
+| FR-6.3 | Staff attendance and leave | M | Delivered (API: staff marking, leave requests with approval writing leave attendance) |
+| FR-6.4 | Automatic parent notification for absence | S | Pending (notification channel not built) |
+| FR-6.5 | Offline attendance capture with sync (mobile) | S | Pending |
 
 ### 6.7 Examinations and results
 

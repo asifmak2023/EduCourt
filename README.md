@@ -69,7 +69,11 @@ php artisan serve --host=127.0.0.1 --port=8000
   this. Admissions are delivered: campus-numbered applications, enquiry
   tracking, document upload/download, a submit/approve/reject workflow and
   one-step enrollment into a student with guardian link and class/section
-  placement. Per-student documents and the remaining finance requirements are
-  pending.
+  placement. Attendance is delivered: daily class-wise student attendance
+  (single or bulk marking, one record per student/day), per-class and
+  per-student summaries, staff attendance with a per-staff report, and leave
+  requests whose approval writes leave attendance across the requested days.
+  Per-student documents, absence notifications and the remaining finance
+  requirements are pending.
 
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

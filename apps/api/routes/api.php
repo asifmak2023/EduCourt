@@ -44,6 +44,7 @@ use App\Http\Controllers\Api\StudentEnrollmentController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\TeachingAssignmentController;
 use App\Http\Controllers\Api\TermController;
+use App\Http\Controllers\Api\TimetableGenerationController;
 use App\Http\Controllers\Api\TimetableSlotController;
 use App\Http\Controllers\Api\TimetableViewController;
 use App\Http\Controllers\Api\UserController;
@@ -137,6 +138,11 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:timetable.view');
             Route::get('timetable/teachers/{user}', [TimetableViewController::class, 'teachers'])
                 ->middleware('permission:timetable.view');
+
+            Route::post('timetable/generate', [TimetableGenerationController::class, 'store'])
+                ->middleware('permission:timetable.create');
+            Route::delete('timetable/generate', [TimetableGenerationController::class, 'destroy'])
+                ->middleware('permission:timetable.delete');
 
             Route::get('fiscal-years', [FiscalYearController::class, 'index'])->middleware('permission:finance.view');
             Route::post('fiscal-years', [FiscalYearController::class, 'store'])->middleware('permission:finance.create');

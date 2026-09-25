@@ -180,6 +180,28 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   -X POST http://127.0.0.1:8000/api/v1/accounting-periods/2/lock
 ```
 
+Timetable generation quick check (campus admin token):
+
+```bash
+# Preview a generated timetable without writing anything
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"academic_year_id":1,"days":[1,2,3,4,5],"dry_run":true}' \
+  http://127.0.0.1:8000/api/v1/timetable/generate
+
+# Generate draft slots (replace clears the scope first)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"academic_year_id":1,"days":[1,2,3,4,5],"replace":true}' \
+  http://127.0.0.1:8000/api/v1/timetable/generate
+
+# Clear unpublished slots in a scope (published ones are kept)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -X DELETE -d '{"academic_year_id":1}' \
+  http://127.0.0.1:8000/api/v1/timetable/generate
+```
+
 Admissions quick check (campus admin token):
 
 ```bash

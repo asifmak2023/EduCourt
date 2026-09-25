@@ -171,7 +171,7 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-2.6 | Teacher x Subject x Class x Section x Year assignment matrix | M | Delivered (API) |
 | FR-2.7 | Workload limits and conflict checks (teacher and room) | M | Delivered (basic: slot conflict + weekly workload; room conflicts pending timetable) |
 | FR-2.8 | Substitute and cover management | S | Pending |
-| FR-2.9 | Timetable generation (constraint solver) with manual override | S | Partially delivered (manual slots + conflict checks; auto-generation pending) |
+| FR-2.9 | Timetable generation (constraint solver) with manual override | S | Delivered (API: greedy generator with dry-run, replace, unplaced reporting; manual slots remain) |
 | FR-2.10 | Published timetable views for students, parents, teachers | M | Delivered (API: class, teacher, self views with publish control) |
 | FR-2.11 | Academic calendar: terms, holidays, exams, events | M | Delivered (API) |
 
@@ -484,8 +484,8 @@ sensitive value is masked by default with reveal-and-log.
 1. Foundation: tenancy, users, roles, permissions, authentication, security. (Delivered)
 2. Academic structure: classes, sections, subjects, teacher allocation, timetable.
    (Delivered: years, terms, stages, classes, sections, subjects, mappings,
-   assignments, calendar, periods, rooms, timetable slots with conflict checks
-   and published views; auto-generation pending)
+   assignments, calendar, periods, rooms, timetable slots with conflict checks,
+   published views and a greedy generator with dry-run and manual override)
 3. Finance and accounts (prime importance).
 4. Fees and admissions.
 5. Attendance and exams.

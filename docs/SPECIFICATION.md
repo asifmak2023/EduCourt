@@ -215,7 +215,7 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-5.4 | Admission and withdrawal records with dates | M | Delivered (API: dated application/decision/enrollment and dated withdrawal/transfer) |
 | FR-5.5 | Student profile, guardians (many-to-many) and documents | M | Partially delivered (API: profile, guardians and admission documents; per-student document store pending) |
 | FR-5.6 | Year-by-year class and section history (enrollment) | M | Delivered (API) |
-| FR-5.7 | Academic, fee, attendance and conduct history | M | Pending (student foundation delivered; modules pending) |
+| FR-5.7 | Academic, fee, attendance and conduct history | M | Partially delivered (API: consolidated per-student history with academic timeline, attendance rollup and fee/scholarship summary; conduct records pending) |
 | FR-5.8 | Scholarship holder records and policy | M | Delivered (API: scholarship catalogue by type/discount, per-student awards with override and revoke, automatic discount applied to fee vouchers) |
 | FR-5.9 | Promotion / rollover between academic years | M | Delivered (API) |
 

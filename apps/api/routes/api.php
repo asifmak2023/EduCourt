@@ -44,6 +44,7 @@ use App\Http\Controllers\Api\StageController;
 use App\Http\Controllers\Api\StudentAttendanceController;
 use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\StudentEnrollmentController;
+use App\Http\Controllers\Api\StudentHistoryController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\TeachingAssignmentController;
 use App\Http\Controllers\Api\TermController;
@@ -306,6 +307,7 @@ Route::prefix('v1')->group(function () {
             Route::put('students/{student}', [StudentController::class, 'update'])->middleware('permission:student.edit');
             Route::delete('students/{student}', [StudentController::class, 'destroy'])->middleware('permission:student.delete');
             Route::post('students/{student}/withdraw', [StudentController::class, 'withdraw'])->middleware('permission:student.approve');
+            Route::get('students/{student}/history', [StudentHistoryController::class, 'show'])->middleware('permission:student.view');
 
             Route::get('guardians', [GuardianController::class, 'index'])->middleware('permission:student.view');
             Route::post('guardians', [GuardianController::class, 'store'])->middleware('permission:student.create');

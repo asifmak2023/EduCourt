@@ -312,6 +312,14 @@ Fee voucher generation merges active scholarship discounts automatically; pass
 `apply_scholarships=false` to disable, and explicit `discounts` always take
 precedence over scholarship-derived amounts.
 
+Student history quick check (campus admin token):
+
+```bash
+# Consolidated academic timeline, attendance rollup and fee/scholarship position
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/students/1/history
+```
+
 Fee billing quick check (campus admin token):
 
 ```bash

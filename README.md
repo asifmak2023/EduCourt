@@ -80,7 +80,8 @@ php artisan serve --host=127.0.0.1 --port=8000
   sports, sibling, staff-ward) with percentage or fixed discounts, per-student
   awards with an optional value override, approve/revoke tracking, and automatic
   scholarship discounts merged into fee voucher generation (explicit discounts
-  still win).
+  still win). A consolidated per-student history endpoint rolls up the academic
+  timeline, attendance summary and fee/scholarship position.
   Per-student documents, absence notifications and the remaining finance
   requirements are pending.
 

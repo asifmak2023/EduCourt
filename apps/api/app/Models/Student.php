@@ -63,6 +63,11 @@ class Student extends Model
         return $this->hasMany(StudentEnrollment::class);
     }
 
+    public function awards(): HasMany
+    {
+        return $this->hasMany(ScholarshipAward::class);
+    }
+
     protected function fullName(): Attribute
     {
         return Attribute::get(fn () => trim("{$this->first_name} {$this->last_name}"));

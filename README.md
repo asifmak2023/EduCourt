@@ -119,6 +119,10 @@ php artisan serve --host=127.0.0.1 --port=8000
   Examinations are delivered: weighted exam types, exams per academic year/term,
   per-class papers with date sheets, rooms and invigilation duties, bulk marks
   entry, campus grade scales and derived result cards and merit lists, plus
-  result analysis by class, subject, teacher and year-on-year.
+  result analysis by class, subject, teacher and year-on-year. HR adds a staff
+  register with departments, designations and job descriptions, a per-staff
+  document store and headcount/movement reports, with configurable salary
+  components, per-staff salary structures, incentives/rewards/deductions and
+  monthly payroll runs whose approval and payment post to the ledger.
 
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

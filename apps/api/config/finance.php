@@ -23,6 +23,9 @@ return [
         'vendor_payable' => '2010',
         'tax_payable' => '2140',
         'withholding_tax_payable' => '2150',
+        'salary_expense' => '5010',
+        'salary_payable' => '2020',
+        'payroll_deductions_payable' => '2160',
     ],
 
 ];

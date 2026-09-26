@@ -243,14 +243,14 @@ Priorities: M = Must, S = Should, C = Could.
 
 ### 6.8 HR and payroll
 
-| ID | Requirement | Priority |
-| --- | --- | --- |
-| FR-8.1 | Staff profiles and documents | M |
-| FR-8.2 | Job description per role, categorically assigned | M |
-| FR-8.3 | Joining, leaving and staff reports | M |
-| FR-8.4 | Attendance, leave and salary processing | M |
-| FR-8.5 | Incentives, rewards and deductions | M |
-| FR-8.6 | Payroll posts to finance with approval | M |
+| ID | Requirement | Priority | Status |
+| --- | --- | --- | --- |
+| FR-8.1 | Staff profiles and documents | M | Delivered (API: staff register with department/designation, personal and bank details, joining/leaving dates, plus a per-staff document store with type validation, scanner hook, verify and download) |
+| FR-8.2 | Job description per role, categorically assigned | M | Delivered (API: departments and designations with grade, job description and responsibility list) |
+| FR-8.3 | Joining, leaving and staff reports | M | Delivered (API: auto employee numbers, terminate action recording leaving date/status, headcount report by department/designation/status/employment type and joiners/leavers movement report) |
+| FR-8.4 | Attendance, leave and salary processing | M | Delivered (API: reuses staff attendance and leave requests; monthly payroll runs generate payslips from each staff member's salary structure) |
+| FR-8.5 | Incentives, rewards and deductions | M | Delivered (API: payroll adjustments for incentive/reward/bonus/overtime/deduction applied into the matching period's payslip) |
+| FR-8.6 | Payroll posts to finance with approval | M | Delivered (API: approval-gated payroll approval posts Dr salaries expense / Cr net payable + deductions payable, with a separate payment posting to cash/bank) |
 
 ### 6.9 Operations - canteen, sports, student affairs, IT and support
 

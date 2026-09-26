@@ -82,6 +82,7 @@ class DefaultChartOfAccounts
             '2130' => ['name' => 'Other Liabilities', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2100'],
             '2140' => ['name' => 'Tax Payable', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2100'],
             '2150' => ['name' => 'Withholding Tax Payable', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2100'],
+            '2160' => ['name' => 'Payroll Deductions Payable', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2100'],
 
             '3000' => ['name' => 'Fund Balance', 'type' => AccountType::Equity, 'group' => true, 'parent' => null],
             '3010' => ['name' => 'Capital / Endowment', 'type' => AccountType::Equity, 'group' => false, 'parent' => '3000'],

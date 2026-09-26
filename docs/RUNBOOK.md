@@ -601,6 +601,56 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   "http://127.0.0.1:8000/api/v1/exams/analysis/year-on-year?exam_type_id=1"
 ```
 
+HR quick check (campus admin token):
+
+```bash
+# Create a department and a designation with a job description
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Science","code":"SCI"}' \
+  http://127.0.0.1:8000/api/v1/departments
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Senior Teacher","code":"ST","department_id":1,"job_description":"Teach senior science classes."}' \
+  http://127.0.0.1:8000/api/v1/designations
+
+# Register a staff member (employee number auto-assigned), then headcount
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"first_name":"Ayesha","last_name":"Malik","joining_date":"2026-09-01","employment_type":"permanent"}' \
+  http://127.0.0.1:8000/api/v1/staff
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/staff-reports/headcount
+```
+
+Payroll quick check (finance head token):
+
+```bash
+# Define salary components and a staff salary structure
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"House Allowance","code":"HRA","type":"earning","calculation":"fixed","default_amount":5000}' \
+  http://127.0.0.1:8000/api/v1/salary-components
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"staff_member_id":1,"basic_salary":50000,"effective_from":"2026-01-01","items":[{"salary_component_id":1,"amount":5000}]}' \
+  http://127.0.0.1:8000/api/v1/staff-salaries
+
+# Create, generate, approve (posts to the ledger) and pay a monthly run
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"period":"2026-09"}' \
+  http://127.0.0.1:8000/api/v1/payroll-runs
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -X POST \
+  http://127.0.0.1:8000/api/v1/payroll-runs/1/generate
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -X POST \
+  http://127.0.0.1:8000/api/v1/payroll-runs/1/approve
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"payment_method":"bank_transfer"}' \
+  http://127.0.0.1:8000/api/v1/payroll-runs/1/pay
+```
+
 Online payment quick check (campus admin token):
 
 ```bash

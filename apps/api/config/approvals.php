@@ -3,6 +3,7 @@
 use App\Models\Expense;
 use App\Models\FeeRefund;
 use App\Models\OtherIncome;
+use App\Models\PayrollRun;
 use App\Models\TaxReturn;
 
 return [
@@ -23,6 +24,7 @@ return [
         'fee_refund' => FeeRefund::class,
         'other_income' => OtherIncome::class,
         'tax_return' => TaxReturn::class,
+        'payroll_run' => PayrollRun::class,
     ],
 
 ];

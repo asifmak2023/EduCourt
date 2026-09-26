@@ -20,6 +20,8 @@ use App\Http\Controllers\Api\ClassSubjectController;
 use App\Http\Controllers\Api\ConcessionController;
 use App\Http\Controllers\Api\ConcessionPolicyController;
 use App\Http\Controllers\Api\ConductRecordController;
+use App\Http\Controllers\Api\DepartmentController;
+use App\Http\Controllers\Api\DesignationController;
 use App\Http\Controllers\Api\ExamAnalysisController;
 use App\Http\Controllers\Api\ExamController;
 use App\Http\Controllers\Api\ExamMarkController;
@@ -52,15 +54,22 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OnlinePaymentController;
 use App\Http\Controllers\Api\OtherIncomeController;
 use App\Http\Controllers\Api\PaymentWebhookController;
+use App\Http\Controllers\Api\PayrollAdjustmentController;
+use App\Http\Controllers\Api\PayrollRunController;
 use App\Http\Controllers\Api\PeriodController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RoomController;
+use App\Http\Controllers\Api\SalaryComponentController;
 use App\Http\Controllers\Api\ScholarshipAwardController;
 use App\Http\Controllers\Api\ScholarshipController;
 use App\Http\Controllers\Api\ScopeAssignmentController;
 use App\Http\Controllers\Api\SectionController;
 use App\Http\Controllers\Api\SessionController;
 use App\Http\Controllers\Api\StaffAttendanceController;
+use App\Http\Controllers\Api\StaffDocumentController;
+use App\Http\Controllers\Api\StaffMemberController;
+use App\Http\Controllers\Api\StaffReportController;
+use App\Http\Controllers\Api\StaffSalaryController;
 use App\Http\Controllers\Api\StageController;
 use App\Http\Controllers\Api\StudentAttendanceController;
 use App\Http\Controllers\Api\StudentController;
@@ -547,6 +556,51 @@ Route::prefix('v1')->group(function () {
             Route::post('notifications/send', [NotificationController::class, 'sendBatch'])->middleware('permission:notification.send');
             Route::post('notifications/{notification}/send', [NotificationController::class, 'send'])->middleware('permission:notification.send');
             Route::post('notifications/{notification}/cancel', [NotificationController::class, 'cancel'])->middleware('permission:notification.send');
+
+            $hr = function (string $uri, string $controller, string $param): void {
+                Route::get($uri, [$controller, 'index'])->middleware('permission:hr.view');
+                Route::post($uri, [$controller, 'store'])->middleware('permission:hr.create');
+                Route::get("{$uri}/{".$param.'}', [$controller, 'show'])->middleware('permission:hr.view');
+                Route::put("{$uri}/{".$param.'}', [$controller, 'update'])->middleware('permission:hr.edit');
+                Route::delete("{$uri}/{".$param.'}', [$controller, 'destroy'])->middleware('permission:hr.delete');
+            };
+
+            $hr('departments', DepartmentController::class, 'department');
+            $hr('designations', DesignationController::class, 'designation');
+            $hr('staff', StaffMemberController::class, 'staffMember');
+
+            Route::post('staff/{staffMember}/terminate', [StaffMemberController::class, 'terminate'])->middleware('permission:hr.approve');
+
+            Route::get('staff-reports/headcount', [StaffReportController::class, 'headcount'])->middleware('permission:hr.view');
+            Route::get('staff-reports/joiners-leavers', [StaffReportController::class, 'joinersLeavers'])->middleware('permission:hr.view');
+
+            Route::get('staff/{staffMember}/documents', [StaffDocumentController::class, 'index'])->middleware('permission:hr.view');
+            Route::post('staff/{staffMember}/documents', [StaffDocumentController::class, 'store'])->middleware('permission:hr.create');
+            Route::post('staff/{staffMember}/documents/{document}/verify', [StaffDocumentController::class, 'verify'])->middleware('permission:hr.approve');
+            Route::get('staff/{staffMember}/documents/{document}/download', [StaffDocumentController::class, 'download'])->middleware('permission:hr.view');
+            Route::delete('staff/{staffMember}/documents/{document}', [StaffDocumentController::class, 'destroy'])->middleware('permission:hr.delete');
+
+            $payroll = function (string $uri, string $controller, string $param): void {
+                Route::get($uri, [$controller, 'index'])->middleware('permission:payroll.view');
+                Route::post($uri, [$controller, 'store'])->middleware('permission:payroll.create');
+                Route::get("{$uri}/{".$param.'}', [$controller, 'show'])->middleware('permission:payroll.view');
+                Route::put("{$uri}/{".$param.'}', [$controller, 'update'])->middleware('permission:payroll.edit');
+                Route::delete("{$uri}/{".$param.'}', [$controller, 'destroy'])->middleware('permission:payroll.delete');
+            };
+
+            $payroll('salary-components', SalaryComponentController::class, 'salaryComponent');
+            $payroll('staff-salaries', StaffSalaryController::class, 'staffSalary');
+            $payroll('payroll-adjustments', PayrollAdjustmentController::class, 'payrollAdjustment');
+
+            Route::get('payroll-runs', [PayrollRunController::class, 'index'])->middleware('permission:payroll.view');
+            Route::post('payroll-runs', [PayrollRunController::class, 'store'])->middleware('permission:payroll.create');
+            Route::get('payroll-runs/{payrollRun}', [PayrollRunController::class, 'show'])->middleware('permission:payroll.view');
+            Route::delete('payroll-runs/{payrollRun}', [PayrollRunController::class, 'destroy'])->middleware('permission:payroll.delete');
+            Route::post('payroll-runs/{payrollRun}/generate', [PayrollRunController::class, 'generate'])->middleware('permission:payroll.edit');
+            Route::post('payroll-runs/{payrollRun}/approve', [PayrollRunController::class, 'approve'])->middleware('permission:payroll.approve');
+            Route::post('payroll-runs/{payrollRun}/pay', [PayrollRunController::class, 'pay'])->middleware('permission:payroll.approve');
+            Route::get('payroll-runs/{payrollRun}/payslips', [PayrollRunController::class, 'payslips'])->middleware('permission:payroll.view');
+            Route::get('payslips/{payslip}', [PayrollRunController::class, 'showPayslip'])->middleware('permission:payroll.view');
 
             Route::get('leave-requests', [LeaveRequestController::class, 'index'])->middleware('permission:attendance.view');
             Route::post('leave-requests', [LeaveRequestController::class, 'store'])->middleware('permission:attendance.create');

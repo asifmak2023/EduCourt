@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\ClassSubjectController;
 use App\Http\Controllers\Api\ConcessionController;
 use App\Http\Controllers\Api\ConcessionPolicyController;
 use App\Http\Controllers\Api\ConductRecordController;
+use App\Http\Controllers\Api\ExamAnalysisController;
 use App\Http\Controllers\Api\ExamController;
 use App\Http\Controllers\Api\ExamMarkController;
 use App\Http\Controllers\Api\ExamPaperController;
@@ -230,6 +231,10 @@ Route::prefix('v1')->group(function () {
             Route::post('exams/{exam}/publish', [ExamController::class, 'publish'])->middleware('permission:exam.approve');
             Route::get('exams/{exam}/merit-list', [ExamController::class, 'meritList'])->middleware('permission:exam.view');
             Route::get('exams/{exam}/students/{student}/result-card', [ExamMarkController::class, 'resultCard'])->middleware('permission:exam.view');
+            Route::get('exams/{exam}/analysis/class', [ExamAnalysisController::class, 'classRoom'])->middleware('permission:exam.view');
+            Route::get('exams/{exam}/analysis/subject', [ExamAnalysisController::class, 'subject'])->middleware('permission:exam.view');
+            Route::get('exams/{exam}/analysis/teachers', [ExamAnalysisController::class, 'teachers'])->middleware('permission:exam.view');
+            Route::get('exams/analysis/year-on-year', [ExamAnalysisController::class, 'yearOnYear'])->middleware('permission:exam.view');
 
             Route::get('exam-marks', [ExamMarkController::class, 'index'])->middleware('permission:exam.view');
             Route::post('exam-marks/bulk', [ExamMarkController::class, 'bulkStore'])->middleware('permission:exam.marks');

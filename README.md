@@ -118,6 +118,7 @@ php artisan serve --host=127.0.0.1 --port=8000
   proration bills late joiners only for the installments they are liable for.
   Examinations are delivered: weighted exam types, exams per academic year/term,
   per-class papers with date sheets, rooms and invigilation duties, bulk marks
-  entry, campus grade scales and derived result cards and merit lists.
+  entry, campus grade scales and derived result cards and merit lists, plus
+  result analysis by class, subject, teacher and year-on-year.
 
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

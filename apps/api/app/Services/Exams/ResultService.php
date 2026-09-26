@@ -8,6 +8,8 @@ use App\Models\ExamPaper;
 use App\Models\GradeScale;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
+use App\Models\TeachingAssignment;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 /**
@@ -154,5 +156,315 @@ class ResultService
 
             return $row;
         })->all();
+    }
+
+    /**
+     * Per-subject and overall achievement for one class sitting an exam.
+     *
+     * @return array<string, mixed>
+     */
+    public function classAnalysis(Exam $exam, int $classRoomId, ?GradeScale $scale = null): array
+    {
+        $scale ??= $this->defaultScale((int) $exam->campus_id);
+        $scale?->loadMissing('items');
+
+        $papers = ExamPaper::query()
+            ->with('subject')
+            ->where('exam_id', $exam->id)
+            ->where('class_room_id', $classRoomId)
+            ->get();
+
+        $paperIds = $papers->pluck('id');
+
+        $marksByPaper = ExamMark::query()
+            ->whereIn('exam_paper_id', $paperIds)
+            ->get()
+            ->groupBy('exam_paper_id');
+
+        $subjects = [];
+
+        foreach ($papers->groupBy('subject_id') as $subjectId => $subjectPapers) {
+            $appeared = 0;
+            $absent = 0;
+            $passed = 0;
+            $obtainedSum = 0.0;
+            $maxSum = 0.0;
+            $highest = null;
+            $lowest = null;
+
+            foreach ($subjectPapers as $paper) {
+                $maxSum += (float) $paper->max_marks;
+
+                foreach ($marksByPaper->get($paper->id, collect()) as $mark) {
+                    if ($mark->is_absent) {
+                        $absent++;
+
+                        continue;
+                    }
+
+                    if ($mark->marks_obtained === null) {
+                        continue;
+                    }
+
+                    $value = (float) $mark->marks_obtained;
+                    $appeared++;
+                    $obtainedSum += $value;
+                    $highest = $highest === null ? $value : max($highest, $value);
+                    $lowest = $lowest === null ? $value : min($lowest, $value);
+
+                    if ($value >= (float) $paper->pass_marks) {
+                        $passed++;
+                    }
+                }
+            }
+
+            $subjects[] = [
+                'subject_id' => (int) $subjectId,
+                'subject' => $subjectPapers->first()?->subject?->name,
+                'papers' => $subjectPapers->count(),
+                'appeared' => $appeared,
+                'absent' => $absent,
+                'passed' => $passed,
+                'pass_rate' => $appeared > 0 ? round(($passed / $appeared) * 100, 2) : 0.0,
+                'average_percentage' => $maxSum > 0 ? round(($obtainedSum / $maxSum) * 100, 2) : 0.0,
+                'highest' => $highest,
+                'lowest' => $lowest,
+            ];
+        }
+
+        $totals = $this->studentTotals($exam, $classRoomId);
+        $percentages = $totals->pluck('percentage');
+        $distribution = [];
+
+        if ($scale !== null) {
+            foreach ($scale->items as $item) {
+                $distribution[$item->grade] = 0;
+            }
+
+            foreach ($percentages as $percentage) {
+                $grade = $scale->gradeFor((float) $percentage)?->grade;
+
+                if ($grade !== null) {
+                    $distribution[$grade] = ($distribution[$grade] ?? 0) + 1;
+                }
+            }
+        }
+
+        return [
+            'class_room_id' => $classRoomId,
+            'exam_id' => $exam->id,
+            'subjects' => $subjects,
+            'students' => $totals->count(),
+            'average_percentage' => $percentages->isNotEmpty() ? round($percentages->avg(), 2) : 0.0,
+            'grade_distribution' => $distribution,
+        ];
+    }
+
+    /**
+     * One subject across the classes of an exam.
+     *
+     * @return array<string, mixed>
+     */
+    public function subjectAnalysis(Exam $exam, int $subjectId): array
+    {
+        $rows = [];
+
+        $papers = ExamPaper::query()
+            ->where('exam_id', $exam->id)
+            ->where('subject_id', $subjectId)
+            ->get();
+
+        foreach ($papers as $paper) {
+            $marks = ExamMark::query()->where('exam_paper_id', $paper->id)->get();
+            $appeared = $marks->where('is_absent', false)->whereNotNull('marks_obtained')->count();
+            $passed = $marks->filter(fn (ExamMark $m) => ! $m->is_absent
+                && $m->marks_obtained !== null
+                && (float) $m->marks_obtained >= (float) $paper->pass_marks)->count();
+            $obtained = (float) $marks->where('is_absent', false)->sum('marks_obtained');
+            $capacity = (float) $paper->max_marks * max($appeared, 1);
+
+            $rows[] = [
+                'exam_paper_id' => $paper->id,
+                'class_room_id' => $paper->class_room_id,
+                'appeared' => $appeared,
+                'passed' => $passed,
+                'pass_rate' => $appeared > 0 ? round(($passed / $appeared) * 100, 2) : 0.0,
+                'average_percentage' => $capacity > 0 ? round(($obtained / $capacity) * 100, 2) : 0.0,
+            ];
+        }
+
+        return [
+            'exam_id' => $exam->id,
+            'subject_id' => $subjectId,
+            'classes' => $rows,
+        ];
+    }
+
+    /**
+     * Achievement per teacher for the classes/subjects they teach in a year.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function teacherAnalysis(int $campusId, int $academicYearId, ?int $examId = null): array
+    {
+        $examQuery = Exam::query()
+            ->where('campus_id', $campusId)
+            ->where('academic_year_id', $academicYearId);
+
+        if ($examId !== null) {
+            $examQuery->whereKey($examId);
+        }
+
+        $examIds = $examQuery->pluck('id');
+
+        if ($examIds->isEmpty()) {
+            return [];
+        }
+
+        $assignments = TeachingAssignment::query()
+            ->where('campus_id', $campusId)
+            ->where('academic_year_id', $academicYearId)
+            ->where('is_active', true)
+            ->get();
+
+        $papers = ExamPaper::query()
+            ->whereIn('exam_id', $examIds)
+            ->get()
+            ->keyBy('id');
+
+        $marksByPaper = ExamMark::query()
+            ->whereIn('exam_paper_id', $papers->keys())
+            ->get()
+            ->groupBy('exam_paper_id');
+
+        $teachers = User::query()
+            ->whereIn('id', $assignments->pluck('teacher_user_id')->unique())
+            ->get()
+            ->keyBy('id');
+
+        $result = [];
+
+        foreach ($assignments->groupBy('teacher_user_id') as $teacherId => $teacherAssignments) {
+            $appeared = 0;
+            $passed = 0;
+            $obtained = 0.0;
+            $capacity = 0.0;
+
+            foreach ($teacherAssignments as $assignment) {
+                foreach ($papers as $paper) {
+                    if ($paper->class_room_id !== $assignment->class_room_id
+                        || $paper->subject_id !== $assignment->subject_id) {
+                        continue;
+                    }
+
+                    foreach ($marksByPaper->get($paper->id, collect()) as $mark) {
+                        if ($mark->is_absent || $mark->marks_obtained === null) {
+                            continue;
+                        }
+
+                        $value = (float) $mark->marks_obtained;
+                        $appeared++;
+                        $obtained += $value;
+                        $capacity += (float) $paper->max_marks;
+
+                        if ($value >= (float) $paper->pass_marks) {
+                            $passed++;
+                        }
+                    }
+                }
+            }
+
+            $result[] = [
+                'teacher_id' => (int) $teacherId,
+                'teacher' => $teachers->get($teacherId)?->name,
+                'appeared' => $appeared,
+                'passed' => $passed,
+                'pass_rate' => $appeared > 0 ? round(($passed / $appeared) * 100, 2) : 0.0,
+                'average_percentage' => $capacity > 0 ? round(($obtained / $capacity) * 100, 2) : 0.0,
+            ];
+        }
+
+        usort($result, fn (array $a, array $b) => $b['average_percentage'] <=> $a['average_percentage']);
+
+        return $result;
+    }
+
+    /**
+     * Compare one exam type across academic years for a campus.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function yearOnYear(int $campusId, int $examTypeId, ?int $classRoomId = null): array
+    {
+        $exams = Exam::query()
+            ->with('academicYear')
+            ->where('campus_id', $campusId)
+            ->where('exam_type_id', $examTypeId)
+            ->orderBy('academic_year_id')
+            ->get();
+
+        $rows = [];
+
+        foreach ($exams as $exam) {
+            $papers = ExamPaper::query()
+                ->where('exam_id', $exam->id)
+                ->when($classRoomId !== null, fn ($q) => $q->where('class_room_id', $classRoomId))
+                ->get();
+
+            if ($papers->isEmpty()) {
+                continue;
+            }
+
+            $marks = ExamMark::query()
+                ->whereIn('exam_paper_id', $papers->pluck('id'))
+                ->where('is_absent', false)
+                ->whereNotNull('marks_obtained')
+                ->get();
+
+            $maxByPaper = $papers->pluck('max_marks', 'id');
+            $obtained = (float) $marks->sum('marks_obtained');
+            $capacity = (float) $marks->sum(fn (ExamMark $m) => (float) ($maxByPaper[$m->exam_paper_id] ?? 0));
+
+            $rows[] = [
+                'exam_id' => $exam->id,
+                'academic_year_id' => $exam->academic_year_id,
+                'academic_year' => $exam->academicYear?->name,
+                'appeared' => $marks->count(),
+                'average_percentage' => $capacity > 0 ? round(($obtained / $capacity) * 100, 2) : 0.0,
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function studentTotals(Exam $exam, int $classRoomId): Collection
+    {
+        $studentIds = StudentEnrollment::query()
+            ->where('academic_year_id', $exam->academic_year_id)
+            ->where('class_room_id', $classRoomId)
+            ->where('status', 'active')
+            ->pluck('student_id');
+
+        $totals = ExamMark::query()
+            ->where('exam_id', $exam->id)
+            ->whereIn('student_id', $studentIds)
+            ->where('is_absent', false)
+            ->selectRaw('student_id, SUM(marks_obtained) as total')
+            ->groupBy('student_id')
+            ->pluck('total', 'student_id');
+
+        $maxTotal = (float) ExamPaper::query()
+            ->where('exam_id', $exam->id)
+            ->where('class_room_id', $classRoomId)
+            ->sum('max_marks');
+
+        return $studentIds->map(fn ($studentId) => [
+            'student_id' => (int) $studentId,
+            'total_obtained' => round((float) ($totals[$studentId] ?? 0), 2),
+            'percentage' => $maxTotal > 0 ? round(((float) ($totals[$studentId] ?? 0) / $maxTotal) * 100, 2) : 0.0,
+        ])->values();
     }
 }

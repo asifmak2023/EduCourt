@@ -589,6 +589,16 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
 curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' -X POST \
   http://127.0.0.1:8000/api/v1/exams/1/publish
+
+# Result analysis: class, subject, teacher, year-on-year
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/exams/1/analysis/class?class_room_id=1"
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/exams/1/analysis/subject?subject_id=1"
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/exams/1/analysis/teachers
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/exams/analysis/year-on-year?exam_type_id=1"
 ```
 
 Online payment quick check (campus admin token):

@@ -17,6 +17,7 @@ use App\Models\Stage;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
 use App\Models\Subject;
+use App\Models\TeachingAssignment;
 use App\Models\User;
 use App\Services\Exams\ResultService;
 use Database\Seeders\RbacSeeder;
@@ -275,6 +276,78 @@ class ExamTest extends TestCase
             'exam_paper_id' => $paper['id'],
             'user_id' => $this->teacher->id,
         ])->assertStatus(422);
+    }
+
+    public function test_result_analysis_reports_class_subject_teacher_and_year_on_year(): void
+    {
+        $this->createDefaultScale();
+
+        $paper = $this->api($this->admin)->postJson('/api/v1/exam-papers', [
+            'exam_id' => $this->exam->id,
+            'class_room_id' => $this->class->id,
+            'subject_id' => $this->subject->id,
+            'exam_date' => '2026-09-02',
+            'max_marks' => 100, 'pass_marks' => 40,
+        ])->assertStatus(201)->json('data');
+
+        $this->api($this->teacher)->postJson('/api/v1/exam-marks/bulk', [
+            'exam_paper_id' => $paper['id'],
+            'marks' => [
+                ['student_id' => $this->ali->id, 'marks_obtained' => 90],
+                ['student_id' => $this->sara->id, 'marks_obtained' => 55],
+            ],
+        ])->assertOk();
+
+        TeachingAssignment::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'academic_year_id' => $this->year->id,
+            'teacher_user_id' => $this->teacher->id,
+            'subject_id' => $this->subject->id,
+            'class_room_id' => $this->class->id,
+            'is_active' => true,
+        ]);
+
+        $classAnalysis = $this->api($this->admin)
+            ->getJson("/api/v1/exams/{$this->exam->id}/analysis/class?class_room_id={$this->class->id}")
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame(72.5, (float) $classAnalysis['average_percentage']);
+        $this->assertSame(1, $classAnalysis['grade_distribution']['A']);
+        $this->assertSame(2, $classAnalysis['subjects'][0]['passed']);
+
+        $subject = $this->api($this->admin)
+            ->getJson("/api/v1/exams/{$this->exam->id}/analysis/subject?subject_id={$this->subject->id}")
+            ->assertOk()
+            ->json('data');
+        $this->assertSame(2, $subject['classes'][0]['appeared']);
+
+        $teachers = $this->api($this->admin)
+            ->getJson("/api/v1/exams/{$this->exam->id}/analysis/teachers")
+            ->assertOk()
+            ->json('data');
+        $this->assertSame($this->teacher->id, $teachers[0]['teacher_id']);
+        $this->assertSame(100.0, (float) $teachers[0]['pass_rate']);
+
+        $yearOnYear = $this->api($this->admin)
+            ->getJson('/api/v1/exams/analysis/year-on-year?exam_type_id='.$this->examType->id)
+            ->assertOk()
+            ->json('data');
+        $this->assertCount(1, $yearOnYear);
+        $this->assertSame(72.5, (float) $yearOnYear[0]['average_percentage']);
+    }
+
+    private function createDefaultScale(): void
+    {
+        $this->api($this->admin)->postJson('/api/v1/grade-scales', [
+            'name' => 'Default Scale', 'code' => 'DEF', 'is_default' => true,
+            'items' => [
+                ['grade' => 'A', 'min_percentage' => 80, 'max_percentage' => 100, 'points' => 4],
+                ['grade' => 'B', 'min_percentage' => 60, 'max_percentage' => 79.99, 'points' => 3],
+                ['grade' => 'F', 'min_percentage' => 0, 'max_percentage' => 59.99, 'points' => 0],
+            ],
+        ])->assertStatus(201);
     }
 
     private function student(string $admissionNo, string $first, string $last, Section $section): Student

@@ -12,10 +12,12 @@ use App\Http\Controllers\Api\BankReconciliationController;
 use App\Http\Controllers\Api\BudgetController;
 use App\Http\Controllers\Api\CampusController;
 use App\Http\Controllers\Api\ChartOfAccountController;
+use App\Http\Controllers\Api\ClassBookController;
 use App\Http\Controllers\Api\ClassRoomController;
 use App\Http\Controllers\Api\ClassSubjectController;
 use App\Http\Controllers\Api\ConcessionController;
 use App\Http\Controllers\Api\ConcessionPolicyController;
+use App\Http\Controllers\Api\ConductRecordController;
 use App\Http\Controllers\Api\ExpenseCategoryController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\ExpensePaymentController;
@@ -33,8 +35,10 @@ use App\Http\Controllers\Api\GuardianController;
 use App\Http\Controllers\Api\InstitutionController;
 use App\Http\Controllers\Api\JournalEntryController;
 use App\Http\Controllers\Api\LeaveRequestController;
+use App\Http\Controllers\Api\LessonPlanController;
 use App\Http\Controllers\Api\LiabilityController;
 use App\Http\Controllers\Api\MetaController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OnlinePaymentController;
 use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\PeriodController;
@@ -49,11 +53,13 @@ use App\Http\Controllers\Api\StaffAttendanceController;
 use App\Http\Controllers\Api\StageController;
 use App\Http\Controllers\Api\StudentAttendanceController;
 use App\Http\Controllers\Api\StudentController;
+use App\Http\Controllers\Api\StudentDocumentController;
 use App\Http\Controllers\Api\StudentEnrollmentController;
 use App\Http\Controllers\Api\StudentFineController;
 use App\Http\Controllers\Api\StudentHistoryController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\SubstituteAssignmentController;
+use App\Http\Controllers\Api\SyllabusUnitController;
 use App\Http\Controllers\Api\TeachingAssignmentController;
 use App\Http\Controllers\Api\TermController;
 use App\Http\Controllers\Api\TimetableGenerationController;
@@ -145,6 +151,14 @@ Route::prefix('v1')->group(function () {
                 Route::delete("{$uri}/{".$param.'}', [$controller, 'destroy'])->middleware('permission:academic.delete');
             };
 
+            $curriculum = function (string $uri, string $controller, string $param): void {
+                Route::get($uri, [$controller, 'index'])->middleware('permission:curriculum.view');
+                Route::post($uri, [$controller, 'store'])->middleware('permission:curriculum.create');
+                Route::get("{$uri}/{".$param.'}', [$controller, 'show'])->middleware('permission:curriculum.view');
+                Route::put("{$uri}/{".$param.'}', [$controller, 'update'])->middleware('permission:curriculum.edit');
+                Route::delete("{$uri}/{".$param.'}', [$controller, 'destroy'])->middleware('permission:curriculum.delete');
+            };
+
             $academic('academic-years', AcademicYearController::class, 'academicYear');
             $academic('terms', TermController::class, 'term');
             $academic('stages', StageController::class, 'stage');
@@ -157,6 +171,13 @@ Route::prefix('v1')->group(function () {
             $academic('periods', PeriodController::class, 'period');
             $academic('rooms', RoomController::class, 'room');
             $academic('timetable-slots', TimetableSlotController::class, 'timetableSlot');
+
+            $curriculum('syllabus-units', SyllabusUnitController::class, 'syllabusUnit');
+            $curriculum('class-books', ClassBookController::class, 'classBook');
+            $curriculum('lesson-plans', LessonPlanController::class, 'lessonPlan');
+
+            Route::post('lesson-plans/{lessonPlan}/approve', [LessonPlanController::class, 'approve'])
+                ->middleware('permission:curriculum.approve');
 
             Route::post('timetable-slots/publish', [TimetableSlotController::class, 'publish'])
                 ->middleware('permission:timetable.approve');
@@ -298,6 +319,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('fee-vouchers', [FeeVoucherController::class, 'index'])->middleware('permission:fee.view');
             Route::post('fee-vouchers/generate', [FeeVoucherController::class, 'generate'])->middleware('permission:fee.create');
+            Route::post('fee-vouchers/generate-prorated', [FeeVoucherController::class, 'generateProrated'])->middleware('permission:fee.create');
             Route::get('fee-vouchers/{feeVoucher}', [FeeVoucherController::class, 'show'])->middleware('permission:fee.view');
             Route::post('fee-vouchers/{feeVoucher}/void', [FeeVoucherController::class, 'void'])->middleware('permission:fee.approve');
             Route::post('fee-vouchers/{feeVoucher}/late-fee', [FeeVoucherController::class, 'applyLateFee'])->middleware('permission:fee.approve');
@@ -355,6 +377,19 @@ Route::prefix('v1')->group(function () {
             Route::delete('students/{student}', [StudentController::class, 'destroy'])->middleware('permission:student.delete');
             Route::post('students/{student}/withdraw', [StudentController::class, 'withdraw'])->middleware('permission:student.approve');
             Route::get('students/{student}/history', [StudentHistoryController::class, 'show'])->middleware('permission:student.view');
+
+            Route::get('students/{student}/documents', [StudentDocumentController::class, 'index'])->middleware('permission:student.view');
+            Route::post('students/{student}/documents', [StudentDocumentController::class, 'store'])->middleware('permission:student.create');
+            Route::get('students/{student}/documents/{document}/download', [StudentDocumentController::class, 'download'])->middleware('permission:student.view');
+            Route::post('students/{student}/documents/{document}/verify', [StudentDocumentController::class, 'verify'])->middleware('permission:student.approve');
+            Route::delete('students/{student}/documents/{document}', [StudentDocumentController::class, 'destroy'])->middleware('permission:student.delete');
+
+            Route::get('conduct-records', [ConductRecordController::class, 'index'])->middleware('permission:conduct.view');
+            Route::post('conduct-records', [ConductRecordController::class, 'store'])->middleware('permission:conduct.create');
+            Route::get('conduct-records/{conductRecord}', [ConductRecordController::class, 'show'])->middleware('permission:conduct.view');
+            Route::put('conduct-records/{conductRecord}', [ConductRecordController::class, 'update'])->middleware('permission:conduct.edit');
+            Route::post('conduct-records/{conductRecord}/resolve', [ConductRecordController::class, 'resolve'])->middleware('permission:conduct.approve');
+            Route::delete('conduct-records/{conductRecord}', [ConductRecordController::class, 'destroy'])->middleware('permission:conduct.delete');
 
             Route::get('guardians', [GuardianController::class, 'index'])->middleware('permission:student.view');
             Route::post('guardians', [GuardianController::class, 'store'])->middleware('permission:student.create');
@@ -423,6 +458,12 @@ Route::prefix('v1')->group(function () {
             Route::get('attendance/staff/report', [StaffAttendanceController::class, 'report'])->middleware('permission:attendance.view');
             Route::put('attendance/staff/{staffAttendance}', [StaffAttendanceController::class, 'update'])->middleware('permission:attendance.edit');
             Route::delete('attendance/staff/{staffAttendance}', [StaffAttendanceController::class, 'destroy'])->middleware('permission:attendance.edit');
+
+            Route::get('notifications', [NotificationController::class, 'index'])->middleware('permission:notification.view');
+            Route::post('notifications/queue-absences', [NotificationController::class, 'queueAbsences'])->middleware('permission:notification.create');
+            Route::post('notifications/send', [NotificationController::class, 'sendBatch'])->middleware('permission:notification.send');
+            Route::post('notifications/{notification}/send', [NotificationController::class, 'send'])->middleware('permission:notification.send');
+            Route::post('notifications/{notification}/cancel', [NotificationController::class, 'cancel'])->middleware('permission:notification.send');
 
             Route::get('leave-requests', [LeaveRequestController::class, 'index'])->middleware('permission:attendance.view');
             Route::post('leave-requests', [LeaveRequestController::class, 'store'])->middleware('permission:attendance.create');

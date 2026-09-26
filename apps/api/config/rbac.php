@@ -22,6 +22,7 @@ return [
         'institution' => ['view', 'create', 'edit', 'delete'],
         'campus' => ['view', 'create', 'edit', 'delete'],
         'academic' => ['view', 'create', 'edit', 'delete'],
+        'curriculum' => ['view', 'create', 'edit', 'delete', 'approve'],
         'timetable' => ['view', 'create', 'edit', 'approve', 'delete'],
         'user' => ['view', 'create', 'edit', 'approve', 'delete'],
         'role' => ['view', 'create', 'edit', 'delete'],
@@ -34,6 +35,8 @@ return [
         'concession' => ['view', 'create', 'edit', 'approve', 'delete'],
         'fine' => ['view', 'create', 'edit', 'approve', 'delete'],
         'reminder' => ['view', 'create', 'send', 'delete'],
+        'conduct' => ['view', 'create', 'edit', 'approve', 'delete'],
+        'notification' => ['view', 'create', 'send', 'delete'],
         'exam' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'hr' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'payroll' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
@@ -69,8 +72,10 @@ return [
             'campus.view', 'campus.edit',
             'user.*', 'role.view',
             'admission.*', 'student.*', 'attendance.*', 'exam.*',
-            'academic.*', 'timetable.*', 'scholarship.*',
+            'academic.*', 'timetable.*', 'scholarship.*', 'curriculum.*',
             'finance.*', 'fee.*', 'concession.*', 'fine.*', 'reminder.*',
+            'conduct.*',
+            'notification.*',
             'hr.*', 'payroll.view',
             'inventory.*', 'library.*', 'lab.*', 'transport.*', 'hostel.*',
             'canteen.*', 'sports.*', 'student_affairs.*',
@@ -80,9 +85,12 @@ return [
         RoleName::Principal->value => [
             'student.view', 'attendance.view', 'exam.view', 'exam.approve',
             'academic.view', 'timetable.view', 'timetable.approve', 'scholarship.view',
+            'curriculum.view', 'curriculum.approve',
             'concession.view', 'concession.approve',
             'fine.view', 'fine.approve',
             'reminder.view', 'reminder.send',
+            'conduct.view', 'conduct.approve',
+            'notification.view', 'notification.send',
             'report.*', 'finance.view', 'hr.view', 'complaint.view',
             'student_affairs.view', 'circular.create', 'circular.approve',
         ],
@@ -113,13 +121,17 @@ return [
         RoleName::AcademicCoordinator->value => [
             'student.view', 'attendance.view', 'exam.view', 'report.view',
             'academic.view', 'academic.create', 'academic.edit',
+            'curriculum.view', 'curriculum.create', 'curriculum.edit', 'curriculum.approve',
             'timetable.*',
+            'conduct.view', 'conduct.create',
         ],
 
         RoleName::Teacher->value => [
             'student.view', 'attendance.view', 'attendance.create', 'attendance.edit',
             'exam.view', 'exam.create', 'exam.edit',
             'academic.view', 'timetable.view',
+            'curriculum.view', 'curriculum.create', 'curriculum.edit',
+            'conduct.view', 'conduct.create',
         ],
 
         RoleName::ExamController->value => [
@@ -127,7 +139,7 @@ return [
         ],
 
         RoleName::StudentAffairsOfficer->value => [
-            'student_affairs.*', 'sports.view', 'complaint.view', 'report.view',
+            'student_affairs.*', 'sports.view', 'complaint.view', 'report.view', 'conduct.*',
         ],
 
         RoleName::Counsellor->value => [

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ConductStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\StudentResource;
 use App\Models\AcademicYear;
+use App\Models\ConductRecord;
 use App\Models\FeePayment;
 use App\Models\FeeVoucher;
 use App\Models\Student;
@@ -41,6 +43,7 @@ class StudentHistoryController extends Controller
                     ]),
                 'attendance' => $this->attendance($student),
                 'fees' => $this->fees($student),
+                'conduct' => $this->conduct($student),
             ],
         ]);
     }
@@ -158,6 +161,42 @@ class StudentHistoryController extends Controller
                 'awarded_on' => $award->awarded_on?->toDateString(),
                 'status' => $award->status?->value,
             ])->values(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function conduct(Student $student): array
+    {
+        $rows = ConductRecord::query()
+            ->where('student_id', $student->id)
+            ->get();
+
+        $byCategory = $rows->groupBy(fn (ConductRecord $record) => $record->category?->value ?? 'other')
+            ->map(fn ($group, $category) => [
+                'category' => $category,
+                'count' => $group->count(),
+            ])
+            ->values();
+
+        return [
+            'totals' => [
+                'total' => $rows->count(),
+                'open' => $rows->where('status', ConductStatus::Open)->count(),
+                'resolved' => $rows->where('status', ConductStatus::Resolved)->count(),
+                'dismissed' => $rows->where('status', ConductStatus::Dismissed)->count(),
+                'positive' => $rows->filter(fn (ConductRecord $record) => (bool) $record->category?->isPositive())->count(),
+            ],
+            'by_category' => $byCategory,
+            'recent' => $rows->sortByDesc('occurred_on')->take(10)->values()->map(fn (ConductRecord $record) => [
+                'id' => $record->id,
+                'category' => $record->category?->value,
+                'severity' => $record->severity?->value,
+                'title' => $record->title,
+                'occurred_on' => $record->occurred_on?->toDateString(),
+                'status' => $record->status?->value,
+            ]),
         ];
     }
 

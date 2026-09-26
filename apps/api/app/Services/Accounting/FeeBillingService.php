@@ -16,6 +16,7 @@ use App\Models\FeeVoucher;
 use App\Models\FiscalYear;
 use App\Models\JournalEntry;
 use App\Models\StudentEnrollment;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -82,6 +83,125 @@ class FeeBillingService
         }
 
         return ['created' => $created, 'skipped' => $skipped];
+    }
+
+    /**
+     * Generate prorated vouchers for students who join mid-year. Installments
+     * whose billing period ends before the join date are skipped; the
+     * installment that contains the join date is prorated by the remaining
+     * days in its period; later installments are billed in full.
+     *
+     * @param  array<int, float|int>  $discounts  keyed by student id (annual amount)
+     * @return array{created: int, skipped: int}
+     */
+    public function generateForJoinDate(
+        FeePlan $plan,
+        CarbonInterface $joinDate,
+        array $discounts = [],
+        ?int $studentId = null,
+        ?int $userId = null,
+    ): array {
+        $plan->load(['items.feeHead.incomeAccount', 'installments', 'academicYear']);
+
+        $items = $plan->items->where('is_optional', false)->values();
+        $installments = $plan->installments->values();
+
+        if ($items->isEmpty()) {
+            throw ValidationException::withMessages([
+                'fee_plan_id' => ['The fee plan has no required fee items.'],
+            ]);
+        }
+
+        if ($installments->isEmpty()) {
+            throw ValidationException::withMessages([
+                'fee_plan_id' => ['The fee plan has no installment schedule.'],
+            ]);
+        }
+
+        $enrollments = StudentEnrollment::query()
+            ->where('academic_year_id', $plan->academic_year_id)
+            ->where('class_room_id', $plan->class_room_id)
+            ->where('status', 'active')
+            ->when($studentId !== null, fn ($q) => $q->where('student_id', $studentId))
+            ->get();
+
+        $ratios = $this->prorationRatios($plan, $installments, $joinDate);
+
+        $created = 0;
+        $skipped = 0;
+
+        foreach ($enrollments as $enrollment) {
+            foreach ($installments as $index => $installment) {
+                $ratio = $ratios[$index];
+
+                if ($ratio <= 0) {
+                    $skipped++;
+
+                    continue;
+                }
+
+                $exists = FeeVoucher::query()
+                    ->where('student_id', $enrollment->student_id)
+                    ->where('fee_installment_id', $installment->id)
+                    ->exists();
+
+                if ($exists) {
+                    $skipped++;
+
+                    continue;
+                }
+
+                $this->createVoucher(
+                    $plan,
+                    $enrollment,
+                    $installment,
+                    $items,
+                    (float) ($discounts[$enrollment->student_id] ?? 0),
+                    $userId,
+                    $ratio * ((float) $installment->percentage / 100),
+                );
+                $created++;
+            }
+        }
+
+        return ['created' => $created, 'skipped' => $skipped];
+    }
+
+    /**
+     * Fraction of each installment that a student joining on the given date is
+     * liable for, in installment sequence order.
+     *
+     * @param  Collection<int, FeeInstallment>  $installments
+     * @return array<int, float>
+     */
+    private function prorationRatios(FeePlan $plan, Collection $installments, CarbonInterface $joinDate): array
+    {
+        $ratios = [];
+        $previousEnd = null;
+
+        foreach ($installments as $index => $installment) {
+            $periodEnd = $installment->due_date;
+
+            $periodStart = $previousEnd !== null
+                ? $previousEnd->copy()->addDay()
+                : ($plan->academicYear?->starts_on ?? $periodEnd);
+
+            $totalDays = max($periodStart->diffInDays($periodEnd) + 1, 1);
+
+            if ($joinDate->lessThanOrEqualTo($periodStart)) {
+                $ratio = 1.0;
+            } elseif ($joinDate->greaterThan($periodEnd)) {
+                $ratio = 0.0;
+            } else {
+                $remaining = $joinDate->diffInDays($periodEnd) + 1;
+                $ratio = round($remaining / $totalDays, 4);
+            }
+
+            $ratios[$index] = $ratio;
+            $previousEnd = $periodEnd;
+        }
+
+        return $ratios;
     }
 
     public function issue(FeeVoucher $voucher, ?int $userId): FeeVoucher
@@ -588,8 +708,9 @@ class FeeBillingService
         Collection $items,
         float $annualDiscount,
         ?int $userId,
+        ?float $ratioOverride = null,
     ): FeeVoucher {
-        $ratio = (float) $installment->percentage / 100;
+        $ratio = $ratioOverride ?? ((float) $installment->percentage / 100);
 
         $grossAmounts = $items->map(fn ($item) => round((float) $item->amount * $ratio, 2))->all();
         $installmentGross = round(array_sum($grossAmounts), 2);

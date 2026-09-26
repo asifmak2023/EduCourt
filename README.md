@@ -97,7 +97,16 @@ php artisan serve --host=127.0.0.1 --port=8000
   Fee reminders close the defaulter loop: overdue students are queued onto a
   configurable email/SMS/in-app reminder with a primary-guardian recipient, a
   templated message, send/cancel lifecycle and same-day duplicate suppression,
-  delivered through a pluggable gateway (log driver by default). Per-student
-  documents and absence notifications remain pending.
+  delivered through a pluggable gateway (log driver by default). Student
+  records are rounded out with a per-student document store (type/size/MIME
+  validation, verify/download and a pluggable virus scanner defaulting to a
+  no-op driver with opt-in ClamAV) and conduct/incident records (category,
+  severity, status, resolution) that feed the consolidated student history.
+  Attendance now closes the loop with parents: marking a student absent
+  automatically queues a primary-guardian notification with a queue/send/cancel
+  lifecycle, bulk backfill and same-day dedupe through a pluggable gateway.
+  Curriculum delivery adds per-class/subject syllabus units, class book lists and
+  lesson plans with a draft/submitted/approved workflow, and mid-year fee
+  proration bills late joiners only for the installments they are liable for.
 
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

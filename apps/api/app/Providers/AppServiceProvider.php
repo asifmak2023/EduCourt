@@ -2,6 +2,11 @@
 
 namespace App\Providers;
 
+use App\Services\Files\ClamavFileScanner;
+use App\Services\Files\FileScanner;
+use App\Services\Files\NullFileScanner;
+use App\Services\Notifications\NotificationGateway;
+use App\Services\Notifications\NotificationService;
 use App\Services\Reminders\ReminderGateway;
 use App\Services\Reminders\ReminderService;
 use App\Support\TenantContext;
@@ -17,6 +22,11 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(TenantContext::class, fn () => new TenantContext);
         $this->app->bind(ReminderGateway::class, fn () => ReminderService::makeGateway());
+        $this->app->bind(NotificationGateway::class, fn () => NotificationService::makeGateway());
+        $this->app->bind(FileScanner::class, fn () => match (config('security.uploads.scanner')) {
+            'clamav' => new ClamavFileScanner,
+            default => new NullFileScanner,
+        });
     }
 
     public function boot(): void

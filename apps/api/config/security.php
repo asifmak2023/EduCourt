@@ -27,4 +27,20 @@ return [
 
     'frontend_url' => env('FRONTEND_URL', env('APP_URL', 'http://localhost:3000')),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Upload malware scanning
+    |--------------------------------------------------------------------------
+    |
+    | Driver "null" skips scanning (development default). Set UPLOAD_SCANNER to
+    | "clamav" to scan every uploaded document with ClamAV before it is stored.
+    |
+    */
+
+    'uploads' => [
+        'scanner' => env('UPLOAD_SCANNER', 'null'),
+        'clamav_binary' => env('CLAMAV_BINARY', 'clamdscan'),
+        'scan_timeout' => (int) env('UPLOAD_SCAN_TIMEOUT', 30),
+    ],
+
 ];

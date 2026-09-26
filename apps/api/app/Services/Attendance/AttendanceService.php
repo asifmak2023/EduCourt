@@ -8,6 +8,7 @@ use App\Models\StaffAttendance;
 use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Models\User;
+use App\Services\Notifications\NotificationService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,8 @@ use Illuminate\Validation\ValidationException;
 
 class AttendanceService
 {
+    public function __construct(private readonly NotificationService $notifications) {}
+
     /**
      * @param  array{institution_id: int, campus_id: int}  $tenant
      * @param  array<int, array{student_id: int, status: string, remarks?: string|null}>  $records
@@ -52,6 +55,8 @@ class AttendanceService
                     ]
                 );
             });
+
+            $marked->each(fn (StudentAttendance $attendance) => $this->notifications->notifyAbsence($attendance, $user->id));
 
             return new Collection($marked->all());
         });

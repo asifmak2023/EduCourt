@@ -167,7 +167,7 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-2.2 | Class register with capacity, in-charge and room mapping | M | Delivered (API) |
 | FR-2.3 | Section grouping into stages | M | Delivered (API) |
 | FR-2.4 | Subject master list and subject-to-class mapping | M | Delivered (API) |
-| FR-2.5 | Syllabus, book list and lesson plans per class and subject | S | Pending |
+| FR-2.5 | Syllabus, book list and lesson plans per class and subject | S | Delivered (API: per class/subject syllabus units, class book lists and lesson plans with a draft/submitted/approved workflow and campus-scoped references) |
 | FR-2.6 | Teacher x Subject x Class x Section x Year assignment matrix | M | Delivered (API) |
 | FR-2.7 | Workload limits and conflict checks (teacher and room) | M | Delivered (basic: slot conflict + weekly workload; room conflicts pending timetable) |
 | FR-2.8 | Substitute and cover management | S | Delivered (API: per-slot/date substitute cover with weekday, self-cover and period double-booking guards, cancel) |
@@ -198,7 +198,7 @@ Priorities: M = Must, S = Should, C = Could.
 | ID | Requirement | Priority | Status |
 | --- | --- | --- | --- |
 | FR-4.1 | Fee schedule and fee heads per class | M | Delivered (API: fee heads linked to income accounts; class fee plans and line items) |
-| FR-4.2 | Fee plans with installment schedules and proration | M | Partially delivered (installment schedules, per-installment billing and discount allocation delivered; mid-year proration pending) |
+| FR-4.2 | Fee plans with installment schedules and proration | M | Delivered (installment schedules, per-installment billing and discount allocation, and mid-year proration for late joiners that skips elapsed installments and prorates the active one by remaining days) |
 | FR-4.3 | Per-student status: due, received, discount, concession, scholarship | M | Delivered (API: per-student vouchers with unpaid/partial/paid status and paid amounts; campus concession policies with rule-based criteria (gender, category, sibling count), stackable/non-stackable discounts with caps, approval-gated grants, and automatic scholarship and concession discounts merged into fee voucher generation) |
 | FR-4.4 | Vouchers and receipts with numbering and void/reversal | M | Delivered (API: campus-numbered vouchers and receipts, discount-aware lines, double-entry posting, void with reversal) |
 | FR-4.5 | Late fees, fines, advance balances and refunds | S | Delivered (API: per-plan late fee policy and application, configurable fine rules and per-student fines with apply/waive/revoke posting on outstanding vouchers, advance payments and allocation, refunds with an approval workflow that posts to the ledger only on approval and reverses on revoke) |
@@ -210,12 +210,12 @@ Priorities: M = Must, S = Should, C = Could.
 | ID | Requirement | Priority | Status |
 | --- | --- | --- | --- |
 | FR-5.1 | Online admission form and enquiry tracking | M | Delivered (API: enquiry/applied/under-review/approved/rejected/enrolled statuses) |
-| FR-5.2 | Document upload with validation and virus scanning | M | Partially delivered (API: upload with type/size/MIME validation and download; virus scanning pending) |
+| FR-5.2 | Document upload with validation and virus scanning | M | Delivered (upload with type/size/MIME validation and download, plus a pluggable scanner with a default no-op driver and an opt-in ClamAV driver via `UPLOAD_SCANNER`) |
 | FR-5.3 | Approval workflow with class and section allocation | M | Delivered (API: submit/approve/reject, then enroll into class and section) |
 | FR-5.4 | Admission and withdrawal records with dates | M | Delivered (API: dated application/decision/enrollment and dated withdrawal/transfer) |
-| FR-5.5 | Student profile, guardians (many-to-many) and documents | M | Partially delivered (API: profile, guardians and admission documents; per-student document store pending) |
+| FR-5.5 | Student profile, guardians (many-to-many) and documents | M | Delivered (API: profile, guardians, admission documents and a per-student document store with type validation, scanner hook, verify and download) |
 | FR-5.6 | Year-by-year class and section history (enrollment) | M | Delivered (API) |
-| FR-5.7 | Academic, fee, attendance and conduct history | M | Partially delivered (API: consolidated per-student history with academic timeline, attendance rollup and fee/scholarship summary; conduct records pending) |
+| FR-5.7 | Academic, fee, attendance and conduct history | M | Delivered (API: consolidated per-student history with academic timeline, attendance rollup, fee/scholarship summary and conduct/incident records with category, severity and resolution) |
 | FR-5.8 | Scholarship holder records and policy | M | Delivered (API: scholarship catalogue by type/discount, per-student awards with override and revoke, automatic discount applied to fee vouchers) |
 | FR-5.9 | Promotion / rollover between academic years | M | Delivered (API) |
 
@@ -226,7 +226,7 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-6.1 | Daily class-wise student attendance | M | Delivered (API: single and bulk marking with unique student/day record) |
 | FR-6.2 | Report by class: total, boys, girls, present, leave, absent | M | Delivered (API: class summary and per-student summary) |
 | FR-6.3 | Staff attendance and leave | M | Delivered (API: staff marking, leave requests with approval writing leave attendance) |
-| FR-6.4 | Automatic parent notification for absence | S | Pending (notification channel not built) |
+| FR-6.4 | Automatic parent notification for absence | S | Delivered (API: marking a student absent automatically queues a per-guardian notification using the primary contact, with a queue/send/cancel lifecycle, bulk backfill, same-day dedupe and a pluggable gateway defaulting to a log driver) |
 | FR-6.5 | Offline attendance capture with sync (mobile) | S | Pending |
 
 ### 6.7 Examinations and results

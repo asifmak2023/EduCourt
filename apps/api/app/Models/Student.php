@@ -73,6 +73,16 @@ class Student extends Model
         return $this->hasMany(Concession::class);
     }
 
+    public function conductRecords(): HasMany
+    {
+        return $this->hasMany(ConductRecord::class);
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(StudentDocument::class);
+    }
+
     protected function fullName(): Attribute
     {
         return Attribute::get(fn () => trim("{$this->first_name} {$this->last_name}"));

@@ -467,6 +467,37 @@ Reminder delivery uses the `REMINDER_GATEWAY` driver (`log` by default, so
 reminders are written to `storage/logs/laravel.log`). Generation is idempotent
 per student per day; pass `"force":true` to re-queue.
 
+Absence notification quick check (campus admin token):
+
+```bash
+# Mark a student absent; a notification is queued for the primary guardian
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"student_id":1,"attendance_date":"2026-09-21","status":"absent","academic_year_id":1}' \
+  http://127.0.0.1:8000/api/v1/attendance/students
+
+# Backfill for a whole day/class, then list and send
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"attendance_date":"2026-09-21","class_room_id":1}' \
+  http://127.0.0.1:8000/api/v1/notifications/queue-absences
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/notifications?type=absence"
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/notifications/1/send
+```
+
+Mid-year fee proration quick check (campus admin token):
+
+```bash
+# Bill only the installments a late joiner is liable for (past ones skipped,
+# the active period prorated by remaining days)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"academic_year_id":1,"class_room_id":1,"fee_plan_id":1,"student_id":1,"join_date":"2026-08-01"}' \
+  http://127.0.0.1:8000/api/v1/fee-vouchers/generate-prorated
+```
+
 Online payment quick check (campus admin token):
 
 ```bash

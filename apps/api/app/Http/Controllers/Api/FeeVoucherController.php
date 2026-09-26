@@ -10,6 +10,7 @@ use App\Models\FeeVoucher;
 use App\Services\Accounting\FeeBillingService;
 use App\Services\Concessions\ConcessionService;
 use App\Services\Scholarships\ScholarshipService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -121,6 +122,86 @@ class FeeVoucherController extends Controller
             'created' => $result['created'],
             'skipped' => $result['skipped'],
             'data' => FeeVoucherResource::collection($vouchers)->resolve(),
+        ], 201);
+    }
+
+    public function generateProrated(Request $request): JsonResponse
+    {
+        $tenant = $this->academicTenantAttributes();
+
+        $data = $request->validate([
+            'academic_year_id' => [
+                'required', 'integer',
+                Rule::exists('academic_years', 'id')->where('campus_id', $tenant['campus_id'])->whereNull('deleted_at'),
+            ],
+            'class_room_id' => [
+                'required', 'integer',
+                Rule::exists('class_rooms', 'id')->where('campus_id', $tenant['campus_id'])->whereNull('deleted_at'),
+            ],
+            'fee_plan_id' => [
+                'required', 'integer',
+                Rule::exists('fee_plans', 'id')->where('campus_id', $tenant['campus_id'])->whereNull('deleted_at'),
+            ],
+            'student_id' => [
+                'nullable', 'integer',
+                Rule::exists('students', 'id')->where('campus_id', $tenant['campus_id'])->whereNull('deleted_at'),
+            ],
+            'join_date' => ['required', 'date'],
+            'discounts' => ['sometimes', 'array'],
+            'discounts.*' => ['numeric', 'min:0'],
+            'apply_scholarships' => ['sometimes', 'boolean'],
+            'apply_concessions' => ['sometimes', 'boolean'],
+        ]);
+
+        $plan = FeePlan::query()->findOrFail($data['fee_plan_id']);
+
+        if ($plan->academic_year_id !== $data['academic_year_id'] || $plan->class_room_id !== $data['class_room_id']) {
+            throw ValidationException::withMessages([
+                'fee_plan_id' => ['The fee plan does not belong to the selected academic year and class.'],
+            ]);
+        }
+
+        $discounts = $data['discounts'] ?? [];
+
+        $applyScholarships = $request->boolean('apply_scholarships', true);
+        $applyConcessions = $request->boolean('apply_concessions', true);
+
+        if ($applyScholarships || $applyConcessions) {
+            $annualGross = (float) $plan->items()->where('is_optional', false)->sum('amount');
+
+            $scholarshipMap = $applyScholarships
+                ? $this->scholarships->applyToDiscounts($plan->academic_year_id, $plan->class_room_id, $annualGross, [])
+                : [];
+
+            $concessionMap = $applyConcessions
+                ? $this->concessions->applyToDiscounts($plan->academic_year_id, $plan->class_room_id, $annualGross, [])
+                : [];
+
+            foreach (array_unique(array_merge(array_keys($scholarshipMap), array_keys($concessionMap))) as $studentId) {
+                if (array_key_exists($studentId, $discounts)) {
+                    continue;
+                }
+
+                $combined = (float) ($scholarshipMap[$studentId] ?? 0) + (float) ($concessionMap[$studentId] ?? 0);
+
+                if ($combined > 0) {
+                    $discounts[$studentId] = min($combined, $annualGross);
+                }
+            }
+        }
+
+        $result = $this->billing->generateForJoinDate(
+            $plan,
+            Carbon::parse($data['join_date']),
+            $discounts,
+            $data['student_id'] ?? null,
+            $request->user()->id,
+        );
+
+        return response()->json([
+            'message' => "Generated {$result['created']} prorated voucher(s), skipped {$result['skipped']}.",
+            'created' => $result['created'],
+            'skipped' => $result['skipped'],
         ], 201);
     }
 

@@ -679,6 +679,47 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8000/api/v1/reports/platform-overview
 ```
 
+Canteen quick check (canteen manager token):
+
+```bash
+# Create a supplier and a menu item
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Fresh Foods","phone":"0300-1234567"}' \
+  http://127.0.0.1:8000/api/v1/canteen/suppliers
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Chicken Patty","code":"PAT-01","price":60,"cost_price":35,"reorder_level":10}' \
+  http://127.0.0.1:8000/api/v1/canteen/items
+
+# Receive stock, then ring up a cash sale
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"canteen_item_id":1,"type":"purchase","quantity":100,"unit_cost":35}' \
+  http://127.0.0.1:8000/api/v1/canteen/stock-entries
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"payment_method":"cash","items":[{"canteen_item_id":1,"quantity":2}]}' \
+  http://127.0.0.1:8000/api/v1/canteen/sales
+
+# Top up a student wallet and pay from it
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/canteen/students/1/wallet
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"amount":500,"method":"cash"}' \
+  http://127.0.0.1:8000/api/v1/canteen/wallets/1/top-up
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"student_id":1,"payment_method":"wallet","items":[{"canteen_item_id":1,"quantity":1}]}' \
+  http://127.0.0.1:8000/api/v1/canteen/sales
+
+# Reports
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/canteen/reports/daily?from=2026-09-01&to=2026-09-30"
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/canteen/reports/profit-loss
+```
+
 Online payment quick check (campus admin token):
 
 ```bash

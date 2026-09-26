@@ -70,6 +70,7 @@ class DefaultChartOfAccounts
             '1330' => ['name' => 'Vehicles', 'type' => AccountType::Asset, 'group' => false, 'parent' => '1300'],
             '1340' => ['name' => 'Buildings and Land', 'type' => AccountType::Asset, 'group' => false, 'parent' => '1300'],
             '1350' => ['name' => 'Accumulated Depreciation', 'type' => AccountType::Asset, 'group' => false, 'parent' => '1300', 'normal' => NormalBalance::Credit],
+            '1360' => ['name' => 'Canteen Inventory', 'type' => AccountType::Asset, 'group' => false, 'parent' => '1300'],
 
             '2000' => ['name' => 'Payables', 'type' => AccountType::Liability, 'group' => true, 'parent' => null],
             '2010' => ['name' => 'Vendor Payable', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2000'],
@@ -83,6 +84,7 @@ class DefaultChartOfAccounts
             '2140' => ['name' => 'Tax Payable', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2100'],
             '2150' => ['name' => 'Withholding Tax Payable', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2100'],
             '2160' => ['name' => 'Payroll Deductions Payable', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2100'],
+            '2170' => ['name' => 'Student Wallet Payable', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2100'],
 
             '3000' => ['name' => 'Fund Balance', 'type' => AccountType::Equity, 'group' => true, 'parent' => null],
             '3010' => ['name' => 'Capital / Endowment', 'type' => AccountType::Equity, 'group' => false, 'parent' => '3000'],
@@ -98,6 +100,7 @@ class DefaultChartOfAccounts
             '4070' => ['name' => 'Sales Income', 'type' => AccountType::Income, 'group' => false, 'parent' => '4000'],
             '4080' => ['name' => 'Commission Income', 'type' => AccountType::Income, 'group' => false, 'parent' => '4000'],
             '4090' => ['name' => 'Exam Fee Income', 'type' => AccountType::Income, 'group' => false, 'parent' => '4000'],
+            '4095' => ['name' => 'Canteen Sales Income', 'type' => AccountType::Income, 'group' => false, 'parent' => '4000'],
 
             '5000' => ['name' => 'Operating Expenses', 'type' => AccountType::Expense, 'group' => true, 'parent' => null],
             '5010' => ['name' => 'Salaries and Wages', 'type' => AccountType::Expense, 'group' => false, 'parent' => '5000'],
@@ -105,6 +108,7 @@ class DefaultChartOfAccounts
             '5030' => ['name' => 'Teaching Supplies', 'type' => AccountType::Expense, 'group' => false, 'parent' => '5000'],
             '5040' => ['name' => 'Repairs and Maintenance', 'type' => AccountType::Expense, 'group' => false, 'parent' => '5000'],
             '5050' => ['name' => 'Marketing and Promotion', 'type' => AccountType::Expense, 'group' => false, 'parent' => '5000'],
+            '5060' => ['name' => 'Cost of Goods Sold', 'type' => AccountType::Expense, 'group' => false, 'parent' => '5000'],
         ];
     }
 }

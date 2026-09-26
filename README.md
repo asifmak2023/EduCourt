@@ -127,6 +127,10 @@ php artisan serve --host=127.0.0.1 --port=8000
   and analytics close the loop: a campus dashboard, progress, attendance, exam
   result, staff, per-student year-by-year counselling, financial and payroll
   reports for campus users, plus a cross-institution platform overview for the
-  Super User.
+  Super User. Operations begin with the canteen: suppliers, a menu with stock
+  tracking and low-stock flags, purchases/adjustments/wastage, POS billing by
+  cash, wallet or credit, student wallets with top-ups, daily limits and
+  adjustments, hygiene checklists, and daily/item-wise/profit-loss/wallet
+  reports, all posting to the double-entry ledger.
 
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

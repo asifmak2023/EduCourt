@@ -13,6 +13,12 @@ use App\Http\Controllers\Api\BankAccountController;
 use App\Http\Controllers\Api\BankReconciliationController;
 use App\Http\Controllers\Api\BudgetController;
 use App\Http\Controllers\Api\CampusController;
+use App\Http\Controllers\Api\CanteenHygieneCheckController;
+use App\Http\Controllers\Api\CanteenItemController;
+use App\Http\Controllers\Api\CanteenReportController;
+use App\Http\Controllers\Api\CanteenSaleController;
+use App\Http\Controllers\Api\CanteenStockEntryController;
+use App\Http\Controllers\Api\CanteenSupplierController;
 use App\Http\Controllers\Api\ChartOfAccountController;
 use App\Http\Controllers\Api\ClassBookController;
 use App\Http\Controllers\Api\ClassRoomController;
@@ -75,6 +81,7 @@ use App\Http\Controllers\Api\StaffSalaryController;
 use App\Http\Controllers\Api\StageController;
 use App\Http\Controllers\Api\StudentAttendanceController;
 use App\Http\Controllers\Api\StudentController;
+use App\Http\Controllers\Api\StudentWalletController;
 use App\Http\Controllers\Api\StudentDocumentController;
 use App\Http\Controllers\Api\StudentEnrollmentController;
 use App\Http\Controllers\Api\StudentFineController;
@@ -615,6 +622,47 @@ Route::prefix('v1')->group(function () {
             Route::post('leave-requests/{leaveRequest}/reject', [LeaveRequestController::class, 'reject'])->middleware('permission:attendance.approve');
             Route::post('leave-requests/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel'])->middleware('permission:attendance.edit');
             Route::delete('leave-requests/{leaveRequest}', [LeaveRequestController::class, 'destroy'])->middleware('permission:attendance.approve');
+
+            Route::get('canteen/suppliers', [CanteenSupplierController::class, 'index'])->middleware('permission:canteen.view');
+            Route::post('canteen/suppliers', [CanteenSupplierController::class, 'store'])->middleware('permission:canteen.create');
+            Route::get('canteen/suppliers/{supplier}', [CanteenSupplierController::class, 'show'])->middleware('permission:canteen.view');
+            Route::put('canteen/suppliers/{supplier}', [CanteenSupplierController::class, 'update'])->middleware('permission:canteen.edit');
+            Route::delete('canteen/suppliers/{supplier}', [CanteenSupplierController::class, 'destroy'])->middleware('permission:canteen.delete');
+
+            Route::get('canteen/items', [CanteenItemController::class, 'index'])->middleware('permission:canteen.view');
+            Route::post('canteen/items', [CanteenItemController::class, 'store'])->middleware('permission:canteen.create');
+            Route::get('canteen/items/{item}', [CanteenItemController::class, 'show'])->middleware('permission:canteen.view');
+            Route::put('canteen/items/{item}', [CanteenItemController::class, 'update'])->middleware('permission:canteen.edit');
+            Route::delete('canteen/items/{item}', [CanteenItemController::class, 'destroy'])->middleware('permission:canteen.delete');
+            Route::post('canteen/items/{item}/adjust-stock', [CanteenItemController::class, 'adjustStock'])->middleware('permission:canteen.approve');
+
+            Route::get('canteen/stock-entries', [CanteenStockEntryController::class, 'index'])->middleware('permission:canteen.view');
+            Route::post('canteen/stock-entries', [CanteenStockEntryController::class, 'store'])->middleware('permission:canteen.create');
+            Route::get('canteen/stock-entries/{stockEntry}', [CanteenStockEntryController::class, 'show'])->middleware('permission:canteen.view');
+
+            Route::get('canteen/sales', [CanteenSaleController::class, 'index'])->middleware('permission:canteen.view');
+            Route::post('canteen/sales', [CanteenSaleController::class, 'store'])->middleware('permission:canteen.create');
+            Route::get('canteen/sales/{sale}', [CanteenSaleController::class, 'show'])->middleware('permission:canteen.view');
+            Route::post('canteen/sales/{sale}/void', [CanteenSaleController::class, 'void'])->middleware('permission:canteen.approve');
+
+            Route::get('canteen/wallets', [StudentWalletController::class, 'index'])->middleware('permission:canteen.view');
+            Route::get('canteen/students/{student}/wallet', [StudentWalletController::class, 'forStudent'])->middleware('permission:canteen.view');
+            Route::get('canteen/wallets/{wallet}', [StudentWalletController::class, 'show'])->middleware('permission:canteen.view');
+            Route::post('canteen/wallets/{wallet}/top-up', [StudentWalletController::class, 'topUp'])->middleware('permission:canteen.create');
+            Route::post('canteen/wallets/{wallet}/adjust', [StudentWalletController::class, 'adjust'])->middleware('permission:canteen.approve');
+            Route::get('canteen/wallets/{wallet}/transactions', [StudentWalletController::class, 'transactions'])->middleware('permission:canteen.view');
+
+            Route::get('canteen/hygiene-checks', [CanteenHygieneCheckController::class, 'index'])->middleware('permission:canteen.view');
+            Route::post('canteen/hygiene-checks', [CanteenHygieneCheckController::class, 'store'])->middleware('permission:canteen.create');
+            Route::get('canteen/hygiene-checks/{hygieneCheck}', [CanteenHygieneCheckController::class, 'show'])->middleware('permission:canteen.view');
+            Route::put('canteen/hygiene-checks/{hygieneCheck}', [CanteenHygieneCheckController::class, 'update'])->middleware('permission:canteen.edit');
+            Route::delete('canteen/hygiene-checks/{hygieneCheck}', [CanteenHygieneCheckController::class, 'destroy'])->middleware('permission:canteen.delete');
+
+            Route::get('canteen/reports/daily', [CanteenReportController::class, 'daily'])->middleware('permission:canteen.export');
+            Route::get('canteen/reports/item-wise', [CanteenReportController::class, 'itemWise'])->middleware('permission:canteen.export');
+            Route::get('canteen/reports/profit-loss', [CanteenReportController::class, 'profitLoss'])->middleware('permission:canteen.export');
+            Route::get('canteen/reports/low-stock', [CanteenReportController::class, 'lowStock'])->middleware('permission:canteen.view');
+            Route::get('canteen/reports/wallet-summary', [CanteenReportController::class, 'walletSummary'])->middleware('permission:canteen.export');
 
             Route::get('reports/campus-dashboard', [ReportController::class, 'campusDashboard'])->middleware('permission:report.view');
             Route::get('reports/progress', [ReportController::class, 'progress'])->middleware('permission:report.view');

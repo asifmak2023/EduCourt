@@ -26,6 +26,10 @@ return [
         'salary_expense' => '5010',
         'salary_payable' => '2020',
         'payroll_deductions_payable' => '2160',
+        'canteen_income' => '4095',
+        'canteen_inventory' => '1360',
+        'wallet_payable' => '2170',
+        'cost_of_goods_sold' => '5060',
     ],
 
 ];

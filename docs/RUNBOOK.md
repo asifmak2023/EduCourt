@@ -562,6 +562,35 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   -X POST http://127.0.0.1:8000/api/v1/approvals/1/approve
 ```
 
+Examination quick check (campus admin token):
+
+```bash
+# Create an exam type, a grade scale, an exam and a paper
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Final Term","code":"FIN","weightage":60}' \
+  http://127.0.0.1:8000/api/v1/exam-types
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Default Scale","code":"DEF","is_default":true,"items":[{"grade":"A","min_percentage":80,"max_percentage":100,"points":4},{"grade":"B","min_percentage":60,"max_percentage":79.99,"points":3},{"grade":"F","min_percentage":0,"max_percentage":59.99,"points":0}]}' \
+  http://127.0.0.1:8000/api/v1/grade-scales
+
+# Enter marks for a paper, then read the result card and class merit list
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"exam_paper_id":1,"marks":[{"student_id":1,"marks_obtained":90}]}' \
+  http://127.0.0.1:8000/api/v1/exam-marks/bulk
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/exams/1/students/1/result-card
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/exams/1/merit-list?class_room_id=1"
+
+# Publish an exam (needs exam.approve)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -X POST \
+  http://127.0.0.1:8000/api/v1/exams/1/publish
+```
+
 Online payment quick check (campus admin token):
 
 ```bash

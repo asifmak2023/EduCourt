@@ -116,5 +116,8 @@ php artisan serve --host=127.0.0.1 --port=8000
   Curriculum delivery adds per-class/subject syllabus units, class book lists and
   lesson plans with a draft/submitted/approved workflow, and mid-year fee
   proration bills late joiners only for the installments they are liable for.
+  Examinations are delivered: weighted exam types, exams per academic year/term,
+  per-class papers with date sheets, rooms and invigilation duties, bulk marks
+  entry, campus grade scales and derived result cards and merit lists.
 
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

@@ -231,15 +231,15 @@ Priorities: M = Must, S = Should, C = Could.
 
 ### 6.7 Examinations and results
 
-| ID | Requirement | Priority |
-| --- | --- | --- |
-| FR-7.1 | Exam types and date sheets | M |
-| FR-7.2 | Invigilation duties | M |
-| FR-7.3 | Marks entry by subject teacher | M |
-| FR-7.4 | Grading rules, result cards, merit lists | M |
-| FR-7.5 | Result analysis: class, subject, teacher, year-on-year | M |
-| FR-7.6 | Moderation, re-evaluation, supplementary exams | S |
-| FR-7.7 | Semester and credit-hour model for college/university | S |
+| ID | Requirement | Priority | Status |
+| --- | --- | --- | --- |
+| FR-7.1 | Exam types and date sheets | M | Delivered (API: exam types with weightage, exams per academic year/term, and per-class papers with date, timing, room, max/pass marks and publish step) |
+| FR-7.2 | Invigilation duties | M | Delivered (API: per-paper duty assignments with chief/assistant roles, duplicate guard) |
+| FR-7.3 | Marks entry by subject teacher | M | Delivered (API: bulk marks entry per paper with absentee flag, max-marks validation and upsert) |
+| FR-7.4 | Grading rules, result cards, merit lists | M | Delivered (API: campus grade scales with banded items, derived result cards with per-subject pass/fail, totals, percentage and grade, and class merit lists with ranks) |
+| FR-7.5 | Result analysis: class, subject, teacher, year-on-year | M | Pending |
+| FR-7.6 | Moderation, re-evaluation, supplementary exams | S | Pending |
+| FR-7.7 | Semester and credit-hour model for college/university | S | Pending |
 
 ### 6.8 HR and payroll
 

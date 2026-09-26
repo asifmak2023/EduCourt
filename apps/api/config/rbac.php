@@ -37,7 +37,7 @@ return [
         'reminder' => ['view', 'create', 'send', 'delete'],
         'conduct' => ['view', 'create', 'edit', 'approve', 'delete'],
         'notification' => ['view', 'create', 'send', 'delete'],
-        'exam' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
+        'exam' => ['view', 'create', 'edit', 'marks', 'approve', 'delete', 'export'],
         'hr' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'payroll' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'inventory' => ['view', 'create', 'edit', 'delete', 'export'],
@@ -119,7 +119,7 @@ return [
         ],
 
         RoleName::AcademicCoordinator->value => [
-            'student.view', 'attendance.view', 'exam.view', 'report.view',
+            'student.view', 'attendance.view', 'exam.view', 'exam.marks', 'report.view',
             'academic.view', 'academic.create', 'academic.edit',
             'curriculum.view', 'curriculum.create', 'curriculum.edit', 'curriculum.approve',
             'timetable.*',
@@ -128,7 +128,7 @@ return [
 
         RoleName::Teacher->value => [
             'student.view', 'attendance.view', 'attendance.create', 'attendance.edit',
-            'exam.view', 'exam.create', 'exam.edit',
+            'exam.view', 'exam.create', 'exam.edit', 'exam.marks',
             'academic.view', 'timetable.view',
             'curriculum.view', 'curriculum.create', 'curriculum.edit',
             'conduct.view', 'conduct.create',

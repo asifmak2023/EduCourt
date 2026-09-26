@@ -20,6 +20,10 @@ use App\Http\Controllers\Api\ClassSubjectController;
 use App\Http\Controllers\Api\ConcessionController;
 use App\Http\Controllers\Api\ConcessionPolicyController;
 use App\Http\Controllers\Api\ConductRecordController;
+use App\Http\Controllers\Api\ExamController;
+use App\Http\Controllers\Api\ExamMarkController;
+use App\Http\Controllers\Api\ExamPaperController;
+use App\Http\Controllers\Api\ExamTypeController;
 use App\Http\Controllers\Api\ExpenseCategoryController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\ExpensePaymentController;
@@ -33,9 +37,11 @@ use App\Http\Controllers\Api\FeeVoucherController;
 use App\Http\Controllers\Api\FinanceReportController;
 use App\Http\Controllers\Api\FineRuleController;
 use App\Http\Controllers\Api\FiscalYearController;
+use App\Http\Controllers\Api\GradeScaleController;
 use App\Http\Controllers\Api\GuardianController;
 use App\Http\Controllers\Api\IncomeSourceController;
 use App\Http\Controllers\Api\InstitutionController;
+use App\Http\Controllers\Api\InvigilationDutyController;
 use App\Http\Controllers\Api\JournalEntryController;
 use App\Http\Controllers\Api\LeaveRequestController;
 use App\Http\Controllers\Api\LessonPlanController;
@@ -207,6 +213,32 @@ Route::prefix('v1')->group(function () {
             Route::get('substitute-assignments/{substituteAssignment}', [SubstituteAssignmentController::class, 'show'])->middleware('permission:timetable.view');
             Route::post('substitute-assignments/{substituteAssignment}/cancel', [SubstituteAssignmentController::class, 'cancel'])->middleware('permission:timetable.edit');
             Route::delete('substitute-assignments/{substituteAssignment}', [SubstituteAssignmentController::class, 'destroy'])->middleware('permission:timetable.delete');
+
+            $exam = function (string $uri, string $controller, string $param): void {
+                Route::get($uri, [$controller, 'index'])->middleware('permission:exam.view');
+                Route::post($uri, [$controller, 'store'])->middleware('permission:exam.create');
+                Route::get("{$uri}/{".$param.'}', [$controller, 'show'])->middleware('permission:exam.view');
+                Route::put("{$uri}/{".$param.'}', [$controller, 'update'])->middleware('permission:exam.edit');
+                Route::delete("{$uri}/{".$param.'}', [$controller, 'destroy'])->middleware('permission:exam.delete');
+            };
+
+            $exam('exam-types', ExamTypeController::class, 'examType');
+            $exam('grade-scales', GradeScaleController::class, 'gradeScale');
+            $exam('exams', ExamController::class, 'exam');
+            $exam('exam-papers', ExamPaperController::class, 'examPaper');
+
+            Route::post('exams/{exam}/publish', [ExamController::class, 'publish'])->middleware('permission:exam.approve');
+            Route::get('exams/{exam}/merit-list', [ExamController::class, 'meritList'])->middleware('permission:exam.view');
+            Route::get('exams/{exam}/students/{student}/result-card', [ExamMarkController::class, 'resultCard'])->middleware('permission:exam.view');
+
+            Route::get('exam-marks', [ExamMarkController::class, 'index'])->middleware('permission:exam.view');
+            Route::post('exam-marks/bulk', [ExamMarkController::class, 'bulkStore'])->middleware('permission:exam.marks');
+
+            Route::get('invigilation-duties', [InvigilationDutyController::class, 'index'])->middleware('permission:exam.view');
+            Route::post('invigilation-duties', [InvigilationDutyController::class, 'store'])->middleware('permission:exam.edit');
+            Route::get('invigilation-duties/{invigilationDuty}', [InvigilationDutyController::class, 'show'])->middleware('permission:exam.view');
+            Route::put('invigilation-duties/{invigilationDuty}', [InvigilationDutyController::class, 'update'])->middleware('permission:exam.edit');
+            Route::delete('invigilation-duties/{invigilationDuty}', [InvigilationDutyController::class, 'destroy'])->middleware('permission:exam.edit');
 
             Route::get('fiscal-years', [FiscalYearController::class, 'index'])->middleware('permission:finance.view');
             Route::post('fiscal-years', [FiscalYearController::class, 'store'])->middleware('permission:finance.create');

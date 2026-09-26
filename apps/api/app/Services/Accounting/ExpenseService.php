@@ -11,6 +11,7 @@ use App\Models\ExpensePayment;
 use App\Models\FiscalYear;
 use App\Models\JournalEntry;
 use App\Models\Vendor;
+use App\Services\Approvals\ApprovalService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -63,6 +64,9 @@ class ExpenseService
                 'lines' => ['The expense total must be greater than zero.'],
             ]);
         }
+
+        app(ApprovalService::class)
+            ->assertMayProceed($expense, 'expense', (int) $expense->campus_id, $total);
 
         $payable = $this->payableAccount($expense->vendor);
         $fiscalYear = $this->fiscalYearFor($expense->expense_date->toDateString());

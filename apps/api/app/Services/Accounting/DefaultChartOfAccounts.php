@@ -80,6 +80,8 @@ class DefaultChartOfAccounts
             '2110' => ['name' => 'Bank Loan', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2100'],
             '2120' => ['name' => 'Mortgage Payable', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2100'],
             '2130' => ['name' => 'Other Liabilities', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2100'],
+            '2140' => ['name' => 'Tax Payable', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2100'],
+            '2150' => ['name' => 'Withholding Tax Payable', 'type' => AccountType::Liability, 'group' => false, 'parent' => '2100'],
 
             '3000' => ['name' => 'Fund Balance', 'type' => AccountType::Equity, 'group' => true, 'parent' => null],
             '3010' => ['name' => 'Capital / Endowment', 'type' => AccountType::Equity, 'group' => false, 'parent' => '3000'],
@@ -91,6 +93,10 @@ class DefaultChartOfAccounts
             '4030' => ['name' => 'Transport Fee Income', 'type' => AccountType::Income, 'group' => false, 'parent' => '4000'],
             '4040' => ['name' => 'Other Income', 'type' => AccountType::Income, 'group' => false, 'parent' => '4000'],
             '4050' => ['name' => 'Late Fee Income', 'type' => AccountType::Income, 'group' => false, 'parent' => '4000'],
+            '4060' => ['name' => 'Donation Income', 'type' => AccountType::Income, 'group' => false, 'parent' => '4000'],
+            '4070' => ['name' => 'Sales Income', 'type' => AccountType::Income, 'group' => false, 'parent' => '4000'],
+            '4080' => ['name' => 'Commission Income', 'type' => AccountType::Income, 'group' => false, 'parent' => '4000'],
+            '4090' => ['name' => 'Exam Fee Income', 'type' => AccountType::Income, 'group' => false, 'parent' => '4000'],
 
             '5000' => ['name' => 'Operating Expenses', 'type' => AccountType::Expense, 'group' => true, 'parent' => null],
             '5010' => ['name' => 'Salaries and Wages', 'type' => AccountType::Expense, 'group' => false, 'parent' => '5000'],

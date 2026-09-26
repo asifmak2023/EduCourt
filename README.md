@@ -69,7 +69,15 @@ php artisan serve --host=127.0.0.1 --port=8000
   Monthly accounting periods can be generated, closed, reopened and locked, with
   posting blocked inside closed or locked periods. Financial reporting adds a
   surplus/deficit statement and a whole-school consolidated income statement and
-  balance sheet.
+  balance sheet. Non-fee income is covered by configurable income sources
+  (donations, sales, commissions, exam fees, charges) that post receipts to the
+  matching income account, with per-source overrides and void/reversal. Tax
+  handling adds configurable tax rules and per-period tax returns whose filing
+  and payment lifecycle settles tax payable to the ledger and tracks required
+  documents. Configurable approval workflows close the control loop: workflows
+  matched by entity type and amount require sign-off by a user, role or
+  permission, and expense approval is gated until the applicable workflow is
+  approved.
 - Student records delivered: student profiles, guardians (many-to-many),
   year-by-year class/section enrollment, withdrawal/transfer and promotion.
   Fee billing now raises per-student vouchers and records receipts on top of

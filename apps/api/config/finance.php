@@ -19,7 +19,10 @@ return [
         'bank' => '1020',
         'advance' => '2030',
         'late_fee_income' => '4050',
+        'other_income' => '4040',
         'vendor_payable' => '2010',
+        'tax_payable' => '2140',
+        'withholding_tax_payable' => '2150',
     ],
 
 ];

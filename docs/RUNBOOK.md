@@ -498,6 +498,70 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8000/api/v1/fee-vouchers/generate-prorated
 ```
 
+Other income quick check (campus admin token):
+
+```bash
+# Create an income source (donations post to account 4060 unless overridden)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Alumni Donations","code":"DON-01","category":"donation"}' \
+  http://127.0.0.1:8000/api/v1/income-sources
+
+# Record a receipt; it posts Dr Cash/Bank, Cr income account
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"income_source_id":1,"received_on":"2026-08-15","amount":25000,"method":"cash","payer_name":"Old Boys Association"}' \
+  http://127.0.0.1:8000/api/v1/other-incomes
+
+# Void a receipt (reverses the ledger)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"memo":"Recorded twice"}' \
+  -X POST http://127.0.0.1:8000/api/v1/other-incomes/1/void
+```
+
+Tax quick check (campus admin token):
+
+```bash
+# Define a tax rule, then a period return (tax is derived from the rate)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Sales Tax 5%","code":"ST5","type":"sales_tax","applies_to":"all","rate":5}' \
+  http://127.0.0.1:8000/api/v1/tax-rules
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"tax_rule_id":1,"period_start":"2026-07-01","period_end":"2026-07-31","due_date":"2026-08-15","taxable_amount":100000}' \
+  http://127.0.0.1:8000/api/v1/tax-returns
+
+# File, then pay (Dr Tax Payable, Cr Cash/Bank); list overdue returns
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"reference":"FBR-JUL-2026"}' \
+  -X POST http://127.0.0.1:8000/api/v1/tax-returns/1/file
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"method":"cash","paid_on":"2026-08-10"}' \
+  -X POST http://127.0.0.1:8000/api/v1/tax-returns/1/pay
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  'http://127.0.0.1:8000/api/v1/tax-returns?overdue=1'
+```
+
+Approval workflow quick check (campus admin token):
+
+```bash
+# Require finance-head sign-off for expenses of 10,000 or more
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Expense control","code":"EXP-10000","entity_type":"expense","min_amount":10000,"steps":[{"sequence":1,"label":"Finance sign-off","required_role":"finance_head"}]}' \
+  http://127.0.0.1:8000/api/v1/approval-workflows
+
+# Submit an approval for a draft expense, then approve it as a finance head
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"entity_type":"expense","entity_id":1}' \
+  http://127.0.0.1:8000/api/v1/approvals
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"comment":"Budget allows"}' \
+  -X POST http://127.0.0.1:8000/api/v1/approvals/1/approve
+```
+
 Online payment quick check (campus admin token):
 
 ```bash

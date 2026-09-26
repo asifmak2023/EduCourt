@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\AcademicYearController;
 use App\Http\Controllers\Api\AccountingPeriodController;
 use App\Http\Controllers\Api\AdmissionController;
 use App\Http\Controllers\Api\AdmissionDocumentController;
+use App\Http\Controllers\Api\ApprovalRequestController;
+use App\Http\Controllers\Api\ApprovalWorkflowController;
 use App\Http\Controllers\Api\AssetController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BankAccountController;
@@ -32,6 +34,7 @@ use App\Http\Controllers\Api\FinanceReportController;
 use App\Http\Controllers\Api\FineRuleController;
 use App\Http\Controllers\Api\FiscalYearController;
 use App\Http\Controllers\Api\GuardianController;
+use App\Http\Controllers\Api\IncomeSourceController;
 use App\Http\Controllers\Api\InstitutionController;
 use App\Http\Controllers\Api\JournalEntryController;
 use App\Http\Controllers\Api\LeaveRequestController;
@@ -40,6 +43,7 @@ use App\Http\Controllers\Api\LiabilityController;
 use App\Http\Controllers\Api\MetaController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OnlinePaymentController;
+use App\Http\Controllers\Api\OtherIncomeController;
 use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\PeriodController;
 use App\Http\Controllers\Api\ProfileController;
@@ -60,6 +64,8 @@ use App\Http\Controllers\Api\StudentHistoryController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\SubstituteAssignmentController;
 use App\Http\Controllers\Api\SyllabusUnitController;
+use App\Http\Controllers\Api\TaxReturnController;
+use App\Http\Controllers\Api\TaxRuleController;
 use App\Http\Controllers\Api\TeachingAssignmentController;
 use App\Http\Controllers\Api\TermController;
 use App\Http\Controllers\Api\TimetableGenerationController;
@@ -262,6 +268,46 @@ Route::prefix('v1')->group(function () {
             Route::post('expense-payments/{expensePayment}/void', [ExpensePaymentController::class, 'void'])->middleware('permission:finance.approve');
 
             Route::get('finance/reports/cash-book', [FinanceReportController::class, 'cashBook'])->middleware('permission:finance.view');
+
+            Route::get('income-sources', [IncomeSourceController::class, 'index'])->middleware('permission:finance.view');
+            Route::post('income-sources', [IncomeSourceController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('income-sources/{incomeSource}', [IncomeSourceController::class, 'show'])->middleware('permission:finance.view');
+            Route::put('income-sources/{incomeSource}', [IncomeSourceController::class, 'update'])->middleware('permission:finance.edit');
+            Route::delete('income-sources/{incomeSource}', [IncomeSourceController::class, 'destroy'])->middleware('permission:finance.delete');
+
+            Route::get('other-incomes', [OtherIncomeController::class, 'index'])->middleware('permission:finance.view');
+            Route::post('other-incomes', [OtherIncomeController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('other-incomes/{otherIncome}', [OtherIncomeController::class, 'show'])->middleware('permission:finance.view');
+            Route::post('other-incomes/{otherIncome}/void', [OtherIncomeController::class, 'void'])->middleware('permission:finance.approve');
+
+            Route::get('tax-rules', [TaxRuleController::class, 'index'])->middleware('permission:finance.view');
+            Route::post('tax-rules', [TaxRuleController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('tax-rules/{taxRule}', [TaxRuleController::class, 'show'])->middleware('permission:finance.view');
+            Route::put('tax-rules/{taxRule}', [TaxRuleController::class, 'update'])->middleware('permission:finance.edit');
+            Route::delete('tax-rules/{taxRule}', [TaxRuleController::class, 'destroy'])->middleware('permission:finance.delete');
+
+            Route::get('tax-returns', [TaxReturnController::class, 'index'])->middleware('permission:finance.view');
+            Route::post('tax-returns', [TaxReturnController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('tax-returns/{taxReturn}', [TaxReturnController::class, 'show'])->middleware('permission:finance.view');
+            Route::put('tax-returns/{taxReturn}', [TaxReturnController::class, 'update'])->middleware('permission:finance.edit');
+            Route::delete('tax-returns/{taxReturn}', [TaxReturnController::class, 'destroy'])->middleware('permission:finance.delete');
+            Route::post('tax-returns/{taxReturn}/file', [TaxReturnController::class, 'file'])->middleware('permission:finance.approve');
+            Route::post('tax-returns/{taxReturn}/pay', [TaxReturnController::class, 'pay'])->middleware('permission:finance.approve');
+            Route::post('tax-returns/{taxReturn}/documents', [TaxReturnController::class, 'addDocument'])->middleware('permission:finance.edit');
+            Route::delete('tax-returns/{taxReturn}/documents/{document}', [TaxReturnController::class, 'deleteDocument'])->middleware('permission:finance.edit');
+
+            Route::get('approval-workflows', [ApprovalWorkflowController::class, 'index'])->middleware('permission:finance.view');
+            Route::post('approval-workflows', [ApprovalWorkflowController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('approval-workflows/{approvalWorkflow}', [ApprovalWorkflowController::class, 'show'])->middleware('permission:finance.view');
+            Route::put('approval-workflows/{approvalWorkflow}', [ApprovalWorkflowController::class, 'update'])->middleware('permission:finance.edit');
+            Route::delete('approval-workflows/{approvalWorkflow}', [ApprovalWorkflowController::class, 'destroy'])->middleware('permission:finance.delete');
+
+            Route::get('approvals', [ApprovalRequestController::class, 'index'])->middleware('permission:finance.view');
+            Route::post('approvals', [ApprovalRequestController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('approvals/{approvalRequest}', [ApprovalRequestController::class, 'show'])->middleware('permission:finance.view');
+            Route::post('approvals/{approvalRequest}/approve', [ApprovalRequestController::class, 'approve'])->middleware('permission:finance.approve');
+            Route::post('approvals/{approvalRequest}/reject', [ApprovalRequestController::class, 'reject'])->middleware('permission:finance.approve');
+            Route::post('approvals/{approvalRequest}/cancel', [ApprovalRequestController::class, 'cancel'])->middleware('permission:finance.edit');
 
             Route::get('bank-accounts', [BankAccountController::class, 'index'])->middleware('permission:finance.view');
             Route::post('bank-accounts', [BankAccountController::class, 'store'])->middleware('permission:finance.create');

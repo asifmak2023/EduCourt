@@ -282,13 +282,13 @@ hostel, complaints and feedback.
 
 ### 6.10 Reports and analytics
 
-| ID | Requirement | Priority |
-| --- | --- | --- |
-| FR-10.1 | Progress report: students, admissions, withdrawals, scholarships, projects | M |
-| FR-10.2 | Attendance, result and staff reports | M |
-| FR-10.3 | Year-by-year and consolidated student analysis for counselling | M |
-| FR-10.4 | Financial, canteen, inventory and HR reports | M |
-| FR-10.5 | Consolidated cross-campus and cross-institution dashboards for the Super User | M |
+| ID | Requirement | Priority | Status |
+| --- | --- | --- | --- |
+| FR-10.1 | Progress report: students, admissions, withdrawals, scholarships, projects | M | Delivered (API: population by status/gender, admissions funnel, enrollment movement, scholarships by type/value and events for a date range or academic year) |
+| FR-10.2 | Attendance, result and staff reports | M | Delivered (API: attendance totals/rate by class, exam pass/fail and grade distribution with per-paper averages, and a staff report covering headcount, attendance and leave) |
+| FR-10.3 | Year-by-year and consolidated student analysis for counselling | M | Delivered (API: per-year class/section/status with attendance percentage, academic percentage and conduct counts, plus a rolled-up summary) |
+| FR-10.4 | Financial, canteen, inventory and HR reports | M | Delivered (API: ledger-based income/expense/surplus summary, payroll cost by period and HR staff report; canteen/inventory reports arrive with FR-9) |
+| FR-10.5 | Consolidated cross-campus and cross-institution dashboards for the Super User | M | Delivered (API: campus dashboard plus a platform overview of institutions, campuses, students, staff and active enrollments for the product owner) |
 
 ---
 

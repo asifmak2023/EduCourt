@@ -123,6 +123,10 @@ php artisan serve --host=127.0.0.1 --port=8000
   register with departments, designations and job descriptions, a per-staff
   document store and headcount/movement reports, with configurable salary
   components, per-staff salary structures, incentives/rewards/deductions and
-  monthly payroll runs whose approval and payment post to the ledger.
+  monthly payroll runs whose approval and payment post to the ledger. Reporting
+  and analytics close the loop: a campus dashboard, progress, attendance, exam
+  result, staff, per-student year-by-year counselling, financial and payroll
+  reports for campus users, plus a cross-institution platform overview for the
+  Super User.
 
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

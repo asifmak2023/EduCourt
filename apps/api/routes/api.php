@@ -57,7 +57,9 @@ use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\PayrollAdjustmentController;
 use App\Http\Controllers\Api\PayrollRunController;
 use App\Http\Controllers\Api\PeriodController;
+use App\Http\Controllers\Api\PlatformReportController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\SalaryComponentController;
 use App\Http\Controllers\Api\ScholarshipAwardController;
@@ -163,6 +165,9 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:role.edit');
         Route::delete('scope-assignments/{scopeAssignment}', [ScopeAssignmentController::class, 'destroy'])
             ->middleware('permission:role.edit');
+
+        Route::get('reports/platform-overview', [PlatformReportController::class, 'overview'])
+            ->middleware('permission:report.view');
 
         Route::middleware('campus')->group(function () {
             $academic = function (string $uri, string $controller, string $param): void {
@@ -610,6 +615,15 @@ Route::prefix('v1')->group(function () {
             Route::post('leave-requests/{leaveRequest}/reject', [LeaveRequestController::class, 'reject'])->middleware('permission:attendance.approve');
             Route::post('leave-requests/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel'])->middleware('permission:attendance.edit');
             Route::delete('leave-requests/{leaveRequest}', [LeaveRequestController::class, 'destroy'])->middleware('permission:attendance.approve');
+
+            Route::get('reports/campus-dashboard', [ReportController::class, 'campusDashboard'])->middleware('permission:report.view');
+            Route::get('reports/progress', [ReportController::class, 'progress'])->middleware('permission:report.view');
+            Route::get('reports/attendance', [ReportController::class, 'attendance'])->middleware('permission:report.view');
+            Route::get('reports/results/{exam}', [ReportController::class, 'results'])->middleware('permission:report.view');
+            Route::get('reports/staff', [ReportController::class, 'staff'])->middleware('permission:report.view');
+            Route::get('reports/students/{student}/yearly', [ReportController::class, 'studentYearly'])->middleware('permission:report.view');
+            Route::get('reports/financial', [ReportController::class, 'financial'])->middleware('permission:report.view');
+            Route::get('reports/payroll', [ReportController::class, 'payroll'])->middleware('permission:report.view');
         });
     });
 });

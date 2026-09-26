@@ -651,6 +651,34 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8000/api/v1/payroll-runs/1/pay
 ```
 
+Reporting quick check (campus admin token):
+
+```bash
+# Campus dashboard snapshot and progress report
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/reports/campus-dashboard
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/reports/progress?academic_year_id=1"
+
+# Attendance rate, exam results, staff and financial summaries
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/reports/attendance?from=2026-09-01&to=2026-09-30"
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/reports/results/1
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/reports/staff
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/reports/financial
+
+# Per-student year-by-year counselling analysis
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/reports/students/1/yearly
+
+# Cross-institution overview (super user token)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/reports/platform-overview
+```
+
 Online payment quick check (campus admin token):
 
 ```bash

@@ -131,6 +131,10 @@ php artisan serve --host=127.0.0.1 --port=8000
   tracking and low-stock flags, purchases/adjustments/wastage, POS billing by
   cash, wallet or credit, student wallets with top-ups, daily limits and
   adjustments, hygiene checklists, and daily/item-wise/profit-loss/wallet
-  reports, all posting to the double-entry ledger.
+  reports, all posting to the double-entry ledger. Student affairs adds clubs
+  and memberships, events with participants, certificate issuance, health and
+  welfare records, alumni profiles, student council terms, a complaint desk
+  with assignment/resolution workflow, and confidential counselling sessions
+  restricted behind a dedicated permission.
 
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

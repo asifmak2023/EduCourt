@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AcademicYearController;
 use App\Http\Controllers\Api\AccountingPeriodController;
 use App\Http\Controllers\Api\AdmissionController;
 use App\Http\Controllers\Api\AdmissionDocumentController;
+use App\Http\Controllers\Api\AlumniProfileController;
 use App\Http\Controllers\Api\ApprovalRequestController;
 use App\Http\Controllers\Api\ApprovalWorkflowController;
 use App\Http\Controllers\Api\AssetController;
@@ -23,9 +24,12 @@ use App\Http\Controllers\Api\ChartOfAccountController;
 use App\Http\Controllers\Api\ClassBookController;
 use App\Http\Controllers\Api\ClassRoomController;
 use App\Http\Controllers\Api\ClassSubjectController;
+use App\Http\Controllers\Api\ComplaintController;
 use App\Http\Controllers\Api\ConcessionController;
 use App\Http\Controllers\Api\ConcessionPolicyController;
 use App\Http\Controllers\Api\ConductRecordController;
+use App\Http\Controllers\Api\CouncilMemberController;
+use App\Http\Controllers\Api\CounsellingSessionController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DesignationController;
 use App\Http\Controllers\Api\ExamAnalysisController;
@@ -80,12 +84,15 @@ use App\Http\Controllers\Api\StaffReportController;
 use App\Http\Controllers\Api\StaffSalaryController;
 use App\Http\Controllers\Api\StageController;
 use App\Http\Controllers\Api\StudentAttendanceController;
+use App\Http\Controllers\Api\StudentCertificateController;
+use App\Http\Controllers\Api\StudentClubController;
 use App\Http\Controllers\Api\StudentController;
-use App\Http\Controllers\Api\StudentWalletController;
 use App\Http\Controllers\Api\StudentDocumentController;
 use App\Http\Controllers\Api\StudentEnrollmentController;
+use App\Http\Controllers\Api\StudentEventController;
 use App\Http\Controllers\Api\StudentFineController;
 use App\Http\Controllers\Api\StudentHistoryController;
+use App\Http\Controllers\Api\StudentWalletController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\SubstituteAssignmentController;
 use App\Http\Controllers\Api\SyllabusUnitController;
@@ -98,6 +105,7 @@ use App\Http\Controllers\Api\TimetableSlotController;
 use App\Http\Controllers\Api\TimetableViewController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\VendorController;
+use App\Http\Controllers\Api\WelfareRecordController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -672,6 +680,65 @@ Route::prefix('v1')->group(function () {
             Route::get('reports/students/{student}/yearly', [ReportController::class, 'studentYearly'])->middleware('permission:report.view');
             Route::get('reports/financial', [ReportController::class, 'financial'])->middleware('permission:report.view');
             Route::get('reports/payroll', [ReportController::class, 'payroll'])->middleware('permission:report.view');
+
+            Route::get('student-affairs/clubs', [StudentClubController::class, 'index'])->middleware('permission:student_affairs.view');
+            Route::post('student-affairs/clubs', [StudentClubController::class, 'store'])->middleware('permission:student_affairs.create');
+            Route::get('student-affairs/clubs/{club}', [StudentClubController::class, 'show'])->middleware('permission:student_affairs.view');
+            Route::put('student-affairs/clubs/{club}', [StudentClubController::class, 'update'])->middleware('permission:student_affairs.edit');
+            Route::delete('student-affairs/clubs/{club}', [StudentClubController::class, 'destroy'])->middleware('permission:student_affairs.delete');
+            Route::get('student-affairs/clubs/{club}/members', [StudentClubController::class, 'memberships'])->middleware('permission:student_affairs.view');
+            Route::post('student-affairs/clubs/{club}/members', [StudentClubController::class, 'addMember'])->middleware('permission:student_affairs.edit');
+            Route::delete('student-affairs/clubs/{club}/members/{membership}', [StudentClubController::class, 'removeMember'])->middleware('permission:student_affairs.edit');
+
+            Route::get('student-affairs/events', [StudentEventController::class, 'index'])->middleware('permission:student_affairs.view');
+            Route::post('student-affairs/events', [StudentEventController::class, 'store'])->middleware('permission:student_affairs.create');
+            Route::get('student-affairs/events/{event}', [StudentEventController::class, 'show'])->middleware('permission:student_affairs.view');
+            Route::put('student-affairs/events/{event}', [StudentEventController::class, 'update'])->middleware('permission:student_affairs.edit');
+            Route::delete('student-affairs/events/{event}', [StudentEventController::class, 'destroy'])->middleware('permission:student_affairs.delete');
+            Route::post('student-affairs/events/{event}/participants', [StudentEventController::class, 'addParticipant'])->middleware('permission:student_affairs.edit');
+            Route::get('student-affairs/events/{event}/participants', [StudentEventController::class, 'participants'])->middleware('permission:student_affairs.view');
+            Route::put('student-affairs/events/{event}/participants/{participant}', [StudentEventController::class, 'updateParticipant'])->middleware('permission:student_affairs.edit');
+            Route::delete('student-affairs/events/{event}/participants/{participant}', [StudentEventController::class, 'removeParticipant'])->middleware('permission:student_affairs.edit');
+
+            Route::get('student-affairs/certificates', [StudentCertificateController::class, 'index'])->middleware('permission:student_affairs.view');
+            Route::post('student-affairs/certificates', [StudentCertificateController::class, 'store'])->middleware('permission:student_affairs.create');
+            Route::get('student-affairs/certificates/{certificate}', [StudentCertificateController::class, 'show'])->middleware('permission:student_affairs.view');
+            Route::put('student-affairs/certificates/{certificate}', [StudentCertificateController::class, 'update'])->middleware('permission:student_affairs.edit');
+            Route::post('student-affairs/certificates/{certificate}/issue', [StudentCertificateController::class, 'issue'])->middleware('permission:student_affairs.approve');
+            Route::delete('student-affairs/certificates/{certificate}', [StudentCertificateController::class, 'destroy'])->middleware('permission:student_affairs.delete');
+
+            Route::get('student-affairs/welfare-records', [WelfareRecordController::class, 'index'])->middleware('permission:student_affairs.view');
+            Route::post('student-affairs/welfare-records', [WelfareRecordController::class, 'store'])->middleware('permission:student_affairs.create');
+            Route::get('student-affairs/welfare-records/{welfareRecord}', [WelfareRecordController::class, 'show'])->middleware('permission:student_affairs.view');
+            Route::put('student-affairs/welfare-records/{welfareRecord}', [WelfareRecordController::class, 'update'])->middleware('permission:student_affairs.edit');
+            Route::delete('student-affairs/welfare-records/{welfareRecord}', [WelfareRecordController::class, 'destroy'])->middleware('permission:student_affairs.delete');
+
+            Route::get('student-affairs/alumni', [AlumniProfileController::class, 'index'])->middleware('permission:student_affairs.view');
+            Route::post('student-affairs/alumni', [AlumniProfileController::class, 'store'])->middleware('permission:student_affairs.create');
+            Route::get('student-affairs/alumni/{alumnus}', [AlumniProfileController::class, 'show'])->middleware('permission:student_affairs.view');
+            Route::put('student-affairs/alumni/{alumnus}', [AlumniProfileController::class, 'update'])->middleware('permission:student_affairs.edit');
+            Route::delete('student-affairs/alumni/{alumnus}', [AlumniProfileController::class, 'destroy'])->middleware('permission:student_affairs.delete');
+
+            Route::get('student-affairs/council-members', [CouncilMemberController::class, 'index'])->middleware('permission:student_affairs.view');
+            Route::post('student-affairs/council-members', [CouncilMemberController::class, 'store'])->middleware('permission:student_affairs.create');
+            Route::get('student-affairs/council-members/{councilMember}', [CouncilMemberController::class, 'show'])->middleware('permission:student_affairs.view');
+            Route::put('student-affairs/council-members/{councilMember}', [CouncilMemberController::class, 'update'])->middleware('permission:student_affairs.edit');
+            Route::delete('student-affairs/council-members/{councilMember}', [CouncilMemberController::class, 'destroy'])->middleware('permission:student_affairs.delete');
+
+            Route::get('student-affairs/complaints', [ComplaintController::class, 'index'])->middleware('permission:student_affairs.view');
+            Route::post('student-affairs/complaints', [ComplaintController::class, 'store'])->middleware('permission:student_affairs.create');
+            Route::get('student-affairs/complaints/{complaint}', [ComplaintController::class, 'show'])->middleware('permission:student_affairs.view');
+            Route::put('student-affairs/complaints/{complaint}', [ComplaintController::class, 'update'])->middleware('permission:student_affairs.edit');
+            Route::post('student-affairs/complaints/{complaint}/assign', [ComplaintController::class, 'assign'])->middleware('permission:student_affairs.edit');
+            Route::post('student-affairs/complaints/{complaint}/resolve', [ComplaintController::class, 'resolve'])->middleware('permission:student_affairs.approve');
+            Route::post('student-affairs/complaints/{complaint}/reject', [ComplaintController::class, 'reject'])->middleware('permission:student_affairs.approve');
+            Route::delete('student-affairs/complaints/{complaint}', [ComplaintController::class, 'destroy'])->middleware('permission:student_affairs.delete');
+
+            Route::get('student-affairs/counselling', [CounsellingSessionController::class, 'index'])->middleware('permission:counselling.view');
+            Route::post('student-affairs/counselling', [CounsellingSessionController::class, 'store'])->middleware('permission:counselling.create');
+            Route::get('student-affairs/counselling/{counsellingSession}', [CounsellingSessionController::class, 'show'])->middleware('permission:counselling.view');
+            Route::put('student-affairs/counselling/{counsellingSession}', [CounsellingSessionController::class, 'update'])->middleware('permission:counselling.edit');
+            Route::delete('student-affairs/counselling/{counsellingSession}', [CounsellingSessionController::class, 'destroy'])->middleware('permission:counselling.delete');
         });
     });
 });

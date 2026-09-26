@@ -720,6 +720,42 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8000/api/v1/canteen/reports/profit-loss
 ```
 
+Student affairs quick check (student affairs officer token):
+
+```bash
+# Create a club and add a member
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Science Society","code":"SCI","category":"academic"}' \
+  http://127.0.0.1:8000/api/v1/student-affairs/clubs
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"student_id":1,"role":"member"}' \
+  http://127.0.0.1:8000/api/v1/student-affairs/clubs/1/members
+
+# Raise and resolve a complaint
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"subject":"Broken desk","description":"Desk in room 5 is broken","priority":"high"}' \
+  http://127.0.0.1:8000/api/v1/student-affairs/complaints
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"resolution":"Desk replaced"}' \
+  http://127.0.0.1:8000/api/v1/student-affairs/complaints/1/resolve
+```
+
+Counselling quick check (counsellor token; the confidentiality permission is separate):
+
+```bash
+# Record a session and list completed sessions
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"student_id":1,"session_date":"2026-09-12","type":"individual","status":"completed","summary":"Study plan"}' \
+  http://127.0.0.1:8000/api/v1/student-affairs/counselling
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/student-affairs/counselling?status=completed"
+```
+
 Online payment quick check (campus admin token):
 
 ```bash

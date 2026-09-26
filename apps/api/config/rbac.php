@@ -33,6 +33,7 @@ return [
         'scholarship' => ['view', 'create', 'edit', 'approve', 'delete'],
         'concession' => ['view', 'create', 'edit', 'approve', 'delete'],
         'fine' => ['view', 'create', 'edit', 'approve', 'delete'],
+        'reminder' => ['view', 'create', 'send', 'delete'],
         'exam' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'hr' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'payroll' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
@@ -69,7 +70,7 @@ return [
             'user.*', 'role.view',
             'admission.*', 'student.*', 'attendance.*', 'exam.*',
             'academic.*', 'timetable.*', 'scholarship.*',
-            'finance.*', 'fee.*', 'concession.*', 'fine.*',
+            'finance.*', 'fee.*', 'concession.*', 'fine.*', 'reminder.*',
             'hr.*', 'payroll.view',
             'inventory.*', 'library.*', 'lab.*', 'transport.*', 'hostel.*',
             'canteen.*', 'sports.*', 'student_affairs.*',
@@ -81,13 +82,14 @@ return [
             'academic.view', 'timetable.view', 'timetable.approve', 'scholarship.view',
             'concession.view', 'concession.approve',
             'fine.view', 'fine.approve',
+            'reminder.view', 'reminder.send',
             'report.*', 'finance.view', 'hr.view', 'complaint.view',
             'student_affairs.view', 'circular.create', 'circular.approve',
         ],
 
         RoleName::FinanceHead->value => [
             'finance.*', 'fee.*', 'payroll.*', 'report.*', 'audit.view',
-            'scholarship.*', 'concession.*', 'fine.*',
+            'scholarship.*', 'concession.*', 'fine.*', 'reminder.*',
         ],
 
         RoleName::Accountant->value => [
@@ -95,11 +97,12 @@ return [
             'fee.view', 'fee.create', 'fee.edit', 'fee.export',
             'report.view', 'scholarship.view', 'concession.view',
             'fine.view', 'fine.create', 'fine.edit',
+            'reminder.view', 'reminder.create', 'reminder.send',
         ],
 
         RoleName::AdmissionsOfficer->value => [
             'admission.*', 'student.view', 'student.create', 'report.view',
-            'scholarship.view', 'concession.view', 'fine.view',
+            'scholarship.view', 'concession.view', 'fine.view', 'reminder.view',
         ],
 
         RoleName::HrOfficer->value => [

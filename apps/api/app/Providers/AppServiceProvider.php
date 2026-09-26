@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Reminders\ReminderGateway;
+use App\Services\Reminders\ReminderService;
 use App\Support\TenantContext;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -14,6 +16,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(TenantContext::class, fn () => new TenantContext);
+        $this->app->bind(ReminderGateway::class, fn () => ReminderService::makeGateway());
     }
 
     public function boot(): void

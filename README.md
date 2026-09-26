@@ -94,7 +94,10 @@ php artisan serve --host=127.0.0.1 --port=8000
   settles the voucher (manual/test gateway driver behind a gateway interface).
   Configurable fine rules and per-student fines are delivered too, posting onto
   an outstanding voucher and the ledger with apply, waive and revoke actions.
-  Per-student documents, absence notifications and the remaining finance
-  requirements are pending.
+  Fee reminders close the defaulter loop: overdue students are queued onto a
+  configurable email/SMS/in-app reminder with a primary-guardian recipient, a
+  templated message, send/cancel lifecycle and same-day duplicate suppression,
+  delivered through a pluggable gateway (log driver by default). Per-student
+  documents and absence notifications remain pending.
 
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

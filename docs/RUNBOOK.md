@@ -444,6 +444,29 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   -X POST http://127.0.0.1:8000/api/v1/fines/3/waive
 ```
 
+Fee reminder quick check (campus admin token):
+
+```bash
+# Queue reminders for overdue defaulters (email by default; sms uses guardian phone)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"channel":"email","as_of":"2026-09-26"}' \
+  http://127.0.0.1:8000/api/v1/fee-reminders
+
+# List queued reminders and send one (or all pending)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/fee-reminders
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/fee-reminders/1/send
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{}' \
+  -X POST http://127.0.0.1:8000/api/v1/fee-reminders/send
+```
+
+Reminder delivery uses the `REMINDER_GATEWAY` driver (`log` by default, so
+reminders are written to `storage/logs/laravel.log`). Generation is idempotent
+per student per day; pass `"force":true` to re-queue.
+
 Online payment quick check (campus admin token):
 
 ```bash

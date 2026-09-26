@@ -56,6 +56,7 @@ use App\Models\ExpensePayment;
 use App\Models\FeeHead;
 use App\Models\FeePayment;
 use App\Models\FeePlan;
+use App\Models\FeeReminder;
 use App\Models\FeeVoucher;
 use App\Models\FineRule;
 use App\Models\FiscalYear;
@@ -91,6 +92,7 @@ use App\Services\Accounting\JournalService;
 use App\Services\Concessions\ConcessionService;
 use App\Services\Fines\FineService;
 use App\Services\Payments\Gateways\ManualGateway;
+use App\Services\Reminders\ReminderService;
 use App\Services\Scholarships\ScholarshipService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
@@ -107,6 +109,7 @@ class DemoSeeder extends Seeder
         private readonly ScholarshipService $scholarships,
         private readonly ConcessionService $concessions,
         private readonly FineService $fines,
+        private readonly ReminderService $reminders,
     ) {}
 
     public function run(): void
@@ -201,6 +204,7 @@ class DemoSeeder extends Seeder
         $this->seedFeeBilling($campus, $campusAdmin);
         $this->seedOnlinePayments($campus, $campusAdmin);
         $this->seedFines($institution, $campus, $campusAdmin);
+        $this->seedFeeReminders($institution, $campus, $campusAdmin);
         $this->seedBudget($institution, $campus, $campusAdmin);
         $this->seedExpenses($institution, $campus, $campusAdmin);
         $this->seedBankAccounts($institution, $campus, $campusAdmin);
@@ -1372,6 +1376,35 @@ class DemoSeeder extends Seeder
         if ($applied->status === FineStatus::Pending && $applied->fee_voucher_id === null) {
             $this->fines->apply($applied, $campusAdmin->id);
         }
+    }
+
+    private function seedFeeReminders(Institution $institution, Campus $campus, User $campusAdmin): void
+    {
+        $year = AcademicYear::query()
+            ->where('campus_id', $campus->id)
+            ->where('is_current', true)
+            ->first();
+
+        if ($year === null) {
+            return;
+        }
+
+        $alreadyReminded = FeeReminder::query()->where('campus_id', $campus->id)->exists();
+
+        if ($alreadyReminded) {
+            return;
+        }
+
+        $this->reminders->generate(
+            ['institution_id' => $institution->id, 'campus_id' => $campus->id],
+            [
+                'academic_year_id' => $year->id,
+                'as_of' => '2026-09-26',
+                'channel' => 'sms',
+                'overdue_only' => true,
+            ],
+            $campusAdmin->id,
+        );
     }
 
     private function seedAdmissions(Institution $institution, Campus $campus): void

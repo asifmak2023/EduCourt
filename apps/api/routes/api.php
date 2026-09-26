@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\FeeHeadController;
 use App\Http\Controllers\Api\FeePaymentController;
 use App\Http\Controllers\Api\FeePlanController;
 use App\Http\Controllers\Api\FeeRefundController;
+use App\Http\Controllers\Api\FeeReminderController;
 use App\Http\Controllers\Api\FeeReportController;
 use App\Http\Controllers\Api\FeeVoucherController;
 use App\Http\Controllers\Api\FinanceReportController;
@@ -332,6 +333,14 @@ Route::prefix('v1')->group(function () {
             Route::post('fines/{fine}/apply', [StudentFineController::class, 'apply'])->middleware('permission:fine.approve');
             Route::post('fines/{fine}/waive', [StudentFineController::class, 'waive'])->middleware('permission:fine.approve');
             Route::post('fines/{fine}/revoke', [StudentFineController::class, 'revoke'])->middleware('permission:fine.approve');
+
+            Route::get('fee-reminders', [FeeReminderController::class, 'index'])->middleware('permission:reminder.view');
+            Route::post('fee-reminders', [FeeReminderController::class, 'store'])->middleware('permission:reminder.create');
+            Route::post('fee-reminders/send', [FeeReminderController::class, 'sendBatch'])->middleware('permission:reminder.send');
+            Route::get('fee-reminders/{reminder}', [FeeReminderController::class, 'show'])->middleware('permission:reminder.view');
+            Route::post('fee-reminders/{reminder}/send', [FeeReminderController::class, 'send'])->middleware('permission:reminder.send');
+            Route::post('fee-reminders/{reminder}/cancel', [FeeReminderController::class, 'cancel'])->middleware('permission:reminder.send');
+            Route::delete('fee-reminders/{reminder}', [FeeReminderController::class, 'destroy'])->middleware('permission:reminder.delete');
 
             Route::get('fee-reports/defaulters', [FeeReportController::class, 'defaulters'])->middleware('permission:fee.view');
             Route::get('fee-reports/students/{student}/statement', [FeeReportController::class, 'studentStatement'])->middleware('permission:fee.view');

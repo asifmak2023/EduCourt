@@ -17,6 +17,8 @@ use App\Enums\DepreciationMethod;
 use App\Enums\DiscountType;
 use App\Enums\EnrollmentStatus;
 use App\Enums\ExpenseStatus;
+use App\Enums\FineCategory;
+use App\Enums\FineStatus;
 use App\Enums\Gender;
 use App\Enums\JournalStatus;
 use App\Enums\LeaveStatus;
@@ -55,6 +57,7 @@ use App\Models\FeeHead;
 use App\Models\FeePayment;
 use App\Models\FeePlan;
 use App\Models\FeeVoucher;
+use App\Models\FineRule;
 use App\Models\FiscalYear;
 use App\Models\Guardian;
 use App\Models\Institution;
@@ -72,6 +75,7 @@ use App\Models\Stage;
 use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Models\StudentEnrollment;
+use App\Models\StudentFine;
 use App\Models\Subject;
 use App\Models\SubstituteAssignment;
 use App\Models\TeachingAssignment;
@@ -85,6 +89,7 @@ use App\Services\Accounting\ExpenseService;
 use App\Services\Accounting\FeeBillingService;
 use App\Services\Accounting\JournalService;
 use App\Services\Concessions\ConcessionService;
+use App\Services\Fines\FineService;
 use App\Services\Payments\Gateways\ManualGateway;
 use App\Services\Scholarships\ScholarshipService;
 use Carbon\CarbonImmutable;
@@ -101,6 +106,7 @@ class DemoSeeder extends Seeder
         private readonly BankReconciliationService $bankBook,
         private readonly ScholarshipService $scholarships,
         private readonly ConcessionService $concessions,
+        private readonly FineService $fines,
     ) {}
 
     public function run(): void
@@ -194,6 +200,7 @@ class DemoSeeder extends Seeder
         $this->seedSubstitutes($institution, $campus, $campusAdmin, $teacher);
         $this->seedFeeBilling($campus, $campusAdmin);
         $this->seedOnlinePayments($campus, $campusAdmin);
+        $this->seedFines($institution, $campus, $campusAdmin);
         $this->seedBudget($institution, $campus, $campusAdmin);
         $this->seedExpenses($institution, $campus, $campusAdmin);
         $this->seedBankAccounts($institution, $campus, $campusAdmin);
@@ -1276,6 +1283,94 @@ class DemoSeeder extends Seeder
                     'note' => 'Awaiting committee review.',
                 ]
             );
+        }
+    }
+
+    private function seedFines(Institution $institution, Campus $campus, User $campusAdmin): void
+    {
+        $tenant = ['institution_id' => $institution->id, 'campus_id' => $campus->id];
+
+        $year = AcademicYear::query()
+            ->where('campus_id', $campus->id)
+            ->where('is_current', true)
+            ->first();
+
+        $income = ChartOfAccount::query()
+            ->where('campus_id', $campus->id)
+            ->where('code', '4040')
+            ->first();
+
+        if ($year === null || $income === null) {
+            return;
+        }
+
+        $head = FeeHead::updateOrCreate(
+            ['campus_id' => $campus->id, 'code' => 'FINE'],
+            $tenant + [
+                'name' => 'Fines and Penalties',
+                'income_account_id' => $income->id,
+                'is_active' => true,
+            ]
+        );
+
+        $rules = [
+            'LIB1000' => ['name' => 'Library Late Return', 'category' => FineCategory::Library, 'amount' => 1000],
+            'LAB500' => ['name' => 'Laboratory Damage', 'category' => FineCategory::Lab, 'amount' => 500],
+        ];
+
+        $created = [];
+
+        foreach ($rules as $code => $rule) {
+            $created[$code] = FineRule::updateOrCreate(
+                ['campus_id' => $campus->id, 'code' => $code],
+                $tenant + $rule + ['fee_head_id' => $head->id, 'is_active' => true]
+            );
+        }
+
+        $pendingStudent = Student::query()
+            ->where('campus_id', $campus->id)
+            ->where('admission_no', 'ADM-00002')
+            ->first();
+
+        if ($pendingStudent !== null) {
+            StudentFine::updateOrCreate(
+                ['campus_id' => $campus->id, 'student_id' => $pendingStudent->id, 'fine_rule_id' => $created['LIB1000']->id],
+                $tenant + [
+                    'academic_year_id' => $year->id,
+                    'amount' => 1000,
+                    'reason' => 'Book returned three weeks late.',
+                    'status' => FineStatus::Pending,
+                    'issued_on' => '2026-07-25',
+                    'created_by' => $campusAdmin->id,
+                ]
+            );
+        }
+
+        $voucher = FeeVoucher::query()
+            ->where('campus_id', $campus->id)
+            ->where('status', VoucherStatus::Unpaid)
+            ->orderBy('id')
+            ->with('student')
+            ->first();
+
+        if ($voucher === null || $voucher->student === null) {
+            return;
+        }
+
+        $applied = StudentFine::updateOrCreate(
+            ['campus_id' => $campus->id, 'student_id' => $voucher->student_id, 'fine_rule_id' => $created['LAB500']->id],
+            $tenant + [
+                'academic_year_id' => $year->id,
+                'amount' => 500,
+                'reason' => 'Broken beaker in the chemistry lab.',
+                'status' => FineStatus::Pending,
+                'issued_on' => '2026-07-26',
+                'created_by' => $campusAdmin->id,
+            ]
+        );
+
+        if ($applied->status === FineStatus::Pending && $applied->fee_voucher_id === null) {
+            $this->fines->apply($applied, $campusAdmin->id);
         }
     }
 

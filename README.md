@@ -53,7 +53,9 @@ php artisan serve --host=127.0.0.1 --port=8000
   heads, class fee plans and installment schedules, per-student vouchers with
   discount-aware lines, campus-numbered receipts, double-entry posting, and
   void/reversal for both vouchers and payments. Late fees (per-plan policy),
-  advance payments with allocation, and refunds post to the ledger. Reporting
+  advance payments with allocation, and refunds post to the ledger, with refunds
+  following an approval workflow (request, approve, reject, revoke) that only
+  touches the ledger on approval. Reporting
   covers trial balance, account ledgers, receivable aging (defaulter lists),
   per-student statements, per-class summaries and dated collection reports.
   Budgeting is delivered with campus budgets, line items, a draft/approved
@@ -90,6 +92,8 @@ php artisan serve --host=127.0.0.1 --port=8000
   delivered: gateway-agnostic payment intents with a hosted checkout URL,
   HMAC-signed webhooks, and idempotent confirmation that posts a fee payment and
   settles the voucher (manual/test gateway driver behind a gateway interface).
+  Configurable fine rules and per-student fines are delivered too, posting onto
+  an outstanding voucher and the ledger with apply, waive and revoke actions.
   Per-student documents, absence notifications and the remaining finance
   requirements are pending.
 

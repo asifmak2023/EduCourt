@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\PaymentMethod;
-use App\Enums\PaymentStatus;
-use App\Enums\RefundStatus;
+use App\Enums\FineStatus;
 use App\Support\Concerns\BelongsToCampus;
 use App\Support\Concerns\BelongsToInstitution;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,26 +12,25 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class FeeRefund extends Model
+class StudentFine extends Model
 {
     use BelongsToCampus, BelongsToInstitution, HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-        'institution_id', 'campus_id', 'student_id', 'fee_payment_id',
-        'receipt_no', 'refund_date', 'amount', 'method', 'reason',
-        'journal_entry_id', 'status', 'approval_status', 'requested_by',
-        'approved_by', 'approved_at', 'decision_note', 'created_by',
+        'institution_id', 'campus_id', 'student_id', 'fine_rule_id',
+        'academic_year_id', 'fee_voucher_id', 'amount', 'reason', 'status',
+        'issued_on', 'journal_entry_id', 'applied_at', 'waived_by',
+        'waived_at', 'waived_reason', 'created_by',
     ];
 
     protected function casts(): array
     {
         return [
-            'refund_date' => 'date',
             'amount' => 'decimal:2',
-            'method' => PaymentMethod::class,
-            'status' => PaymentStatus::class,
-            'approval_status' => RefundStatus::class,
-            'approved_at' => 'datetime',
+            'status' => FineStatus::class,
+            'issued_on' => 'date',
+            'applied_at' => 'datetime',
+            'waived_at' => 'datetime',
         ];
     }
 
@@ -52,9 +49,19 @@ class FeeRefund extends Model
         return $this->belongsTo(Student::class);
     }
 
-    public function payment(): BelongsTo
+    public function rule(): BelongsTo
     {
-        return $this->belongsTo(FeePayment::class, 'fee_payment_id');
+        return $this->belongsTo(FineRule::class, 'fine_rule_id');
+    }
+
+    public function academicYear(): BelongsTo
+    {
+        return $this->belongsTo(AcademicYear::class);
+    }
+
+    public function voucher(): BelongsTo
+    {
+        return $this->belongsTo(FeeVoucher::class, 'fee_voucher_id');
     }
 
     public function journalEntry(): BelongsTo
@@ -62,19 +69,14 @@ class FeeRefund extends Model
         return $this->belongsTo(JournalEntry::class);
     }
 
+    public function waivedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'waived_by');
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function requestedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'requested_by');
-    }
-
-    public function approvedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'approved_by');
     }
 
     public function getActivitylogOptions(): LogOptions

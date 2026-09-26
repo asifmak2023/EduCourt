@@ -522,6 +522,33 @@ class FeeBillingService
         return $refund->refresh();
     }
 
+    public function revokeRefund(FeeRefund $refund, ?int $userId, ?string $memo = null): FeeRefund
+    {
+        if ($refund->status !== PaymentStatus::Posted || $refund->journal_entry_id === null) {
+            throw ValidationException::withMessages([
+                'status' => ['Only a posted refund can be revoked.'],
+            ]);
+        }
+
+        $refund->loadMissing('payment.voucher');
+
+        DB::transaction(function () use ($refund, $userId, $memo) {
+            $entry = $refund->journalEntry;
+
+            if ($entry !== null) {
+                $this->journals->reverse($entry, $userId, $memo ?? "Refund {$refund->receipt_no} revoked");
+            }
+
+            $refund->forceFill(['status' => PaymentStatus::Void])->save();
+
+            if ($refund->payment?->voucher !== null) {
+                $this->recalculateVoucher($refund->payment->voucher);
+            }
+        });
+
+        return $refund->refresh();
+    }
+
     public function recalculateVoucher(FeeVoucher $voucher): FeeVoucher
     {
         $paymentIds = $voucher->payments()->pluck('id');

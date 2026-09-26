@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Enums\RefundStatus;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\FeeRefundResource;
@@ -14,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class FeeRefundController extends Controller
 {
@@ -24,9 +26,10 @@ class FeeRefundController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $refunds = FeeRefund::query()
-            ->with(['student', 'payment'])
+            ->with(['student', 'payment', 'approvedBy'])
             ->when($request->filled('student_id'), fn ($q) => $q->where('student_id', $request->integer('student_id')))
             ->when($request->filled('fee_payment_id'), fn ($q) => $q->where('fee_payment_id', $request->integer('fee_payment_id')))
+            ->when($request->filled('approval_status'), fn ($q) => $q->where('approval_status', $request->string('approval_status')->toString()))
             ->when($request->filled('from'), fn ($q) => $q->whereDate('refund_date', '>=', $request->date('from')))
             ->when($request->filled('to'), fn ($q) => $q->whereDate('refund_date', '<=', $request->date('to')))
             ->orderByDesc('id')
@@ -63,10 +66,10 @@ class FeeRefundController extends Controller
             'method' => $data['method'],
             'reason' => $data['reason'] ?? null,
             'status' => PaymentStatus::Draft,
+            'approval_status' => RefundStatus::Pending,
+            'requested_by' => $request->user()->id,
             'created_by' => $request->user()->id,
         ]);
-
-        $refund = $this->billing->recordRefund($refund, $request->user()->id);
 
         return (new FeeRefundResource($refund->load(['student', 'payment'])))
             ->response()
@@ -75,6 +78,64 @@ class FeeRefundController extends Controller
 
     public function show(FeeRefund $feeRefund): FeeRefundResource
     {
-        return new FeeRefundResource($feeRefund->load(['student', 'payment.voucher']));
+        return new FeeRefundResource($feeRefund->load(['student', 'payment.voucher', 'requestedBy', 'approvedBy']));
+    }
+
+    public function approve(Request $request, FeeRefund $feeRefund): FeeRefundResource
+    {
+        $this->ensureApprovalStatus($feeRefund, [RefundStatus::Pending], 'Only a pending refund can be approved.');
+
+        $refund = $this->billing->recordRefund($feeRefund, $request->user()->id);
+
+        $refund->forceFill([
+            'approval_status' => RefundStatus::Approved,
+            'approved_by' => $request->user()->id,
+            'approved_at' => now(),
+        ])->save();
+
+        return new FeeRefundResource($refund->refresh()->load(['student', 'payment', 'approvedBy']));
+    }
+
+    public function reject(Request $request, FeeRefund $feeRefund): FeeRefundResource
+    {
+        $this->ensureApprovalStatus($feeRefund, [RefundStatus::Pending], 'Only a pending refund can be rejected.');
+
+        $data = $request->validate([
+            'decision_note' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $feeRefund->forceFill([
+            'approval_status' => RefundStatus::Rejected,
+            'decision_note' => $data['decision_note'] ?? null,
+            'approved_by' => $request->user()->id,
+            'approved_at' => now(),
+        ])->save();
+
+        return new FeeRefundResource($feeRefund->refresh()->load(['student', 'payment', 'approvedBy']));
+    }
+
+    public function revoke(Request $request, FeeRefund $feeRefund): FeeRefundResource
+    {
+        $this->ensureApprovalStatus($feeRefund, [RefundStatus::Approved], 'Only an approved refund can be revoked.');
+
+        $data = $request->validate([
+            'decision_note' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $refund = $this->billing->revokeRefund($feeRefund, $request->user()->id, $data['decision_note'] ?? null);
+
+        $refund->forceFill(['approval_status' => RefundStatus::Revoked])->save();
+
+        return new FeeRefundResource($refund->refresh()->load(['student', 'payment', 'approvedBy']));
+    }
+
+    /**
+     * @param  array<int, RefundStatus>  $allowed
+     */
+    private function ensureApprovalStatus(FeeRefund $refund, array $allowed, string $message): void
+    {
+        if (! in_array($refund->approval_status, $allowed, true)) {
+            throw ValidationException::withMessages(['approval_status' => [$message]]);
+        }
     }
 }

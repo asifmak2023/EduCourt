@@ -412,6 +412,36 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"fee_payment_id":2,"refund_date":"2026-09-24","amount":500,"method":"cash"}' \
   http://127.0.0.1:8000/api/v1/fee-refunds
+
+# Refunds follow an approval workflow; the ledger is only touched on approval
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/fee-refunds/1/approve
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"reason":"Duplicate request"}' \
+  -X POST http://127.0.0.1:8000/api/v1/fee-refunds/1/revoke
+```
+
+Fine quick check (campus admin token):
+
+```bash
+# List seeded fine rules and fines (one pending, one applied)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/fine-rules
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/fines
+
+# Raise a fine, then apply it to the student's outstanding voucher
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"student_id":1,"fine_rule_id":2,"academic_year_id":1,"issued_on":"2026-09-26"}' \
+  http://127.0.0.1:8000/api/v1/fines
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/fines/3/apply
+
+# Waive a pending fine, or revoke an applied one (reverses the ledger)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"waived_reason":"First offence"}' \
+  -X POST http://127.0.0.1:8000/api/v1/fines/3/waive
 ```
 
 Online payment quick check (campus admin token):

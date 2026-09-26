@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\FeeRefundController;
 use App\Http\Controllers\Api\FeeReportController;
 use App\Http\Controllers\Api\FeeVoucherController;
 use App\Http\Controllers\Api\FinanceReportController;
+use App\Http\Controllers\Api\FineRuleController;
 use App\Http\Controllers\Api\FiscalYearController;
 use App\Http\Controllers\Api\GuardianController;
 use App\Http\Controllers\Api\InstitutionController;
@@ -48,6 +49,7 @@ use App\Http\Controllers\Api\StageController;
 use App\Http\Controllers\Api\StudentAttendanceController;
 use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\StudentEnrollmentController;
+use App\Http\Controllers\Api\StudentFineController;
 use App\Http\Controllers\Api\StudentHistoryController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\SubstituteAssignmentController;
@@ -312,8 +314,24 @@ Route::prefix('v1')->group(function () {
             Route::post('online-payments/{paymentIntent}/cancel', [OnlinePaymentController::class, 'cancel'])->middleware('permission:fee.edit');
 
             Route::get('fee-refunds', [FeeRefundController::class, 'index'])->middleware('permission:fee.view');
-            Route::post('fee-refunds', [FeeRefundController::class, 'store'])->middleware('permission:fee.approve');
+            Route::post('fee-refunds', [FeeRefundController::class, 'store'])->middleware('permission:fee.create');
             Route::get('fee-refunds/{feeRefund}', [FeeRefundController::class, 'show'])->middleware('permission:fee.view');
+            Route::post('fee-refunds/{feeRefund}/approve', [FeeRefundController::class, 'approve'])->middleware('permission:fee.approve');
+            Route::post('fee-refunds/{feeRefund}/reject', [FeeRefundController::class, 'reject'])->middleware('permission:fee.approve');
+            Route::post('fee-refunds/{feeRefund}/revoke', [FeeRefundController::class, 'revoke'])->middleware('permission:fee.approve');
+
+            Route::get('fine-rules', [FineRuleController::class, 'index'])->middleware('permission:fine.view');
+            Route::post('fine-rules', [FineRuleController::class, 'store'])->middleware('permission:fine.create');
+            Route::get('fine-rules/{fineRule}', [FineRuleController::class, 'show'])->middleware('permission:fine.view');
+            Route::put('fine-rules/{fineRule}', [FineRuleController::class, 'update'])->middleware('permission:fine.edit');
+            Route::delete('fine-rules/{fineRule}', [FineRuleController::class, 'destroy'])->middleware('permission:fine.delete');
+
+            Route::get('fines', [StudentFineController::class, 'index'])->middleware('permission:fine.view');
+            Route::post('fines', [StudentFineController::class, 'store'])->middleware('permission:fine.create');
+            Route::get('fines/{fine}', [StudentFineController::class, 'show'])->middleware('permission:fine.view');
+            Route::post('fines/{fine}/apply', [StudentFineController::class, 'apply'])->middleware('permission:fine.approve');
+            Route::post('fines/{fine}/waive', [StudentFineController::class, 'waive'])->middleware('permission:fine.approve');
+            Route::post('fines/{fine}/revoke', [StudentFineController::class, 'revoke'])->middleware('permission:fine.approve');
 
             Route::get('fee-reports/defaulters', [FeeReportController::class, 'defaulters'])->middleware('permission:fee.view');
             Route::get('fee-reports/students/{student}/statement', [FeeReportController::class, 'studentStatement'])->middleware('permission:fee.view');

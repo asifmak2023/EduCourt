@@ -204,13 +204,17 @@ class FeeAdjustmentTest extends TestCase
 
         $this->assertSame(VoucherStatus::Paid, $voucher->refresh()->status);
 
-        $this->as($this->admin)->postJson('/api/v1/fee-refunds', [
+        $refundId = $this->as($this->admin)->postJson('/api/v1/fee-refunds', [
             'fee_payment_id' => $paymentId,
             'refund_date' => '2026-07-20',
             'amount' => 2000,
             'method' => 'cash',
             'reason' => 'Partial refund',
-        ])->assertStatus(201)->assertJsonPath('data.receipt_no', 'RF-000001');
+        ])->assertStatus(201)->assertJsonPath('data.receipt_no', 'RF-000001')->json('data.id');
+
+        $this->as($this->admin)->postJson("/api/v1/fee-refunds/{$refundId}/approve")
+            ->assertOk()
+            ->assertJsonPath('data.approval_status', 'approved');
 
         $voucher->refresh();
         $this->assertSame('10000.00', (string) $voucher->paid_amount);
@@ -233,12 +237,14 @@ class FeeAdjustmentTest extends TestCase
             'method' => 'cash',
         ])->assertStatus(201)->json('data.id');
 
-        $this->as($this->admin)->postJson('/api/v1/fee-refunds', [
+        $refundId = $this->as($this->admin)->postJson('/api/v1/fee-refunds', [
             'fee_payment_id' => $paymentId,
             'refund_date' => '2026-07-20',
             'amount' => 5000,
             'method' => 'cash',
-        ])->assertStatus(201);
+        ])->assertStatus(201)->json('data.id');
+
+        $this->as($this->admin)->postJson("/api/v1/fee-refunds/{$refundId}/approve")->assertOk();
 
         $this->assertSame(5000.0, (float) JournalLine::query()
             ->where('chart_of_account_id', $this->accounts->get('2030')->id)
@@ -257,12 +263,16 @@ class FeeAdjustmentTest extends TestCase
             'method' => 'cash',
         ])->assertStatus(201)->json('data.id');
 
-        $this->as($this->admin)->postJson('/api/v1/fee-refunds', [
+        $refundId = $this->as($this->admin)->postJson('/api/v1/fee-refunds', [
             'fee_payment_id' => $paymentId,
             'refund_date' => '2026-07-20',
             'amount' => 6000,
             'method' => 'cash',
-        ])->assertStatus(422)->assertJsonValidationErrors('amount');
+        ])->assertStatus(201)->json('data.id');
+
+        $this->as($this->admin)->postJson("/api/v1/fee-refunds/{$refundId}/approve")
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('amount');
     }
 
     public function test_teacher_cannot_apply_late_fees_or_issue_refunds(): void
@@ -281,6 +291,103 @@ class FeeAdjustmentTest extends TestCase
                 'amount' => 100,
                 'method' => 'cash',
             ])->assertStatus(403);
+    }
+
+    public function test_refund_request_starts_pending_without_posting(): void
+    {
+        $plan = $this->plan('none', 0, 0);
+        $voucher = $this->voucher($plan);
+
+        $paymentId = $this->as($this->admin)->postJson('/api/v1/fee-payments', [
+            'student_id' => $this->ali->id,
+            'fee_voucher_id' => $voucher->id,
+            'payment_date' => '2026-07-15',
+            'amount' => 12000,
+            'method' => 'cash',
+        ])->assertStatus(201)->json('data.id');
+
+        $refundId = $this->as($this->admin)->postJson('/api/v1/fee-refunds', [
+            'fee_payment_id' => $paymentId,
+            'refund_date' => '2026-07-20',
+            'amount' => 2000,
+            'method' => 'cash',
+            'reason' => 'Requested by parent',
+        ])->assertStatus(201)
+            ->assertJsonPath('data.approval_status', 'pending')
+            ->assertJsonPath('data.status', 'draft')
+            ->json('data.id');
+
+        $this->assertSame('12000.00', (string) $voucher->refresh()->paid_amount);
+        $this->assertSame(0.0, (float) JournalLine::query()
+            ->where('chart_of_account_id', $this->accounts->get('1010')->id)
+            ->sum('credit'));
+
+        $this->as($this->admin)->getJson('/api/v1/fee-refunds?approval_status=pending')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $refundId);
+    }
+
+    public function test_pending_refund_can_be_rejected_without_posting(): void
+    {
+        $plan = $this->plan('none', 0, 0);
+        $voucher = $this->voucher($plan);
+
+        $paymentId = $this->as($this->admin)->postJson('/api/v1/fee-payments', [
+            'student_id' => $this->ali->id,
+            'fee_voucher_id' => $voucher->id,
+            'payment_date' => '2026-07-15',
+            'amount' => 12000,
+            'method' => 'cash',
+        ])->assertStatus(201)->json('data.id');
+
+        $refundId = $this->as($this->admin)->postJson('/api/v1/fee-refunds', [
+            'fee_payment_id' => $paymentId,
+            'refund_date' => '2026-07-20',
+            'amount' => 2000,
+            'method' => 'cash',
+        ])->assertStatus(201)->json('data.id');
+
+        $this->as($this->admin)->postJson("/api/v1/fee-refunds/{$refundId}/reject", [
+            'decision_note' => 'Insufficient justification.',
+        ])->assertOk()->assertJsonPath('data.approval_status', 'rejected');
+
+        $this->assertSame('12000.00', (string) $voucher->refresh()->paid_amount);
+        $this->assertSame(0.0, (float) JournalLine::query()
+            ->where('chart_of_account_id', $this->accounts->get('1010')->id)
+            ->sum('credit'));
+    }
+
+    public function test_approved_refund_can_be_revoked_reversing_the_ledger(): void
+    {
+        $plan = $this->plan('none', 0, 0);
+        $voucher = $this->voucher($plan);
+
+        $paymentId = $this->as($this->admin)->postJson('/api/v1/fee-payments', [
+            'student_id' => $this->ali->id,
+            'fee_voucher_id' => $voucher->id,
+            'payment_date' => '2026-07-15',
+            'amount' => 12000,
+            'method' => 'cash',
+        ])->assertStatus(201)->json('data.id');
+
+        $refundId = $this->as($this->admin)->postJson('/api/v1/fee-refunds', [
+            'fee_payment_id' => $paymentId,
+            'refund_date' => '2026-07-20',
+            'amount' => 2000,
+            'method' => 'cash',
+        ])->assertStatus(201)->json('data.id');
+
+        $this->as($this->admin)->postJson("/api/v1/fee-refunds/{$refundId}/approve")->assertOk();
+
+        $this->assertSame('10000.00', (string) $voucher->refresh()->paid_amount);
+
+        $this->as($this->admin)->postJson("/api/v1/fee-refunds/{$refundId}/revoke", [
+            'decision_note' => 'Refund issued in error.',
+        ])->assertOk()
+            ->assertJsonPath('data.approval_status', 'revoked')
+            ->assertJsonPath('data.status', 'void');
+
+        $this->assertSame('12000.00', (string) $voucher->refresh()->paid_amount);
     }
 
     private function plan(string $lateFeeType, float $lateFeeAmount, int $graceDays, string $name = 'Standard Fee'): FeePlan

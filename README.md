@@ -82,7 +82,10 @@ php artisan serve --host=127.0.0.1 --port=8000
   sports, sibling, staff-ward) with percentage or fixed discounts, per-student
   awards with an optional value override, approve/revoke tracking, and automatic
   scholarship discounts merged into fee voucher generation (explicit discounts
-  still win). A consolidated per-student history endpoint rolls up the academic
+  still win). Configurable concession policies add rule-based discounts
+  (gender, category, sibling count), stackable or best-single selection with
+  caps, and approval-gated grants, all merged into voucher generation alongside
+  scholarships. A consolidated per-student history endpoint rolls up the academic
   timeline, attendance summary and fee/scholarship position. Online payments are
   delivered: gateway-agnostic payment intents with a hosted checkout URL,
   HMAC-signed webhooks, and idempotent confirmation that posts a fee payment and

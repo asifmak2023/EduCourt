@@ -332,6 +332,38 @@ Fee voucher generation merges active scholarship discounts automatically; pass
 `apply_scholarships=false` to disable, and explicit `discounts` always take
 precedence over scholarship-derived amounts.
 
+Concession policy quick check (campus admin token):
+
+```bash
+# Seeded policies: SIB10 (10% sibling), STAFF50 (50% staff ward, capped 5000)
+# and NEED500 (fixed 500, requires approval)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/concession-policies
+
+# Create a rule-based policy (criteria are matched against student attributes)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Sibling 10%","code":"SIB10","type":"sibling","discount_type":"percentage","value":10,"criteria":{"min_siblings":1}}' \
+  http://127.0.0.1:8000/api/v1/concession-policies
+
+# Seeded grants: ADM-00001 holds an approved NEED500, ADM-00002 a pending one
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/concessions
+
+# Request and approve a concession for a policy that requires approval
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"student_id":2,"academic_year_id":1,"concession_policy_id":3}' \
+  http://127.0.0.1:8000/api/v1/concessions
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/concessions/2/approve
+```
+
+Voucher generation applies scholarships and concessions together; pass
+`apply_concessions=false` to disable concessions. Non-stackable policies
+contribute only their largest value, stackable ones add on top, and the combined
+annual discount is capped at the annual gross. Explicit `discounts` win.
+
 Student history quick check (campus admin token):
 
 ```bash

@@ -199,7 +199,7 @@ Priorities: M = Must, S = Should, C = Could.
 | --- | --- | --- | --- |
 | FR-4.1 | Fee schedule and fee heads per class | M | Delivered (API: fee heads linked to income accounts; class fee plans and line items) |
 | FR-4.2 | Fee plans with installment schedules and proration | M | Partially delivered (installment schedules, per-installment billing and discount allocation delivered; mid-year proration pending) |
-| FR-4.3 | Per-student status: due, received, discount, concession, scholarship | M | Partially delivered (API: per-student vouchers with unpaid/partial/paid status, paid amounts, annual discounts and automatic scholarship discounts; configurable concession policy pending) |
+| FR-4.3 | Per-student status: due, received, discount, concession, scholarship | M | Delivered (API: per-student vouchers with unpaid/partial/paid status and paid amounts; campus concession policies with rule-based criteria (gender, category, sibling count), stackable/non-stackable discounts with caps, approval-gated grants, and automatic scholarship and concession discounts merged into fee voucher generation) |
 | FR-4.4 | Vouchers and receipts with numbering and void/reversal | M | Delivered (API: campus-numbered vouchers and receipts, discount-aware lines, double-entry posting, void with reversal) |
 | FR-4.5 | Late fees, fines, advance balances and refunds | S | Partially delivered (API: per-plan late fee policy and application, advance payments and allocation, refunds with ledger posting; configurable fines and refund approval workflow pending) |
 | FR-4.6 | Defaulter lists and reminders | M | Partially delivered (API: aging defaulter list by student/class; reminders pending a notifications module) |

@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\CampusController;
 use App\Http\Controllers\Api\ChartOfAccountController;
 use App\Http\Controllers\Api\ClassRoomController;
 use App\Http\Controllers\Api\ClassSubjectController;
+use App\Http\Controllers\Api\ConcessionController;
+use App\Http\Controllers\Api\ConcessionPolicyController;
 use App\Http\Controllers\Api\ExpenseCategoryController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\ExpensePaymentController;
@@ -350,6 +352,20 @@ Route::prefix('v1')->group(function () {
             Route::get('scholarship-awards/{scholarshipAward}', [ScholarshipAwardController::class, 'show'])->middleware('permission:scholarship.view');
             Route::post('scholarship-awards/{scholarshipAward}/revoke', [ScholarshipAwardController::class, 'revoke'])->middleware('permission:scholarship.approve');
             Route::delete('scholarship-awards/{scholarshipAward}', [ScholarshipAwardController::class, 'destroy'])->middleware('permission:scholarship.delete');
+
+            Route::get('concession-policies', [ConcessionPolicyController::class, 'index'])->middleware('permission:concession.view');
+            Route::post('concession-policies', [ConcessionPolicyController::class, 'store'])->middleware('permission:concession.create');
+            Route::get('concession-policies/{concessionPolicy}', [ConcessionPolicyController::class, 'show'])->middleware('permission:concession.view');
+            Route::put('concession-policies/{concessionPolicy}', [ConcessionPolicyController::class, 'update'])->middleware('permission:concession.edit');
+            Route::delete('concession-policies/{concessionPolicy}', [ConcessionPolicyController::class, 'destroy'])->middleware('permission:concession.delete');
+
+            Route::get('concessions', [ConcessionController::class, 'index'])->middleware('permission:concession.view');
+            Route::post('concessions', [ConcessionController::class, 'store'])->middleware('permission:concession.create');
+            Route::get('concessions/{concession}', [ConcessionController::class, 'show'])->middleware('permission:concession.view');
+            Route::post('concessions/{concession}/approve', [ConcessionController::class, 'approve'])->middleware('permission:concession.approve');
+            Route::post('concessions/{concession}/reject', [ConcessionController::class, 'reject'])->middleware('permission:concession.approve');
+            Route::post('concessions/{concession}/revoke', [ConcessionController::class, 'revoke'])->middleware('permission:concession.approve');
+            Route::delete('concessions/{concession}', [ConcessionController::class, 'destroy'])->middleware('permission:concession.delete');
 
             Route::get('admissions', [AdmissionController::class, 'index'])->middleware('permission:admission.view');
             Route::post('admissions', [AdmissionController::class, 'store'])->middleware('permission:admission.create');

@@ -11,7 +11,10 @@ use App\Enums\BankAccountType;
 use App\Enums\BudgetPeriodType;
 use App\Enums\BudgetStatus;
 use App\Enums\CampusType;
+use App\Enums\ConcessionStatus;
+use App\Enums\ConcessionType;
 use App\Enums\DepreciationMethod;
+use App\Enums\DiscountType;
 use App\Enums\EnrollmentStatus;
 use App\Enums\ExpenseStatus;
 use App\Enums\Gender;
@@ -43,6 +46,8 @@ use App\Models\Campus;
 use App\Models\ChartOfAccount;
 use App\Models\ClassRoom;
 use App\Models\ClassSubject;
+use App\Models\Concession;
+use App\Models\ConcessionPolicy;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\ExpensePayment;
@@ -79,6 +84,7 @@ use App\Services\Accounting\DefaultChartOfAccounts;
 use App\Services\Accounting\ExpenseService;
 use App\Services\Accounting\FeeBillingService;
 use App\Services\Accounting\JournalService;
+use App\Services\Concessions\ConcessionService;
 use App\Services\Payments\Gateways\ManualGateway;
 use App\Services\Scholarships\ScholarshipService;
 use Carbon\CarbonImmutable;
@@ -94,6 +100,7 @@ class DemoSeeder extends Seeder
         private readonly ExpenseService $expenses,
         private readonly BankReconciliationService $bankBook,
         private readonly ScholarshipService $scholarships,
+        private readonly ConcessionService $concessions,
     ) {}
 
     public function run(): void
@@ -181,6 +188,7 @@ class DemoSeeder extends Seeder
         $this->seedFinance($institution, $campus, $campusAdmin);
         $this->seedStudents($institution, $campus);
         $this->seedScholarships($institution, $campus, $campusAdmin);
+        $this->seedConcessionPolicies($institution, $campus, $campusAdmin);
         $this->seedAdmissions($institution, $campus);
         $this->seedAttendance($institution, $campus, $campusAdmin, $teacher);
         $this->seedSubstitutes($institution, $campus, $campusAdmin, $teacher);
@@ -585,7 +593,21 @@ class DemoSeeder extends Seeder
         $discounts = $scholarship !== null ? [$scholarship->id => 3000] : [];
 
         $annualGross = (float) $plan->items()->where('is_optional', false)->sum('amount');
-        $discounts = $this->scholarships->applyToDiscounts($year->id, $class->id, $annualGross, $discounts);
+
+        $scholarshipMap = $this->scholarships->applyToDiscounts($year->id, $class->id, $annualGross, []);
+        $concessionMap = $this->concessions->applyToDiscounts($year->id, $class->id, $annualGross, []);
+
+        foreach (array_unique(array_merge(array_keys($scholarshipMap), array_keys($concessionMap))) as $studentId) {
+            if (array_key_exists($studentId, $discounts)) {
+                continue;
+            }
+
+            $combined = (float) ($scholarshipMap[$studentId] ?? 0) + (float) ($concessionMap[$studentId] ?? 0);
+
+            if ($combined > 0) {
+                $discounts[$studentId] = min($combined, $annualGross);
+            }
+        }
 
         $this->billing->generateForClass($plan, $discounts, $campusAdmin->id);
 
@@ -1150,6 +1172,108 @@ class DemoSeeder extends Seeder
                     'status' => ScholarshipAwardStatus::Active,
                     'value_override' => $definition['value_override'],
                     'approved_by' => $campusAdmin->id,
+                ]
+            );
+        }
+    }
+
+    private function seedConcessionPolicies(Institution $institution, Campus $campus, User $campusAdmin): void
+    {
+        $tenant = ['institution_id' => $institution->id, 'campus_id' => $campus->id];
+
+        $year = AcademicYear::query()
+            ->where('campus_id', $campus->id)
+            ->where('is_current', true)
+            ->first();
+
+        if ($year === null) {
+            return;
+        }
+
+        $definitions = [
+            [
+                'code' => 'SIB10',
+                'name' => 'Sibling Concession',
+                'type' => ConcessionType::Sibling,
+                'discount_type' => DiscountType::Percentage,
+                'value' => 10,
+                'criteria' => ['min_siblings' => 1],
+                'priority' => 10,
+                'is_stackable' => false,
+                'requires_approval' => false,
+            ],
+            [
+                'code' => 'STAFF50',
+                'name' => 'Staff Ward Concession',
+                'type' => ConcessionType::StaffWard,
+                'discount_type' => DiscountType::Percentage,
+                'value' => 50,
+                'max_amount' => 5000,
+                'criteria' => ['categories' => ['staff_ward']],
+                'priority' => 5,
+                'is_stackable' => true,
+                'requires_approval' => false,
+            ],
+            [
+                'code' => 'NEED500',
+                'name' => 'Need-Based Concession',
+                'type' => ConcessionType::NeedBased,
+                'discount_type' => DiscountType::Fixed,
+                'value' => 500,
+                'criteria' => null,
+                'priority' => 1,
+                'is_stackable' => true,
+                'requires_approval' => true,
+            ],
+        ];
+
+        $policies = [];
+
+        foreach ($definitions as $definition) {
+            $policies[$definition['code']] = ConcessionPolicy::updateOrCreate(
+                ['campus_id' => $campus->id, 'code' => $definition['code']],
+                $tenant + $definition + ['academic_year_id' => $year->id, 'is_active' => true],
+            );
+        }
+
+        $approved = Student::query()
+            ->where('campus_id', $campus->id)
+            ->where('admission_no', 'ADM-00001')
+            ->first();
+
+        if ($approved !== null) {
+            Concession::updateOrCreate(
+                ['campus_id' => $campus->id, 'student_id' => $approved->id, 'concession_policy_id' => $policies['NEED500']->id],
+                $tenant + [
+                    'academic_year_id' => $year->id,
+                    'discount_type' => DiscountType::Fixed,
+                    'value' => 500,
+                    'amount' => 500,
+                    'status' => ConcessionStatus::Approved,
+                    'requested_by' => $campusAdmin->id,
+                    'approved_by' => $campusAdmin->id,
+                    'approved_at' => now(),
+                    'note' => 'Approved on income assessment.',
+                ]
+            );
+        }
+
+        $pending = Student::query()
+            ->where('campus_id', $campus->id)
+            ->where('admission_no', 'ADM-00002')
+            ->first();
+
+        if ($pending !== null) {
+            Concession::updateOrCreate(
+                ['campus_id' => $campus->id, 'student_id' => $pending->id, 'concession_policy_id' => $policies['NEED500']->id],
+                $tenant + [
+                    'academic_year_id' => $year->id,
+                    'discount_type' => DiscountType::Fixed,
+                    'value' => 500,
+                    'amount' => 0,
+                    'status' => ConcessionStatus::Pending,
+                    'requested_by' => $campusAdmin->id,
+                    'note' => 'Awaiting committee review.',
                 ]
             );
         }

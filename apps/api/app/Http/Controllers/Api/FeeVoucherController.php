@@ -8,6 +8,7 @@ use App\Http\Resources\FeeVoucherResource;
 use App\Models\FeePlan;
 use App\Models\FeeVoucher;
 use App\Services\Accounting\FeeBillingService;
+use App\Services\Concessions\ConcessionService;
 use App\Services\Scholarships\ScholarshipService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class FeeVoucherController extends Controller
     public function __construct(
         private readonly FeeBillingService $billing,
         private readonly ScholarshipService $scholarships,
+        private readonly ConcessionService $concessions,
     ) {}
 
     public function index(Request $request): AnonymousResourceCollection
@@ -61,6 +63,7 @@ class FeeVoucherController extends Controller
             'discounts' => ['sometimes', 'array'],
             'discounts.*' => ['numeric', 'min:0'],
             'apply_scholarships' => ['sometimes', 'boolean'],
+            'apply_concessions' => ['sometimes', 'boolean'],
         ]);
 
         $plan = FeePlan::query()->findOrFail($data['fee_plan_id']);
@@ -73,15 +76,31 @@ class FeeVoucherController extends Controller
 
         $discounts = $data['discounts'] ?? [];
 
-        if ($request->boolean('apply_scholarships', true)) {
+        $applyScholarships = $request->boolean('apply_scholarships', true);
+        $applyConcessions = $request->boolean('apply_concessions', true);
+
+        if ($applyScholarships || $applyConcessions) {
             $annualGross = (float) $plan->items()->where('is_optional', false)->sum('amount');
 
-            $discounts = $this->scholarships->applyToDiscounts(
-                $plan->academic_year_id,
-                $plan->class_room_id,
-                $annualGross,
-                $discounts,
-            );
+            $scholarshipMap = $applyScholarships
+                ? $this->scholarships->applyToDiscounts($plan->academic_year_id, $plan->class_room_id, $annualGross, [])
+                : [];
+
+            $concessionMap = $applyConcessions
+                ? $this->concessions->applyToDiscounts($plan->academic_year_id, $plan->class_room_id, $annualGross, [])
+                : [];
+
+            foreach (array_unique(array_merge(array_keys($scholarshipMap), array_keys($concessionMap))) as $studentId) {
+                if (array_key_exists($studentId, $discounts)) {
+                    continue;
+                }
+
+                $combined = (float) ($scholarshipMap[$studentId] ?? 0) + (float) ($concessionMap[$studentId] ?? 0);
+
+                if ($combined > 0) {
+                    $discounts[$studentId] = min($combined, $annualGross);
+                }
+            }
         }
 
         $result = $this->billing->generateForClass($plan, $discounts, $request->user()->id);

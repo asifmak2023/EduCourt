@@ -1,0 +1,143 @@
+export type NavIcon =
+  | "grid"
+  | "users"
+  | "userPlus"
+  | "award"
+  | "arrowUp"
+  | "building"
+  | "calendar"
+  | "check"
+  | "clipboard"
+  | "book"
+  | "chart"
+  | "receipt"
+  | "list"
+  | "banknote"
+  | "idCard"
+  | "wallet"
+  | "clock"
+  | "box"
+  | "bus"
+  | "bed"
+  | "trophy"
+  | "heart"
+  | "message"
+  | "megaphone"
+  | "shield"
+  | "cog"
+  | "history"
+  | "creditCard";
+
+export interface NavItem {
+  label: string;
+  href: string;
+  icon: NavIcon;
+  permission: string | null;
+  ready: boolean;
+}
+
+export interface NavSection {
+  label: string;
+  items: NavItem[];
+}
+
+export const NAV_SECTIONS: NavSection[] = [
+  {
+    label: "Overview",
+    items: [
+      { label: "Dashboard", href: "/dashboard", icon: "grid", permission: null, ready: true },
+    ],
+  },
+  {
+    label: "Admissions & Students",
+    items: [
+      { label: "Admissions", href: "/dashboard/admissions", icon: "userPlus", permission: "admission.view", ready: true },
+      { label: "Students", href: "/dashboard/students", icon: "users", permission: "student.view", ready: true },
+      { label: "Scholarships", href: "/dashboard/scholarships", icon: "award", permission: "scholarship.view", ready: false },
+      { label: "Promotions", href: "/dashboard/promotions", icon: "arrowUp", permission: "student.edit", ready: false },
+    ],
+  },
+  {
+    label: "Academics",
+    items: [
+      { label: "Academic structure", href: "/dashboard/academics", icon: "building", permission: "academic.view", ready: false },
+      { label: "Timetable", href: "/dashboard/timetable", icon: "calendar", permission: "timetable.view", ready: false },
+      { label: "Attendance", href: "/dashboard/attendance", icon: "check", permission: "attendance.view", ready: false },
+      { label: "Exams & results", href: "/dashboard/exams", icon: "clipboard", permission: "exam.view", ready: false },
+      { label: "Curriculum", href: "/dashboard/curriculum", icon: "book", permission: "curriculum.view", ready: false },
+      { label: "Credits & GPA", href: "/dashboard/credits", icon: "chart", permission: "credit.view", ready: false },
+    ],
+  },
+  {
+    label: "Finance",
+    items: [
+      { label: "Fee vouchers", href: "/dashboard/fees", icon: "receipt", permission: "fee.view", ready: true },
+      { label: "Chart of accounts", href: "/dashboard/finance/accounts", icon: "list", permission: "finance.view", ready: false },
+      { label: "Journal", href: "/dashboard/finance/journal", icon: "list", permission: "finance.view", ready: false },
+      { label: "Expenses", href: "/dashboard/finance/expenses", icon: "banknote", permission: "finance.view", ready: false },
+      { label: "Budgets", href: "/dashboard/finance/budgets", icon: "chart", permission: "finance.view", ready: false },
+      { label: "Reports", href: "/dashboard/reports", icon: "chart", permission: "report.view", ready: false },
+    ],
+  },
+  {
+    label: "People",
+    items: [
+      { label: "Staff", href: "/dashboard/hr/staff", icon: "idCard", permission: "hr.view", ready: false },
+      { label: "Payroll", href: "/dashboard/hr/payroll", icon: "wallet", permission: "payroll.view", ready: false },
+      { label: "Leave", href: "/dashboard/hr/leave", icon: "clock", permission: "hr.view", ready: false },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { label: "Inventory", href: "/dashboard/inventory", icon: "box", permission: "inventory.view", ready: false },
+      { label: "Library", href: "/dashboard/library", icon: "book", permission: "library.view", ready: false },
+      { label: "Labs", href: "/dashboard/labs", icon: "box", permission: "lab.view", ready: false },
+      { label: "Transport", href: "/dashboard/transport", icon: "bus", permission: "transport.view", ready: false },
+      { label: "Hostel", href: "/dashboard/hostel", icon: "bed", permission: "hostel.view", ready: false },
+      { label: "Canteen", href: "/dashboard/canteen", icon: "box", permission: "canteen.view", ready: false },
+      { label: "Sports", href: "/dashboard/sports", icon: "trophy", permission: "sports.view", ready: false },
+      { label: "Student affairs", href: "/dashboard/student-affairs", icon: "heart", permission: "student_affairs.view", ready: false },
+      { label: "Complaints", href: "/dashboard/complaints", icon: "message", permission: "complaint.view", ready: false },
+      { label: "Circulars", href: "/dashboard/circulars", icon: "megaphone", permission: "circular.view", ready: false },
+    ],
+  },
+  {
+    label: "Administration",
+    items: [
+      { label: "Users", href: "/dashboard/users", icon: "users", permission: "user.view", ready: false },
+      { label: "Roles & scopes", href: "/dashboard/roles", icon: "shield", permission: "role.view", ready: false },
+      { label: "Settings", href: "/dashboard/settings", icon: "cog", permission: "setting.view", ready: false },
+      { label: "Audit log", href: "/dashboard/audit", icon: "history", permission: "audit.view", ready: false },
+      { label: "Institutions", href: "/dashboard/institutions", icon: "building", permission: "institution.view", ready: false },
+      { label: "Subscription", href: "/dashboard/subscription", icon: "creditCard", permission: "subscription.view", ready: false },
+    ],
+  },
+];
+
+export function can(userPermissions: string[], permission: string | null): boolean {
+  if (permission === null) {
+    return true;
+  }
+
+  return userPermissions.includes(permission);
+}
+
+export function visibleSections(userPermissions: string[]): NavSection[] {
+  return NAV_SECTIONS.map((section) => ({
+    label: section.label,
+    items: section.items.filter((item) => can(userPermissions, item.permission)),
+  })).filter((section) => section.items.length > 0);
+}
+
+export function findNavItem(pathname: string): NavItem | null {
+  for (const section of NAV_SECTIONS) {
+    for (const item of section.items) {
+      if (item.href === pathname) {
+        return item;
+      }
+    }
+  }
+
+  return null;
+}

@@ -5,12 +5,20 @@ import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 
+const DEMO_ACCOUNTS = [
+  { label: "Super User", email: "superadmin@demo-eis.test" },
+  { label: "Campus admin", email: "campusadmin@demo-eis.test" },
+  { label: "Teacher", email: "teacher@demo-eis.test" },
+];
+
 export default function LoginPage() {
-  const { user, loading, login } = useAuth();
+  const { user, loading, login, verifyTwoFactor } = useAuth();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [challengeToken, setChallengeToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -26,14 +34,44 @@ export default function LoginPage() {
     setSubmitting(true);
 
     try {
-      await login(email, password);
+      const result = await login(email, password);
+
+      if (result.status === "two_factor_required") {
+        setChallengeToken(result.challengeToken);
+        return;
+      }
+
       router.replace("/dashboard");
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError("Unable to sign in. Please try again.");
-      }
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Unable to sign in. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleChallenge(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!challengeToken) {
+      return;
+    }
+
+    setError(null);
+    setSubmitting(true);
+
+    try {
+      await verifyTwoFactor(challengeToken, code);
+      router.replace("/dashboard");
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Unable to verify the code. Please try again."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -46,60 +84,138 @@ export default function LoginPage() {
           Education Information System
         </h1>
         <p className="mt-1 text-sm text-slate-500">
-          Sign in to your campus dashboard.
+          {challengeToken
+            ? "Enter the 6-digit code from your authenticator app."
+            : "Sign in to your campus dashboard."}
         </p>
 
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-slate-700"
+        {challengeToken ? (
+          <form className="mt-6 space-y-4" onSubmit={handleChallenge}>
+            <div>
+              <label
+                htmlFor="code"
+                className="block text-sm font-medium text-slate-700"
+              >
+                Verification code
+              </label>
+              <input
+                id="code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                required
+                autoFocus
+                value={code}
+                onChange={(event) => setCode(event.target.value)}
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-center text-lg tracking-[0.3em] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
+              />
+              <p className="mt-1 text-xs text-slate-400">
+                You can also enter one of your recovery codes.
+              </p>
+            </div>
+
+            {error ? (
+              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                {error}
+              </p>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-60"
             >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="username"
-              required
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-            />
-          </div>
+              {submitting ? "Verifying..." : "Verify and sign in"}
+            </button>
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-slate-700"
+            <button
+              type="button"
+              onClick={() => {
+                setChallengeToken(null);
+                setCode("");
+                setError(null);
+              }}
+              className="w-full text-xs font-medium text-slate-500 hover:text-slate-900"
             >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-            />
-          </div>
+              Back to sign in
+            </button>
+          </form>
+        ) : (
+          <>
+            <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-slate-700"
+                >
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="username"
+                  required
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
+                />
+              </div>
 
-          {error ? (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-              {error}
-            </p>
-          ) : null}
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-slate-700"
+                >
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
+                />
+              </div>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-60"
-          >
-            {submitting ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
+              {error ? (
+                <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {error}
+                </p>
+              ) : null}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-60"
+              >
+                {submitting ? "Signing in..." : "Sign in"}
+              </button>
+            </form>
+
+            <div className="mt-6 border-t border-slate-100 pt-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                Demo accounts (password: password)
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {DEMO_ACCOUNTS.map((account) => (
+                  <button
+                    key={account.email}
+                    type="button"
+                    onClick={() => {
+                      setEmail(account.email);
+                      setPassword("password");
+                      setError(null);
+                    }}
+                    className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100"
+                  >
+                    {account.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </main>
   );

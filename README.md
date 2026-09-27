@@ -162,4 +162,20 @@ php artisan serve --host=127.0.0.1 --port=8000
   transport with vehicles, routes, stops and allocations, and hostels with
   rooms, occupancy-tracked allocations and an outpass approval workflow.
 
+## Web application
+
+The backend above is the complete API layer. The Next.js web client is being
+built on top of it, one surface at a time:
+
+- Delivered: authentication (password with a two-factor challenge step), a
+  permission-filtered application shell with sidebar navigation, role-aware
+  dashboards (platform overview for the Super User, campus dashboard for campus
+  roles, personal workspace for teachers), and read-only lists for students,
+  admissions and fee vouchers.
+- Planned: create/edit flows and the remaining module screens, reached from the
+  sidebar entries marked "Soon".
+
+Demo accounts (password `password`): `superadmin@demo-eis.test` (Super User),
+`campusadmin@demo-eis.test` (campus admin) and `teacher@demo-eis.test`.
+
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

@@ -14,6 +14,8 @@ export interface AuthUser {
   id: number;
   name: string;
   email: string;
+  phone?: string | null;
+  job_title?: string | null;
   roles: string[];
   permissions: string[];
   campus_id: number | null;
@@ -23,16 +25,28 @@ export interface AuthUser {
   institution?: { id: number; name: string } | null;
 }
 
-interface LoginResponse {
+interface TokenResponse {
   token: string;
   user: AuthUser;
 }
 
+interface ChallengeResponse {
+  two_factor_required: true;
+  challenge_token: string;
+  expires_in: number;
+}
+
+export type LoginResult =
+  | { status: "authenticated" }
+  | { status: "two_factor_required"; challengeToken: string };
+
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<LoginResult>;
+  verifyTwoFactor: (challengeToken: string, code: string) => Promise<void>;
   logout: () => Promise<void>;
+  can: (permission: string | null) => boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -79,14 +93,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [loadProfile]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const response = await apiFetch<LoginResponse>("/v1/auth/login", {
-      method: "POST",
-      body: { email, password },
-    });
-    window.localStorage.setItem(TOKEN_KEY, response.token);
-    setUser(response.user);
-  }, []);
+  const login = useCallback(
+    async (email: string, password: string): Promise<LoginResult> => {
+      const response = await apiFetch<TokenResponse | ChallengeResponse>(
+        "/v1/auth/login",
+        {
+          method: "POST",
+          body: { email, password },
+        }
+      );
+
+      if ("two_factor_required" in response) {
+        return {
+          status: "two_factor_required",
+          challengeToken: response.challenge_token,
+        };
+      }
+
+      window.localStorage.setItem(TOKEN_KEY, response.token);
+      setUser(response.user);
+
+      return { status: "authenticated" };
+    },
+    []
+  );
+
+  const verifyTwoFactor = useCallback(
+    async (challengeToken: string, code: string) => {
+      const response = await apiFetch<TokenResponse>("/v1/auth/two-factor/challenge", {
+        method: "POST",
+        body: { challenge_token: challengeToken, code },
+      });
+
+      window.localStorage.setItem(TOKEN_KEY, response.token);
+      setUser(response.user);
+    },
+    []
+  );
 
   const logout = useCallback(async () => {
     try {
@@ -98,9 +141,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  const can = useCallback(
+    (permission: string | null) => {
+      if (permission === null) {
+        return true;
+      }
+
+      return user?.permissions.includes(permission) ?? false;
+    },
+    [user]
+  );
+
   const value = useMemo(
-    () => ({ user, loading, login, logout }),
-    [user, loading, login, logout]
+    () => ({ user, loading, login, verifyTwoFactor, logout, can }),
+    [user, loading, login, verifyTwoFactor, logout, can]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

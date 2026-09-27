@@ -1,117 +1,397 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ApiError, apiFetch } from "@/lib/api";
+import { useAuth, type AuthUser } from "@/lib/auth";
+import { Icon } from "@/components/Icons";
+import {
+  Card,
+  EmptyState,
+  ErrorNotice,
+  PageHeader,
+  Spinner,
+  StatCard,
+} from "@/components/ui";
+import {
+  formatCurrency,
+  formatDate,
+  formatNumber,
+  humanize,
+} from "@/lib/format";
+import type { CampusDashboard, PlatformOverview, TimetableSlot } from "@/lib/types";
 
-function StatCard({ label, value }: { label: string; value: string | number }) {
+type Mode = "platform" | "campus" | "teacher";
+
+function modeFor(user: AuthUser): Mode {
+  if (user.roles.includes("platform_admin")) {
+    return "platform";
+  }
+
+  if (user.permissions.includes("report.view")) {
+    return "campus";
+  }
+
+  return "teacher";
+}
+
+function todayIsoWeekday(): number {
+  const day = new Date().getDay();
+
+  return day === 0 ? 7 : day;
+}
+
+function greeting(): string {
+  const hour = new Date().getHours();
+
+  if (hour < 12) {
+    return "Good morning";
+  }
+
+  if (hour < 17) {
+    return "Good afternoon";
+  }
+
+  return "Good evening";
+}
+
+export default function DashboardPage() {
+  const { user } = useAuth();
+  const [campus, setCampus] = useState<CampusDashboard | null>(null);
+  const [platform, setPlatform] = useState<PlatformOverview | null>(null);
+  const [slots, setSlots] = useState<TimetableSlot[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const mode = user ? modeFor(user) : null;
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    const resolved = modeFor(user);
+
+    let active = true;
+
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        if (resolved === "platform") {
+          const response = await apiFetch<{ data: PlatformOverview }>(
+            "/v1/reports/platform-overview"
+          );
+
+          if (active) {
+            setPlatform(response.data);
+          }
+        } else if (resolved === "campus") {
+          const response = await apiFetch<{ data: CampusDashboard }>(
+            "/v1/reports/campus-dashboard"
+          );
+
+          if (active) {
+            setCampus(response.data);
+          }
+        } else {
+          const response = await apiFetch<{ data: TimetableSlot[] }>(
+            "/v1/timetable/me"
+          );
+
+          if (active) {
+            setSlots(response.data);
+          }
+        }
+      } catch (err) {
+        if (active) {
+          setError(
+            err instanceof ApiError
+              ? err.message
+              : "Unable to load your dashboard right now."
+          );
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  if (!user) {
+    return null;
+  }
+
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
+    <div className="space-y-6">
+      <PageHeader
+        title={`${greeting()}, ${user.name.split(" ")[0]}`}
+        description={`${user.campus?.name ?? "All campuses"} - ${roleSummary(user)}`}
+        actions={
+          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-slate-200">
+            {formatDate(new Date().toISOString())}
+          </span>
+        }
+      />
+
+      {error ? <ErrorNotice message={error} /> : null}
+
+      {loading ? <Spinner label="Loading dashboard..." /> : null}
+
+      {!loading && mode === "platform" && platform ? (
+        <PlatformView overview={platform} />
+      ) : null}
+
+      {!loading && mode === "campus" && campus ? (
+        <CampusView dashboard={campus} />
+      ) : null}
+
+      {!loading && mode === "teacher" ? (
+        <TeacherView slots={slots} twoFactorEnabled={user.two_factor_enabled} />
+      ) : null}
     </div>
   );
 }
 
-export default function DashboardPage() {
-  const { user, loading, logout } = useAuth();
-  const router = useRouter();
+function roleSummary(user: AuthUser): string {
+  return user.roles
+    .slice(0, 2)
+    .map((role) => humanize(role))
+    .join(" / ");
+}
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/login");
-    }
-  }, [loading, user, router]);
+function PlatformView({ overview }: { overview: PlatformOverview }) {
+  return (
+    <div className="space-y-6">
+      <section className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <StatCard label="Institutions" value={formatNumber(overview.totals.institutions)} />
+        <StatCard label="Campuses" value={formatNumber(overview.totals.campuses)} />
+        <StatCard label="Students" value={formatNumber(overview.totals.students)} />
+        <StatCard label="Staff" value={formatNumber(overview.totals.staff)} />
+        <StatCard
+          label="Active enrollments"
+          value={formatNumber(overview.totals.active_enrollments)}
+        />
+      </section>
 
-  if (loading || !user) {
-    return (
-      <main className="flex flex-1 items-center justify-center p-8">
-        <p className="text-sm text-slate-500">Loading dashboard...</p>
-      </main>
-    );
-  }
+      <Card>
+        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+          <h2 className="text-sm font-semibold text-slate-900">Institutions</h2>
+          <Link
+            href="/dashboard/institutions"
+            className="text-xs font-medium text-slate-500 hover:text-slate-900"
+          >
+            Manage
+          </Link>
+        </div>
+        {overview.institutions.length === 0 ? (
+          <EmptyState message="No institutions have been created yet." />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-5 py-3 font-medium">Institution</th>
+                  <th className="px-5 py-3 font-medium">Code</th>
+                  <th className="px-5 py-3 text-right font-medium">Campuses</th>
+                  <th className="px-5 py-3 text-right font-medium">Students</th>
+                  <th className="px-5 py-3 text-right font-medium">Staff</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {overview.institutions.map((institution) => (
+                  <tr key={institution.id} className="hover:bg-slate-50">
+                    <td className="px-5 py-3 font-medium text-slate-900">
+                      {institution.name}
+                    </td>
+                    <td className="px-5 py-3 text-slate-500">
+                      {institution.code ?? "-"}
+                    </td>
+                    <td className="px-5 py-3 text-right">{institution.campuses}</td>
+                    <td className="px-5 py-3 text-right">{institution.students}</td>
+                    <td className="px-5 py-3 text-right">{institution.staff}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
 
-  const modules = Array.from(
-    new Set(user.permissions.map((permission) => permission.split(".")[0]))
-  ).sort();
+function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
+  const girls = dashboard.students_by_gender.find((item) => item.gender === "female")?.total ?? 0;
+  const boys = dashboard.students_by_gender.find((item) => item.gender === "male")?.total ?? 0;
 
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-sm font-semibold text-slate-900">
-              {user.institution?.name ?? "Institution"}
-            </p>
-            <p className="text-xs text-slate-500">
-              {user.campus?.name ?? "All campuses"}
-            </p>
+    <div className="space-y-6">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Active students"
+          value={formatNumber(dashboard.students_active)}
+          hint={`${boys} boys / ${girls} girls`}
+        />
+        <StatCard label="Staff employed" value={formatNumber(dashboard.staff_employed)} />
+        <StatCard
+          label="Outstanding fees"
+          value={formatCurrency(dashboard.outstanding_fees)}
+          tone="danger"
+          hint={`${dashboard.unpaid_vouchers} unpaid vouchers`}
+        />
+        <StatCard
+          label="Collected this month"
+          value={formatCurrency(dashboard.fees_collected_this_month)}
+          tone="positive"
+        />
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Admissions pending" value={formatNumber(dashboard.admissions_pending)} tone="warning" />
+        <StatCard label="Scholarships active" value={formatNumber(dashboard.scholarships_active)} />
+        <StatCard label="Exams scheduled" value={formatNumber(dashboard.exams_scheduled)} />
+        <StatCard label="Leave pending" value={formatNumber(dashboard.leave_pending)} tone="warning" />
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-3">
+        <QuickLinks
+          title="Students & admissions"
+          links={[
+            { href: "/dashboard/students", label: "Students" },
+            { href: "/dashboard/admissions", label: "Admissions" },
+          ]}
+        />
+        <QuickLinks
+          title="Finance"
+          links={[
+            { href: "/dashboard/fees", label: "Fee vouchers" },
+            { href: "/dashboard/reports", label: "Reports" },
+          ]}
+        />
+        <Card className="p-5">
+          <h2 className="text-sm font-semibold text-slate-900">Today at a glance</h2>
+          <dl className="mt-3 space-y-2 text-sm">
+            <Row label="Active enrollments" value={formatNumber(dashboard.enrollments_active)} />
+            <Row label="Open conduct cases" value={formatNumber(dashboard.conduct_open)} />
+            <Row label="Payroll draft runs" value={formatNumber(dashboard.payroll_draft_runs)} />
+            <Row label="Upcoming events" value={formatNumber(dashboard.upcoming_events)} />
+          </dl>
+        </Card>
+      </section>
+    </div>
+  );
+}
+
+function TeacherView({
+  slots,
+  twoFactorEnabled,
+}: {
+  slots: TimetableSlot[];
+  twoFactorEnabled: boolean;
+}) {
+  const today = todayIsoWeekday();
+  const todaySlots = slots
+    .filter((slot) => slot.day_of_week === today)
+    .sort((a, b) => (a.period?.id ?? 0) - (b.period?.id ?? 0));
+
+  return (
+    <div className="space-y-6">
+      <section className="grid gap-4 sm:grid-cols-3">
+        <StatCard label="Periods this week" value={formatNumber(slots.length)} />
+        <StatCard label="Periods today" value={formatNumber(todaySlots.length)} />
+        <StatCard
+          label="Two-factor"
+          value={twoFactorEnabled ? "Enabled" : "Not enabled"}
+          tone={twoFactorEnabled ? "positive" : "warning"}
+        />
+      </section>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <div className="border-b border-slate-100 px-5 py-4">
+            <h2 className="text-sm font-semibold text-slate-900">Today&apos;s schedule</h2>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-medium text-slate-900">{user.name}</p>
-              <p className="text-xs text-slate-500">{user.email}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                void logout().then(() => router.replace("/login"));
-              }}
-              className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          {todaySlots.length === 0 ? (
+            <EmptyState message="You have no periods scheduled for today." />
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {todaySlots.map((slot) => (
+                <li key={slot.id} className="flex items-center gap-4 px-5 py-3">
+                  <div className="w-24 text-xs font-medium text-slate-500">
+                    {slot.period?.starts_at ?? `Period ${slot.period?.id ?? ""}`}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-slate-900">
+                      {slot.subject?.name ?? "Subject"}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">
+                      {slot.class_room?.name ?? "Class"}
+                      {slot.section?.name ? ` - ${slot.section.name}` : ""}
+                    </p>
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    {slot.room?.name ?? "-"}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+
+        <QuickLinks
+          title="My workspace"
+          links={[
+            { href: "/dashboard/students", label: "Students" },
+            { href: "/dashboard/exams", label: "Exams & results" },
+            { href: "/dashboard/timetable", label: "Timetable" },
+          ]}
+        />
+      </div>
+    </div>
+  );
+}
+
+function QuickLinks({
+  title,
+  links,
+}: {
+  title: string;
+  links: { href: string; label: string }[];
+}) {
+  return (
+    <Card className="p-5">
+      <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+      <ul className="mt-3 space-y-1">
+        {links.map((link) => (
+          <li key={link.href}>
+            <Link
+              href={link.href}
+              className="flex items-center justify-between rounded-lg px-2 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
             >
-              Sign out
-            </button>
-          </div>
-        </div>
-      </header>
+              {link.label}
+              <Icon name="arrowUp" className="h-3.5 w-3.5 rotate-90" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
-        <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          This is the foundation shell. Module dashboards are added phase by
-          phase.
-        </p>
-
-        <section className="mt-6 grid gap-4 sm:grid-cols-3">
-          <StatCard label="Roles" value={user.roles.length} />
-          <StatCard label="Permissions" value={user.permissions.length} />
-          <StatCard label="Modules" value={modules.length} />
-        </section>
-
-        <section className="mt-8 grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Your roles</h2>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {user.roles.map((role) => (
-                <span
-                  key={role}
-                  className="rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white"
-                >
-                  {role}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">
-              Accessible modules
-            </h2>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {modules.map((module) => (
-                <span
-                  key={module}
-                  className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700"
-                >
-                  {module}
-                </span>
-              ))}
-            </div>
-          </div>
-        </section>
-      </main>
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <dt className="text-slate-500">{label}</dt>
+      <dd className="font-medium text-slate-900">{value}</dd>
     </div>
   );
 }

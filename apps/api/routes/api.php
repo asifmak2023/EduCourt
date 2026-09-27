@@ -52,9 +52,15 @@ use App\Http\Controllers\Api\FineRuleController;
 use App\Http\Controllers\Api\FiscalYearController;
 use App\Http\Controllers\Api\GradeScaleController;
 use App\Http\Controllers\Api\GuardianController;
+use App\Http\Controllers\Api\HelpdeskTicketController;
 use App\Http\Controllers\Api\IncomeSourceController;
 use App\Http\Controllers\Api\InstitutionController;
 use App\Http\Controllers\Api\InvigilationDutyController;
+use App\Http\Controllers\Api\ItAssetController;
+use App\Http\Controllers\Api\ItBackupLogController;
+use App\Http\Controllers\Api\ItChangeRequestController;
+use App\Http\Controllers\Api\ItReportController;
+use App\Http\Controllers\Api\ItSystemController;
 use App\Http\Controllers\Api\JournalEntryController;
 use App\Http\Controllers\Api\LeaveRequestController;
 use App\Http\Controllers\Api\LessonPlanController;
@@ -791,6 +797,47 @@ Route::prefix('v1')->group(function () {
             Route::get('sports/{sport}', [SportController::class, 'show'])->middleware('permission:sports.view');
             Route::put('sports/{sport}', [SportController::class, 'update'])->middleware('permission:sports.edit');
             Route::delete('sports/{sport}', [SportController::class, 'destroy'])->middleware('permission:sports.delete');
+
+            Route::get('it/assets', [ItAssetController::class, 'index'])->middleware('permission:it.view');
+            Route::post('it/assets', [ItAssetController::class, 'store'])->middleware('permission:it.create');
+            Route::get('it/assets/{asset}', [ItAssetController::class, 'show'])->middleware('permission:it.view');
+            Route::put('it/assets/{asset}', [ItAssetController::class, 'update'])->middleware('permission:it.edit');
+            Route::delete('it/assets/{asset}', [ItAssetController::class, 'destroy'])->middleware('permission:it.delete');
+            Route::get('it/assets/{asset}/assignments', [ItAssetController::class, 'assignments'])->middleware('permission:it.view');
+            Route::post('it/assets/{asset}/assign', [ItAssetController::class, 'assign'])->middleware('permission:it.edit');
+            Route::post('it/assets/{asset}/return', [ItAssetController::class, 'returnAsset'])->middleware('permission:it.edit');
+
+            Route::get('it/tickets', [HelpdeskTicketController::class, 'index'])->middleware('permission:it.view');
+            Route::post('it/tickets', [HelpdeskTicketController::class, 'store'])->middleware('permission:it.create');
+            Route::get('it/tickets/{ticket}', [HelpdeskTicketController::class, 'show'])->middleware('permission:it.view');
+            Route::put('it/tickets/{ticket}', [HelpdeskTicketController::class, 'update'])->middleware('permission:it.edit');
+            Route::post('it/tickets/{ticket}/assign', [HelpdeskTicketController::class, 'assign'])->middleware('permission:it.edit');
+            Route::post('it/tickets/{ticket}/resolve', [HelpdeskTicketController::class, 'resolve'])->middleware('permission:it.edit');
+            Route::post('it/tickets/{ticket}/close', [HelpdeskTicketController::class, 'close'])->middleware('permission:it.edit');
+            Route::get('it/tickets/{ticket}/comments', [HelpdeskTicketController::class, 'comments'])->middleware('permission:it.view');
+            Route::post('it/tickets/{ticket}/comments', [HelpdeskTicketController::class, 'addComment'])->middleware('permission:it.edit');
+            Route::delete('it/tickets/{ticket}', [HelpdeskTicketController::class, 'destroy'])->middleware('permission:it.delete');
+
+            Route::get('it/change-requests', [ItChangeRequestController::class, 'index'])->middleware('permission:it.view');
+            Route::post('it/change-requests', [ItChangeRequestController::class, 'store'])->middleware('permission:it.create');
+            Route::get('it/change-requests/{changeRequest}', [ItChangeRequestController::class, 'show'])->middleware('permission:it.view');
+            Route::put('it/change-requests/{changeRequest}', [ItChangeRequestController::class, 'update'])->middleware('permission:it.edit');
+            Route::post('it/change-requests/{changeRequest}/decide', [ItChangeRequestController::class, 'decide'])->middleware('permission:it.approve');
+            Route::delete('it/change-requests/{changeRequest}', [ItChangeRequestController::class, 'destroy'])->middleware('permission:it.delete');
+
+            Route::get('it/backups', [ItBackupLogController::class, 'index'])->middleware('permission:it.view');
+            Route::post('it/backups', [ItBackupLogController::class, 'store'])->middleware('permission:it.create');
+            Route::get('it/backups/{backupLog}', [ItBackupLogController::class, 'show'])->middleware('permission:it.view');
+            Route::put('it/backups/{backupLog}', [ItBackupLogController::class, 'update'])->middleware('permission:it.edit');
+            Route::delete('it/backups/{backupLog}', [ItBackupLogController::class, 'destroy'])->middleware('permission:it.delete');
+
+            Route::get('it/systems', [ItSystemController::class, 'index'])->middleware('permission:it.view');
+            Route::post('it/systems', [ItSystemController::class, 'store'])->middleware('permission:it.create');
+            Route::get('it/systems/{system}', [ItSystemController::class, 'show'])->middleware('permission:it.view');
+            Route::put('it/systems/{system}', [ItSystemController::class, 'update'])->middleware('permission:it.edit');
+            Route::delete('it/systems/{system}', [ItSystemController::class, 'destroy'])->middleware('permission:it.delete');
+
+            Route::get('it/reports/summary', [ItReportController::class, 'summary'])->middleware('permission:it.view');
         });
     });
 });

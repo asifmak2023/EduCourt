@@ -138,6 +138,9 @@ php artisan serve --host=127.0.0.1 --port=8000
   restricted behind a dedicated permission. Sports adds a catalogue with age
   and attendance eligibility checks, teams and squads, training sessions,
   fixtures with automatic win/loss/draw results, achievements by level,
-  equipment stock movements and a campus sports summary report.
+  equipment stock movements and a campus sports summary report. IT delivers an
+  asset register with assignment history, a helpdesk with priority-based SLAs
+  and an open/overdue queue, change requests with an approval workflow, backup
+  logs, portal and system uptime monitoring, and a campus IT operations summary.
 
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

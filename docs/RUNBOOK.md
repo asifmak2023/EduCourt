@@ -790,6 +790,43 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8000/api/v1/sports/reports/summary
 ```
 
+IT department quick check (IT administrator token):
+
+```bash
+# Register an asset and assign it
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Dell Latitude","asset_tag":"IT-0001","category":"laptop","cost":900}' \
+  http://127.0.0.1:8000/api/v1/it/assets
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"assigned_to":1}' \
+  http://127.0.0.1:8000/api/v1/it/assets/1/assign
+
+# Raise, assign and resolve a helpdesk ticket
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"subject":"Printer offline","description":"Floor 2 printer offline","priority":"high"}' \
+  http://127.0.0.1:8000/api/v1/it/tickets
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"assigned_to":1}' \
+  http://127.0.0.1:8000/api/v1/it/tickets/1/assign
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"resolution":"Restarted spooler"}' \
+  http://127.0.0.1:8000/api/v1/it/tickets/1/resolve
+
+# File a change request and approve it, then read the operations summary
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Firewall upgrade","description":"Firmware upgrade","risk":"high","status":"submitted"}' \
+  http://127.0.0.1:8000/api/v1/it/change-requests
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"status":"approved"}' \
+  http://127.0.0.1:8000/api/v1/it/change-requests/1/decide
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/it/reports/summary
+```
+
 Online payment quick check (campus admin token):
 
 ```bash

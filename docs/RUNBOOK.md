@@ -599,6 +599,38 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8000/api/v1/exams/1/analysis/teachers
 curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   "http://127.0.0.1:8000/api/v1/exams/analysis/year-on-year?exam_type_id=1"
+
+# Moderation: raise a grace-marks moderation, approve and apply it
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"exam_paper_id":1,"type":"grace_marks","value":5,"reason":"Moderation"}' \
+  http://127.0.0.1:8000/api/v1/exam-moderations
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/exam-moderations/1/approve
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/exam-moderations/1/apply
+
+# Re-evaluation: request, then approve with revised marks
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"exam_paper_id":1,"student_id":1,"reason":"Recheck totals"}' \
+  http://127.0.0.1:8000/api/v1/exam-reevaluations
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"status":"approved","revised_marks":45}' \
+  http://127.0.0.1:8000/api/v1/exam-reevaluations/1/review
+
+# Supplementary exams: list failed students, register, approve and complete
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/exams/1/supplementary-eligible?class_room_id=1"
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"original_exam_id":1,"exam_paper_id":1,"student_id":1,"fee_amount":500,"is_paid":true}' \
+  http://127.0.0.1:8000/api/v1/exam-supplementaries
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/exam-supplementaries/1/approve
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/exam-supplementaries/1/complete
 ```
 
 HR quick check (campus admin token):
@@ -910,6 +942,54 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8000/api/v1/lab-bookings
 curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8000/api/v1/labs/1/reports/summary
+```
+
+Transport and hostel quick check (transport/hostel incharge token):
+
+```bash
+# Register a vehicle and route, add a stop, then allocate a student
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Bus 1","registration_no":"LEB-1234","type":"bus","capacity":40}' \
+  http://127.0.0.1:8000/api/v1/transport/vehicles
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"North Route","code":"NR-1","fare":2000,"vehicle_id":1}' \
+  http://127.0.0.1:8000/api/v1/transport/routes
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Gulberg","sequence":1,"fare":1500}' \
+  http://127.0.0.1:8000/api/v1/transport/routes/1/stops
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"student_id":1,"transport_route_id":1,"transport_route_stop_id":1}' \
+  http://127.0.0.1:8000/api/v1/transport/allocations
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/transport/reports/summary
+
+# Create a hostel and room, allocate a student and read the occupancy summary
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Boys Hostel","code":"BH-1","type":"boys","capacity":10}' \
+  http://127.0.0.1:8000/api/v1/hostels
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"room_no":"101","type":"single","capacity":1,"monthly_fee":8000}' \
+  http://127.0.0.1:8000/api/v1/hostels/1/rooms
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"hostel_room_id":1,"student_id":1,"bed_no":"A"}' \
+  http://127.0.0.1:8000/api/v1/hostel-allocations
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/hostels/1/reports/summary
+
+# Request and approve a hostel outpass
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"student_id":1,"from_datetime":"2026-10-01 16:00:00","to_datetime":"2026-10-02 09:00:00","reason":"Family wedding"}' \
+  http://127.0.0.1:8000/api/v1/hostel-outpasses
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/hostel-outpasses/1/approve
 ```
 
 Online payment quick check (campus admin token):

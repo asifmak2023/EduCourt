@@ -38,7 +38,10 @@ use App\Http\Controllers\Api\DesignationController;
 use App\Http\Controllers\Api\ExamAnalysisController;
 use App\Http\Controllers\Api\ExamController;
 use App\Http\Controllers\Api\ExamMarkController;
+use App\Http\Controllers\Api\ExamModerationController;
 use App\Http\Controllers\Api\ExamPaperController;
+use App\Http\Controllers\Api\ExamReevaluationController;
+use App\Http\Controllers\Api\ExamSupplementaryController;
 use App\Http\Controllers\Api\ExamTypeController;
 use App\Http\Controllers\Api\ExpenseCategoryController;
 use App\Http\Controllers\Api\ExpenseController;
@@ -56,6 +59,11 @@ use App\Http\Controllers\Api\FiscalYearController;
 use App\Http\Controllers\Api\GradeScaleController;
 use App\Http\Controllers\Api\GuardianController;
 use App\Http\Controllers\Api\HelpdeskTicketController;
+use App\Http\Controllers\Api\HostelAllocationController;
+use App\Http\Controllers\Api\HostelController;
+use App\Http\Controllers\Api\HostelOutpassController;
+use App\Http\Controllers\Api\HostelReportController;
+use App\Http\Controllers\Api\HostelRoomController;
 use App\Http\Controllers\Api\IncomeSourceController;
 use App\Http\Controllers\Api\InstitutionController;
 use App\Http\Controllers\Api\InventoryCategoryController;
@@ -129,7 +137,11 @@ use App\Http\Controllers\Api\TermController;
 use App\Http\Controllers\Api\TimetableGenerationController;
 use App\Http\Controllers\Api\TimetableSlotController;
 use App\Http\Controllers\Api\TimetableViewController;
+use App\Http\Controllers\Api\TransportAllocationController;
+use App\Http\Controllers\Api\TransportReportController;
+use App\Http\Controllers\Api\TransportRouteController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\VehicleController;
 use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\Api\VisitorLogController;
 use App\Http\Controllers\Api\WelfareRecordController;
@@ -294,6 +306,29 @@ Route::prefix('v1')->group(function () {
 
             Route::get('exam-marks', [ExamMarkController::class, 'index'])->middleware('permission:exam.view');
             Route::post('exam-marks/bulk', [ExamMarkController::class, 'bulkStore'])->middleware('permission:exam.marks');
+
+            Route::get('exam-moderations', [ExamModerationController::class, 'index'])->middleware('permission:exam.view');
+            Route::post('exam-moderations', [ExamModerationController::class, 'store'])->middleware('permission:exam.edit');
+            Route::get('exam-moderations/{moderation}', [ExamModerationController::class, 'show'])->middleware('permission:exam.view');
+            Route::post('exam-moderations/{moderation}/approve', [ExamModerationController::class, 'approve'])->middleware('permission:exam.approve');
+            Route::post('exam-moderations/{moderation}/apply', [ExamModerationController::class, 'apply'])->middleware('permission:exam.approve');
+            Route::post('exam-moderations/{moderation}/reject', [ExamModerationController::class, 'reject'])->middleware('permission:exam.approve');
+            Route::delete('exam-moderations/{moderation}', [ExamModerationController::class, 'destroy'])->middleware('permission:exam.edit');
+
+            Route::get('exam-reevaluations', [ExamReevaluationController::class, 'index'])->middleware('permission:exam.view');
+            Route::post('exam-reevaluations', [ExamReevaluationController::class, 'store'])->middleware('permission:exam.edit');
+            Route::get('exam-reevaluations/{reevaluation}', [ExamReevaluationController::class, 'show'])->middleware('permission:exam.view');
+            Route::post('exam-reevaluations/{reevaluation}/review', [ExamReevaluationController::class, 'review'])->middleware('permission:exam.approve');
+            Route::delete('exam-reevaluations/{reevaluation}', [ExamReevaluationController::class, 'destroy'])->middleware('permission:exam.edit');
+
+            Route::get('exam-supplementaries', [ExamSupplementaryController::class, 'index'])->middleware('permission:exam.view');
+            Route::post('exam-supplementaries', [ExamSupplementaryController::class, 'store'])->middleware('permission:exam.edit');
+            Route::get('exam-supplementaries/{supplementary}', [ExamSupplementaryController::class, 'show'])->middleware('permission:exam.view');
+            Route::post('exam-supplementaries/{supplementary}/approve', [ExamSupplementaryController::class, 'approve'])->middleware('permission:exam.approve');
+            Route::post('exam-supplementaries/{supplementary}/reject', [ExamSupplementaryController::class, 'reject'])->middleware('permission:exam.approve');
+            Route::post('exam-supplementaries/{supplementary}/complete', [ExamSupplementaryController::class, 'complete'])->middleware('permission:exam.edit');
+            Route::delete('exam-supplementaries/{supplementary}', [ExamSupplementaryController::class, 'destroy'])->middleware('permission:exam.edit');
+            Route::get('exams/{exam}/supplementary-eligible', [ExamSupplementaryController::class, 'eligible'])->middleware('permission:exam.view');
 
             Route::get('invigilation-duties', [InvigilationDutyController::class, 'index'])->middleware('permission:exam.view');
             Route::post('invigilation-duties', [InvigilationDutyController::class, 'store'])->middleware('permission:exam.edit');
@@ -928,6 +963,55 @@ Route::prefix('v1')->group(function () {
             Route::post('lab-bookings/{booking}/cancel', [LabBookingController::class, 'cancel'])->middleware('permission:lab.edit');
             Route::post('lab-bookings/{booking}/complete', [LabBookingController::class, 'complete'])->middleware('permission:lab.edit');
             Route::delete('lab-bookings/{booking}', [LabBookingController::class, 'destroy'])->middleware('permission:lab.delete');
+
+            Route::get('transport/vehicles', [VehicleController::class, 'index'])->middleware('permission:transport.view');
+            Route::post('transport/vehicles', [VehicleController::class, 'store'])->middleware('permission:transport.create');
+            Route::get('transport/vehicles/{vehicle}', [VehicleController::class, 'show'])->middleware('permission:transport.view');
+            Route::put('transport/vehicles/{vehicle}', [VehicleController::class, 'update'])->middleware('permission:transport.edit');
+            Route::delete('transport/vehicles/{vehicle}', [VehicleController::class, 'destroy'])->middleware('permission:transport.delete');
+
+            Route::get('transport/routes', [TransportRouteController::class, 'index'])->middleware('permission:transport.view');
+            Route::post('transport/routes', [TransportRouteController::class, 'store'])->middleware('permission:transport.create');
+            Route::get('transport/routes/{route}', [TransportRouteController::class, 'show'])->middleware('permission:transport.view');
+            Route::put('transport/routes/{route}', [TransportRouteController::class, 'update'])->middleware('permission:transport.edit');
+            Route::delete('transport/routes/{route}', [TransportRouteController::class, 'destroy'])->middleware('permission:transport.delete');
+            Route::get('transport/routes/{route}/stops', [TransportRouteController::class, 'stops'])->middleware('permission:transport.view');
+            Route::post('transport/routes/{route}/stops', [TransportRouteController::class, 'addStop'])->middleware('permission:transport.edit');
+            Route::put('transport/stops/{stop}', [TransportRouteController::class, 'updateStop'])->middleware('permission:transport.edit');
+            Route::delete('transport/stops/{stop}', [TransportRouteController::class, 'destroyStop'])->middleware('permission:transport.edit');
+
+            Route::get('transport/allocations', [TransportAllocationController::class, 'index'])->middleware('permission:transport.view');
+            Route::post('transport/allocations', [TransportAllocationController::class, 'store'])->middleware('permission:transport.create');
+            Route::get('transport/allocations/{allocation}', [TransportAllocationController::class, 'show'])->middleware('permission:transport.view');
+            Route::post('transport/allocations/{allocation}/deallocate', [TransportAllocationController::class, 'deallocate'])->middleware('permission:transport.edit');
+            Route::delete('transport/allocations/{allocation}', [TransportAllocationController::class, 'destroy'])->middleware('permission:transport.delete');
+            Route::get('transport/reports/summary', [TransportReportController::class, 'summary'])->middleware('permission:transport.export');
+
+            Route::get('hostels', [HostelController::class, 'index'])->middleware('permission:hostel.view');
+            Route::post('hostels', [HostelController::class, 'store'])->middleware('permission:hostel.create');
+            Route::get('hostels/{hostel}/rooms', [HostelRoomController::class, 'index'])->middleware('permission:hostel.view');
+            Route::post('hostels/{hostel}/rooms', [HostelRoomController::class, 'store'])->middleware('permission:hostel.edit');
+            Route::get('hostels/{hostel}/reports/summary', [HostelReportController::class, 'summary'])->middleware('permission:hostel.export');
+            Route::get('hostels/{hostel}', [HostelController::class, 'show'])->middleware('permission:hostel.view');
+            Route::put('hostels/{hostel}', [HostelController::class, 'update'])->middleware('permission:hostel.edit');
+            Route::delete('hostels/{hostel}', [HostelController::class, 'destroy'])->middleware('permission:hostel.delete');
+            Route::get('hostel-rooms/{room}', [HostelRoomController::class, 'show'])->middleware('permission:hostel.view');
+            Route::put('hostel-rooms/{room}', [HostelRoomController::class, 'update'])->middleware('permission:hostel.edit');
+            Route::delete('hostel-rooms/{room}', [HostelRoomController::class, 'destroy'])->middleware('permission:hostel.delete');
+
+            Route::get('hostel-allocations', [HostelAllocationController::class, 'index'])->middleware('permission:hostel.view');
+            Route::post('hostel-allocations', [HostelAllocationController::class, 'store'])->middleware('permission:hostel.create');
+            Route::get('hostel-allocations/{allocation}', [HostelAllocationController::class, 'show'])->middleware('permission:hostel.view');
+            Route::post('hostel-allocations/{allocation}/vacate', [HostelAllocationController::class, 'vacate'])->middleware('permission:hostel.edit');
+            Route::delete('hostel-allocations/{allocation}', [HostelAllocationController::class, 'destroy'])->middleware('permission:hostel.delete');
+
+            Route::get('hostel-outpasses', [HostelOutpassController::class, 'index'])->middleware('permission:hostel.view');
+            Route::post('hostel-outpasses', [HostelOutpassController::class, 'store'])->middleware('permission:hostel.create');
+            Route::get('hostel-outpasses/{outpass}', [HostelOutpassController::class, 'show'])->middleware('permission:hostel.view');
+            Route::post('hostel-outpasses/{outpass}/approve', [HostelOutpassController::class, 'approve'])->middleware('permission:hostel.edit');
+            Route::post('hostel-outpasses/{outpass}/reject', [HostelOutpassController::class, 'reject'])->middleware('permission:hostel.edit');
+            Route::post('hostel-outpasses/{outpass}/return', [HostelOutpassController::class, 'markReturned'])->middleware('permission:hostel.edit');
+            Route::delete('hostel-outpasses/{outpass}', [HostelOutpassController::class, 'destroy'])->middleware('permission:hostel.delete');
         });
     });
 });

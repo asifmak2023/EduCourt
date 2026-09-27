@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\Auth\TwoFactorService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +18,8 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct(private readonly TwoFactorService $twoFactor) {}
+
     public function login(LoginRequest $request): JsonResponse
     {
         /** @var User|null $user */
@@ -41,11 +44,54 @@ class AuthController extends Controller
             ], 409);
         }
 
+        if ($user->hasTwoFactorEnabled()) {
+            $challenge = $this->twoFactor->issueChallenge($user);
+
+            $user->forceFill(['last_login_at' => now()])->save();
+
+            activity('auth')->causedBy($user)->withProperties(['ip' => $request->ip(), 'stage' => 'password'])->log('Password accepted, two-factor challenge issued');
+
+            return response()->json([
+                'message' => 'Two-factor verification required.',
+                'two_factor_required' => true,
+                'challenge_token' => $challenge,
+                'expires_in' => (int) config('security.two_factor.challenge_ttl', 300),
+            ]);
+        }
+
         $user->forceFill(['last_login_at' => now()])->save();
 
         $token = $user->createToken($request->validated('device_name') ?? 'api')->plainTextToken;
 
         activity('auth')->causedBy($user)->withProperties(['ip' => $request->ip()])->log('User logged in');
+
+        $user->load(['roles', 'permissions', 'campus', 'institution', 'scopeAssignments']);
+
+        return response()->json([
+            'token' => $token,
+            'user' => new UserResource($user),
+        ]);
+    }
+
+    public function twoFactorChallenge(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'challenge_token' => ['required', 'string'],
+            'code' => ['required', 'string'],
+            'device_name' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $user = $this->twoFactor->completeChallenge($validated['challenge_token'], $validated['code']);
+
+        if (! $user->is_active) {
+            abort(403, 'This account is inactive. Contact your administrator.');
+        }
+
+        $user->forceFill(['last_login_at' => now()])->save();
+
+        $token = $user->createToken($validated['device_name'] ?? 'api')->plainTextToken;
+
+        activity('auth')->causedBy($user)->withProperties(['ip' => $request->ip(), 'two_factor' => true])->log('User logged in');
 
         $user->load(['roles', 'permissions', 'campus', 'institution', 'scopeAssignments']);
 

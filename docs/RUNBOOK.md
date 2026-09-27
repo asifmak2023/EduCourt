@@ -103,6 +103,24 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
 Password reset and email-verification links point at `FRONTEND_URL` (defaults to
 `APP_URL`), so the web client owns the reset and verification screens.
 
+Two-factor authentication quick check (campus admin token):
+
+```bash
+# Start enrolment: returns the secret, otpauth URL and recovery codes
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/auth/two-factor/enable
+
+# Confirm with the 6-digit code from the authenticator app
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"code":"123456"}' \
+  http://127.0.0.1:8000/api/v1/auth/two-factor/confirm
+```
+
+Once enabled, login returns `two_factor_required` with a short-lived
+`challenge_token` instead of a token; exchange it for an access token (or pass a
+recovery code) at `POST /api/v1/auth/two-factor/challenge`. Disable and
+recovery-code regeneration require the account password.
+
 SSO/OIDC quick check (campus admin token):
 
 ```bash

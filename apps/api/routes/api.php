@@ -145,6 +145,7 @@ use App\Http\Controllers\Api\TranscriptController;
 use App\Http\Controllers\Api\TransportAllocationController;
 use App\Http\Controllers\Api\TransportReportController;
 use App\Http\Controllers\Api\TransportRouteController;
+use App\Http\Controllers\Api\TwoFactorController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\VehicleController;
 use App\Http\Controllers\Api\VendorController;
@@ -165,6 +166,8 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:sensitive');
     Route::post('auth/sso/{provider}/callback', [SsoAuthController::class, 'callback'])
         ->middleware('throttle:sensitive');
+    Route::post('auth/two-factor/challenge', [AuthController::class, 'twoFactorChallenge'])
+        ->middleware('throttle:login');
     Route::get('auth/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
         ->middleware('signed')->name('verification.verify');
 
@@ -187,6 +190,11 @@ Route::prefix('v1')->group(function () {
         Route::delete('auth/tokens/{token}', [SessionController::class, 'destroy']);
 
         Route::put('auth/password', [ProfileController::class, 'updatePassword']);
+
+        Route::post('auth/two-factor/enable', [TwoFactorController::class, 'enable']);
+        Route::post('auth/two-factor/confirm', [TwoFactorController::class, 'confirm']);
+        Route::post('auth/two-factor/disable', [TwoFactorController::class, 'disable']);
+        Route::post('auth/two-factor/recovery-codes', [TwoFactorController::class, 'recoveryCodes']);
 
         Route::post('auth/email/verification-notification', [AuthController::class, 'sendVerificationEmail'])
             ->middleware('throttle:sensitive');

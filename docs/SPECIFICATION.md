@@ -155,7 +155,7 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-1.4 | Super User creates the campus admin account for each campus; campus admins create local accounts | M | Delivered (API) |
 | FR-1.5 | All sensitive changes are audit logged | M | Delivered (API) |
 | FR-1.6 | Security headers on every response | M | Delivered (API) |
-| FR-1.7 | Two-factor authentication for admin, finance, HR | M | Fields + enforcement flag delivered; enrolment flow pending |
+| FR-1.7 | Two-factor authentication for admin, finance, HR | M | Delivered (API: native TOTP authenticator enrolment with encrypted secret and hashed single-use recovery codes, a password-then-code login challenge, recovery-code regeneration and password-confirmed disable; `ENFORCE_TWO_FACTOR` can require admin/finance/HR roles to enrol before login) |
 | FR-1.8 | Password reset, email verification, session/device management | M | Delivered (API: forgot/reset password, signed email verification, token/session list-revoke, password change) |
 | FR-1.9 | SSO (OIDC/SAML) for staff | C | OIDC delivered (API: per-institution OIDC providers with encrypted client secret, authorization-code flow with state/nonce/PKCE, account linking by subject or email, optional JIT provisioning with a default role, and RP-initiated logout; SAML remains pending) |
 

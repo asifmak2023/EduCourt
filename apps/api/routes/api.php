@@ -98,6 +98,7 @@ use App\Http\Controllers\Api\PlatformReportController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\PtmBookingController;
 use App\Http\Controllers\Api\PtmEventController;
+use App\Http\Controllers\Api\ReferenceDataController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\SalaryComponentController;
@@ -575,6 +576,9 @@ Route::prefix('v1')->group(function () {
             Route::get('fee-reports/students/{student}/statement', [FeeReportController::class, 'studentStatement'])->middleware('permission:fee.view');
             Route::get('fee-reports/classes/summary', [FeeReportController::class, 'classSummary'])->middleware('permission:fee.view');
             Route::get('fee-reports/collection', [FeeReportController::class, 'collection'])->middleware('permission:fee.view');
+
+            Route::get('reference/academic-options', [ReferenceDataController::class, 'academicOptions'])
+                ->middleware('permission:admission.view|student.view');
 
             Route::get('students', [StudentController::class, 'index'])->middleware('permission:student.view');
             Route::post('students', [StudentController::class, 'store'])->middleware('permission:student.create');

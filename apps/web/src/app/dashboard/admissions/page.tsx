@@ -1,8 +1,12 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
 import { useList } from "@/lib/useList";
+import { useAuth } from "@/lib/auth";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Pagination } from "@/components/Pagination";
+import { buttonClasses } from "@/components/Form";
 import {
   Badge,
   Card,
@@ -14,6 +18,16 @@ import {
 import { formatDate } from "@/lib/format";
 import type { Admission } from "@/lib/types";
 
+const STATUS_OPTIONS = [
+  { value: "", label: "All statuses" },
+  { value: "enquiry", label: "Enquiry" },
+  { value: "applied", label: "Applied" },
+  { value: "under_review", label: "Under review" },
+  { value: "approved", label: "Approved" },
+  { value: "rejected", label: "Rejected" },
+  { value: "enrolled", label: "Enrolled" },
+];
+
 export default function AdmissionsPage() {
   return (
     <PermissionGate permission="admission.view">
@@ -23,8 +37,11 @@ export default function AdmissionsPage() {
 }
 
 function AdmissionsTable() {
+  const { can } = useAuth();
+  const [status, setStatus] = useState("");
+
   const { items, meta, loading, error, page, setPage, search, setSearch } =
-    useList<Admission>("/v1/admissions");
+    useList<Admission>("/v1/admissions", { status });
 
   return (
     <div className="space-y-6">
@@ -32,18 +49,45 @@ function AdmissionsTable() {
         title="Admissions"
         description="Applications and their current stage."
         actions={
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => {
-              setPage(1);
-              setSearch(event.target.value);
-            }}
-            placeholder="Search name, application no or phone"
-            className="w-64 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-          />
+          <>
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => {
+                setPage(1);
+                setSearch(event.target.value);
+              }}
+              placeholder="Search name, application no or phone"
+              className="w-64 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
+            />
+            {can("admission.create") ? (
+              <Link
+                href="/dashboard/admissions/new"
+                className={buttonClasses("primary")}
+              >
+                New application
+              </Link>
+            ) : null}
+          </>
         }
       />
+
+      <div className="flex flex-wrap gap-3">
+        <select
+          value={status}
+          onChange={(event) => {
+            setPage(1);
+            setStatus(event.target.value);
+          }}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
+        >
+          {STATUS_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {error ? <ErrorNotice message={error} /> : null}
 
@@ -72,7 +116,12 @@ function AdmissionsTable() {
                       {admission.application_no}
                     </td>
                     <td className="px-5 py-3 font-medium text-slate-900">
-                      {admission.full_name}
+                      <Link
+                        href={`/dashboard/admissions/${admission.id}`}
+                        className="hover:underline"
+                      >
+                        {admission.full_name}
+                      </Link>
                     </td>
                     <td className="px-5 py-3 text-slate-600">
                       {admission.class_room ?? "-"}

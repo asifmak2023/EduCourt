@@ -29,6 +29,8 @@ export interface Campus {
 export interface Student {
   id: number;
   admission_no: string;
+  first_name: string;
+  last_name: string;
   full_name: string;
   gender: string | null;
   status: string | null;
@@ -37,9 +39,55 @@ export interface Student {
   phone?: string | null;
 }
 
+export interface Guardian {
+  id: number;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  national_id: string | null;
+  occupation: string | null;
+  relationship?: string | null;
+  is_primary?: boolean | null;
+  is_emergency_contact?: boolean | null;
+}
+
+export interface Enrollment {
+  id: number;
+  academic_year_id: number;
+  class_room_id: number;
+  section_id: number | null;
+  roll_number: string | null;
+  status: string | null;
+  starts_on: string | null;
+  ends_on: string | null;
+  academic_year?: { id: number; name: string } | null;
+  class_room?: { id: number; name: string } | null;
+  section?: { id: number; name: string } | null;
+}
+
+export interface StudentDetail extends Student {
+  institution_id: number;
+  campus_id: number;
+  national_id: string | null;
+  blood_group: string | null;
+  nationality: string | null;
+  religion: string | null;
+  category: string | null;
+  email: string | null;
+  address: string | null;
+  city: string | null;
+  previous_school: string | null;
+  admission_date: string | null;
+  notes: string | null;
+  guardians: Guardian[];
+  enrollments: Enrollment[];
+}
+
 export interface Admission {
   id: number;
   application_no: string;
+  first_name: string;
+  last_name: string;
   full_name: string;
   gender: string | null;
   status: string | null;
@@ -49,6 +97,52 @@ export interface Admission {
   guardian_name: string | null;
   guardian_phone: string | null;
   applied_on: string | null;
+  documents_count?: number;
+}
+
+export interface AdmissionDetail extends Admission {
+  institution_id: number;
+  campus_id: number;
+  date_of_birth: string | null;
+  class_room_id: number | null;
+  academic_year_id: number | null;
+  guardian_email: string | null;
+  guardian_relation: string | null;
+  previous_school: string | null;
+  address: string | null;
+  city: string | null;
+  decided_on: string | null;
+  decided_by: string | null;
+  rejection_reason: string | null;
+  student_id: number | null;
+  notes: string | null;
+}
+
+export interface AcademicYearOption {
+  id: number;
+  name: string;
+  code: string | null;
+  status: string | null;
+  is_current: boolean;
+}
+
+export interface ClassRoomOption {
+  id: number;
+  name: string;
+  code: string | null;
+  stage_id: number | null;
+}
+
+export interface SectionOption {
+  id: number;
+  class_room_id: number;
+  name: string;
+}
+
+export interface AcademicOptions {
+  academic_years: AcademicYearOption[];
+  class_rooms: ClassRoomOption[];
+  sections: SectionOption[];
 }
 
 export interface FeeVoucher {

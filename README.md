@@ -170,10 +170,20 @@ built on top of it, one surface at a time:
 - Delivered: authentication (password with a two-factor challenge step), a
   permission-filtered application shell with sidebar navigation, role-aware
   dashboards (platform overview for the Super User, campus dashboard for campus
-  roles, personal workspace for teachers), and read-only lists for students,
-  admissions and fee vouchers.
-- Planned: create/edit flows and the remaining module screens, reached from the
-  sidebar entries marked "Soon".
+  roles, personal workspace for teachers), and students, admissions and fee
+  voucher lists.
+- Delivered: student records (create with guardians and an optional first
+  enrollment, edit profile and guardians, view detail and enrollment history,
+  withdraw/transfer) and admission workflow (create/edit applications, submit
+  for review, approve, reject with a reason, and enroll into a student record
+  from the application detail page).
+- Planned: fee voucher detail and payment flows, then the remaining module
+  screens, reached from the sidebar entries marked "Soon".
+
+The client reads reference lists (academic years, classes, sections) from
+`GET /api/v1/reference/academic-options`, which is available to admission and
+student readers so front-office staff can complete forms without holding the
+academic structure permission.
 
 Demo accounts (password `password`): `superadmin@demo-eis.test` (Super User),
 `campusadmin@demo-eis.test` (campus admin) and `teacher@demo-eis.test`.

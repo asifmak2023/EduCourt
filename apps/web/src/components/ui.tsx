@@ -123,3 +123,65 @@ export function ErrorNotice({ message }: { message: string }) {
     </div>
   );
 }
+
+export function SuccessNotice({ message }: { message: string }) {
+  return (
+    <div className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+      {message}
+    </div>
+  );
+}
+
+export function DataList({ children }: { children: ReactNode }) {
+  return (
+    <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+      {children}
+    </dl>
+  );
+}
+
+export function DataItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: ReactNode;
+}) {
+  return (
+    <div>
+      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">
+        {label}
+      </dt>
+      <dd className="mt-1 break-words text-sm text-slate-800">
+        {value ?? "-"}
+      </dd>
+    </div>
+  );
+}
+
+export function SectionCard({
+  title,
+  description,
+  actions,
+  children,
+}: {
+  title: string;
+  description?: string;
+  actions?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <Card>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+          {description ? (
+            <p className="mt-0.5 text-xs text-slate-500">{description}</p>
+          ) : null}
+        </div>
+        {actions}
+      </div>
+      <div className="px-6 py-5">{children}</div>
+    </Card>
+  );
+}

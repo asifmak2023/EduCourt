@@ -135,6 +135,9 @@ php artisan serve --host=127.0.0.1 --port=8000
   and memberships, events with participants, certificate issuance, health and
   welfare records, alumni profiles, student council terms, a complaint desk
   with assignment/resolution workflow, and confidential counselling sessions
-  restricted behind a dedicated permission.
+  restricted behind a dedicated permission. Sports adds a catalogue with age
+  and attendance eligibility checks, teams and squads, training sessions,
+  fixtures with automatic win/loss/draw results, achievements by level,
+  equipment stock movements and a campus sports summary report.
 
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

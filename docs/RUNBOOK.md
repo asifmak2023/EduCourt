@@ -756,6 +756,40 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   "http://127.0.0.1:8000/api/v1/student-affairs/counselling?status=completed"
 ```
 
+Sports quick check (sports director token):
+
+```bash
+# Create a sport, a team and add a squad member
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Cricket","code":"CRICKET","category":"outdoor","budget":20000}' \
+  http://127.0.0.1:8000/api/v1/sports
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"sport_id":1,"name":"Senior XI","age_group":"U-17"}' \
+  http://127.0.0.1:8000/api/v1/sports/teams
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"student_id":1,"position":"Batsman"}' \
+  http://127.0.0.1:8000/api/v1/sports/teams/1/members
+
+# Schedule a fixture and record the result
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"sport_id":1,"opponent":"City School","fixture_date":"2026-10-05"}' \
+  http://127.0.0.1:8000/api/v1/sports/fixtures
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"our_score":180,"opponent_score":150}' \
+  http://127.0.0.1:8000/api/v1/sports/fixtures/1/result
+
+# Check eligibility and read the summary report
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/sports/1/students/1/eligibility
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/sports/reports/summary
+```
+
 Online payment quick check (campus admin token):
 
 ```bash

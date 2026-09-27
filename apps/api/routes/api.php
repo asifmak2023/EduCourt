@@ -77,6 +77,13 @@ use App\Http\Controllers\Api\ScholarshipController;
 use App\Http\Controllers\Api\ScopeAssignmentController;
 use App\Http\Controllers\Api\SectionController;
 use App\Http\Controllers\Api\SessionController;
+use App\Http\Controllers\Api\SportAchievementController;
+use App\Http\Controllers\Api\SportController;
+use App\Http\Controllers\Api\SportEquipmentController;
+use App\Http\Controllers\Api\SportFixtureController;
+use App\Http\Controllers\Api\SportReportController;
+use App\Http\Controllers\Api\SportTeamController;
+use App\Http\Controllers\Api\SportTrainingSessionController;
 use App\Http\Controllers\Api\StaffAttendanceController;
 use App\Http\Controllers\Api\StaffDocumentController;
 use App\Http\Controllers\Api\StaffMemberController;
@@ -739,6 +746,51 @@ Route::prefix('v1')->group(function () {
             Route::get('student-affairs/counselling/{counsellingSession}', [CounsellingSessionController::class, 'show'])->middleware('permission:counselling.view');
             Route::put('student-affairs/counselling/{counsellingSession}', [CounsellingSessionController::class, 'update'])->middleware('permission:counselling.edit');
             Route::delete('student-affairs/counselling/{counsellingSession}', [CounsellingSessionController::class, 'destroy'])->middleware('permission:counselling.delete');
+
+            Route::get('sports/teams', [SportTeamController::class, 'index'])->middleware('permission:sports.view');
+            Route::post('sports/teams', [SportTeamController::class, 'store'])->middleware('permission:sports.create');
+            Route::get('sports/teams/{team}', [SportTeamController::class, 'show'])->middleware('permission:sports.view');
+            Route::put('sports/teams/{team}', [SportTeamController::class, 'update'])->middleware('permission:sports.edit');
+            Route::delete('sports/teams/{team}', [SportTeamController::class, 'destroy'])->middleware('permission:sports.delete');
+            Route::get('sports/teams/{team}/members', [SportTeamController::class, 'members'])->middleware('permission:sports.view');
+            Route::post('sports/teams/{team}/members', [SportTeamController::class, 'addMember'])->middleware('permission:sports.edit');
+            Route::delete('sports/teams/{team}/members/{member}', [SportTeamController::class, 'removeMember'])->middleware('permission:sports.edit');
+
+            Route::get('sports/training-sessions', [SportTrainingSessionController::class, 'index'])->middleware('permission:sports.view');
+            Route::post('sports/training-sessions', [SportTrainingSessionController::class, 'store'])->middleware('permission:sports.create');
+            Route::get('sports/training-sessions/{trainingSession}', [SportTrainingSessionController::class, 'show'])->middleware('permission:sports.view');
+            Route::put('sports/training-sessions/{trainingSession}', [SportTrainingSessionController::class, 'update'])->middleware('permission:sports.edit');
+            Route::delete('sports/training-sessions/{trainingSession}', [SportTrainingSessionController::class, 'destroy'])->middleware('permission:sports.delete');
+
+            Route::get('sports/fixtures', [SportFixtureController::class, 'index'])->middleware('permission:sports.view');
+            Route::post('sports/fixtures', [SportFixtureController::class, 'store'])->middleware('permission:sports.create');
+            Route::get('sports/fixtures/{fixture}', [SportFixtureController::class, 'show'])->middleware('permission:sports.view');
+            Route::put('sports/fixtures/{fixture}', [SportFixtureController::class, 'update'])->middleware('permission:sports.edit');
+            Route::post('sports/fixtures/{fixture}/result', [SportFixtureController::class, 'recordResult'])->middleware('permission:sports.edit');
+            Route::delete('sports/fixtures/{fixture}', [SportFixtureController::class, 'destroy'])->middleware('permission:sports.delete');
+
+            Route::get('sports/achievements', [SportAchievementController::class, 'index'])->middleware('permission:sports.view');
+            Route::post('sports/achievements', [SportAchievementController::class, 'store'])->middleware('permission:sports.create');
+            Route::get('sports/achievements/{achievement}', [SportAchievementController::class, 'show'])->middleware('permission:sports.view');
+            Route::put('sports/achievements/{achievement}', [SportAchievementController::class, 'update'])->middleware('permission:sports.edit');
+            Route::delete('sports/achievements/{achievement}', [SportAchievementController::class, 'destroy'])->middleware('permission:sports.delete');
+
+            Route::get('sports/equipment', [SportEquipmentController::class, 'index'])->middleware('permission:sports.view');
+            Route::post('sports/equipment', [SportEquipmentController::class, 'store'])->middleware('permission:sports.create');
+            Route::get('sports/equipment/{equipment}', [SportEquipmentController::class, 'show'])->middleware('permission:sports.view');
+            Route::put('sports/equipment/{equipment}', [SportEquipmentController::class, 'update'])->middleware('permission:sports.edit');
+            Route::delete('sports/equipment/{equipment}', [SportEquipmentController::class, 'destroy'])->middleware('permission:sports.delete');
+            Route::get('sports/equipment/{equipment}/movements', [SportEquipmentController::class, 'movements'])->middleware('permission:sports.view');
+            Route::post('sports/equipment/{equipment}/movements', [SportEquipmentController::class, 'recordMovement'])->middleware('permission:sports.edit');
+
+            Route::get('sports/reports/summary', [SportReportController::class, 'summary'])->middleware('permission:sports.export');
+
+            Route::get('sports', [SportController::class, 'index'])->middleware('permission:sports.view');
+            Route::post('sports', [SportController::class, 'store'])->middleware('permission:sports.create');
+            Route::get('sports/{sport}/students/{student}/eligibility', [SportController::class, 'eligibility'])->middleware('permission:sports.view');
+            Route::get('sports/{sport}', [SportController::class, 'show'])->middleware('permission:sports.view');
+            Route::put('sports/{sport}', [SportController::class, 'update'])->middleware('permission:sports.edit');
+            Route::delete('sports/{sport}', [SportController::class, 'destroy'])->middleware('permission:sports.delete');
         });
     });
 });

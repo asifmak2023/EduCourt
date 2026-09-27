@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\CanteenSaleController;
 use App\Http\Controllers\Api\CanteenStockEntryController;
 use App\Http\Controllers\Api\CanteenSupplierController;
 use App\Http\Controllers\Api\ChartOfAccountController;
+use App\Http\Controllers\Api\CircularController;
 use App\Http\Controllers\Api\ClassBookController;
 use App\Http\Controllers\Api\ClassRoomController;
 use App\Http\Controllers\Api\ClassSubjectController;
@@ -75,6 +76,8 @@ use App\Http\Controllers\Api\PayrollRunController;
 use App\Http\Controllers\Api\PeriodController;
 use App\Http\Controllers\Api\PlatformReportController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\PtmBookingController;
+use App\Http\Controllers\Api\PtmEventController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\SalaryComponentController;
@@ -118,6 +121,7 @@ use App\Http\Controllers\Api\TimetableSlotController;
 use App\Http\Controllers\Api\TimetableViewController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\VendorController;
+use App\Http\Controllers\Api\VisitorLogController;
 use App\Http\Controllers\Api\WelfareRecordController;
 use Illuminate\Support\Facades\Route;
 
@@ -838,6 +842,37 @@ Route::prefix('v1')->group(function () {
             Route::delete('it/systems/{system}', [ItSystemController::class, 'destroy'])->middleware('permission:it.delete');
 
             Route::get('it/reports/summary', [ItReportController::class, 'summary'])->middleware('permission:it.view');
+
+            Route::get('circulars', [CircularController::class, 'index'])->middleware('permission:circular.view');
+            Route::post('circulars', [CircularController::class, 'store'])->middleware('permission:circular.create');
+            Route::get('circulars/{circular}', [CircularController::class, 'show'])->middleware('permission:circular.view');
+            Route::put('circulars/{circular}', [CircularController::class, 'update'])->middleware('permission:circular.edit');
+            Route::post('circulars/{circular}/publish', [CircularController::class, 'publish'])->middleware('permission:circular.approve');
+            Route::post('circulars/{circular}/archive', [CircularController::class, 'archive'])->middleware('permission:circular.edit');
+            Route::delete('circulars/{circular}', [CircularController::class, 'destroy'])->middleware('permission:circular.delete');
+
+            Route::get('visitors', [VisitorLogController::class, 'index'])->middleware('permission:front_office.view');
+            Route::post('visitors', [VisitorLogController::class, 'store'])->middleware('permission:front_office.create');
+            Route::get('visitors/{visitor}', [VisitorLogController::class, 'show'])->middleware('permission:front_office.view');
+            Route::put('visitors/{visitor}', [VisitorLogController::class, 'update'])->middleware('permission:front_office.edit');
+            Route::post('visitors/{visitor}/checkout', [VisitorLogController::class, 'checkout'])->middleware('permission:front_office.edit');
+            Route::delete('visitors/{visitor}', [VisitorLogController::class, 'destroy'])->middleware('permission:front_office.delete');
+
+            Route::get('ptm-events', [PtmEventController::class, 'index'])->middleware('permission:ptm.view');
+            Route::post('ptm-events', [PtmEventController::class, 'store'])->middleware('permission:ptm.create');
+            Route::get('ptm-events/{ptmEvent}', [PtmEventController::class, 'show'])->middleware('permission:ptm.view');
+            Route::put('ptm-events/{ptmEvent}', [PtmEventController::class, 'update'])->middleware('permission:ptm.edit');
+            Route::delete('ptm-events/{ptmEvent}', [PtmEventController::class, 'destroy'])->middleware('permission:ptm.delete');
+            Route::post('ptm-events/{ptmEvent}/slots', [PtmEventController::class, 'addSlot'])->middleware('permission:ptm.edit');
+            Route::put('ptm-slots/{slot}', [PtmEventController::class, 'updateSlot'])->middleware('permission:ptm.edit');
+            Route::delete('ptm-slots/{slot}', [PtmEventController::class, 'destroySlot'])->middleware('permission:ptm.edit');
+
+            Route::get('ptm-bookings', [PtmBookingController::class, 'index'])->middleware('permission:ptm.view');
+            Route::post('ptm-bookings', [PtmBookingController::class, 'store'])->middleware('permission:ptm.create');
+            Route::get('ptm-bookings/{booking}', [PtmBookingController::class, 'show'])->middleware('permission:ptm.view');
+            Route::post('ptm-bookings/{booking}/cancel', [PtmBookingController::class, 'cancel'])->middleware('permission:ptm.edit');
+            Route::post('ptm-bookings/{booking}/mark', [PtmBookingController::class, 'mark'])->middleware('permission:ptm.edit');
+            Route::delete('ptm-bookings/{booking}', [PtmBookingController::class, 'destroy'])->middleware('permission:ptm.delete');
         });
     });
 });

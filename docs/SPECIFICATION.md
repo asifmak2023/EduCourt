@@ -278,7 +278,7 @@ hostel, complaints and feedback.
 | FR-9.y | Sports module | S | Delivered (API: a sports catalogue with age and attendance eligibility checks, teams and squads, training sessions, fixtures with automatic win/loss/draw results, achievements by level, equipment stock with purchase/issue/return/damage/adjustment movements, and a campus sports summary report) |
 | FR-9.z | Student affairs module | M | Delivered (API: clubs with memberships, events with participants, certificate issuance with serial numbers, health/welfare records with follow-up, alumni profiles, student council terms, a complaint desk with reference numbers and an assign/resolve/reject workflow, and confidential counselling sessions gated behind the counselling permission) |
 | FR-9.it | IT department module | M | Delivered (API: IT asset register with assignment/return history and warranty tracking, a helpdesk with priority-based SLAs, assignment, comments and open/overdue queues, change requests with an approve/reject/implement workflow, backup logs, portal/system uptime monitoring, and a campus IT operations summary) |
-| FR-9.sup | Support modules | S | Not started |
+| FR-9.sup | Support modules | S | In progress (API delivered: circulars with publish/archive lifecycle, a front-office visitor register with check-in/check-out, and a parent-teacher meeting scheduler with capacity-limited slots and bookings; library, labs, inventory, transport and hostel still pending) |
 
 ### 6.10 Reports and analytics
 

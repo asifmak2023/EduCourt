@@ -827,6 +827,44 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8000/api/v1/it/reports/summary
 ```
 
+Support office quick check (campus admin token):
+
+```bash
+# Publish a circular, then archive it
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Parent Meeting","body":"Meeting on Friday","audience":"parents"}' \
+  http://127.0.0.1:8000/api/v1/circulars
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/circulars/1/publish
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/circulars/1/archive
+
+# Log a visitor and check them out
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Imran Shah","purpose":"Parent meeting","person_to_meet":"Principal"}' \
+  http://127.0.0.1:8000/api/v1/visitors
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/visitors/1/checkout
+
+# Schedule a PTM event with a slot, then book and cancel an appointment
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Term 1 PTM","event_date":"2026-10-05","venue":"Main Hall"}' \
+  http://127.0.0.1:8000/api/v1/ptm-events
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"start_time":"09:00","end_time":"09:15","capacity":1}' \
+  http://127.0.0.1:8000/api/v1/ptm-events/1/slots
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"ptm_slot_id":1,"student_id":1,"guardian_name":"Mr. Raza"}' \
+  http://127.0.0.1:8000/api/v1/ptm-bookings
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/ptm-bookings/1/cancel
+```
+
 Online payment quick check (campus admin token):
 
 ```bash

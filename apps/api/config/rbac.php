@@ -51,6 +51,8 @@ return [
         'counselling' => ['view', 'create', 'edit', 'delete'],
         'complaint' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'circular' => ['view', 'create', 'edit', 'approve', 'delete'],
+        'front_office' => ['view', 'create', 'edit', 'delete'],
+        'ptm' => ['view', 'create', 'edit', 'delete'],
         'report' => ['view', 'export'],
         'it' => ['view', 'create', 'edit', 'approve', 'delete'],
         'audit' => ['view', 'export'],
@@ -79,7 +81,7 @@ return [
             'hr.*', 'payroll.view',
             'inventory.*', 'library.*', 'lab.*', 'transport.*', 'hostel.*',
             'canteen.*', 'sports.*', 'student_affairs.*',
-            'complaint.*', 'circular.*', 'report.*', 'audit.view', 'setting.*',
+            'complaint.*', 'circular.*', 'front_office.*', 'ptm.*', 'report.*', 'audit.view', 'setting.*',
         ],
 
         RoleName::Principal->value => [
@@ -93,6 +95,7 @@ return [
             'notification.view', 'notification.send',
             'report.*', 'finance.view', 'hr.view', 'complaint.view',
             'student_affairs.view', 'circular.create', 'circular.approve',
+            'front_office.view', 'ptm.view', 'ptm.create', 'ptm.edit',
         ],
 
         RoleName::FinanceHead->value => [
@@ -111,6 +114,7 @@ return [
         RoleName::AdmissionsOfficer->value => [
             'admission.*', 'student.view', 'student.create', 'report.view',
             'scholarship.view', 'concession.view', 'fine.view', 'reminder.view',
+            'front_office.*', 'circular.view',
         ],
 
         RoleName::HrOfficer->value => [
@@ -124,6 +128,7 @@ return [
             'curriculum.view', 'curriculum.create', 'curriculum.edit', 'curriculum.approve',
             'timetable.*',
             'conduct.view', 'conduct.create',
+            'ptm.*',
         ],
 
         RoleName::Teacher->value => [
@@ -132,6 +137,7 @@ return [
             'academic.view', 'timetable.view',
             'curriculum.view', 'curriculum.create', 'curriculum.edit',
             'conduct.view', 'conduct.create',
+            'ptm.view', 'ptm.create', 'ptm.edit',
         ],
 
         RoleName::ExamController->value => [

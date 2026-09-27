@@ -113,6 +113,9 @@ php artisan serve --host=127.0.0.1 --port=8000
   Attendance now closes the loop with parents: marking a student absent
   automatically queues a primary-guardian notification with a queue/send/cancel
   lifecycle, bulk backfill and same-day dedupe through a pluggable gateway.
+  Mobile clients can capture attendance offline and sync batches with
+  client-UUID idempotency, capture-time conflict resolution and per-batch
+  receipts.
   Curriculum delivery adds per-class/subject syllabus units, class book lists and
   lesson plans with a draft/submitted/approved workflow, and mid-year fee
   proration bills late joiners only for the installments they are liable for.

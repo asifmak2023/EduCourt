@@ -292,6 +292,16 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   -d '{"attendance_date":"2026-09-26","class_room_id":1,"section_id":1,"records":[{"student_id":1,"status":"present"},{"student_id":2,"status":"absent"}]}' \
   http://127.0.0.1:8000/api/v1/attendance/students/bulk
 
+# Sync a batch captured offline on a mobile device (idempotent by client UUID)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"device_id":"tablet-7","client_batch_uuid":"11111111-1111-1111-1111-111111111111","records":[{"client_uuid":"22222222-2222-2222-2222-222222222222","student_id":1,"attendance_date":"2026-09-26","status":"absent","captured_at":"2026-09-26T08:15:00Z"}]}' \
+  http://127.0.0.1:8000/api/v1/attendance/sync
+
+# Sync receipts (applied/duplicate/conflict counts)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/attendance/sync-batches
+
 # Staff attendance and its report
 curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8000/api/v1/attendance/staff

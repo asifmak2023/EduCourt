@@ -227,7 +227,7 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-6.2 | Report by class: total, boys, girls, present, leave, absent | M | Delivered (API: class summary and per-student summary) |
 | FR-6.3 | Staff attendance and leave | M | Delivered (API: staff marking, leave requests with approval writing leave attendance) |
 | FR-6.4 | Automatic parent notification for absence | S | Delivered (API: marking a student absent automatically queues a per-guardian notification using the primary contact, with a queue/send/cancel lifecycle, bulk backfill, same-day dedupe and a pluggable gateway defaulting to a log driver) |
-| FR-6.5 | Offline attendance capture with sync (mobile) | S | Pending |
+| FR-6.5 | Offline attendance capture with sync (mobile) | S | Delivered (API: `POST /attendance/sync` accepts a device batch of attendance records carrying a client UUID and capture timestamp; per-record idempotency skips duplicates, newer server records win conflicts, and stale offline edits are overwritten; each batch is stored as a receipt with applied/duplicate/conflict counts and offline absences still queue guardian notifications) |
 
 ### 6.7 Examinations and results
 

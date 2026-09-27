@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AttendanceSource;
 use App\Enums\AttendanceStatus;
 use App\Support\Concerns\BelongsToCampus;
 use App\Support\Concerns\BelongsToInstitution;
@@ -18,14 +19,18 @@ class StudentAttendance extends Model
     protected $fillable = [
         'institution_id', 'campus_id', 'student_id', 'academic_year_id',
         'class_room_id', 'section_id', 'attendance_date', 'status',
-        'remarks', 'marked_by',
+        'remarks', 'marked_by', 'client_uuid', 'source', 'device_id',
+        'captured_at', 'synced_at',
     ];
 
     protected function casts(): array
     {
         return [
             'status' => AttendanceStatus::class,
+            'source' => AttendanceSource::class,
             'attendance_date' => 'date',
+            'captured_at' => 'datetime',
+            'synced_at' => 'datetime',
         ];
     }
 

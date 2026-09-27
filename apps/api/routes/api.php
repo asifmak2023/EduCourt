@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\AlumniProfileController;
 use App\Http\Controllers\Api\ApprovalRequestController;
 use App\Http\Controllers\Api\ApprovalWorkflowController;
 use App\Http\Controllers\Api\AssetController;
+use App\Http\Controllers\Api\AttendanceSyncController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BankAccountController;
 use App\Http\Controllers\Api\BankReconciliationController;
@@ -635,6 +636,9 @@ Route::prefix('v1')->group(function () {
             Route::get('attendance/students/students/{student}/report', [StudentAttendanceController::class, 'studentReport'])->middleware('permission:attendance.view');
             Route::put('attendance/students/{studentAttendance}', [StudentAttendanceController::class, 'update'])->middleware('permission:attendance.edit');
             Route::delete('attendance/students/{studentAttendance}', [StudentAttendanceController::class, 'destroy'])->middleware('permission:attendance.edit');
+
+            Route::post('attendance/sync', [AttendanceSyncController::class, 'store'])->middleware('permission:attendance.create');
+            Route::get('attendance/sync-batches', [AttendanceSyncController::class, 'index'])->middleware('permission:attendance.view');
 
             Route::get('attendance/staff', [StaffAttendanceController::class, 'index'])->middleware('permission:attendance.view');
             Route::post('attendance/staff', [StaffAttendanceController::class, 'store'])->middleware('permission:attendance.create');

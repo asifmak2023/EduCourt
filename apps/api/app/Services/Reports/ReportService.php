@@ -265,27 +265,27 @@ class ReportService
             ->get()
             ->filter(fn (ExamMark $mark) => $papers->has($mark->exam_paper_id));
 
-        $graded = $marks->where('is_absent', false)->whereNotNull('marks_obtained');
+        $graded = $marks->filter(fn (ExamMark $mark) => $mark->effective_marks !== null);
         $percentages = $graded->map(function (ExamMark $mark) use ($papers) {
             $max = (float) $papers->get($mark->exam_paper_id)->max_marks;
 
-            return $max > 0 ? (float) $mark->marks_obtained / $max * 100 : 0.0;
+            return $max > 0 ? (float) $mark->effective_marks / $max * 100 : 0.0;
         });
 
         $passing = $marks->filter(function (ExamMark $mark) use ($papers) {
-            if ($mark->is_absent || $mark->marks_obtained === null) {
+            if ($mark->effective_marks === null) {
                 return false;
             }
 
-            return (float) $mark->marks_obtained >= (float) $papers->get($mark->exam_paper_id)->pass_marks;
+            return $mark->effective_marks >= (float) $papers->get($mark->exam_paper_id)->pass_marks;
         })->count();
 
         $byPaper = $marks->groupBy('exam_paper_id')->map(function ($group, $paperId) use ($papers) {
             $paper = $papers->get($paperId);
             $max = (float) $paper->max_marks;
-            $obtained = (float) $group->where('is_absent', false)->sum('marks_obtained');
-            $count = $group->where('is_absent', false)->whereNotNull('marks_obtained')->count();
-            $passed = $group->filter(fn (ExamMark $m) => ! $m->is_absent && $m->marks_obtained !== null && (float) $m->marks_obtained >= (float) $paper->pass_marks)->count();
+            $obtained = (float) $group->sum(fn (ExamMark $m) => $m->effective_marks ?? 0.0);
+            $count = $group->filter(fn (ExamMark $m) => $m->effective_marks !== null)->count();
+            $passed = $group->filter(fn (ExamMark $m) => $m->effective_marks !== null && $m->effective_marks >= (float) $paper->pass_marks)->count();
 
             return [
                 'exam_paper_id' => (int) $paperId,
@@ -439,7 +439,7 @@ class ReportService
                 ->whereIn('exam_paper_id', $paperIds)
                 ->get();
 
-            $obtained = (float) $marks->where('is_absent', false)->sum('marks_obtained');
+            $obtained = (float) $marks->sum(fn (ExamMark $m) => $m->effective_marks ?? 0.0);
             $possible = (float) $papers->sum('max_marks');
 
             return [

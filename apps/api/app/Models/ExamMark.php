@@ -16,14 +16,31 @@ class ExamMark extends Model
     protected $fillable = [
         'institution_id', 'campus_id', 'exam_id', 'exam_paper_id', 'student_id',
         'class_room_id', 'subject_id', 'entered_by', 'marks_obtained', 'is_absent', 'remarks',
+        'original_marks_obtained', 'moderated_marks_obtained', 'moderation_source',
     ];
 
     protected function casts(): array
     {
         return [
             'marks_obtained' => 'decimal:2',
+            'original_marks_obtained' => 'decimal:2',
+            'moderated_marks_obtained' => 'decimal:2',
             'is_absent' => 'boolean',
         ];
+    }
+
+    /**
+     * Marks after any moderation or re-evaluation has been applied.
+     */
+    public function getEffectiveMarksAttribute(): ?float
+    {
+        if ($this->is_absent) {
+            return null;
+        }
+
+        $value = $this->moderated_marks_obtained ?? $this->marks_obtained;
+
+        return $value === null ? null : (float) $value;
     }
 
     public function institution(): BelongsTo

@@ -62,7 +62,7 @@ class ResultService
 
         foreach ($papers as $paper) {
             $mark = $marks->get($paper->id);
-            $obtained = $mark?->is_absent ? null : ($mark?->marks_obtained !== null ? (float) $mark->marks_obtained : null);
+            $obtained = $mark?->effective_marks;
 
             $subjects[] = [
                 'exam_paper_id' => $paper->id,
@@ -127,7 +127,7 @@ class ResultService
             ->where('exam_id', $exam->id)
             ->whereIn('student_id', $studentIds)
             ->where('is_absent', false)
-            ->selectRaw('student_id, SUM(marks_obtained) as total')
+            ->selectRaw('student_id, SUM(COALESCE(moderated_marks_obtained, marks_obtained)) as total')
             ->groupBy('student_id')
             ->pluck('total', 'student_id');
 
@@ -202,11 +202,12 @@ class ResultService
                         continue;
                     }
 
-                    if ($mark->marks_obtained === null) {
+                    $value = $mark->effective_marks;
+
+                    if ($value === null) {
                         continue;
                     }
 
-                    $value = (float) $mark->marks_obtained;
                     $appeared++;
                     $obtainedSum += $value;
                     $highest = $highest === null ? $value : max($highest, $value);
@@ -276,11 +277,10 @@ class ResultService
 
         foreach ($papers as $paper) {
             $marks = ExamMark::query()->where('exam_paper_id', $paper->id)->get();
-            $appeared = $marks->where('is_absent', false)->whereNotNull('marks_obtained')->count();
-            $passed = $marks->filter(fn (ExamMark $m) => ! $m->is_absent
-                && $m->marks_obtained !== null
-                && (float) $m->marks_obtained >= (float) $paper->pass_marks)->count();
-            $obtained = (float) $marks->where('is_absent', false)->sum('marks_obtained');
+            $appeared = $marks->filter(fn (ExamMark $m) => $m->effective_marks !== null)->count();
+            $passed = $marks->filter(fn (ExamMark $m) => $m->effective_marks !== null
+                && $m->effective_marks >= (float) $paper->pass_marks)->count();
+            $obtained = (float) $marks->sum(fn (ExamMark $m) => $m->effective_marks ?? 0);
             $capacity = (float) $paper->max_marks * max($appeared, 1);
 
             $rows[] = [
@@ -358,11 +358,12 @@ class ResultService
                     }
 
                     foreach ($marksByPaper->get($paper->id, collect()) as $mark) {
-                        if ($mark->is_absent || $mark->marks_obtained === null) {
+                        $value = $mark->effective_marks;
+
+                        if ($value === null) {
                             continue;
                         }
 
-                        $value = (float) $mark->marks_obtained;
                         $appeared++;
                         $obtained += $value;
                         $capacity += (float) $paper->max_marks;
@@ -422,7 +423,7 @@ class ResultService
                 ->get();
 
             $maxByPaper = $papers->pluck('max_marks', 'id');
-            $obtained = (float) $marks->sum('marks_obtained');
+            $obtained = (float) $marks->sum(fn (ExamMark $m) => $m->effective_marks ?? 0);
             $capacity = (float) $marks->sum(fn (ExamMark $m) => (float) ($maxByPaper[$m->exam_paper_id] ?? 0));
 
             $rows[] = [
@@ -452,7 +453,7 @@ class ResultService
             ->where('exam_id', $exam->id)
             ->whereIn('student_id', $studentIds)
             ->where('is_absent', false)
-            ->selectRaw('student_id, SUM(marks_obtained) as total')
+            ->selectRaw('student_id, SUM(COALESCE(moderated_marks_obtained, marks_obtained)) as total')
             ->groupBy('student_id')
             ->pluck('total', 'student_id');
 

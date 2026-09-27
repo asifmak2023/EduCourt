@@ -38,7 +38,10 @@ use App\Http\Controllers\Api\DesignationController;
 use App\Http\Controllers\Api\ExamAnalysisController;
 use App\Http\Controllers\Api\ExamController;
 use App\Http\Controllers\Api\ExamMarkController;
+use App\Http\Controllers\Api\ExamModerationController;
 use App\Http\Controllers\Api\ExamPaperController;
+use App\Http\Controllers\Api\ExamReevaluationController;
+use App\Http\Controllers\Api\ExamSupplementaryController;
 use App\Http\Controllers\Api\ExamTypeController;
 use App\Http\Controllers\Api\ExpenseCategoryController;
 use App\Http\Controllers\Api\ExpenseController;
@@ -303,6 +306,29 @@ Route::prefix('v1')->group(function () {
 
             Route::get('exam-marks', [ExamMarkController::class, 'index'])->middleware('permission:exam.view');
             Route::post('exam-marks/bulk', [ExamMarkController::class, 'bulkStore'])->middleware('permission:exam.marks');
+
+            Route::get('exam-moderations', [ExamModerationController::class, 'index'])->middleware('permission:exam.view');
+            Route::post('exam-moderations', [ExamModerationController::class, 'store'])->middleware('permission:exam.edit');
+            Route::get('exam-moderations/{moderation}', [ExamModerationController::class, 'show'])->middleware('permission:exam.view');
+            Route::post('exam-moderations/{moderation}/approve', [ExamModerationController::class, 'approve'])->middleware('permission:exam.approve');
+            Route::post('exam-moderations/{moderation}/apply', [ExamModerationController::class, 'apply'])->middleware('permission:exam.approve');
+            Route::post('exam-moderations/{moderation}/reject', [ExamModerationController::class, 'reject'])->middleware('permission:exam.approve');
+            Route::delete('exam-moderations/{moderation}', [ExamModerationController::class, 'destroy'])->middleware('permission:exam.edit');
+
+            Route::get('exam-reevaluations', [ExamReevaluationController::class, 'index'])->middleware('permission:exam.view');
+            Route::post('exam-reevaluations', [ExamReevaluationController::class, 'store'])->middleware('permission:exam.edit');
+            Route::get('exam-reevaluations/{reevaluation}', [ExamReevaluationController::class, 'show'])->middleware('permission:exam.view');
+            Route::post('exam-reevaluations/{reevaluation}/review', [ExamReevaluationController::class, 'review'])->middleware('permission:exam.approve');
+            Route::delete('exam-reevaluations/{reevaluation}', [ExamReevaluationController::class, 'destroy'])->middleware('permission:exam.edit');
+
+            Route::get('exam-supplementaries', [ExamSupplementaryController::class, 'index'])->middleware('permission:exam.view');
+            Route::post('exam-supplementaries', [ExamSupplementaryController::class, 'store'])->middleware('permission:exam.edit');
+            Route::get('exam-supplementaries/{supplementary}', [ExamSupplementaryController::class, 'show'])->middleware('permission:exam.view');
+            Route::post('exam-supplementaries/{supplementary}/approve', [ExamSupplementaryController::class, 'approve'])->middleware('permission:exam.approve');
+            Route::post('exam-supplementaries/{supplementary}/reject', [ExamSupplementaryController::class, 'reject'])->middleware('permission:exam.approve');
+            Route::post('exam-supplementaries/{supplementary}/complete', [ExamSupplementaryController::class, 'complete'])->middleware('permission:exam.edit');
+            Route::delete('exam-supplementaries/{supplementary}', [ExamSupplementaryController::class, 'destroy'])->middleware('permission:exam.edit');
+            Route::get('exams/{exam}/supplementary-eligible', [ExamSupplementaryController::class, 'eligible'])->middleware('permission:exam.view');
 
             Route::get('invigilation-duties', [InvigilationDutyController::class, 'index'])->middleware('permission:exam.view');
             Route::post('invigilation-duties', [InvigilationDutyController::class, 'store'])->middleware('permission:exam.edit');

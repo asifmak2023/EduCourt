@@ -599,6 +599,38 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8000/api/v1/exams/1/analysis/teachers
 curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   "http://127.0.0.1:8000/api/v1/exams/analysis/year-on-year?exam_type_id=1"
+
+# Moderation: raise a grace-marks moderation, approve and apply it
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"exam_paper_id":1,"type":"grace_marks","value":5,"reason":"Moderation"}' \
+  http://127.0.0.1:8000/api/v1/exam-moderations
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/exam-moderations/1/approve
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/exam-moderations/1/apply
+
+# Re-evaluation: request, then approve with revised marks
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"exam_paper_id":1,"student_id":1,"reason":"Recheck totals"}' \
+  http://127.0.0.1:8000/api/v1/exam-reevaluations
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"status":"approved","revised_marks":45}' \
+  http://127.0.0.1:8000/api/v1/exam-reevaluations/1/review
+
+# Supplementary exams: list failed students, register, approve and complete
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/exams/1/supplementary-eligible?class_room_id=1"
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"original_exam_id":1,"exam_paper_id":1,"student_id":1,"fee_amount":500,"is_paid":true}' \
+  http://127.0.0.1:8000/api/v1/exam-supplementaries
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/exam-supplementaries/1/approve
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/exam-supplementaries/1/complete
 ```
 
 HR quick check (campus admin token):

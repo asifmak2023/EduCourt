@@ -238,7 +238,7 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-7.3 | Marks entry by subject teacher | M | Delivered (API: bulk marks entry per paper with absentee flag, max-marks validation and upsert) |
 | FR-7.4 | Grading rules, result cards, merit lists | M | Delivered (API: campus grade scales with banded items, derived result cards with per-subject pass/fail, totals, percentage and grade, and class merit lists with ranks) |
 | FR-7.5 | Result analysis: class, subject, teacher, year-on-year | M | Delivered (API: class analysis with per-subject averages/pass rates/high-low and overall grade distribution, subject-by-class analysis, per-teacher achievement and year-on-year comparison by exam type) |
-| FR-7.6 | Moderation, re-evaluation, supplementary exams | S | Pending |
+| FR-7.6 | Moderation, re-evaluation, supplementary exams | S | Delivered (API: grace-marks and scaling moderations with approve/apply workflow that stores moderated marks separately and clamps to paper maximum, per-student re-evaluation requests with review/revise, and supplementary exam registration for failed students with approve/reject/complete; result cards, analysis and reports aggregate effective marks) |
 | FR-7.7 | Semester and credit-hour model for college/university | S | Pending |
 
 ### 6.8 HR and payroll

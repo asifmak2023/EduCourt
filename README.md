@@ -146,6 +146,8 @@ php artisan serve --host=127.0.0.1 --port=8000
   visitor register with check-in/check-out, a parent-teacher meeting scheduler
   with capacity-limited slots and bookings, a general stores inventory with
   stock movements and low-stock reporting, a library with issuing, returns and
-  overdue fines, and labs with equipment registers and clash-free bookings.
+  overdue fines, labs with equipment registers and clash-free bookings,
+  transport with vehicles, routes, stops and allocations, and hostels with
+  rooms, occupancy-tracked allocations and an outpass approval workflow.
 
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

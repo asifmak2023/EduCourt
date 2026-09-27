@@ -143,7 +143,9 @@ php artisan serve --host=127.0.0.1 --port=8000
   and an open/overdue queue, change requests with an approval workflow, backup
   logs, portal and system uptime monitoring, and a campus IT operations summary.
   Support modules add circulars with a publish/archive lifecycle, a front-office
-  visitor register with check-in/check-out, and a parent-teacher meeting
-  scheduler with capacity-limited slots and bookings.
+  visitor register with check-in/check-out, a parent-teacher meeting scheduler
+  with capacity-limited slots and bookings, a general stores inventory with
+  stock movements and low-stock reporting, a library with issuing, returns and
+  overdue fines, and labs with equipment registers and clash-free bookings.
 
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

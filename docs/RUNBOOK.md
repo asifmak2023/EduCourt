@@ -865,6 +865,53 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   -X POST http://127.0.0.1:8000/api/v1/ptm-bookings/1/cancel
 ```
 
+Inventory, library and lab quick check (campus admin token):
+
+```bash
+# Create a store item, issue stock and read the low-stock summary
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Whiteboard Marker","code":"MRK-01","quantity":10,"reorder_level":5}' \
+  http://127.0.0.1:8000/api/v1/inventory/items
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"type":"issue","quantity":8}' \
+  http://127.0.0.1:8000/api/v1/inventory/items/1/movements
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/inventory/reports/summary
+
+# Add a library book, issue it, then return it and read the summary
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Physics 101","author":"Dr. Iqbal","total_copies":2}' \
+  http://127.0.0.1:8000/api/v1/library/books
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"book_id":1,"member_type":"student","issued_on":"2026-09-01","due_on":"2026-09-05"}' \
+  http://127.0.0.1:8000/api/v1/library/issues
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"returned_on":"2026-09-10","fine_per_day":5}' \
+  http://127.0.0.1:8000/api/v1/library/issues/1/return
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/library/reports/summary
+
+# Create a lab with equipment, book a session and read the lab summary
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Chemistry Lab","code":"LAB-CHM","type":"science","capacity":30}' \
+  http://127.0.0.1:8000/api/v1/labs
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Microscope","quantity":10,"condition":"working"}' \
+  http://127.0.0.1:8000/api/v1/labs/1/equipment
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"lab_id":1,"session_date":"2026-10-01","start_time":"09:00","end_time":"10:00"}' \
+  http://127.0.0.1:8000/api/v1/lab-bookings
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/labs/1/reports/summary
+```
+
 Online payment quick check (campus admin token):
 
 ```bash

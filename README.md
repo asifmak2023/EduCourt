@@ -38,7 +38,9 @@ php artisan serve --host=127.0.0.1 --port=8000
 - Phase 1 delivered: tenancy, users, roles, permissions, scoped access,
   authentication, audit logging and security headers. Account security adds
   password reset, email verification, self-service password change and
-  per-device session listing/revocation.
+  per-device session listing/revocation. Staff single sign-on is available
+  through per-institution OIDC providers (authorization code with PKCE,
+  account linking and optional just-in-time provisioning).
 - Phase 2 delivered: academic years and terms, stages, classes, sections,
   subjects and subject-to-class mapping, teaching assignments with slot and
   workload guards, the academic calendar, periods and rooms, and timetable slots

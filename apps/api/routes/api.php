@@ -113,6 +113,8 @@ use App\Http\Controllers\Api\SportFixtureController;
 use App\Http\Controllers\Api\SportReportController;
 use App\Http\Controllers\Api\SportTeamController;
 use App\Http\Controllers\Api\SportTrainingSessionController;
+use App\Http\Controllers\Api\SsoAuthController;
+use App\Http\Controllers\Api\SsoProviderController;
 use App\Http\Controllers\Api\StaffAttendanceController;
 use App\Http\Controllers\Api\StaffDocumentController;
 use App\Http\Controllers\Api\StaffMemberController;
@@ -158,6 +160,11 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:sensitive');
     Route::post('auth/reset-password', [AuthController::class, 'resetPassword'])
         ->middleware('throttle:sensitive');
+
+    Route::get('auth/sso/{provider}/authorize', [SsoAuthController::class, 'authorize'])
+        ->middleware('throttle:sensitive');
+    Route::post('auth/sso/{provider}/callback', [SsoAuthController::class, 'callback'])
+        ->middleware('throttle:sensitive');
     Route::get('auth/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
         ->middleware('signed')->name('verification.verify');
 
@@ -167,6 +174,13 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
         Route::get('auth/me', [ProfileController::class, 'show']);
         Route::post('auth/logout', [AuthController::class, 'logout']);
+        Route::post('auth/sso/{provider}/logout', [SsoAuthController::class, 'logout']);
+
+        Route::get('sso-providers', [SsoProviderController::class, 'index'])->middleware('permission:setting.view');
+        Route::post('sso-providers', [SsoProviderController::class, 'store'])->middleware('permission:setting.edit');
+        Route::get('sso-providers/{provider}', [SsoProviderController::class, 'show'])->middleware('permission:setting.view');
+        Route::put('sso-providers/{provider}', [SsoProviderController::class, 'update'])->middleware('permission:setting.edit');
+        Route::delete('sso-providers/{provider}', [SsoProviderController::class, 'destroy'])->middleware('permission:setting.edit');
 
         Route::get('auth/tokens', [SessionController::class, 'index']);
         Route::delete('auth/tokens', [SessionController::class, 'destroyOthers']);

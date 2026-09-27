@@ -157,7 +157,7 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-1.6 | Security headers on every response | M | Delivered (API) |
 | FR-1.7 | Two-factor authentication for admin, finance, HR | M | Fields + enforcement flag delivered; enrolment flow pending |
 | FR-1.8 | Password reset, email verification, session/device management | M | Delivered (API: forgot/reset password, signed email verification, token/session list-revoke, password change) |
-| FR-1.9 | SSO (OIDC/SAML) for staff | C | Pending |
+| FR-1.9 | SSO (OIDC/SAML) for staff | C | OIDC delivered (API: per-institution OIDC providers with encrypted client secret, authorization-code flow with state/nonce/PKCE, account linking by subject or email, optional JIT provisioning with a default role, and RP-initiated logout; SAML remains pending) |
 
 ### 6.2 Academic structure
 
@@ -524,6 +524,8 @@ schema; school-first with college/university extension.
    `credit_hours` with a 1.0 fallback, GPA points from the campus grade scale,
    and terms used as semesters); institution-specific overrides remain open.
 5. Notification channels in priority order: SMS, email, WhatsApp, push.
+6. SSO: OIDC is delivered; whether to add SAML and the per-IdP attribute/role
+   mapping for specific providers remains open.
 
 Resolved: the platform is multi-tenant SaaS with many institutions, each with
 many campuses; campus is the tenant boundary; school-first with per-campus

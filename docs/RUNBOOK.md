@@ -103,6 +103,24 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
 Password reset and email-verification links point at `FRONTEND_URL` (defaults to
 `APP_URL`), so the web client owns the reset and verification screens.
 
+SSO/OIDC quick check (campus admin token):
+
+```bash
+# Register an OIDC provider for the institution (secret is stored encrypted)
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Demo IdP","client_id":"demo-client","client_secret":"demo-secret","authorize_url":"https://idp.example.com/authorize","token_url":"https://idp.example.com/token","userinfo_url":"https://idp.example.com/userinfo","redirect_uri":"http://localhost:3000/auth/sso/callback","jit_provisioning":true,"default_role":"teacher"}' \
+  http://127.0.0.1:8000/api/v1/sso-providers
+
+# Start the authorization-code flow (returns authorize_url with state, nonce, PKCE)
+curl -s -H 'Accept: application/json' \
+  http://127.0.0.1:8000/api/v1/auth/sso/1/authorize
+```
+
+Providers are institution-scoped; the callback links to an existing staff
+account by subject (or verified email) and, when just-in-time provisioning is
+enabled, creates the user with the provider's default role.
+
 Budget quick check (campus admin token):
 
 ```bash

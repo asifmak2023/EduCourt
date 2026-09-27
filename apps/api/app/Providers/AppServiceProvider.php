@@ -9,6 +9,8 @@ use App\Services\Notifications\NotificationGateway;
 use App\Services\Notifications\NotificationService;
 use App\Services\Reminders\ReminderGateway;
 use App\Services\Reminders\ReminderService;
+use App\Services\Sso\HttpOidcClient;
+use App\Services\Sso\OidcClient;
 use App\Support\TenantContext;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -23,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(TenantContext::class, fn () => new TenantContext);
         $this->app->bind(ReminderGateway::class, fn () => ReminderService::makeGateway());
         $this->app->bind(NotificationGateway::class, fn () => NotificationService::makeGateway());
+        $this->app->bind(OidcClient::class, fn () => new HttpOidcClient);
         $this->app->bind(FileScanner::class, fn () => match (config('security.uploads.scanner')) {
             'clamav' => new ClamavFileScanner,
             default => new NullFileScanner,

@@ -33,6 +33,7 @@ use App\Http\Controllers\Api\ConcessionPolicyController;
 use App\Http\Controllers\Api\ConductRecordController;
 use App\Http\Controllers\Api\CouncilMemberController;
 use App\Http\Controllers\Api\CounsellingSessionController;
+use App\Http\Controllers\Api\CourseRegistrationController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DesignationController;
 use App\Http\Controllers\Api\ExamAnalysisController;
@@ -137,6 +138,7 @@ use App\Http\Controllers\Api\TermController;
 use App\Http\Controllers\Api\TimetableGenerationController;
 use App\Http\Controllers\Api\TimetableSlotController;
 use App\Http\Controllers\Api\TimetableViewController;
+use App\Http\Controllers\Api\TranscriptController;
 use App\Http\Controllers\Api\TransportAllocationController;
 use App\Http\Controllers\Api\TransportReportController;
 use App\Http\Controllers\Api\TransportRouteController;
@@ -329,6 +331,14 @@ Route::prefix('v1')->group(function () {
             Route::post('exam-supplementaries/{supplementary}/complete', [ExamSupplementaryController::class, 'complete'])->middleware('permission:exam.edit');
             Route::delete('exam-supplementaries/{supplementary}', [ExamSupplementaryController::class, 'destroy'])->middleware('permission:exam.edit');
             Route::get('exams/{exam}/supplementary-eligible', [ExamSupplementaryController::class, 'eligible'])->middleware('permission:exam.view');
+
+            Route::get('course-registrations', [CourseRegistrationController::class, 'index'])->middleware('permission:credit.view');
+            Route::post('course-registrations', [CourseRegistrationController::class, 'store'])->middleware('permission:credit.create');
+            Route::get('course-registrations/{registration}', [CourseRegistrationController::class, 'show'])->middleware('permission:credit.view');
+            Route::post('course-registrations/{registration}/drop', [CourseRegistrationController::class, 'drop'])->middleware('permission:credit.edit');
+            Route::delete('course-registrations/{registration}', [CourseRegistrationController::class, 'destroy'])->middleware('permission:credit.delete');
+            Route::get('students/{student}/transcript', [TranscriptController::class, 'show'])->middleware('permission:credit.view');
+            Route::get('students/{student}/term-gpa', [TranscriptController::class, 'term'])->middleware('permission:credit.view');
 
             Route::get('invigilation-duties', [InvigilationDutyController::class, 'index'])->middleware('permission:exam.view');
             Route::post('invigilation-duties', [InvigilationDutyController::class, 'store'])->middleware('permission:exam.edit');

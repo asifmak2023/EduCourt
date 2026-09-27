@@ -38,6 +38,7 @@ return [
         'conduct' => ['view', 'create', 'edit', 'approve', 'delete'],
         'notification' => ['view', 'create', 'send', 'delete'],
         'exam' => ['view', 'create', 'edit', 'marks', 'approve', 'delete', 'export'],
+        'credit' => ['view', 'create', 'edit', 'delete', 'export'],
         'hr' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'payroll' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'inventory' => ['view', 'create', 'edit', 'delete', 'export'],
@@ -73,7 +74,7 @@ return [
             'institution.view',
             'campus.view', 'campus.edit',
             'user.*', 'role.view',
-            'admission.*', 'student.*', 'attendance.*', 'exam.*',
+            'admission.*', 'student.*', 'attendance.*', 'exam.*', 'credit.*',
             'academic.*', 'timetable.*', 'scholarship.*', 'curriculum.*',
             'finance.*', 'fee.*', 'concession.*', 'fine.*', 'reminder.*',
             'conduct.*',
@@ -86,6 +87,7 @@ return [
 
         RoleName::Principal->value => [
             'student.view', 'attendance.view', 'exam.view', 'exam.approve',
+            'credit.view',
             'academic.view', 'timetable.view', 'timetable.approve', 'scholarship.view',
             'curriculum.view', 'curriculum.approve',
             'concession.view', 'concession.approve',
@@ -128,6 +130,7 @@ return [
             'curriculum.view', 'curriculum.create', 'curriculum.edit', 'curriculum.approve',
             'timetable.*',
             'conduct.view', 'conduct.create',
+            'credit.view', 'credit.create', 'credit.edit',
             'ptm.*',
         ],
 
@@ -137,11 +140,12 @@ return [
             'academic.view', 'timetable.view',
             'curriculum.view', 'curriculum.create', 'curriculum.edit',
             'conduct.view', 'conduct.create',
+            'credit.view',
             'ptm.view', 'ptm.create', 'ptm.edit',
         ],
 
         RoleName::ExamController->value => [
-            'exam.*', 'student.view', 'report.view',
+            'exam.*', 'credit.*', 'student.view', 'report.view',
         ],
 
         RoleName::StudentAffairsOfficer->value => [
@@ -178,13 +182,13 @@ return [
 
         RoleName::ParentGuardian->value => [
             'student.view', 'attendance.view', 'exam.view', 'fee.view',
-            'academic.view', 'timetable.view',
+            'academic.view', 'timetable.view', 'credit.view',
             'complaint.create', 'complaint.view', 'circular.view',
         ],
 
         RoleName::Student->value => [
             'attendance.view', 'exam.view', 'circular.view', 'complaint.create',
-            'academic.view', 'timetable.view',
+            'academic.view', 'timetable.view', 'credit.view',
         ],
     ],
 ];

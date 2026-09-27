@@ -239,7 +239,7 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-7.4 | Grading rules, result cards, merit lists | M | Delivered (API: campus grade scales with banded items, derived result cards with per-subject pass/fail, totals, percentage and grade, and class merit lists with ranks) |
 | FR-7.5 | Result analysis: class, subject, teacher, year-on-year | M | Delivered (API: class analysis with per-subject averages/pass rates/high-low and overall grade distribution, subject-by-class analysis, per-teacher achievement and year-on-year comparison by exam type) |
 | FR-7.6 | Moderation, re-evaluation, supplementary exams | S | Delivered (API: grace-marks and scaling moderations with approve/apply workflow that stores moderated marks separately and clamps to paper maximum, per-student re-evaluation requests with review/revise, and supplementary exam registration for failed students with approve/reject/complete; result cards, analysis and reports aggregate effective marks) |
-| FR-7.7 | Semester and credit-hour model for college/university | S | Pending |
+| FR-7.7 | Semester and credit-hour model for college/university | S | Delivered (API: per-term/semester course registration with credit hours defaulted from the subject, duplicate/tenancy guards and drop workflow, plus credit-weighted term GPA and cumulative transcript built from exam marks linked to the term and the campus grade scale; honours the campus academic_model/term_system/grading_system/credit_hours_enabled configuration) |
 
 ### 6.8 HR and payroll
 
@@ -520,8 +520,9 @@ schema; school-first with college/university extension.
    handling.
 2. Which payment gateway(s) for fees and wallet top-ups?
 3. Board-specific grading and reporting formats.
-4. College/university credit system specifics: default credit hours per subject,
-   GPA scale and semester rules.
+4. College/university credit system: defaults are delivered (per-subject
+   `credit_hours` with a 1.0 fallback, GPA points from the campus grade scale,
+   and terms used as semesters); institution-specific overrides remain open.
 5. Notification channels in priority order: SMS, email, WhatsApp, push.
 
 Resolved: the platform is multi-tenant SaaS with many institutions, each with

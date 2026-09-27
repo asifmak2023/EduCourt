@@ -633,6 +633,22 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   -X POST http://127.0.0.1:8000/api/v1/exam-supplementaries/1/complete
 ```
 
+Credit-hour quick check (campus admin token):
+
+```bash
+# Register a student for a term/semester subject with credit hours
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"student_id":1,"term_id":1,"subject_id":1,"credit_hours":3}' \
+  http://127.0.0.1:8000/api/v1/course-registrations
+
+# Read the credit-weighted term GPA and the cumulative transcript
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/students/1/term-gpa?term_id=1"
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/students/1/transcript
+```
+
 HR quick check (campus admin token):
 
 ```bash

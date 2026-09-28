@@ -20,9 +20,11 @@ import type {
   Paginated,
   Period,
   Room,
+  SalaryComponent,
   Scholarship,
   Section,
   Stage,
+  StaffMember,
   Student,
   Subject,
   SyllabusUnit,
@@ -283,5 +285,17 @@ export function useDepartments(enabled = true): ListLookupState<Department> {
 export function useDesignations(enabled = true): ListLookupState<Designation> {
   return useCollection<Designation>(
     enabled ? "/v1/designations?per_page=200" : null
+  );
+}
+
+export function useStaffMembers(enabled = true): ListLookupState<StaffMember> {
+  return useCollection<StaffMember>(enabled ? "/v1/staff?per_page=200" : null);
+}
+
+export function useSalaryComponents(
+  enabled = true
+): ListLookupState<SalaryComponent> {
+  return useCollection<SalaryComponent>(
+    enabled ? "/v1/salary-components?per_page=200" : null
   );
 }

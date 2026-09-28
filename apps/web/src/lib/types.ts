@@ -1279,3 +1279,104 @@ export interface StaffJoinersLeavers {
   joiners: StaffMovementRow[];
   leavers: StaffMovementRow[];
 }
+
+export interface SalaryComponent {
+  id: number;
+  campus_id?: number;
+  name: string;
+  code: string;
+  type: string | null;
+  type_label?: string | null;
+  calculation: string | null;
+  default_amount: string | null;
+  default_percentage: string | null;
+  is_taxable: boolean;
+  is_active: boolean;
+  sort_order: number;
+  created_at?: string | null;
+}
+
+export interface StaffSalaryItem {
+  id: number;
+  staff_salary_id: number;
+  salary_component_id: number;
+  amount: string | null;
+  percentage: string | null;
+  component?: SalaryComponent | null;
+}
+
+export interface StaffSalary {
+  id: number;
+  campus_id?: number;
+  staff_member_id: number;
+  basic_salary: string;
+  currency: string;
+  effective_from: string | null;
+  effective_to: string | null;
+  is_active: boolean;
+  notes: string | null;
+  items: StaffSalaryItem[];
+  staff_member?: StaffMember | null;
+  created_at?: string | null;
+}
+
+export interface PayrollAdjustment {
+  id: number;
+  campus_id?: number;
+  staff_member_id: number;
+  type: string | null;
+  type_label?: string | null;
+  amount: string;
+  period: string;
+  reason: string | null;
+  is_applied: boolean;
+  staff_member?: StaffMember | null;
+  created_at?: string | null;
+}
+
+export interface PayslipItem {
+  id: number;
+  label: string;
+  type: string | null;
+  amount: string;
+  source: string | null;
+  salary_component_id: number | null;
+  payroll_adjustment_id: number | null;
+}
+
+export interface Payslip {
+  id: number;
+  payroll_run_id: number;
+  staff_member_id: number;
+  staff_salary_id: number | null;
+  basic: string;
+  gross: string;
+  deductions: string;
+  net: string;
+  working_days: number | null;
+  present_days: number | null;
+  notes: string | null;
+  staff_member?: StaffMember | null;
+  items?: PayslipItem[];
+  created_at?: string | null;
+}
+
+export interface PayrollRun {
+  id: number;
+  campus_id?: number;
+  fiscal_year_id: number | null;
+  period: string;
+  status: string | null;
+  status_label?: string | null;
+  total_gross: string;
+  total_deductions: string;
+  total_net: string;
+  notes: string | null;
+  approved_at: string | null;
+  paid_at: string | null;
+  payment_method: string | null;
+  journal_entry_id: number | null;
+  payslips_count?: number;
+  payslips?: Payslip[];
+  created_at?: string | null;
+}

@@ -244,6 +244,12 @@ built on top of it, one surface at a time:
   details, document upload with verification, download and removal, offboarding
   with a leaving date and reason, department and designation masters, and
   headcount plus joiner/leaver reports).
+- Delivered: payroll (a hub with salary components, staff salary structures
+  built from basic pay plus fixed or percentage component lines, periodic
+  adjustments, and monthly payroll runs that generate payslips, approve to post
+  a balanced salary journal, and record payment method; each payslip shows the
+  gross, deduction and net totals with a working/present day summary and a
+  labelled breakdown that distinguishes earnings, deductions and adjustments).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

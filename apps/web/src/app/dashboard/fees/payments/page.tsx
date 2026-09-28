@@ -14,36 +14,50 @@ import {
   Spinner,
 } from "@/components/ui";
 import { buttonClasses } from "@/components/Form";
-import { formatCurrency, formatDate } from "@/lib/format";
-import type { FeeVoucher } from "@/lib/types";
+import { formatCurrency, formatDate, humanize } from "@/lib/format";
+import type { FeePayment } from "@/lib/types";
+
+const METHODS = [
+  { value: "", label: "All methods" },
+  { value: "cash", label: "Cash" },
+  { value: "bank_transfer", label: "Bank transfer" },
+  { value: "cheque", label: "Cheque" },
+  { value: "online", label: "Online" },
+  { value: "card", label: "Card" },
+  { value: "other", label: "Other" },
+];
 
 const STATUSES = [
   { value: "", label: "All statuses" },
-  { value: "unpaid", label: "Unpaid" },
-  { value: "partial", label: "Partial" },
-  { value: "paid", label: "Paid" },
+  { value: "draft", label: "Draft" },
+  { value: "posted", label: "Posted" },
   { value: "void", label: "Void" },
 ];
 
-export default function FeesPage() {
+export default function FeePaymentsPage() {
   return (
     <PermissionGate permission="fee.view">
-      <VouchersTable />
+      <PaymentsTable />
     </PermissionGate>
   );
 }
 
-function VouchersTable() {
+function PaymentsTable() {
+  const [method, setMethod] = useState("");
   const [status, setStatus] = useState("");
 
+  const filters: Record<string, string> = {};
+  if (method) filters.method = method;
+  if (status) filters.status = status;
+
   const { items, meta, loading, error, page, setPage, search, setSearch } =
-    useList<FeeVoucher>("/v1/fee-vouchers", status === "" ? {} : { status });
+    useList<FeePayment>("/v1/fee-payments", filters);
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Fee vouchers"
-        description="Issued vouchers, payments received and outstanding balances."
+        title="Fee payments"
+        description="Receipts recorded across all vouchers."
         actions={
           <>
             <input
@@ -53,20 +67,34 @@ function VouchersTable() {
                 setPage(1);
                 setSearch(event.target.value);
               }}
-              placeholder="Search voucher no or student"
+              placeholder="Search receipt or student"
               className="w-60 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
             />
             <Link
-              href="/dashboard/fees/payments"
+              href="/dashboard/fees"
               className={buttonClasses("secondary")}
             >
-              Payments
+              Vouchers
             </Link>
           </>
         }
       />
 
       <div className="flex flex-wrap gap-3">
+        <select
+          value={method}
+          onChange={(event) => {
+            setPage(1);
+            setMethod(event.target.value);
+          }}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
+        >
+          {METHODS.map((option) => (
+            <option key={option.value || "all"} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
         <select
           value={status}
           onChange={(event) => {
@@ -89,58 +117,67 @@ function VouchersTable() {
         {loading ? (
           <Spinner />
         ) : items.length === 0 ? (
-          <EmptyState message="No fee vouchers match your filters." />
+          <EmptyState message="No payments match your filters." />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th className="px-5 py-3 font-medium">Voucher no</th>
+                  <th className="px-5 py-3 font-medium">Receipt no</th>
                   <th className="px-5 py-3 font-medium">Student</th>
+                  <th className="px-5 py-3 font-medium">Voucher</th>
+                  <th className="px-5 py-3 font-medium">Date</th>
                   <th className="px-5 py-3 text-right font-medium">Amount</th>
-                  <th className="px-5 py-3 text-right font-medium">Paid</th>
-                  <th className="px-5 py-3 text-right font-medium">Balance</th>
-                  <th className="px-5 py-3 font-medium">Due date</th>
+                  <th className="px-5 py-3 font-medium">Method</th>
                   <th className="px-5 py-3 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {items.map((voucher) => (
-                  <tr key={voucher.id} className="hover:bg-slate-50">
+                {items.map((payment) => (
+                  <tr key={payment.id} className="hover:bg-slate-50">
                     <td className="px-5 py-3 font-mono text-xs text-slate-500">
                       <Link
-                        href={`/dashboard/fees/${voucher.id}`}
+                        href={`/dashboard/fees/payments/${payment.id}`}
                         className="hover:underline"
                       >
-                        {voucher.voucher_no}
+                        {payment.receipt_no}
                       </Link>
                     </td>
                     <td className="px-5 py-3 font-medium text-slate-900">
-                      {voucher.student ? (
+                      {payment.student ? (
                         <Link
-                          href={`/dashboard/students/${voucher.student.id}`}
+                          href={`/dashboard/students/${payment.student.id}`}
                           className="hover:underline"
                         >
-                          {voucher.student.full_name}
+                          {payment.student.full_name}
                         </Link>
                       ) : (
-                        `Student #${voucher.id}`
+                        `Student #${payment.student_id}`
                       )}
                     </td>
-                    <td className="px-5 py-3 text-right text-slate-700">
-                      {formatCurrency(voucher.amount)}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-700">
-                      {formatCurrency(voucher.paid_amount)}
-                    </td>
-                    <td className="px-5 py-3 text-right font-medium text-slate-900">
-                      {formatCurrency(voucher.balance)}
+                    <td className="px-5 py-3 font-mono text-xs text-slate-500">
+                      {payment.voucher ? (
+                        <Link
+                          href={`/dashboard/fees/${payment.voucher.id}`}
+                          className="hover:underline"
+                        >
+                          {payment.voucher.voucher_no}
+                        </Link>
+                      ) : (
+                        "-"
+                      )}
                     </td>
                     <td className="px-5 py-3 text-slate-600">
-                      {formatDate(voucher.due_date)}
+                      {formatDate(payment.payment_date)}
+                    </td>
+                    <td className="px-5 py-3 text-right font-medium text-slate-900">
+                      {formatCurrency(payment.amount)}
+                    </td>
+                    <td className="px-5 py-3 text-slate-600">
+                      {humanize(payment.method)}
                     </td>
                     <td className="px-5 py-3">
-                      <Badge value={voucher.status} />
+                      <Badge value={payment.status} />
                     </td>
                   </tr>
                 ))}

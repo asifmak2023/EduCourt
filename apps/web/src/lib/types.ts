@@ -145,6 +145,21 @@ export interface AcademicOptions {
   sections: SectionOption[];
 }
 
+export interface FeeHead {
+  id: number;
+  code: string | null;
+  name: string;
+}
+
+export interface FeeVoucherLine {
+  id: number;
+  fee_head_id: number;
+  amount: string;
+  discount_amount: string;
+  net_amount: string;
+  fee_head?: FeeHead | null;
+}
+
 export interface FeeVoucher {
   id: number;
   voucher_no: string;
@@ -154,6 +169,39 @@ export interface FeeVoucher {
   balance: string;
   due_date: string | null;
   student?: Student | null;
+}
+
+export interface FeeVoucherDetail extends FeeVoucher {
+  institution_id: number;
+  campus_id: number;
+  student_id: number;
+  academic_year_id: number | null;
+  fee_plan_id: number | null;
+  fee_installment_id: number | null;
+  sequence: number | null;
+  gross_amount: string;
+  discount_amount: string;
+  late_fee_amount: string | null;
+  late_fee_applied_at: string | null;
+  issued_at: string | null;
+  journal_entry_id: number | null;
+  lines: FeeVoucherLine[];
+  payments: FeePayment[];
+}
+
+export interface FeePayment {
+  id: number;
+  student_id: number;
+  fee_voucher_id: number | null;
+  receipt_no: string;
+  payment_date: string | null;
+  amount: string;
+  method: string | null;
+  reference: string | null;
+  status: string | null;
+  notes: string | null;
+  student?: Student | null;
+  voucher?: FeeVoucherDetail | null;
 }
 
 export interface GenderedCount {

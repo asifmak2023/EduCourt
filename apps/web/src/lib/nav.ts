@@ -72,6 +72,7 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "Finance",
     items: [
       { label: "Fee vouchers", href: "/dashboard/fees", icon: "receipt", permission: "fee.view", ready: true },
+      { label: "Fee payments", href: "/dashboard/fees/payments", icon: "banknote", permission: "fee.view", ready: true },
       { label: "Chart of accounts", href: "/dashboard/finance/accounts", icon: "list", permission: "finance.view", ready: false },
       { label: "Journal", href: "/dashboard/finance/journal", icon: "list", permission: "finance.view", ready: false },
       { label: "Expenses", href: "/dashboard/finance/expenses", icon: "banknote", permission: "finance.view", ready: false },

@@ -354,6 +354,48 @@ class FeeBillingTest extends TestCase
         $this->assertSame(JournalStatus::Posted, $reversal->status);
     }
 
+    public function test_vouchers_and_payments_can_be_searched(): void
+    {
+        $plan = $this->plan();
+        $this->generate($plan);
+
+        $voucher = FeeVoucher::query()
+            ->where('student_id', $this->ali->id)
+            ->where('sequence', 1)
+            ->firstOrFail();
+
+        $this->as($this->admin)
+            ->getJson('/api/v1/fee-vouchers?search=Ali')
+            ->assertOk()
+            ->assertJsonPath('data.0.student.first_name', 'Ali');
+
+        $this->as($this->admin)
+            ->getJson('/api/v1/fee-vouchers?search='.$voucher->voucher_no)
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $voucher->id);
+
+        $receipt = $this->as($this->admin)->postJson('/api/v1/fee-payments', [
+            'student_id' => $this->ali->id,
+            'fee_voucher_id' => $voucher->id,
+            'payment_date' => '2026-07-15',
+            'amount' => 1000,
+            'method' => 'cash',
+            'reference' => 'REF-XYZ',
+        ])->assertStatus(201)->json('data');
+
+        $this->as($this->admin)
+            ->getJson('/api/v1/fee-payments?search='.$receipt['receipt_no'])
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $receipt['id']);
+
+        $this->as($this->admin)
+            ->getJson('/api/v1/fee-payments?search=REF-XYZ')
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
+    }
+
     public function test_teacher_cannot_manage_fee_vouchers(): void
     {
         $plan = $this->plan();

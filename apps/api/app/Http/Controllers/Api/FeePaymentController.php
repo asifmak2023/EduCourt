@@ -25,8 +25,18 @@ class FeePaymentController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
+        $search = $request->string('search')->toString();
+
         $payments = FeePayment::query()
             ->with(['student', 'voucher'])
+            ->when($search !== '', fn ($q) => $q->where(function ($inner) use ($search) {
+                $inner->where('receipt_no', 'like', "%{$search}%")
+                    ->orWhere('reference', 'like', "%{$search}%")
+                    ->orWhereHas('student', fn ($student) => $student
+                        ->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('admission_no', 'like', "%{$search}%"));
+            }))
             ->when($request->filled('student_id'), fn ($q) => $q->where('student_id', $request->integer('student_id')))
             ->when($request->filled('fee_voucher_id'), fn ($q) => $q->where('fee_voucher_id', $request->integer('fee_voucher_id')))
             ->when($request->filled('method'), fn ($q) => $q->where('method', $request->string('method')->toString()))

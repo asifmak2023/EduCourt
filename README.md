@@ -177,8 +177,12 @@ built on top of it, one surface at a time:
   withdraw/transfer) and admission workflow (create/edit applications, submit
   for review, approve, reject with a reason, and enroll into a student record
   from the application detail page).
-- Planned: fee voucher detail and payment flows, then the remaining module
-  screens, reached from the sidebar entries marked "Soon".
+- Delivered: fee billing (voucher list with status filter and search, voucher
+  detail with fee-head breakdown and recorded payments, record a receipt against
+  a voucher, apply a late fee, void a voucher, and a payment list plus receipt
+  view with payment void).
+- Planned: the remaining module screens, reached from the sidebar entries
+  marked "Soon".
 
 The client reads reference lists (academic years, classes, sections) from
 `GET /api/v1/reference/academic-options`, which is available to admission and

@@ -199,6 +199,9 @@ built on top of it, one surface at a time:
   user with academic-year and term filters, publish/unpublish of class
   timetables, an auto-generation panel with dry run, and timetable slot
   management with per-slot create and edit).
+- Delivered: class subject allocation and teaching assignments (map subjects
+  to classes per academic year, then assign a teacher to each mapped subject
+  with a workload showing in the weekly periods).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

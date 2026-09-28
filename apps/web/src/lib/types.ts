@@ -534,6 +534,33 @@ export interface User {
   is_active?: boolean;
 }
 
+export interface ClassSubject {
+  id: number;
+  academic_year_id: number;
+  class_room_id: number;
+  subject_id: number;
+  is_elective: boolean;
+  weekly_periods: number | null;
+  is_active: boolean;
+  subject?: Subject | null;
+  class_room?: ClassRoom | null;
+}
+
+export interface TeachingAssignment {
+  id: number;
+  academic_year_id: number;
+  teacher_user_id: number;
+  subject_id: number;
+  class_room_id: number;
+  section_id: number | null;
+  weekly_periods: number | null;
+  is_active: boolean;
+  teacher?: User | null;
+  subject?: Subject | null;
+  class_room?: ClassRoom | null;
+  section?: Section | null;
+}
+
 export interface BudgetVsActualRow {
   chart_of_account_id: number;
   code: string;

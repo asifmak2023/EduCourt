@@ -36,6 +36,16 @@ const SECTIONS = [
     description: "Subjects taught, with type and credit hours.",
   },
   {
+    href: "/dashboard/academics/class-subjects",
+    title: "Class subjects",
+    description: "Which subjects each class studies, per year.",
+  },
+  {
+    href: "/dashboard/academics/teaching-assignments",
+    title: "Teaching assignments",
+    description: "Which teacher takes a subject for a class.",
+  },
+  {
     href: "/dashboard/academics/periods",
     title: "Periods",
     description: "Daily bell schedule used by the timetable.",

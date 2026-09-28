@@ -561,6 +561,108 @@ export interface TeachingAssignment {
   section?: Section | null;
 }
 
+export interface StudentAttendance {
+  id: number;
+  student_id: number;
+  student?: {
+    id: number;
+    name: string;
+    admission_no: string;
+    gender: string | null;
+  } | null;
+  academic_year_id: number | null;
+  class_room_id: number | null;
+  class_room: string | null;
+  section_id: number | null;
+  section: string | null;
+  attendance_date: string | null;
+  status: string | null;
+  status_label: string | null;
+  remarks: string | null;
+  marked_by: string | null;
+}
+
+export interface StaffAttendance {
+  id: number;
+  user_id: number;
+  user?: { id: number; name: string; email: string } | null;
+  attendance_date: string | null;
+  status: string | null;
+  status_label: string | null;
+  check_in: string | null;
+  check_out: string | null;
+  remarks: string | null;
+}
+
+export interface LeaveRequest {
+  id: number;
+  user_id: number;
+  user?: { id: number; name: string; email: string } | null;
+  leave_type: string | null;
+  leave_type_label: string | null;
+  from_date: string | null;
+  to_date: string | null;
+  days: string | null;
+  reason: string | null;
+  status: string | null;
+  status_label: string | null;
+  decided_by: string | null;
+  decided_on: string | null;
+  decision_note: string | null;
+}
+
+export interface AttendanceClassSummary {
+  class_room_id: number | null;
+  class_room: string | null;
+  total: number;
+  boys: number;
+  girls: number;
+  present: number;
+  leave: number;
+  absent: number;
+}
+
+export interface AttendanceReport {
+  from: string;
+  to: string;
+  classes: AttendanceClassSummary[];
+  totals: {
+    total: number;
+    boys: number;
+    girls: number;
+    present: number;
+    leave: number;
+    absent: number;
+  };
+}
+
+export interface StudentAttendanceSummary {
+  student_id: number;
+  from: string;
+  to: string;
+  present: number;
+  late: number;
+  leave: number;
+  absent: number;
+  excused: number;
+  marked: number;
+}
+
+export interface StaffAttendanceReport {
+  from: string;
+  to: string;
+  by_status: Record<string, number>;
+  by_staff: {
+    user_id: number;
+    user: string | null;
+    present: number;
+    late: number;
+    leave: number;
+    absent: number;
+    days: number;
+  }[];
+}
+
 export interface BudgetVsActualRow {
   chart_of_account_id: number;
   code: string;

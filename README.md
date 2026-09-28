@@ -202,6 +202,10 @@ built on top of it, one surface at a time:
 - Delivered: class subject allocation and teaching assignments (map subjects
   to classes per academic year, then assign a teacher to each mapped subject
   with a workload showing in the weekly periods).
+- Delivered: attendance (daily student registers with date, class, section and
+  status filters plus a bulk marking sheet, a class-summary attendance report,
+  staff attendance records with a bulk marking sheet and a per-employee report,
+  and staff leave requests with create, detail, approve, reject and cancel).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

@@ -30,8 +30,11 @@ import type {
   Subject,
   SyllabusUnit,
   Term,
+  TransportRoute,
+  TransportRouteStop,
   User,
   Vendor,
+  Vehicle,
 } from "./types";
 
 const EMPTY: AcademicOptions = {
@@ -306,5 +309,26 @@ export function useInventoryCategories(
 ): ListLookupState<InventoryCategory> {
   return useCollection<InventoryCategory>(
     enabled ? "/v1/inventory/categories?per_page=200" : null
+  );
+}
+
+export function useVehicles(enabled = true): ListLookupState<Vehicle> {
+  return useCollection<Vehicle>(enabled ? "/v1/transport/vehicles?per_page=200" : null);
+}
+
+export function useTransportRoutes(
+  enabled = true
+): ListLookupState<TransportRoute> {
+  return useCollection<TransportRoute>(
+    enabled ? "/v1/transport/routes?per_page=200" : null
+  );
+}
+
+export function useRouteStops(
+  routeId: string | number | null,
+  enabled = true
+): ListLookupState<TransportRouteStop> {
+  return useCollection<TransportRouteStop>(
+    enabled && routeId ? `/v1/transport/routes/${routeId}/stops` : null
   );
 }

@@ -1433,3 +1433,84 @@ export interface InventorySummary {
     reorder_level: number;
   }[];
 }
+
+export interface Vehicle {
+  id: number;
+  campus_id?: number;
+  name: string;
+  registration_no: string;
+  type: string | null;
+  capacity: number;
+  model: string | null;
+  driver_user_id: number | null;
+  driver?: User | null;
+  driver_name: string | null;
+  driver_phone: string | null;
+  conductor_name: string | null;
+  is_active: boolean;
+  created_at?: string | null;
+}
+
+export interface TransportRouteStop {
+  id: number;
+  transport_route_id: number;
+  name: string;
+  sequence: number;
+  pickup_time: string | null;
+  drop_time: string | null;
+  fare: number | null;
+  created_at?: string | null;
+}
+
+export interface TransportRoute {
+  id: number;
+  campus_id?: number;
+  name: string;
+  code: string;
+  start_point: string | null;
+  end_point: string | null;
+  distance_km: number;
+  fare: number;
+  vehicle_id: number | null;
+  vehicle?: Vehicle | null;
+  is_active: boolean;
+  stops?: TransportRouteStop[];
+  stops_count?: number;
+  allocations_count?: number;
+  created_at?: string | null;
+}
+
+export interface TransportAllocation {
+  id: number;
+  campus_id?: number;
+  student_id: number;
+  student?: Student | null;
+  transport_route_id: number;
+  route?: TransportRoute | null;
+  transport_route_stop_id: number | null;
+  stop?: TransportRouteStop | null;
+  vehicle_id: number | null;
+  vehicle?: Vehicle | null;
+  direction: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  fare: number;
+  status: string | null;
+  notes: string | null;
+  created_at?: string | null;
+}
+
+export interface TransportSummary {
+  vehicles: number;
+  vehicle_capacity: number;
+  routes: number;
+  allocated_students: number;
+  monthly_fare: number;
+  routes_detail: {
+    id: number;
+    name: string;
+    code: string;
+    stops: number;
+    allocations: number;
+  }[];
+}

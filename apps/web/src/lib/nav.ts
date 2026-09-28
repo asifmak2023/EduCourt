@@ -97,7 +97,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Inventory", href: "/dashboard/inventory", icon: "box", permission: "inventory.view", ready: true },
       { label: "Library", href: "/dashboard/library", icon: "book", permission: "library.view", ready: true },
       { label: "Labs", href: "/dashboard/labs", icon: "box", permission: "lab.view", ready: true },
-      { label: "Transport", href: "/dashboard/transport", icon: "bus", permission: "transport.view", ready: false },
+      { label: "Transport", href: "/dashboard/transport", icon: "bus", permission: "transport.view", ready: true },
       { label: "Hostel", href: "/dashboard/hostel", icon: "bed", permission: "hostel.view", ready: false },
       { label: "Canteen", href: "/dashboard/canteen", icon: "box", permission: "canteen.view", ready: false },
       { label: "Sports", href: "/dashboard/sports", icon: "trophy", permission: "sports.view", ready: false },

@@ -255,6 +255,11 @@ built on top of it, one surface at a time:
   purchases, issues, returns, adjustments and wastage that posts signed stock
   changes and refuses to drive a quantity below zero, a low-stock list and a
   summary report of item count, stock value and items to reorder).
+- Delivered: transport (a fleet register of vehicles with capacity and driver
+  details, routes with ordered stops, pickup/drop times and fares, allocation of
+  students to a route and stop with direction and validity dates, a deallocate
+  action to end a placement, and a summary report of fleet size, seats, routes,
+  ridership and monthly fare commitment).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

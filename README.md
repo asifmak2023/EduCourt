@@ -216,6 +216,10 @@ built on top of it, one surface at a time:
   eligibility lookup, invigilation duty assignment and editing, and a result
   analysis workspace covering class performance, a subject across classes,
   teacher achievement and year-on-year comparison).
+- Delivered: credits and GPA (term course registrations with credit hours,
+  student/term/subject/status filters, drop and delete, plus a term GPA view
+  with a credit-weighted subject breakdown and a cumulative transcript with a
+  per-term breakdown).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

@@ -913,3 +913,48 @@ export interface YearOnYearRow {
   appeared: number;
   average_percentage: number;
 }
+
+export interface CourseRegistration {
+  id: number;
+  student_id: number;
+  student?: Student | null;
+  term_id: number;
+  term?: Term | null;
+  class_room_id: number | null;
+  subject_id: number;
+  subject?: Subject | null;
+  credit_hours: number;
+  status: string | null;
+  registered_on: string | null;
+  remarks: string | null;
+  created_at?: string | null;
+}
+
+export interface TermGpaSubject {
+  course_registration_id: number;
+  subject_id: number;
+  subject: string | null;
+  credit_hours: number;
+  percentage: number | null;
+  grade: string | null;
+  grade_points: number | null;
+  status: string | null;
+}
+
+export interface TermGpa {
+  term: { id: number; name: string; academic_year_id: number };
+  student_id: number;
+  credits_registered: number;
+  credits_graded: number;
+  credits_earned: number;
+  gpa: number | null;
+  subjects: TermGpaSubject[];
+}
+
+export interface Transcript {
+  student_id: number;
+  student: string;
+  terms: TermGpa[];
+  credits_earned: number;
+  gpa: number | null;
+}

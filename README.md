@@ -292,6 +292,11 @@ built on top of it, one surface at a time:
   create/edit with title, body, audience, optional class/section targeting and
   an expiry date, and a detail view with publish and archive lifecycle actions
   where archiving is refused until a circular has been published).
+- Delivered: users (an account list with search and role/active filters,
+  create/edit with name, email, optional password reset, phone, employee code
+  and job title, role selection and an active flag, and a detail view showing
+  the account, campus, two-factor state and assigned roles; deactivation is
+  refused for your own account).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

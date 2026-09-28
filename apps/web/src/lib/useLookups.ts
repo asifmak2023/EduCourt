@@ -25,6 +25,7 @@ import type {
   Paginated,
   Period,
   Room,
+  RoleOption,
   SalaryComponent,
   Scholarship,
   Section,
@@ -394,4 +395,8 @@ export function useStudentEvents(
   return useCollection<StudentEvent>(
     enabled ? "/v1/student-affairs/events?per_page=200" : null
   );
+}
+
+export function useRoleOptions(enabled = true): ListLookupState<RoleOption> {
+  return useCollection<RoleOption>(enabled ? "/v1/meta/roles" : null);
 }

@@ -532,6 +532,23 @@ export interface User {
   name: string;
   email: string;
   is_active?: boolean;
+  phone?: string | null;
+  employee_code?: string | null;
+  job_title?: string | null;
+  institution_id?: number | null;
+  campus_id?: number | null;
+  roles?: string[];
+  permissions?: string[];
+  campus?: Campus | null;
+  institution?: Institution | null;
+  two_factor_enabled?: boolean;
+  last_login_at?: string | null;
+  created_at?: string | null;
+}
+
+export interface RoleOption {
+  value: string;
+  label: string;
 }
 
 export interface ClassSubject {

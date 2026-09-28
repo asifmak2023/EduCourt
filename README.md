@@ -274,6 +274,13 @@ built on top of it, one surface at a time:
   top-up and approve-gated balance adjustments plus a transaction history,
   hygiene checks with area, status and score, and reports for daily sales,
   item-wise margin, profit and loss, wallet activity and low stock).
+- Delivered: sports (a sports catalogue with category, season, coach, age and
+  attendance eligibility criteria, teams with age group, gender and coach plus
+  a roster that adds, updates and removes players, training sessions per team,
+  fixtures with a record-result action that derives the win/loss/draw outcome,
+  achievements by level, and an equipment register with a purchase/issue/
+  return/adjustment/damage movement ledger that refuses to issue beyond the
+  available quantity, alongside a season summary report).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

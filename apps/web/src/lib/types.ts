@@ -1760,3 +1760,170 @@ export interface CanteenWalletSummary {
   purchases: number;
   low_balance_wallets: number;
 }
+
+export interface Sport {
+  id: number;
+  campus_id?: number;
+  name: string;
+  code: string;
+  category: string | null;
+  season: string | null;
+  coach_user_id: number | null;
+  coach?: User | null;
+  min_age_years: number | null;
+  max_age_years: number | null;
+  min_attendance_percent: string | null;
+  budget: string | null;
+  is_active: boolean;
+  rules: string | null;
+  description: string | null;
+  teams_count?: number;
+  created_at?: string | null;
+}
+
+export interface SportTeam {
+  id: number;
+  campus_id?: number;
+  sport_id: number;
+  sport?: Sport | null;
+  name: string;
+  age_group: string | null;
+  gender: string | null;
+  coach_user_id: number | null;
+  coach?: User | null;
+  is_active: boolean;
+  notes: string | null;
+  members_count?: number;
+  created_at?: string | null;
+}
+
+export interface SportTeamMember {
+  id: number;
+  campus_id?: number;
+  sport_team_id: number;
+  student_id: number;
+  student?: Student | null;
+  position: string | null;
+  jersey_no: string | null;
+  joined_on: string | null;
+  status: string | null;
+  notes: string | null;
+  created_at?: string | null;
+}
+
+export interface SportTrainingSession {
+  id: number;
+  campus_id?: number;
+  sport_team_id: number;
+  team?: SportTeam | null;
+  title: string;
+  session_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  venue: string | null;
+  focus: string | null;
+  notes: string | null;
+  created_by: number | null;
+  created_at?: string | null;
+}
+
+export interface SportFixture {
+  id: number;
+  campus_id?: number;
+  sport_id: number;
+  sport?: Sport | null;
+  sport_team_id: number | null;
+  team?: SportTeam | null;
+  opponent: string;
+  home_away: string | null;
+  venue: string | null;
+  fixture_date: string | null;
+  start_time: string | null;
+  status: string | null;
+  our_score: number | null;
+  opponent_score: number | null;
+  outcome: string | null;
+  remarks: string | null;
+  created_at?: string | null;
+}
+
+export interface SportAchievement {
+  id: number;
+  campus_id?: number;
+  sport_id: number;
+  sport?: Sport | null;
+  student_id: number | null;
+  student?: Student | null;
+  title: string;
+  level: string | null;
+  position: string | null;
+  achieved_on: string | null;
+  description: string | null;
+  created_at?: string | null;
+}
+
+export interface SportEquipment {
+  id: number;
+  campus_id?: number;
+  sport_id: number | null;
+  sport?: Sport | null;
+  name: string;
+  code: string;
+  unit: string | null;
+  quantity: string;
+  available_quantity: string;
+  unit_cost: string | null;
+  condition: string | null;
+  is_active: boolean;
+  is_out_of_stock: boolean;
+  notes: string | null;
+  created_at?: string | null;
+}
+
+export interface SportEquipmentMovement {
+  id: number;
+  campus_id?: number;
+  sport_equipment_id: number;
+  equipment?: SportEquipment | null;
+  type: string | null;
+  quantity: string;
+  balance_after: string;
+  issued_to: number | null;
+  issued_to_user?: User | null;
+  movement_date: string | null;
+  remarks: string | null;
+  created_by: number | null;
+  created_at?: string | null;
+}
+
+export interface SportEligibility {
+  sport_id: number;
+  student_id: number;
+  eligible: boolean;
+  age: number | null;
+  attendance_percent: number | null;
+  attendance_window: { from: string; to: string };
+  reasons: string[];
+}
+
+export interface SportSummary {
+  range: { from: string | null; to: string | null };
+  teams: number;
+  active_members: number;
+  fixtures: {
+    total: number;
+    scheduled: number;
+    completed: number;
+    cancelled: number;
+    wins: number;
+    losses: number;
+    draws: number;
+  };
+  achievements: number;
+  equipment: {
+    items: number;
+    total_quantity: number;
+    out_of_stock: number;
+    value: number;
+  };
+}

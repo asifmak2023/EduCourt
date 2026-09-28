@@ -28,6 +28,8 @@ import type {
   SalaryComponent,
   Scholarship,
   Section,
+  Sport,
+  SportTeam,
   Stage,
   StaffMember,
   Student,
@@ -362,4 +364,16 @@ export function useCanteenSuppliers(
   return useCollection<CanteenSupplier>(
     enabled ? "/v1/canteen/suppliers?per_page=200" : null
   );
+}
+
+export function useSports(enabled = true): ListLookupState<Sport> {
+  return useCollection<Sport>(enabled ? "/v1/sports?per_page=200" : null);
+}
+
+export function useSportTeams(
+  sportId?: string | number | null
+): ListLookupState<SportTeam> {
+  const query = sportId ? `?sport_id=${sportId}&per_page=200` : "?per_page=200";
+
+  return useCollection<SportTeam>(`/v1/sports/teams${query}`);
 }

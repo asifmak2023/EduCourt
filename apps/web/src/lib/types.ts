@@ -1514,3 +1514,79 @@ export interface TransportSummary {
     allocations: number;
   }[];
 }
+
+export interface Hostel {
+  id: number;
+  campus_id?: number;
+  name: string;
+  code: string;
+  type: string | null;
+  warden_user_id: number | null;
+  warden?: User | null;
+  warden_name: string | null;
+  warden_phone: string | null;
+  address: string | null;
+  capacity: number;
+  is_active: boolean;
+  rooms?: HostelRoom[];
+  rooms_count?: number;
+  created_at?: string | null;
+}
+
+export interface HostelRoom {
+  id: number;
+  campus_id?: number;
+  hostel_id: number;
+  room_no: string;
+  floor: string | null;
+  type: string | null;
+  capacity: number;
+  occupied: number;
+  available: number;
+  monthly_fee: number;
+  is_active: boolean;
+  created_at?: string | null;
+}
+
+export interface HostelAllocation {
+  id: number;
+  campus_id?: number;
+  hostel_id: number;
+  hostel?: Hostel | null;
+  hostel_room_id: number;
+  room?: HostelRoom | null;
+  student_id: number;
+  student?: Student | null;
+  bed_no: string | null;
+  allocated_on: string | null;
+  vacated_on: string | null;
+  monthly_fee: number;
+  status: string | null;
+  notes: string | null;
+  created_at?: string | null;
+}
+
+export interface HostelOutpass {
+  id: number;
+  campus_id?: number;
+  hostel_allocation_id: number | null;
+  student_id: number;
+  student?: Student | null;
+  from_datetime: string | null;
+  to_datetime: string | null;
+  reason: string;
+  status: string | null;
+  approved_by: number | null;
+  approved_at: string | null;
+  created_at?: string | null;
+}
+
+export interface HostelSummary {
+  hostel_id: number;
+  rooms: number;
+  capacity: number;
+  occupied: number;
+  available: number;
+  by_type: Record<string, number>;
+  pending_outpasses: number;
+}

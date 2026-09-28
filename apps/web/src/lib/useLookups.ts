@@ -16,6 +16,8 @@ import type {
   ExpenseCategory,
   FiscalYear,
   GradeScale,
+  Hostel,
+  HostelRoom,
   InventoryCategory,
   Lab,
   Paginated,
@@ -330,5 +332,18 @@ export function useRouteStops(
 ): ListLookupState<TransportRouteStop> {
   return useCollection<TransportRouteStop>(
     enabled && routeId ? `/v1/transport/routes/${routeId}/stops` : null
+  );
+}
+
+export function useHostels(enabled = true): ListLookupState<Hostel> {
+  return useCollection<Hostel>(enabled ? "/v1/hostels?per_page=200" : null);
+}
+
+export function useHostelRooms(
+  hostelId: string | number | null,
+  enabled = true
+): ListLookupState<HostelRoom> {
+  return useCollection<HostelRoom>(
+    enabled && hostelId ? `/v1/hostels/${hostelId}/rooms?per_page=200` : null
   );
 }

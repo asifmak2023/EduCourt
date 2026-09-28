@@ -260,6 +260,12 @@ built on top of it, one surface at a time:
   students to a route and stop with direction and validity dates, a deallocate
   action to end a placement, and a summary report of fleet size, seats, routes,
   ridership and monthly fare commitment).
+- Delivered: hostel (a hostel register with type and warden details, rooms with
+  floor, type, capacity, occupancy and monthly fee, allocation of students to
+  rooms and beds that refuses over-capacity placements, a vacate action that
+  frees the bed, a pending/approved/rejected/returned outpass workflow with
+  approve, reject and mark-returned actions, and a per-hostel occupancy
+  summary).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

@@ -220,6 +220,10 @@ built on top of it, one surface at a time:
   student/term/subject/status filters, drop and delete, plus a term GPA view
   with a credit-weighted subject breakdown and a cumulative transcript with a
   per-term breakdown).
+- Delivered: curriculum (syllabus units sequenced per class and subject with
+  period estimates, class book lists with a required flag, and lesson plans with
+  full planning fields plus a draft/submitted/approved workflow where approval
+  is a dedicated action).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

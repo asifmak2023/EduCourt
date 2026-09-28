@@ -958,3 +958,61 @@ export interface Transcript {
   credits_earned: number;
   gpa: number | null;
 }
+
+export interface SyllabusUnit {
+  id: number;
+  academic_year_id: number;
+  class_room_id: number;
+  subject_id: number;
+  term_id: number | null;
+  title: string;
+  description: string | null;
+  sequence: number;
+  estimated_periods: number | null;
+  subject?: Subject | null;
+  class_room?: ClassRoom | null;
+  term?: Term | null;
+  created_at?: string | null;
+}
+
+export interface ClassBook {
+  id: number;
+  academic_year_id: number;
+  class_room_id: number;
+  subject_id: number | null;
+  title: string;
+  author: string | null;
+  publisher: string | null;
+  isbn: string | null;
+  edition: string | null;
+  price: string | null;
+  is_required: boolean;
+  subject?: Subject | null;
+  class_room?: ClassRoom | null;
+  created_at?: string | null;
+}
+
+export interface LessonPlan {
+  id: number;
+  academic_year_id: number;
+  class_room_id: number;
+  subject_id: number;
+  term_id: number | null;
+  syllabus_unit_id: number | null;
+  created_by: number | null;
+  approved_by: number | null;
+  title: string;
+  objectives: string | null;
+  content: string | null;
+  resources: string | null;
+  activities: string | null;
+  assessment: string | null;
+  planned_from: string | null;
+  planned_to: string | null;
+  status: string | null;
+  approved_at: string | null;
+  subject?: Subject | null;
+  class_room?: ClassRoom | null;
+  syllabus_unit?: SyllabusUnit | null;
+  created_at?: string | null;
+}

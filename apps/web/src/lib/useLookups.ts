@@ -20,6 +20,7 @@ import type {
   Stage,
   Student,
   Subject,
+  SyllabusUnit,
   Term,
   User,
   Vendor,
@@ -246,4 +247,10 @@ export function useExamPapers(enabled = true): ListLookupState<ExamPaper> {
 
 export function useStudents(enabled = true): ListLookupState<Student> {
   return useCollection<Student>(enabled ? "/v1/students?per_page=200" : null);
+}
+
+export function useSyllabusUnits(enabled = true): ListLookupState<SyllabusUnit> {
+  return useCollection<SyllabusUnit>(
+    enabled ? "/v1/syllabus-units?per_page=200" : null
+  );
 }

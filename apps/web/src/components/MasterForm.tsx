@@ -10,6 +10,7 @@ import {
   Checkbox,
   Field,
   Select,
+  TextArea,
   TextInput,
 } from "@/components/Form";
 import { Card, ErrorNotice, PageHeader } from "@/components/ui";
@@ -17,7 +18,7 @@ import { Card, ErrorNotice, PageHeader } from "@/components/ui";
 export interface MasterField {
   name: string;
   label: string;
-  type?: "text" | "number" | "date" | "time" | "select" | "checkbox";
+  type?: "text" | "number" | "date" | "time" | "select" | "checkbox" | "textarea";
   required?: boolean;
   options?: { value: string; label: string }[];
   placeholder?: string;
@@ -177,6 +178,16 @@ export function MasterForm({
                         </option>
                       ))}
                     </Select>
+                  ) : field.type === "textarea" ? (
+                    <TextArea
+                      id={id}
+                      value={String(values[field.name] ?? "")}
+                      placeholder={field.placeholder}
+                      readOnly={isEdit && field.readOnlyOnEdit}
+                      disabled={isEdit && field.readOnlyOnEdit}
+                      rows={4}
+                      onChange={(event) => setValue(field.name, event.target.value)}
+                    />
                   ) : (
                     <TextInput
                       id={id}

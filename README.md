@@ -288,6 +288,10 @@ built on top of it, one surface at a time:
   health/medical/welfare/incident, confidential counselling sessions, a
   complaint desk with an assign action and resolve/reject outcomes, and an
   alumni directory with name/email search).
+- Delivered: circulars (a notice list with status and audience filters, draft
+  create/edit with title, body, audience, optional class/section targeting and
+  an expiry date, and a detail view with publish and archive lifecycle actions
+  where archiving is refused until a circular has been published).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

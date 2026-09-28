@@ -102,8 +102,8 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Canteen", href: "/dashboard/canteen", icon: "box", permission: "canteen.view", ready: true },
       { label: "Sports", href: "/dashboard/sports", icon: "trophy", permission: "sports.view", ready: true },
       { label: "Student affairs", href: "/dashboard/student-affairs", icon: "heart", permission: "student_affairs.view", ready: true },
-      { label: "Complaints", href: "/dashboard/complaints", icon: "message", permission: "complaint.view", ready: false },
-      { label: "Circulars", href: "/dashboard/circulars", icon: "megaphone", permission: "circular.view", ready: false },
+      { label: "Complaints", href: "/dashboard/student-affairs/complaints", icon: "message", permission: "complaint.view", ready: true },
+      { label: "Circulars", href: "/dashboard/circulars", icon: "megaphone", permission: "circular.view", ready: true },
     ],
   },
   {

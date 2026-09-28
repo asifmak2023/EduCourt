@@ -2078,3 +2078,22 @@ export interface CounsellingSession {
   follow_up_on: string | null;
   created_at?: string | null;
 }
+
+export interface Circular {
+  id: number;
+  campus_id?: number;
+  title: string;
+  body: string;
+  audience: string | null;
+  class_room_id: number | null;
+  class_room?: ClassRoom | null;
+  section_id: number | null;
+  section?: Section | null;
+  status: string | null;
+  published_at: string | null;
+  expires_on: string | null;
+  attachment_path: string | null;
+  created_by: number | null;
+  author?: User | null;
+  created_at?: string | null;
+}

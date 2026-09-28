@@ -192,6 +192,9 @@ built on top of it, one surface at a time:
   filters, draft create/edit with multi-line allocation per account, an approve
   action that locks the plan, and a per-budget detail page showing the planned
   lines alongside a budget-vs-actual comparison with variance and utilization).
+- Delivered: academic structure (a hub linking to academic years with terms,
+  stages, classes, sections, subjects, periods and rooms, each with search and
+  filters, create, edit and archive).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

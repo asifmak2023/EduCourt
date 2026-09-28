@@ -430,6 +430,92 @@ export interface Budget {
   total_budget: string;
 }
 
+export interface AcademicYear {
+  id: number;
+  name: string;
+  code: string;
+  starts_on: string | null;
+  ends_on: string | null;
+  status: string | null;
+  is_current: boolean;
+  notes: string | null;
+  terms?: Term[];
+}
+
+export interface Term {
+  id: number;
+  academic_year_id: number;
+  name: string;
+  sequence: number;
+  starts_on: string | null;
+  ends_on: string | null;
+  is_current: boolean;
+  academic_year?: AcademicYear | null;
+}
+
+export interface Stage {
+  id: number;
+  name: string;
+  code: string;
+  sequence: number;
+  is_active: boolean;
+}
+
+export interface ClassRoom {
+  id: number;
+  stage_id: number;
+  name: string;
+  code: string;
+  sequence: number;
+  capacity: number | null;
+  room: string | null;
+  in_charge_user_id: number | null;
+  is_active: boolean;
+  stage?: Stage | null;
+  sections?: Section[];
+}
+
+export interface Section {
+  id: number;
+  class_room_id: number;
+  name: string;
+  capacity: number | null;
+  in_charge_user_id: number | null;
+  is_active: boolean;
+  class_room?: ClassRoom | null;
+}
+
+export interface Subject {
+  id: number;
+  name: string;
+  code: string;
+  type: string | null;
+  credit_hours: string | null;
+  weekly_periods: number | null;
+  is_active: boolean;
+}
+
+export interface Period {
+  id: number;
+  name: string;
+  sequence: number;
+  starts_at: string | null;
+  ends_at: string | null;
+  is_break: boolean;
+  is_active: boolean;
+}
+
+export interface Room {
+  id: number;
+  name: string;
+  code: string;
+  block: string | null;
+  floor: string | null;
+  type: string | null;
+  capacity: number | null;
+  is_active: boolean;
+}
+
 export interface BudgetVsActualRow {
   chart_of_account_id: number;
   code: string;

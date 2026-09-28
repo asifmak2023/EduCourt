@@ -4,10 +4,17 @@ import { useEffect, useState } from "react";
 import { ApiError, apiFetch } from "./api";
 import type {
   AcademicOptions,
+  AcademicYear,
   ChartOfAccount,
+  ClassRoom,
   ExpenseCategory,
   FiscalYear,
   Paginated,
+  Period,
+  Room,
+  Section,
+  Stage,
+  Subject,
   Vendor,
 } from "./types";
 
@@ -158,4 +165,44 @@ export function useExpenseCategories(
 
 export function useVendors(enabled = true): ListLookupState<Vendor> {
   return useCollection<Vendor>(enabled ? "/v1/vendors?is_active=1&per_page=200" : null);
+}
+
+function useAcademicCollection<T>(
+  path: string,
+  enabled = true
+): ListLookupState<T> {
+  return useCollection<T>(enabled ? path : null);
+}
+
+export function useAcademicYears(
+  enabled = true
+): ListLookupState<AcademicYear> {
+  return useAcademicCollection<AcademicYear>(
+    "/v1/academic-years?per_page=100",
+    enabled
+  );
+}
+
+export function useStages(enabled = true): ListLookupState<Stage> {
+  return useAcademicCollection<Stage>("/v1/stages?per_page=200", enabled);
+}
+
+export function useClassRooms(enabled = true): ListLookupState<ClassRoom> {
+  return useAcademicCollection<ClassRoom>("/v1/classes?per_page=200", enabled);
+}
+
+export function useSections(enabled = true): ListLookupState<Section> {
+  return useAcademicCollection<Section>("/v1/sections?per_page=200", enabled);
+}
+
+export function useSubjects(enabled = true): ListLookupState<Subject> {
+  return useAcademicCollection<Subject>("/v1/subjects?per_page=200", enabled);
+}
+
+export function useRooms(enabled = true): ListLookupState<Room> {
+  return useAcademicCollection<Room>("/v1/rooms?per_page=200", enabled);
+}
+
+export function usePeriods(enabled = true): ListLookupState<Period> {
+  return useAcademicCollection<Period>("/v1/periods?per_page=200", enabled);
 }

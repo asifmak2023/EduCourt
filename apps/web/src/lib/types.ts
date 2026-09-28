@@ -1927,3 +1927,154 @@ export interface SportSummary {
     value: number;
   };
 }
+
+export interface StudentClub {
+  id: number;
+  campus_id?: number;
+  name: string;
+  code: string;
+  category: string | null;
+  description: string | null;
+  patron_user_id: number | null;
+  patron?: User | null;
+  is_active: boolean;
+  members_count?: number;
+  created_at?: string | null;
+}
+
+export interface ClubMembership {
+  id: number;
+  student_club_id: number;
+  club?: StudentClub | null;
+  student_id: number;
+  student?: Student | null;
+  role: string | null;
+  status: string | null;
+  joined_on: string | null;
+  notes: string | null;
+  created_at?: string | null;
+}
+
+export interface StudentEvent {
+  id: number;
+  campus_id?: number;
+  title: string;
+  type: string | null;
+  description: string | null;
+  starts_on: string | null;
+  ends_on: string | null;
+  venue: string | null;
+  budget: string | null;
+  status: string | null;
+  organizer_user_id: number | null;
+  organizer?: User | null;
+  participants_count?: number;
+  created_at?: string | null;
+}
+
+export interface EventParticipant {
+  id: number;
+  student_event_id: number;
+  event?: StudentEvent | null;
+  student_id: number;
+  student?: Student | null;
+  role: string | null;
+  status: string | null;
+  position: string | null;
+  remarks: string | null;
+  created_at?: string | null;
+}
+
+export interface StudentCertificate {
+  id: number;
+  campus_id?: number;
+  student_id: number;
+  student?: Student | null;
+  type: string;
+  title: string;
+  serial_no: string | null;
+  issued_on: string | null;
+  status: string | null;
+  issued_by: number | null;
+  remarks: string | null;
+  created_at?: string | null;
+}
+
+export interface WelfareRecord {
+  id: number;
+  campus_id?: number;
+  student_id: number;
+  student?: Student | null;
+  type: string | null;
+  title: string;
+  description: string | null;
+  recorded_on: string | null;
+  status: string | null;
+  recorded_by: number | null;
+  follow_up: string | null;
+  created_at?: string | null;
+}
+
+export interface AlumniProfile {
+  id: number;
+  campus_id?: number;
+  student_id: number | null;
+  student?: Student | null;
+  full_name: string;
+  graduation_year: string | null;
+  current_occupation: string | null;
+  employer: string | null;
+  email: string | null;
+  phone: string | null;
+  city: string | null;
+  notes: string | null;
+  created_at?: string | null;
+}
+
+export interface CouncilMember {
+  id: number;
+  campus_id?: number;
+  student_id: number;
+  student?: Student | null;
+  position: string;
+  term: string | null;
+  from_date: string | null;
+  to_date: string | null;
+  is_active: boolean;
+  created_at?: string | null;
+}
+
+export interface Complaint {
+  id: number;
+  campus_id?: number;
+  reference_no: string | null;
+  student_id: number | null;
+  student?: Student | null;
+  raised_by: number | null;
+  against: string | null;
+  category: string | null;
+  subject: string;
+  description: string;
+  priority: string | null;
+  status: string | null;
+  assigned_to: number | null;
+  resolution: string | null;
+  resolved_at: string | null;
+  created_at?: string | null;
+}
+
+export interface CounsellingSession {
+  id: number;
+  campus_id?: number;
+  student_id: number;
+  student?: Student | null;
+  counsellor_user_id: number | null;
+  counsellor?: User | null;
+  session_date: string | null;
+  type: string | null;
+  status: string | null;
+  summary: string | null;
+  confidential_notes?: string | null;
+  follow_up_on: string | null;
+  created_at?: string | null;
+}

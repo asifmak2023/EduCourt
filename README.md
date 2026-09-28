@@ -281,6 +281,13 @@ built on top of it, one surface at a time:
   achievements by level, and an equipment register with a purchase/issue/
   return/adjustment/damage movement ledger that refuses to issue beyond the
   available quantity, alongside a season summary report).
+- Delivered: student affairs (clubs with a member roster that adds, updates and
+  removes students, events with a participant list whose status can be marked
+  attended or absent, a student council register with terms, certificate
+  records with an issue action that assigns a serial number, welfare records for
+  health/medical/welfare/incident, confidential counselling sessions, a
+  complaint desk with an assign action and resolve/reject outcomes, and an
+  alumni directory with name/email search).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

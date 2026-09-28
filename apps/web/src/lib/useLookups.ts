@@ -31,6 +31,8 @@ import type {
   Sport,
   SportTeam,
   Stage,
+  StudentClub,
+  StudentEvent,
   StaffMember,
   Student,
   Subject,
@@ -376,4 +378,20 @@ export function useSportTeams(
   const query = sportId ? `?sport_id=${sportId}&per_page=200` : "?per_page=200";
 
   return useCollection<SportTeam>(`/v1/sports/teams${query}`);
+}
+
+export function useStudentClubs(
+  enabled = true
+): ListLookupState<StudentClub> {
+  return useCollection<StudentClub>(
+    enabled ? "/v1/student-affairs/clubs?per_page=200" : null
+  );
+}
+
+export function useStudentEvents(
+  enabled = true
+): ListLookupState<StudentEvent> {
+  return useCollection<StudentEvent>(
+    enabled ? "/v1/student-affairs/events?per_page=200" : null
+  );
 }

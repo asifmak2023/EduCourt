@@ -73,8 +73,9 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Fee vouchers", href: "/dashboard/fees", icon: "receipt", permission: "fee.view", ready: true },
       { label: "Fee payments", href: "/dashboard/fees/payments", icon: "banknote", permission: "fee.view", ready: true },
-      { label: "Chart of accounts", href: "/dashboard/finance/accounts", icon: "list", permission: "finance.view", ready: false },
-      { label: "Journal", href: "/dashboard/finance/journal", icon: "list", permission: "finance.view", ready: false },
+      { label: "Chart of accounts", href: "/dashboard/finance/accounts", icon: "list", permission: "finance.view", ready: true },
+      { label: "Journal", href: "/dashboard/finance/journal", icon: "list", permission: "finance.view", ready: true },
+      { label: "Trial balance", href: "/dashboard/finance/trial-balance", icon: "chart", permission: "finance.view", ready: true },
       { label: "Expenses", href: "/dashboard/finance/expenses", icon: "banknote", permission: "finance.view", ready: false },
       { label: "Budgets", href: "/dashboard/finance/budgets", icon: "chart", permission: "finance.view", ready: false },
       { label: "Reports", href: "/dashboard/reports", icon: "chart", permission: "report.view", ready: false },

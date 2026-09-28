@@ -254,3 +254,85 @@ export interface TimetableSlot {
   section?: { id: number; name?: string | null } | null;
   room?: { id: number; name?: string | null } | null;
 }
+
+export interface ChartOfAccount {
+  id: number;
+  parent_id: number | null;
+  code: string;
+  name: string;
+  account_type: string | null;
+  normal_balance: string | null;
+  is_group: boolean;
+  is_active: boolean;
+  description: string | null;
+  children?: ChartOfAccount[];
+}
+
+export interface JournalLine {
+  id: number;
+  chart_of_account_id: number;
+  line_no: number;
+  description: string | null;
+  debit: string;
+  credit: string;
+  account?: ChartOfAccount | null;
+}
+
+export interface JournalEntry {
+  id: number;
+  fiscal_year_id: number;
+  reference: string;
+  entry_date: string | null;
+  status: string | null;
+  memo: string | null;
+  total_debit: string;
+  total_credit: string;
+  posted_at: string | null;
+  reversed_by_id: number | null;
+  reversal_of_id: number | null;
+  fiscal_year?: FiscalYear | null;
+  lines?: JournalLine[];
+}
+
+export interface FiscalYear {
+  id: number;
+  name: string;
+  code: string;
+  starts_on: string | null;
+  ends_on: string | null;
+  status: string;
+  is_current: boolean;
+}
+
+export interface TrialBalanceRow {
+  chart_of_account_id: number;
+  code: string;
+  name: string;
+  account_type: string;
+  normal_balance: string;
+  total_debit: string;
+  total_credit: string;
+  balance: string;
+}
+
+export interface AccountLedgerRow {
+  journal_entry_id: number;
+  reference: string;
+  entry_date: string | null;
+  description: string | null;
+  debit: string;
+  credit: string;
+  running_balance: string;
+}
+
+export interface AccountLedger {
+  account: {
+    id: number;
+    code: string;
+    name: string;
+    account_type: string | null;
+    normal_balance: string | null;
+  };
+  data: AccountLedgerRow[];
+  closing_balance: string;
+}

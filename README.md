@@ -181,6 +181,9 @@ built on top of it, one surface at a time:
   detail with fee-head breakdown and recorded payments, record a receipt against
   a voucher, apply a late fee, void a voucher, and a payment list plus receipt
   view with payment void).
+- Delivered: finance ledger (chart of accounts with create/edit and per-account
+  ledger and running balance, journal entries with draft creation, posting and
+  reversal, and a trial balance report).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

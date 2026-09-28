@@ -6,6 +6,7 @@ import type {
   AcademicOptions,
   AcademicYear,
   Book,
+  Campus,
   CanteenItem,
   CanteenSupplier,
   ChartOfAccount,
@@ -399,4 +400,78 @@ export function useStudentEvents(
 
 export function useRoleOptions(enabled = true): ListLookupState<RoleOption> {
   return useCollection<RoleOption>(enabled ? "/v1/meta/roles" : null);
+}
+
+export function useCampuses(enabled = true): ListLookupState<Campus> {
+  return useCollection<Campus>(enabled ? "/v1/campuses?per_page=200" : null);
+}
+
+export interface PermissionCatalogState {
+  items: string[];
+  modules: string[];
+  loading: boolean;
+  error: string | null;
+}
+
+export function usePermissionCatalog(enabled = true): PermissionCatalogState {
+  const [state, setState] = useState<PermissionCatalogState>({
+    items: [],
+    modules: [],
+    loading: enabled,
+    error: null,
+  });
+
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
+    const controller = new AbortController();
+    let active = true;
+
+    const run = async () => {
+      setState((current) => ({ ...current, loading: true, error: null }));
+
+      try {
+        const response = await apiFetch<{ data: string[]; modules: string[] }>(
+          "/v1/meta/permissions",
+          { signal: controller.signal }
+        );
+
+        if (!active) {
+          return;
+        }
+
+        setState({
+          items: response.data,
+          modules: response.modules ?? [],
+          loading: false,
+          error: null,
+        });
+      } catch (err: unknown) {
+        if (!active || (err instanceof DOMException && err.name === "AbortError")) {
+          return;
+        }
+
+        setState({
+          items: [],
+          modules: [],
+          loading: false,
+          error:
+            err instanceof ApiError
+              ? err.message
+              : "Unable to load permissions.",
+        });
+      }
+    };
+
+    void run();
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [enabled]);
+
+  return state;
 }

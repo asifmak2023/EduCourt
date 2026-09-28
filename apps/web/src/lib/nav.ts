@@ -110,7 +110,7 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "Administration",
     items: [
       { label: "Users", href: "/dashboard/users", icon: "users", permission: "user.view", ready: true },
-      { label: "Roles & scopes", href: "/dashboard/roles", icon: "shield", permission: "role.view", ready: false },
+      { label: "Roles & scopes", href: "/dashboard/roles", icon: "shield", permission: "role.view", ready: true },
       { label: "Settings", href: "/dashboard/settings", icon: "cog", permission: "setting.view", ready: false },
       { label: "Audit log", href: "/dashboard/audit", icon: "history", permission: "audit.view", ready: false },
       { label: "Institutions", href: "/dashboard/institutions", icon: "building", permission: "institution.view", ready: false },

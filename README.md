@@ -297,6 +297,10 @@ built on top of it, one surface at a time:
   and job title, role selection and an active flag, and a detail view showing
   the account, campus, two-factor state and assigned roles; deactivation is
   refused for your own account).
+- Delivered: roles and scopes (a role catalogue, a permission reference grouped
+  by module, and campus scope assignments that can be granted to an account with
+  an optional campus, scope type, target id and validity window, then revoked;
+  granting the campus admin role remains reserved for the Super User).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

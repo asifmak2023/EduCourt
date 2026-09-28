@@ -551,6 +551,22 @@ export interface RoleOption {
   label: string;
 }
 
+export interface ScopeAssignment {
+  id: number;
+  user_id: number;
+  role: string | null;
+  role_label: string | null;
+  institution_id: number | null;
+  campus_id: number | null;
+  scope_type: string | null;
+  scope_id: number | null;
+  is_active: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+  campus?: Campus | null;
+  created_at?: string | null;
+}
+
 export interface ClassSubject {
   id: number;
   academic_year_id: number;

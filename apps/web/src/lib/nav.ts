@@ -86,9 +86,9 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: "People",
     items: [
-      { label: "Staff", href: "/dashboard/hr/staff", icon: "idCard", permission: "hr.view", ready: false },
+      { label: "Staff", href: "/dashboard/hr/staff", icon: "idCard", permission: "hr.view", ready: true },
       { label: "Payroll", href: "/dashboard/hr/payroll", icon: "wallet", permission: "payroll.view", ready: false },
-      { label: "Leave", href: "/dashboard/hr/leave", icon: "clock", permission: "hr.view", ready: false },
+      { label: "Leave", href: "/dashboard/attendance/leave", icon: "clock", permission: "attendance.view", ready: true },
     ],
   },
   {

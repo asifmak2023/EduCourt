@@ -1166,3 +1166,116 @@ export interface LabSummary {
   upcoming_sessions: number;
   needs_attention: number;
 }
+
+export interface Department {
+  id: number;
+  campus_id?: number;
+  name: string;
+  code: string;
+  description: string | null;
+  is_active: boolean;
+  head?: User | null;
+  designations_count?: number;
+  staff_count?: number;
+  created_at?: string | null;
+}
+
+export interface Designation {
+  id: number;
+  campus_id?: number;
+  department_id: number | null;
+  name: string;
+  code: string;
+  grade: string | null;
+  job_description: string | null;
+  responsibilities: string[];
+  is_active: boolean;
+  department?: Department | null;
+  created_at?: string | null;
+}
+
+export interface StaffDocument {
+  id: number;
+  staff_member_id: number;
+  type: string | null;
+  type_label?: string | null;
+  title: string | null;
+  original_name: string | null;
+  mime_type: string | null;
+  size: number | null;
+  issued_on: string | null;
+  expires_on: string | null;
+  is_verified: boolean;
+  verified_by?: string | null;
+  verified_at?: string | null;
+  notes: string | null;
+  uploaded_by?: string | null;
+  download_url?: string;
+  created_at?: string | null;
+}
+
+export interface StaffMember {
+  id: number;
+  campus_id?: number;
+  user_id: number | null;
+  employee_no: string;
+  first_name: string;
+  last_name: string | null;
+  full_name: string;
+  gender: string | null;
+  date_of_birth: string | null;
+  cnic: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  employment_type: string | null;
+  employment_type_label?: string | null;
+  status: string | null;
+  status_label?: string | null;
+  joining_date: string | null;
+  leaving_date: string | null;
+  bank_name: string | null;
+  bank_account_no: string | null;
+  tax_number: string | null;
+  notes: string | null;
+  department?: Department | null;
+  designation?: Designation | null;
+  user?: User | null;
+  documents?: StaffDocument[];
+  created_at?: string | null;
+}
+
+export interface StaffHeadcountGroup {
+  department_id?: number;
+  department?: string;
+  designation_id?: number;
+  designation?: string;
+  total: number;
+}
+
+export interface StaffHeadcount {
+  as_on: string;
+  total: number;
+  by_department: StaffHeadcountGroup[];
+  by_designation: StaffHeadcountGroup[];
+  by_status: { status: string; total: number }[];
+  by_employment_type: { employment_type: string; total: number }[];
+}
+
+export interface StaffMovementRow {
+  id: number;
+  employee_no: string;
+  name: string;
+  department: string | null;
+  designation: string | null;
+  date: string | null;
+}
+
+export interface StaffJoinersLeavers {
+  from: string;
+  to: string;
+  joiners: StaffMovementRow[];
+  leavers: StaffMovementRow[];
+}

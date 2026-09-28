@@ -239,6 +239,11 @@ built on top of it, one surface at a time:
   staff, an equipment list per lab with quantity and condition, a per-lab
   summary of units and items needing attention, and clash-free booking of lab
   sessions with complete and cancel actions).
+- Delivered: HR staff (a staff register with department, designation, employment
+  type and status filters, create/edit profiles with personal, contact and bank
+  details, document upload with verification, download and removal, offboarding
+  with a leaving date and reason, department and designation masters, and
+  headcount plus joiner/leaver reports).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

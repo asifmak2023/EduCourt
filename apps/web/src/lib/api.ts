@@ -61,3 +61,51 @@ export async function apiFetch<T>(
 
   return payload as T;
 }
+
+export async function apiUpload<T>(
+  path: string,
+  formData: FormData
+): Promise<T> {
+  const token =
+    typeof window !== "undefined" ? window.localStorage.getItem(TOKEN_KEY) : null;
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    body: formData,
+    headers: {
+      Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  const text = await response.text();
+  const payload = text ? (JSON.parse(text) as unknown) : null;
+
+  if (!response.ok) {
+    const errorPayload = (payload ?? {}) as Partial<ApiErrorShape>;
+    throw new ApiError(
+      errorPayload.message ?? response.statusText ?? "Request failed",
+      response.status,
+      errorPayload.errors
+    );
+  }
+
+  return payload as T;
+}
+
+export async function apiDownload(path: string): Promise<Blob> {
+  const token =
+    typeof window !== "undefined" ? window.localStorage.getItem(TOKEN_KEY) : null;
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!response.ok) {
+    throw new ApiError(response.statusText || "Download failed", response.status);
+  }
+
+  return response.blob();
+}

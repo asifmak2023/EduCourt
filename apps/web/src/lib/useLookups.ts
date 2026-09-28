@@ -8,6 +8,8 @@ import type {
   Book,
   ChartOfAccount,
   ClassRoom,
+  Department,
+  Designation,
   Exam,
   ExamPaper,
   ExamType,
@@ -270,4 +272,16 @@ export function useBooks(enabled = true): ListLookupState<Book> {
 
 export function useLabs(enabled = true): ListLookupState<Lab> {
   return useCollection<Lab>(enabled ? "/v1/labs?per_page=200" : null);
+}
+
+export function useDepartments(enabled = true): ListLookupState<Department> {
+  return useCollection<Department>(
+    enabled ? "/v1/departments?per_page=200" : null
+  );
+}
+
+export function useDesignations(enabled = true): ListLookupState<Designation> {
+  return useCollection<Designation>(
+    enabled ? "/v1/designations?per_page=200" : null
+  );
 }

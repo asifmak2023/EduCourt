@@ -15,6 +15,8 @@ import type {
   Section,
   Stage,
   Subject,
+  Term,
+  User,
   Vendor,
 } from "./types";
 
@@ -205,4 +207,12 @@ export function useRooms(enabled = true): ListLookupState<Room> {
 
 export function usePeriods(enabled = true): ListLookupState<Period> {
   return useAcademicCollection<Period>("/v1/periods?per_page=200", enabled);
+}
+
+export function useTerms(enabled = true): ListLookupState<Term> {
+  return useAcademicCollection<Term>("/v1/terms?per_page=200", enabled);
+}
+
+export function useUsers(enabled = true): ListLookupState<User> {
+  return useCollection<User>(enabled ? "/v1/users?per_page=200" : null);
 }

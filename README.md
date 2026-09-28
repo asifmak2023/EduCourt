@@ -195,6 +195,10 @@ built on top of it, one surface at a time:
 - Delivered: academic structure (a hub linking to academic years with terms,
   stages, classes, sections, subjects, periods and rooms, each with search and
   filters, create, edit and archive).
+- Delivered: timetable (weekly grid by class, by teacher or for the signed-in
+  user with academic-year and term filters, publish/unpublish of class
+  timetables, an auto-generation panel with dry run, and timetable slot
+  management with per-slot create and edit).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

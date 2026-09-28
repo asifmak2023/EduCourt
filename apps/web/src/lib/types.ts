@@ -245,16 +245,6 @@ export interface PlatformOverview {
   }[];
 }
 
-export interface TimetableSlot {
-  id: number;
-  day_of_week: number;
-  period?: { id: number; name?: string | null; starts_at?: string | null; ends_at?: string | null } | null;
-  subject?: { id: number; name?: string | null } | null;
-  class_room?: { id: number; name?: string | null } | null;
-  section?: { id: number; name?: string | null } | null;
-  room?: { id: number; name?: string | null } | null;
-}
-
 export interface ChartOfAccount {
   id: number;
   parent_id: number | null;
@@ -514,6 +504,34 @@ export interface Room {
   type: string | null;
   capacity: number | null;
   is_active: boolean;
+}
+
+export interface TimetableSlot {
+  id: number;
+  academic_year_id: number;
+  term_id: number | null;
+  class_room_id: number;
+  section_id: number | null;
+  period_id: number;
+  day_of_week: number;
+  subject_id: number | null;
+  teacher_user_id: number | null;
+  room_id: number | null;
+  is_published: boolean;
+  notes: string | null;
+  period?: Period | null;
+  subject?: Subject | null;
+  teacher?: User | null;
+  class_room?: ClassRoom | null;
+  section?: Section | null;
+  room?: Room | null;
+}
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  is_active?: boolean;
 }
 
 export interface BudgetVsActualRow {

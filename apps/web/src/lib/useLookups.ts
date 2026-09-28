@@ -16,6 +16,7 @@ import type {
   Paginated,
   Period,
   Room,
+  Scholarship,
   Section,
   Stage,
   Student,
@@ -252,5 +253,11 @@ export function useStudents(enabled = true): ListLookupState<Student> {
 export function useSyllabusUnits(enabled = true): ListLookupState<SyllabusUnit> {
   return useCollection<SyllabusUnit>(
     enabled ? "/v1/syllabus-units?per_page=200" : null
+  );
+}
+
+export function useScholarships(enabled = true): ListLookupState<Scholarship> {
+  return useCollection<Scholarship>(
+    enabled ? "/v1/scholarships?per_page=200" : null
   );
 }

@@ -224,6 +224,10 @@ built on top of it, one surface at a time:
   period estimates, class book lists with a required flag, and lesson plans with
   full planning fields plus a draft/submitted/approved workflow where approval
   is a dedicated action).
+- Delivered: scholarships (concession schemes with merit/need/sports types,
+  percentage or fixed discounts, sponsor and active state, plus student awards
+  with an optional value override, a duplicate guard per academic year, and a
+  revoke action that preserves the record).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

@@ -1016,3 +1016,54 @@ export interface LessonPlan {
   syllabus_unit?: SyllabusUnit | null;
   created_at?: string | null;
 }
+
+export interface Scholarship {
+  id: number;
+  name: string;
+  code: string;
+  type: string | null;
+  type_label?: string | null;
+  discount_type: string | null;
+  discount_type_label?: string | null;
+  value: string;
+  academic_year_id: number | null;
+  academic_year?: string | null;
+  sponsor: string | null;
+  description: string | null;
+  is_active: boolean;
+  awards_count?: number;
+  created_at?: string | null;
+}
+
+export interface ScholarshipAwardSummary {
+  id: number;
+  name: string;
+  code: string;
+  type: string | null;
+  discount_type: string | null;
+  value: string;
+}
+
+export interface ScholarshipAwardStudent {
+  id: number;
+  name: string;
+  admission_no: string;
+}
+
+export interface ScholarshipAward {
+  id: number;
+  scholarship_id: number;
+  scholarship?: ScholarshipAwardSummary | null;
+  student_id: number;
+  student?: ScholarshipAwardStudent | null;
+  academic_year_id: number | null;
+  awarded_on: string | null;
+  status: string | null;
+  status_label?: string | null;
+  value_override: string | null;
+  effective_value?: string | null;
+  notes: string | null;
+  approved_by?: string | null;
+  revoked_on: string | null;
+  created_at?: string | null;
+}

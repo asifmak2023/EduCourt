@@ -228,6 +228,9 @@ built on top of it, one surface at a time:
   percentage or fixed discounts, sponsor and active state, plus student awards
   with an optional value override, a duplicate guard per academic year, and a
   revoke action that preserves the record).
+- Delivered: promotions (select a source academic year and class, load its
+  active students, choose a destination year, class and optional section, flag
+  any student to repeat, and promote the cohort in one action).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

@@ -54,7 +54,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Admissions", href: "/dashboard/admissions", icon: "userPlus", permission: "admission.view", ready: true },
       { label: "Students", href: "/dashboard/students", icon: "users", permission: "student.view", ready: true },
       { label: "Scholarships", href: "/dashboard/scholarships", icon: "award", permission: "scholarship.view", ready: true },
-      { label: "Promotions", href: "/dashboard/promotions", icon: "arrowUp", permission: "student.edit", ready: false },
+      { label: "Promotions", href: "/dashboard/promotions", icon: "arrowUp", permission: "student.edit", ready: true },
     ],
   },
   {

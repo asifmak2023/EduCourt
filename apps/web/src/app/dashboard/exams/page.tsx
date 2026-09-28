@@ -35,6 +35,31 @@ const SECTIONS = [
     title: "Grade scales",
     description: "Percentage bands and grade points.",
   },
+  {
+    href: "/dashboard/exams/moderations",
+    title: "Moderations",
+    description: "Grace marks and scaling applied to papers.",
+  },
+  {
+    href: "/dashboard/exams/reevaluations",
+    title: "Re-evaluations",
+    description: "Review requests to revise a student's marks.",
+  },
+  {
+    href: "/dashboard/exams/supplementaries",
+    title: "Supplementary exams",
+    description: "Register failed students for a re-sit.",
+  },
+  {
+    href: "/dashboard/exams/invigilation",
+    title: "Invigilation duties",
+    description: "Assign chief and assistant invigilators to papers.",
+  },
+  {
+    href: "/dashboard/exams/analysis",
+    title: "Result analysis",
+    description: "Class, subject, teacher and year-on-year insights.",
+  },
 ];
 
 export default function ExamsPage() {

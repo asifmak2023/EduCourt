@@ -18,6 +18,7 @@ import type {
   Room,
   Section,
   Stage,
+  Student,
   Subject,
   Term,
   User,
@@ -241,4 +242,8 @@ export function useExamPapers(enabled = true): ListLookupState<ExamPaper> {
   return useCollection<ExamPaper>(
     enabled ? "/v1/exam-papers?per_page=200" : null
   );
+}
+
+export function useStudents(enabled = true): ListLookupState<Student> {
+  return useCollection<Student>(enabled ? "/v1/students?per_page=200" : null);
 }

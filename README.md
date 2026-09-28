@@ -210,6 +210,12 @@ built on top of it, one surface at a time:
   scheduling with a publish action, exam papers per class and subject, a marks
   entry sheet with absent flags, a class merit list, and per-student result
   cards with subject breakdown, grade and pass/fail outcome).
+- Delivered: exam workflows and analytics (moderations with grace marks and
+  scaling plus approve/apply/reject, re-evaluation requests with a review that
+  revises marks, supplementary registrations driven by a failed-students
+  eligibility lookup, invigilation duty assignment and editing, and a result
+  analysis workspace covering class performance, a subject across classes,
+  teacher achievement and year-on-year comparison).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

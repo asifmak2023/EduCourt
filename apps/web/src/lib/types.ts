@@ -787,3 +787,129 @@ export interface MeritListRow {
   rank: number;
   grade: string | null;
 }
+
+export interface ExamModeration {
+  id: number;
+  exam_id: number;
+  exam?: Exam | null;
+  exam_paper_id: number;
+  paper?: ExamPaper | null;
+  type: string | null;
+  value: number;
+  reason: string | null;
+  status: string | null;
+  created_by: number | null;
+  approved_by: number | null;
+  applied_at: string | null;
+}
+
+export interface ExamReevaluation {
+  id: number;
+  exam_id: number;
+  exam?: Exam | null;
+  exam_paper_id: number;
+  paper?: ExamPaper | null;
+  student_id: number;
+  student?: Student | null;
+  reason: string | null;
+  status: string | null;
+  original_marks: number | null;
+  revised_marks: number | null;
+  reviewed_by: number | null;
+  reviewed_at: string | null;
+  remarks: string | null;
+}
+
+export interface ExamSupplementary {
+  id: number;
+  original_exam_id: number;
+  original_exam?: Exam | null;
+  exam_id: number | null;
+  exam?: Exam | null;
+  exam_paper_id: number | null;
+  student_id: number;
+  student?: Student | null;
+  subject_id: number | null;
+  subject?: Subject | null;
+  fee_amount: number;
+  is_paid: boolean;
+  status: string | null;
+  approved_by: number | null;
+  approved_at: string | null;
+  remarks: string | null;
+}
+
+export interface SupplementaryEligibleRow {
+  student_id: number;
+  student: string | null;
+  exam_paper_id: number;
+  class_room_id: number;
+  subject_id: number;
+  marks_obtained: number;
+  pass_marks: number;
+}
+
+export interface InvigilationDuty {
+  id: number;
+  exam_paper_id: number;
+  user_id: number;
+  role: string | null;
+  notes: string | null;
+  user?: User | null;
+  paper?: ExamPaper | null;
+  created_at?: string | null;
+}
+
+export interface ExamClassAnalysisSubject {
+  subject_id: number;
+  subject: string | null;
+  papers: number;
+  appeared: number;
+  absent: number;
+  passed: number;
+  pass_rate: number;
+  average_percentage: number;
+  highest: number | null;
+  lowest: number | null;
+}
+
+export interface ExamClassAnalysis {
+  class_room_id: number;
+  exam_id: number;
+  subjects: ExamClassAnalysisSubject[];
+  students: number;
+  average_percentage: number;
+  grade_distribution: Record<string, number>;
+}
+
+export interface SubjectAnalysisClass {
+  exam_paper_id: number;
+  class_room_id: number;
+  appeared: number;
+  passed: number;
+  pass_rate: number;
+  average_percentage: number;
+}
+
+export interface ExamSubjectAnalysis {
+  exam_id: number;
+  subject_id: number;
+  classes: SubjectAnalysisClass[];
+}
+
+export interface TeacherAnalysisRow {
+  teacher_id: number;
+  teacher: string | null;
+  appeared: number;
+  passed: number;
+  pass_rate: number;
+  average_percentage: number;
+}
+
+export interface YearOnYearRow {
+  exam_id: number;
+  academic_year_id: number;
+  academic_year: string | null;
+  appeared: number;
+  average_percentage: number;
+}

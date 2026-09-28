@@ -5,6 +5,7 @@ import { ApiError, apiFetch } from "./api";
 import type {
   AcademicOptions,
   AcademicYear,
+  Book,
   ChartOfAccount,
   ClassRoom,
   Exam,
@@ -260,4 +261,8 @@ export function useScholarships(enabled = true): ListLookupState<Scholarship> {
   return useCollection<Scholarship>(
     enabled ? "/v1/scholarships?per_page=200" : null
   );
+}
+
+export function useBooks(enabled = true): ListLookupState<Book> {
+  return useCollection<Book>(enabled ? "/v1/library/books?per_page=200" : null);
 }

@@ -1067,3 +1067,48 @@ export interface ScholarshipAward {
   revoked_on: string | null;
   created_at?: string | null;
 }
+
+export interface Book {
+  id: number;
+  campus_id?: number;
+  title: string;
+  author: string | null;
+  isbn: string | null;
+  publisher: string | null;
+  category: string | null;
+  total_copies: number;
+  available_copies: number;
+  shelf: string | null;
+  price: number;
+  is_active: boolean;
+  created_at?: string | null;
+}
+
+export interface BookIssue {
+  id: number;
+  campus_id?: number;
+  book_id: number;
+  book?: Book | null;
+  member_type: string | null;
+  student_id: number | null;
+  student?: Student | null;
+  user_id: number | null;
+  issued_on: string | null;
+  due_on: string | null;
+  returned_on: string | null;
+  fine_amount: number;
+  status: string | null;
+  notes: string | null;
+  issued_by: number | null;
+  created_at?: string | null;
+}
+
+export interface LibrarySummary {
+  titles: number;
+  copies: number;
+  available: number;
+  issued: number;
+  overdue: number;
+  lost: number;
+  fines_collected: number;
+}

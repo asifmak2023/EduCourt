@@ -231,6 +231,10 @@ built on top of it, one surface at a time:
 - Delivered: promotions (select a source academic year and class, load its
   active students, choose a destination year, class and optional section, flag
   any student to repeat, and promote the cohort in one action).
+- Delivered: library (a book catalogue with copies, availability, shelf and
+  price, issue and return of copies to students or staff with loan periods and
+  automatic overdue fines, and a summary report with circulation, overdue and
+  fines collected alongside the overdue loan list).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

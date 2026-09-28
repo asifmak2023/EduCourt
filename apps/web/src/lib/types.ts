@@ -1380,3 +1380,56 @@ export interface PayrollRun {
   payslips?: Payslip[];
   created_at?: string | null;
 }
+
+export interface InventoryCategory {
+  id: number;
+  campus_id?: number;
+  name: string;
+  code: string | null;
+  description: string | null;
+  items_count?: number;
+  created_at?: string | null;
+}
+
+export interface InventoryItem {
+  id: number;
+  campus_id?: number;
+  inventory_category_id: number | null;
+  category?: InventoryCategory | null;
+  name: string;
+  code: string;
+  unit: string | null;
+  unit_cost: number;
+  quantity: number;
+  reorder_level: number;
+  is_low_stock: boolean;
+  is_active: boolean;
+  created_at?: string | null;
+}
+
+export interface InventoryStockMovement {
+  id: number;
+  inventory_item_id: number;
+  item?: InventoryItem | null;
+  type: string | null;
+  quantity: number;
+  unit_cost: number;
+  reference: string | null;
+  notes: string | null;
+  moved_on: string | null;
+  created_by: number | null;
+  created_at?: string | null;
+}
+
+export interface InventorySummary {
+  items: number;
+  stock_value: number;
+  low_stock: number;
+  low_stock_items: {
+    id: number;
+    name: string;
+    code: string;
+    quantity: number;
+    reorder_level: number;
+  }[];
+}

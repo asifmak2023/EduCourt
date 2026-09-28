@@ -250,6 +250,11 @@ built on top of it, one surface at a time:
   a balanced salary journal, and record payment method; each payslip shows the
   gross, deduction and net totals with a working/present day summary and a
   labelled breakdown that distinguishes earnings, deductions and adjustments).
+- Delivered: inventory (a general store of items with category, unit, unit cost,
+  quantity on hand and reorder level, category masters, a movement ledger for
+  purchases, issues, returns, adjustments and wastage that posts signed stock
+  changes and refuses to drive a quantity below zero, a low-stock list and a
+  summary report of item count, stock value and items to reorder).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

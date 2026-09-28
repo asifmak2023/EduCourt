@@ -16,6 +16,7 @@ import type {
   ExpenseCategory,
   FiscalYear,
   GradeScale,
+  InventoryCategory,
   Lab,
   Paginated,
   Period,
@@ -297,5 +298,13 @@ export function useSalaryComponents(
 ): ListLookupState<SalaryComponent> {
   return useCollection<SalaryComponent>(
     enabled ? "/v1/salary-components?per_page=200" : null
+  );
+}
+
+export function useInventoryCategories(
+  enabled = true
+): ListLookupState<InventoryCategory> {
+  return useCollection<InventoryCategory>(
+    enabled ? "/v1/inventory/categories?per_page=200" : null
   );
 }

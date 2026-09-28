@@ -1590,3 +1590,173 @@ export interface HostelSummary {
   by_type: Record<string, number>;
   pending_outpasses: number;
 }
+
+export interface CanteenSupplier {
+  id: number;
+  campus_id?: number;
+  name: string;
+  contact_person: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  notes: string | null;
+  is_active: boolean;
+  created_at?: string | null;
+}
+
+export interface CanteenItem {
+  id: number;
+  campus_id?: number;
+  name: string;
+  code: string;
+  category: string | null;
+  unit: string | null;
+  price: string;
+  cost_price: string;
+  track_stock: boolean;
+  stock_quantity: string;
+  reorder_level: string;
+  is_low_stock: boolean;
+  is_active: boolean;
+  description: string | null;
+  created_at?: string | null;
+}
+
+export interface CanteenStockEntry {
+  id: number;
+  campus_id?: number;
+  canteen_item_id: number;
+  item?: CanteenItem | null;
+  supplier_id: number | null;
+  supplier?: CanteenSupplier | null;
+  type: string | null;
+  reference: string | null;
+  quantity: string;
+  unit_cost: string;
+  total_cost: string;
+  balance_after: string;
+  entry_date: string | null;
+  notes: string | null;
+  recorded_by: number | null;
+  created_at?: string | null;
+}
+
+export interface CanteenSaleItem {
+  id: number;
+  canteen_item_id: number;
+  item_name: string;
+  quantity: string;
+  unit_price: string;
+  unit_cost: string;
+  line_total: string;
+}
+
+export interface CanteenSale {
+  id: number;
+  campus_id?: number;
+  bill_no: string;
+  student_id: number | null;
+  student?: Student | null;
+  wallet_id: number | null;
+  customer_name: string | null;
+  payment_method: string | null;
+  subtotal: string;
+  discount: string;
+  total: string;
+  cost_total: string;
+  status: string | null;
+  sold_on: string | null;
+  notes: string | null;
+  journal_entry_id: number | null;
+  items?: CanteenSaleItem[];
+  voided_at: string | null;
+  created_at?: string | null;
+}
+
+export interface StudentWallet {
+  id: number;
+  campus_id?: number;
+  student_id: number;
+  student?: Student | null;
+  balance: string;
+  daily_limit: string | null;
+  low_balance_threshold: string | null;
+  is_active: boolean;
+  transactions?: WalletTransaction[];
+  created_at?: string | null;
+}
+
+export interface WalletTransaction {
+  id: number;
+  student_wallet_id: number;
+  type: string | null;
+  amount: string;
+  balance_after: string;
+  reference: string | null;
+  description: string | null;
+  canteen_sale_id: number | null;
+  transaction_date: string | null;
+  journal_entry_id: number | null;
+  created_at?: string | null;
+}
+
+export interface CanteenHygieneCheck {
+  id: number;
+  campus_id?: number;
+  check_date: string | null;
+  area: string;
+  status: string | null;
+  score: number | null;
+  remarks: string | null;
+  checked_by: number | null;
+  created_at?: string | null;
+}
+
+export interface CanteenDailyReport {
+  from: string | null;
+  to: string | null;
+  totals: { bills: number; revenue: number; cost: number; discount: number };
+  by_day: {
+    sold_on: string;
+    bills: number;
+    revenue: number;
+    cost: number;
+    discount: number;
+    profit: number;
+  }[];
+  by_payment_method: {
+    payment_method: string;
+    bills: number;
+    revenue: number;
+  }[];
+}
+
+export interface CanteenItemWiseRow {
+  canteen_item_id: number;
+  item_name: string;
+  quantity: number;
+  revenue: number;
+  cost: number;
+  profit: number;
+}
+
+export interface CanteenProfitLoss {
+  from: string | null;
+  to: string | null;
+  revenue: number;
+  cost_of_goods_sold: number;
+  gross_profit: number;
+  wastage: number;
+  net_profit: number;
+  margin_percentage: number | null;
+}
+
+export interface CanteenWalletSummary {
+  from: string | null;
+  to: string | null;
+  wallets: number;
+  outstanding_balance: number;
+  top_ups: number;
+  purchases: number;
+  low_balance_wallets: number;
+}

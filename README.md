@@ -266,6 +266,14 @@ built on top of it, one surface at a time:
   frees the bed, a pending/approved/rejected/returned outpass workflow with
   approve, reject and mark-returned actions, and a per-hostel occupancy
   summary).
+- Delivered: canteen (supplier and menu-item masters with price, cost,
+  reorder level and tracked stock, stock entries for purchases, wastage and
+  returns with a signed movement ledger, an approve-gated stock adjustment,
+  a point-of-sale bill builder with cash, wallet and credit payment, a void
+  action that restores stock and reverses the journal, student wallets with
+  top-up and approve-gated balance adjustments plus a transaction history,
+  hygiene checks with area, status and score, and reports for daily sales,
+  item-wise margin, profit and loss, wallet activity and low stock).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

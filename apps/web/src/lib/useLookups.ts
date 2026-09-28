@@ -6,6 +6,8 @@ import type {
   AcademicOptions,
   AcademicYear,
   Book,
+  CanteenItem,
+  CanteenSupplier,
   ChartOfAccount,
   ClassRoom,
   Department,
@@ -345,5 +347,19 @@ export function useHostelRooms(
 ): ListLookupState<HostelRoom> {
   return useCollection<HostelRoom>(
     enabled && hostelId ? `/v1/hostels/${hostelId}/rooms?per_page=200` : null
+  );
+}
+
+export function useCanteenItems(enabled = true): ListLookupState<CanteenItem> {
+  return useCollection<CanteenItem>(
+    enabled ? "/v1/canteen/items?per_page=200" : null
+  );
+}
+
+export function useCanteenSuppliers(
+  enabled = true
+): ListLookupState<CanteenSupplier> {
+  return useCollection<CanteenSupplier>(
+    enabled ? "/v1/canteen/suppliers?per_page=200" : null
   );
 }

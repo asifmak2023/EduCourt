@@ -184,6 +184,10 @@ built on top of it, one surface at a time:
 - Delivered: finance ledger (chart of accounts with create/edit and per-account
   ledger and running balance, journal entries with draft creation, posting and
   reversal, and a trial balance report).
+- Delivered: expenses and payables (expense list with search and filters, draft
+  create/edit, approve, void, per-expense lines and recorded payments with an
+  outstanding balance, expense payment view with void, plus vendor and expense
+  category masters).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

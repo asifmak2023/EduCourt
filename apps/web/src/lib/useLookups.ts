@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { ApiError, apiFetch } from "./api";
-import type { AcademicOptions, ChartOfAccount, FiscalYear, Paginated } from "./types";
+import type {
+  AcademicOptions,
+  ChartOfAccount,
+  ExpenseCategory,
+  FiscalYear,
+  Paginated,
+  Vendor,
+} from "./types";
 
 const EMPTY: AcademicOptions = {
   academic_years: [],
@@ -139,4 +146,16 @@ export function useChartOfAccounts(enabled = true): ListLookupState<ChartOfAccou
 
 export function useFiscalYears(enabled = true): ListLookupState<FiscalYear> {
   return useCollection<FiscalYear>(enabled ? "/v1/fiscal-years?per_page=100" : null);
+}
+
+export function useExpenseCategories(
+  enabled = true
+): ListLookupState<ExpenseCategory> {
+  return useCollection<ExpenseCategory>(
+    enabled ? "/v1/expense-categories?is_active=1&per_page=200" : null
+  );
+}
+
+export function useVendors(enabled = true): ListLookupState<Vendor> {
+  return useCollection<Vendor>(enabled ? "/v1/vendors?is_active=1&per_page=200" : null);
 }

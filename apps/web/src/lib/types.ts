@@ -336,3 +336,73 @@ export interface AccountLedger {
   data: AccountLedgerRow[];
   closing_balance: string;
 }
+
+export interface ExpenseCategory {
+  id: number;
+  expense_account_id: number | null;
+  code: string;
+  name: string;
+  description: string | null;
+  sort_order: number;
+  is_active: boolean;
+  expense_account?: ChartOfAccount | null;
+}
+
+export interface Vendor {
+  id: number;
+  payable_account_id: number | null;
+  code: string;
+  name: string;
+  contact_name: string | null;
+  phone: string | null;
+  email: string | null;
+  tax_number: string | null;
+  address: string | null;
+  notes: string | null;
+  is_active: boolean;
+  payable_account?: ChartOfAccount | null;
+}
+
+export interface ExpenseLine {
+  id: number;
+  expense_category_id: number;
+  amount: string;
+  description: string | null;
+  category?: ExpenseCategory | null;
+}
+
+export interface ExpensePayment {
+  id: number;
+  expense_id: number;
+  reference: string;
+  payment_date: string | null;
+  amount: string;
+  method: string | null;
+  method_label: string | null;
+  notes: string | null;
+  voided_at: string | null;
+  is_voided: boolean;
+  expense?: Expense | null;
+}
+
+export interface Expense {
+  id: number;
+  fiscal_year_id: number;
+  vendor_id: number | null;
+  reference: string;
+  expense_date: string | null;
+  status: string | null;
+  status_label: string | null;
+  payee_name: string | null;
+  bill_no: string | null;
+  memo: string | null;
+  total: string;
+  paid_amount: string;
+  outstanding: string;
+  approved_at: string | null;
+  journal_entry_id: number | null;
+  vendor?: Vendor | null;
+  fiscal_year?: FiscalYear | null;
+  lines?: ExpenseLine[];
+  payments?: ExpensePayment[];
+}

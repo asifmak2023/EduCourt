@@ -79,7 +79,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Expenses", href: "/dashboard/finance/expenses", icon: "banknote", permission: "finance.view", ready: true },
       { label: "Vendors", href: "/dashboard/finance/vendors", icon: "building", permission: "finance.view", ready: true },
       { label: "Expense categories", href: "/dashboard/finance/expense-categories", icon: "list", permission: "finance.view", ready: true },
-      { label: "Budgets", href: "/dashboard/finance/budgets", icon: "chart", permission: "finance.view", ready: false },
+      { label: "Budgets", href: "/dashboard/finance/budgets", icon: "chart", permission: "finance.view", ready: true },
       { label: "Reports", href: "/dashboard/reports", icon: "chart", permission: "report.view", ready: false },
     ],
   },

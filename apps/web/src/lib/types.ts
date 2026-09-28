@@ -406,3 +406,39 @@ export interface Expense {
   lines?: ExpenseLine[];
   payments?: ExpensePayment[];
 }
+
+export interface BudgetLine {
+  id: number;
+  chart_of_account_id: number;
+  amount: string;
+  notes: string | null;
+  account?: ChartOfAccount | null;
+}
+
+export interface Budget {
+  id: number;
+  fiscal_year_id: number;
+  name: string;
+  period_type: string | null;
+  starts_on: string | null;
+  ends_on: string | null;
+  status: string | null;
+  notes: string | null;
+  approved_at: string | null;
+  fiscal_year?: FiscalYear | null;
+  lines?: BudgetLine[];
+  total_budget: string;
+}
+
+export interface BudgetVsActualRow {
+  chart_of_account_id: number;
+  code: string;
+  name: string;
+  account_type: string;
+  normal_balance: string;
+  budget: string;
+  actual: string;
+  variance: string;
+  utilization: number | null;
+  favorable: boolean;
+}

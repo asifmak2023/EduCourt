@@ -164,6 +164,21 @@ class BudgetTest extends TestCase
             ->assertJsonCount(0, 'data');
     }
 
+    public function test_index_can_search_by_name(): void
+    {
+        $this->as($this->admin)->postJson('/api/v1/budgets', $this->payload())->assertStatus(201);
+
+        $this->as($this->admin)
+            ->getJson('/api/v1/budgets?search=Operating')
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
+
+        $this->as($this->admin)
+            ->getJson('/api/v1/budgets?search=missing')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
     public function test_budget_vs_actual_reports_spend_against_budget(): void
     {
         $id = $this->as($this->admin)->postJson('/api/v1/budgets', $this->payload())

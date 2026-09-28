@@ -188,6 +188,10 @@ built on top of it, one surface at a time:
   create/edit, approve, void, per-expense lines and recorded payments with an
   outstanding balance, expense payment view with void, plus vendor and expense
   category masters).
+- Delivered: budgeting (budget list with name search, status and fiscal-year
+  filters, draft create/edit with multi-line allocation per account, an approve
+  action that locks the plan, and a per-budget detail page showing the planned
+  lines alongside a budget-vs-actual comparison with variance and utilization).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

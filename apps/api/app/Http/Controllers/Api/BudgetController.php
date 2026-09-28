@@ -22,10 +22,13 @@ class BudgetController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
+        $search = $request->string('search')->toString();
+
         $budgets = Budget::query()
             ->with(['fiscalYear', 'lines.chartOfAccount'])
             ->when($request->filled('fiscal_year_id'), fn ($q) => $q->where('fiscal_year_id', $request->integer('fiscal_year_id')))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))
+            ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
             ->orderByDesc('starts_on')
             ->orderByDesc('id')
             ->paginate($request->integer('per_page', 25));

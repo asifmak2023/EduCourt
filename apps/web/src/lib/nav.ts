@@ -63,7 +63,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Academic structure", href: "/dashboard/academics", icon: "building", permission: "academic.view", ready: true },
       { label: "Timetable", href: "/dashboard/timetable", icon: "calendar", permission: "timetable.view", ready: true },
       { label: "Attendance", href: "/dashboard/attendance", icon: "check", permission: "attendance.view", ready: true },
-      { label: "Exams & results", href: "/dashboard/exams", icon: "clipboard", permission: "exam.view", ready: false },
+      { label: "Exams & results", href: "/dashboard/exams", icon: "clipboard", permission: "exam.view", ready: true },
       { label: "Curriculum", href: "/dashboard/curriculum", icon: "book", permission: "curriculum.view", ready: false },
       { label: "Credits & GPA", href: "/dashboard/credits", icon: "chart", permission: "credit.view", ready: false },
     ],

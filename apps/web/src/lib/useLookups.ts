@@ -7,8 +7,12 @@ import type {
   AcademicYear,
   ChartOfAccount,
   ClassRoom,
+  Exam,
+  ExamPaper,
+  ExamType,
   ExpenseCategory,
   FiscalYear,
+  GradeScale,
   Paginated,
   Period,
   Room,
@@ -215,4 +219,26 @@ export function useTerms(enabled = true): ListLookupState<Term> {
 
 export function useUsers(enabled = true): ListLookupState<User> {
   return useCollection<User>(enabled ? "/v1/users?per_page=200" : null);
+}
+
+export function useExamTypes(enabled = true): ListLookupState<ExamType> {
+  return useCollection<ExamType>(
+    enabled ? "/v1/exam-types?per_page=200" : null
+  );
+}
+
+export function useGradeScales(enabled = true): ListLookupState<GradeScale> {
+  return useCollection<GradeScale>(
+    enabled ? "/v1/grade-scales?per_page=200" : null
+  );
+}
+
+export function useExams(enabled = true): ListLookupState<Exam> {
+  return useCollection<Exam>(enabled ? "/v1/exams?per_page=200" : null);
+}
+
+export function useExamPapers(enabled = true): ListLookupState<ExamPaper> {
+  return useCollection<ExamPaper>(
+    enabled ? "/v1/exam-papers?per_page=200" : null
+  );
 }

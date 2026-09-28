@@ -675,3 +675,115 @@ export interface BudgetVsActualRow {
   utilization: number | null;
   favorable: boolean;
 }
+
+export interface ExamType {
+  id: number;
+  name: string;
+  code: string;
+  weightage: string | null;
+  is_active: boolean;
+  description: string | null;
+}
+
+export interface GradeScaleItem {
+  id: number;
+  grade_scale_id: number;
+  sequence: number;
+  grade: string;
+  min_percentage: string;
+  max_percentage: string;
+  points: string | null;
+  remark: string | null;
+}
+
+export interface GradeScale {
+  id: number;
+  name: string;
+  code: string;
+  is_default: boolean;
+  is_active: boolean;
+  items: GradeScaleItem[];
+}
+
+export interface Exam {
+  id: number;
+  academic_year_id: number;
+  term_id: number | null;
+  exam_type_id: number;
+  name: string;
+  starts_on: string | null;
+  ends_on: string | null;
+  status: string | null;
+  description: string | null;
+  exam_type?: ExamType | null;
+  papers?: ExamPaper[];
+}
+
+export interface ExamPaper {
+  id: number;
+  exam_id: number;
+  class_room_id: number;
+  subject_id: number;
+  room_id: number | null;
+  exam_date: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  max_marks: string;
+  pass_marks: string;
+  class_room?: ClassRoom | null;
+  subject?: Subject | null;
+  room?: Room | null;
+}
+
+export interface ExamMark {
+  id: number;
+  exam_id: number;
+  exam_paper_id: number;
+  student_id: number;
+  class_room_id: number;
+  subject_id: number;
+  marks_obtained: string | null;
+  original_marks_obtained: string | null;
+  moderated_marks_obtained: string | null;
+  effective_marks: string | null;
+  moderation_source: string | null;
+  is_absent: boolean;
+  remarks: string | null;
+  student?: Student | null;
+  subject?: Subject | null;
+}
+
+export interface ResultCardSubject {
+  exam_paper_id: number;
+  subject_id: number;
+  subject: string | null;
+  max_marks: number;
+  pass_marks: number;
+  marks_obtained: number | null;
+  is_absent: boolean;
+  remarks: string | null;
+  passed: boolean;
+}
+
+export interface ResultCard {
+  student_id: number;
+  exam_id: number;
+  class_room_id: number | null;
+  subjects: ResultCardSubject[];
+  total_obtained: number;
+  total_max: number;
+  percentage: number;
+  grade: string | null;
+  grade_points: string | null;
+  failed_subjects: number;
+  result: string;
+}
+
+export interface MeritListRow {
+  student_id: number;
+  student: string;
+  total_obtained: number;
+  percentage: number;
+  rank: number;
+  grade: string | null;
+}

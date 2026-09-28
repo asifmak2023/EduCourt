@@ -206,6 +206,10 @@ built on top of it, one surface at a time:
   status filters plus a bulk marking sheet, a class-summary attendance report,
   staff attendance records with a bulk marking sheet and a per-employee report,
   and staff leave requests with create, detail, approve, reject and cancel).
+- Delivered: exams and results (exam-type and grade-scale masters, exam
+  scheduling with a publish action, exam papers per class and subject, a marks
+  entry sheet with absent flags, a class merit list, and per-student result
+  cards with subject breakdown, grade and pass/fail outcome).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

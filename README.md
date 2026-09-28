@@ -235,6 +235,10 @@ built on top of it, one surface at a time:
   price, issue and return of copies to students or staff with loan periods and
   automatic overdue fines, and a summary report with circulation, overdue and
   fines collected alongside the overdue loan list).
+- Delivered: labs (a lab register with type, location, capacity and in-charge
+  staff, an equipment list per lab with quantity and condition, a per-lab
+  summary of units and items needing attention, and clash-free booking of lab
+  sessions with complete and cancel actions).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

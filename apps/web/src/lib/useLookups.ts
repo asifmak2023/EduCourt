@@ -14,6 +14,7 @@ import type {
   ExpenseCategory,
   FiscalYear,
   GradeScale,
+  Lab,
   Paginated,
   Period,
   Room,
@@ -265,4 +266,8 @@ export function useScholarships(enabled = true): ListLookupState<Scholarship> {
 
 export function useBooks(enabled = true): ListLookupState<Book> {
   return useCollection<Book>(enabled ? "/v1/library/books?per_page=200" : null);
+}
+
+export function useLabs(enabled = true): ListLookupState<Lab> {
+  return useCollection<Lab>(enabled ? "/v1/labs?per_page=200" : null);
 }

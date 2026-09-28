@@ -1112,3 +1112,57 @@ export interface LibrarySummary {
   lost: number;
   fines_collected: number;
 }
+
+export interface Lab {
+  id: number;
+  campus_id?: number;
+  name: string;
+  code: string;
+  type: string | null;
+  location: string | null;
+  capacity: number;
+  incharge_user_id: number | null;
+  incharge?: User | null;
+  is_active: boolean;
+  equipment?: LabEquipment[];
+  created_at?: string | null;
+}
+
+export interface LabEquipment {
+  id: number;
+  campus_id?: number;
+  lab_id: number;
+  name: string;
+  code: string | null;
+  quantity: number;
+  condition: string | null;
+  purchased_on: string | null;
+  notes: string | null;
+  created_at?: string | null;
+}
+
+export interface LabBooking {
+  id: number;
+  campus_id?: number;
+  lab_id: number;
+  lab?: Lab | null;
+  class_room_id: number | null;
+  class_room?: ClassRoom | null;
+  teacher_user_id: number | null;
+  teacher?: User | null;
+  session_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  purpose: string | null;
+  status: string | null;
+  created_at?: string | null;
+}
+
+export interface LabSummary {
+  lab_id: number;
+  equipment_count: number;
+  equipment_quantity: number;
+  by_condition: Record<string, number>;
+  upcoming_sessions: number;
+  needs_attention: number;
+}

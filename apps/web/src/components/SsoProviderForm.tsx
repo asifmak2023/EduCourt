@@ -310,7 +310,7 @@ export function SsoProviderForm({
             </Field>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-6 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-6 py-4">
             <div className="flex flex-wrap items-center gap-6">
               <Checkbox
                 label="Active"

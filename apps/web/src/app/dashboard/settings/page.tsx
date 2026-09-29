@@ -50,7 +50,7 @@ function SettingsHome() {
       </div>
 
       <Card className="space-y-4 p-5">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted">
           Single sign-on uses generic OpenID Connect providers. Each provider is
           linked to an institution and can optionally provision users on first
           login with a default role.

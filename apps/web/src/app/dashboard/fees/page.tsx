@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Pagination } from "@/components/Pagination";
@@ -13,7 +14,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { buttonClasses } from "@/components/Form";
+import { Select, TextInput, buttonClasses } from "@/components/Form";
 import { formatCurrency, formatDate } from "@/lib/format";
 import type { FeeVoucher } from "@/lib/types";
 
@@ -46,16 +47,17 @@ function VouchersTable() {
         description="Issued vouchers, payments received and outstanding balances."
         actions={
           <>
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => {
-                setPage(1);
-                setSearch(event.target.value);
-              }}
-              placeholder="Search voucher no or student"
-              className="w-60 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-            />
+            <div className="w-60">
+              <TextInput
+                type="search"
+                value={search}
+                onChange={(event) => {
+                  setPage(1);
+                  setSearch(event.target.value);
+                }}
+                placeholder="Search voucher no or student"
+              />
+            </div>
             <Link
               href="/dashboard/fees/payments"
               className={buttonClasses("secondary")}
@@ -67,20 +69,21 @@ function VouchersTable() {
       />
 
       <div className="flex flex-wrap gap-3">
-        <select
-          value={status}
-          onChange={(event) => {
-            setPage(1);
-            setStatus(event.target.value);
-          }}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
-        >
-          {STATUSES.map((option) => (
-            <option key={option.value || "all"} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <div className="w-44">
+          <Select
+            value={status}
+            onChange={(event) => {
+              setPage(1);
+              setStatus(event.target.value);
+            }}
+          >
+            {STATUSES.map((option) => (
+              <option key={option.value || "all"} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
 
       {error ? <ErrorNotice message={error} /> : null}
@@ -91,62 +94,62 @@ function VouchersTable() {
         ) : items.length === 0 ? (
           <EmptyState message="No fee vouchers match your filters." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Voucher no</th>
-                  <th className="px-5 py-3 font-medium">Student</th>
-                  <th className="px-5 py-3 text-right font-medium">Amount</th>
-                  <th className="px-5 py-3 text-right font-medium">Paid</th>
-                  <th className="px-5 py-3 text-right font-medium">Balance</th>
-                  <th className="px-5 py-3 font-medium">Due date</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((voucher) => (
-                  <tr key={voucher.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-mono text-xs text-slate-500">
-                      <Link
-                        href={`/dashboard/fees/${voucher.id}`}
-                        className="hover:underline"
-                      >
-                        {voucher.voucher_no}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      {voucher.student ? (
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Fee vouchers" className="min-w-[900px]">
+                <Table.Header>
+                  <Table.Column isRowHeader>Voucher no</Table.Column>
+                  <Table.Column>Student</Table.Column>
+                  <Table.Column className="text-right">Amount</Table.Column>
+                  <Table.Column className="text-right">Paid</Table.Column>
+                  <Table.Column className="text-right">Balance</Table.Column>
+                  <Table.Column>Due date</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((voucher) => (
+                    <Table.Row key={voucher.id} id={voucher.id}>
+                      <Table.Cell className="font-mono text-xs text-muted">
                         <Link
-                          href={`/dashboard/students/${voucher.student.id}`}
+                          href={`/dashboard/fees/${voucher.id}`}
                           className="hover:underline"
                         >
-                          {voucher.student.full_name}
+                          {voucher.voucher_no}
                         </Link>
-                      ) : (
-                        `Student #${voucher.id}`
-                      )}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-700">
-                      {formatCurrency(voucher.amount)}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-700">
-                      {formatCurrency(voucher.paid_amount)}
-                    </td>
-                    <td className="px-5 py-3 text-right font-medium text-slate-900">
-                      {formatCurrency(voucher.balance)}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {formatDate(voucher.due_date)}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={voucher.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-foreground">
+                        {voucher.student ? (
+                          <Link
+                            href={`/dashboard/students/${voucher.student.id}`}
+                            className="hover:underline"
+                          >
+                            {voucher.student.full_name}
+                          </Link>
+                        ) : (
+                          `Student #${voucher.id}`
+                        )}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-foreground">
+                        {formatCurrency(voucher.amount)}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-foreground">
+                        {formatCurrency(voucher.paid_amount)}
+                      </Table.Cell>
+                      <Table.Cell className="text-right font-medium text-foreground">
+                        {formatCurrency(voucher.balance)}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {formatDate(voucher.due_date)}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={voucher.status} />
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {meta ? (

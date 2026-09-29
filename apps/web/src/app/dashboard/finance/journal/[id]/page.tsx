@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { Table } from "@heroui/react";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -78,20 +79,20 @@ function JournalEntryView() {
 
       <div className="flex flex-wrap items-center gap-2">
         <Badge value={data.status} />
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-muted">
           {formatDate(data.entry_date)}
           {data.fiscal_year ? ` · ${data.fiscal_year.name}` : ""}
         </span>
         {data.reversal_of_id ? (
           <Link
             href={`/dashboard/finance/journal/${data.reversal_of_id}`}
-            className="text-xs text-slate-600 underline"
+            className="text-xs text-muted underline"
           >
             Reversal of #{data.reversal_of_id}
           </Link>
         ) : null}
         {data.status === "reversed" ? (
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-muted">
             Corrected by a posted reversal
           </span>
         ) : null}
@@ -115,60 +116,60 @@ function JournalEntryView() {
         {lines.length === 0 ? (
           <EmptyState message="No lines recorded." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-4 py-2 font-medium">#</th>
-                  <th className="px-4 py-2 font-medium">Account</th>
-                  <th className="px-4 py-2 font-medium">Description</th>
-                  <th className="px-4 py-2 text-right font-medium">Debit</th>
-                  <th className="px-4 py-2 text-right font-medium">Credit</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {lines.map((line) => (
-                  <tr key={line.id}>
-                    <td className="px-4 py-2 text-slate-400">{line.line_no}</td>
-                    <td className="px-4 py-2 text-slate-700">
-                      {line.account ? (
-                        <Link
-                          href={`/dashboard/finance/accounts/${line.account.id}`}
-                          className="hover:underline"
-                        >
-                          {line.account.code} - {line.account.name}
-                        </Link>
-                      ) : (
-                        `Account #${line.chart_of_account_id}`
-                      )}
-                    </td>
-                    <td className="px-4 py-2 text-slate-600">
-                      {line.description ?? "-"}
-                    </td>
-                    <td className="px-4 py-2 text-right text-slate-700">
-                      {formatCurrency(line.debit)}
-                    </td>
-                    <td className="px-4 py-2 text-right text-slate-700">
-                      {formatCurrency(line.credit)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot className="bg-slate-50 text-sm font-medium text-slate-900">
-                <tr>
-                  <td className="px-4 py-2" colSpan={3}>
-                    Totals
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    {formatCurrency(data.total_debit)}
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    {formatCurrency(data.total_credit)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Journal entry lines">
+                <Table.Header>
+                  <Table.Column isRowHeader>#</Table.Column>
+                  <Table.Column>Account</Table.Column>
+                  <Table.Column>Description</Table.Column>
+                  <Table.Column className="text-right">Debit</Table.Column>
+                  <Table.Column className="text-right">Credit</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {lines.map((line) => (
+                    <Table.Row key={line.id} id={line.id}>
+                      <Table.Cell className="text-muted">{line.line_no}</Table.Cell>
+                      <Table.Cell className="text-foreground">
+                        {line.account ? (
+                          <Link
+                            href={`/dashboard/finance/accounts/${line.account.id}`}
+                            className="hover:underline"
+                          >
+                            {line.account.code} - {line.account.name}
+                          </Link>
+                        ) : (
+                          `Account #${line.chart_of_account_id}`
+                        )}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {line.description ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-foreground">
+                        {formatCurrency(line.debit)}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-foreground">
+                        {formatCurrency(line.credit)}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+                <Table.Footer>
+                  <Table.Row id="lines-total">
+                    <Table.Cell className="font-semibold">Totals</Table.Cell>
+                    <Table.Cell />
+                    <Table.Cell />
+                    <Table.Cell className="text-right font-semibold">
+                      {formatCurrency(data.total_debit)}
+                    </Table.Cell>
+                    <Table.Cell className="text-right font-semibold">
+                      {formatCurrency(data.total_credit)}
+                    </Table.Cell>
+                  </Table.Row>
+                </Table.Footer>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
       </SectionCard>
 
@@ -246,8 +247,8 @@ function EntryActions({
     <Card className="p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Actions</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Actions</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Posted entries are corrected by creating a reversal.
           </p>
         </div>
@@ -297,7 +298,7 @@ function EntryActions({
       ) : null}
 
       {mode === "reverse" ? (
-        <div className="mt-5 space-y-4 border-t border-slate-100 pt-5">
+        <div className="mt-5 space-y-4 border-t border-border-secondary pt-5">
           <Field label="Reason (optional)" htmlFor="reverse_memo">
             <TextArea
               id="reverse_memo"

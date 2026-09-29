@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { Table } from "@heroui/react";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -103,7 +104,7 @@ function ExpenseDetailView() {
 
       <div className="flex flex-wrap items-center gap-2">
         <Badge value={data.status} />
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-muted">
           {formatDate(data.expense_date)}
           {data.fiscal_year ? ` · ${data.fiscal_year.name}` : ""}
         </span>
@@ -147,7 +148,7 @@ function ExpenseDetailView() {
           <DataItem label="Approved at" value={formatDate(data.approved_at)} />
         </DataList>
         {data.memo ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             {data.memo}
           </p>
         ) : null}
@@ -157,42 +158,41 @@ function ExpenseDetailView() {
         {lines.length === 0 ? (
           <EmptyState message="No lines recorded." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-4 py-2 font-medium">Category</th>
-                  <th className="px-4 py-2 font-medium">Description</th>
-                  <th className="px-4 py-2 text-right font-medium">Amount</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {lines.map((line) => (
-                  <tr key={line.id}>
-                    <td className="px-4 py-2 text-slate-700">
-                      {line.category?.name ?? `Category #${line.expense_category_id}`}
-                    </td>
-                    <td className="px-4 py-2 text-slate-600">
-                      {line.description ?? "-"}
-                    </td>
-                    <td className="px-4 py-2 text-right font-medium text-slate-900">
-                      {formatCurrency(line.amount)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot className="bg-slate-50 text-sm font-medium text-slate-900">
-                <tr>
-                  <td className="px-4 py-2" colSpan={2}>
-                    Total
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    {formatCurrency(data.total)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Expense lines">
+                <Table.Header>
+                  <Table.Column isRowHeader>Category</Table.Column>
+                  <Table.Column>Description</Table.Column>
+                  <Table.Column className="text-right">Amount</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {lines.map((line) => (
+                    <Table.Row key={line.id} id={line.id}>
+                      <Table.Cell className="text-foreground">
+                        {line.category?.name ?? `Category #${line.expense_category_id}`}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {line.description ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-right font-medium text-foreground">
+                        {formatCurrency(line.amount)}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+                <Table.Footer>
+                  <Table.Row id="lines-total">
+                    <Table.Cell className="font-semibold">Total</Table.Cell>
+                    <Table.Cell />
+                    <Table.Cell className="text-right font-semibold">
+                      {formatCurrency(data.total)}
+                    </Table.Cell>
+                  </Table.Row>
+                </Table.Footer>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
       </SectionCard>
 
@@ -203,45 +203,45 @@ function ExpenseDetailView() {
         {payments.length === 0 ? (
           <EmptyState message="No payments recorded." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-4 py-2 font-medium">Reference</th>
-                  <th className="px-4 py-2 font-medium">Date</th>
-                  <th className="px-4 py-2 text-right font-medium">Amount</th>
-                  <th className="px-4 py-2 font-medium">Method</th>
-                  <th className="px-4 py-2 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {payments.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-2 font-mono text-xs text-slate-500">
-                      <Link
-                        href={`/dashboard/finance/expense-payments/${payment.id}`}
-                        className="hover:underline"
-                      >
-                        {payment.reference}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-2 text-slate-600">
-                      {formatDate(payment.payment_date)}
-                    </td>
-                    <td className="px-4 py-2 text-right text-slate-700">
-                      {formatCurrency(payment.amount)}
-                    </td>
-                    <td className="px-4 py-2 text-slate-600">
-                      {payment.method_label ?? humanize(payment.method)}
-                    </td>
-                    <td className="px-4 py-2">
-                      <Badge value={payment.is_voided ? "void" : "posted"} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Expense payments">
+                <Table.Header>
+                  <Table.Column isRowHeader>Reference</Table.Column>
+                  <Table.Column>Date</Table.Column>
+                  <Table.Column className="text-right">Amount</Table.Column>
+                  <Table.Column>Method</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {payments.map((payment) => (
+                    <Table.Row key={payment.id} id={payment.id}>
+                      <Table.Cell className="font-mono text-xs text-muted">
+                        <Link
+                          href={`/dashboard/finance/expense-payments/${payment.id}`}
+                          className="hover:underline"
+                        >
+                          {payment.reference}
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {formatDate(payment.payment_date)}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-foreground">
+                        {formatCurrency(payment.amount)}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {payment.method_label ?? humanize(payment.method)}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={payment.is_voided ? "void" : "posted"} />
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
       </SectionCard>
 
@@ -269,14 +269,14 @@ function SummaryTile({
   tone?: "default" | "positive" | "danger";
 }) {
   const tones: Record<string, string> = {
-    default: "text-slate-900",
-    positive: "text-emerald-600",
-    danger: "text-rose-600",
+    default: "text-foreground",
+    positive: "text-success",
+    danger: "text-danger",
   };
 
   return (
     <Card className="p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted">
         {label}
       </p>
       <p className={`mt-2 text-xl font-semibold ${tones[tone]}`}>{value}</p>
@@ -345,8 +345,8 @@ function ExpenseActions({
     <Card className="p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Actions</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Actions</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Approve the draft to post it, then record settlements.
           </p>
         </div>
@@ -453,7 +453,7 @@ function PaymentForm({
   const [notes, setNotes] = useState("");
 
   return (
-    <div className="mt-5 grid gap-4 border-t border-slate-100 pt-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="mt-5 grid gap-4 border-t border-border-secondary pt-5 sm:grid-cols-2 lg:grid-cols-3">
       <Field
         label="Amount"
         htmlFor="expense_payment_amount"
@@ -537,7 +537,7 @@ function VoidForm({
   const [memo, setMemo] = useState("");
 
   return (
-    <div className="mt-5 space-y-4 border-t border-slate-100 pt-5">
+    <div className="mt-5 space-y-4 border-t border-border-secondary pt-5">
       <Field label="Reason (optional)" htmlFor="void_expense_memo">
         <TextArea
           id="void_expense_memo"

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { Table } from "@heroui/react";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -96,7 +97,7 @@ function BudgetDetailView() {
 
       <div className="flex flex-wrap items-center gap-2">
         <Badge value={data.status} />
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-muted">
           {humanize(data.period_type)} · {formatDate(data.starts_on)} -{" "}
           {formatDate(data.ends_on)}
         </span>
@@ -109,39 +110,41 @@ function BudgetDetailView() {
           <DataItem label="Finalised at" value={formatDate(data.approved_at)} />
         </DataList>
         {data.notes ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             {data.notes}
           </p>
         ) : null}
 
         {lines.length > 0 ? (
-          <div className="mt-5 overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-4 py-2 font-medium">Account</th>
-                  <th className="px-4 py-2 font-medium">Notes</th>
-                  <th className="px-4 py-2 text-right font-medium">Amount</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {lines.map((line) => (
-                  <tr key={line.id}>
-                    <td className="px-4 py-2 text-slate-700">
-                      {line.account
-                        ? `${line.account.code} - ${line.account.name}`
-                        : `Account #${line.chart_of_account_id}`}
-                    </td>
-                    <td className="px-4 py-2 text-slate-600">
-                      {line.notes ?? "-"}
-                    </td>
-                    <td className="px-4 py-2 text-right font-medium text-slate-900">
-                      {formatCurrency(line.amount)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="mt-5">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content aria-label="Budget lines">
+                  <Table.Header>
+                    <Table.Column isRowHeader>Account</Table.Column>
+                    <Table.Column>Notes</Table.Column>
+                    <Table.Column className="text-right">Amount</Table.Column>
+                  </Table.Header>
+                  <Table.Body>
+                    {lines.map((line) => (
+                      <Table.Row key={line.id} id={line.id}>
+                        <Table.Cell className="text-foreground">
+                          {line.account
+                            ? `${line.account.code} - ${line.account.name}`
+                            : `Account #${line.chart_of_account_id}`}
+                        </Table.Cell>
+                        <Table.Cell className="text-muted">
+                          {line.notes ?? "-"}
+                        </Table.Cell>
+                        <Table.Cell className="text-right font-medium text-foreground">
+                          {formatCurrency(line.amount)}
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </div>
         ) : null}
       </SectionCard>
@@ -205,32 +208,32 @@ function ActualsSection({ budgetId }: { budgetId: number }) {
 
   return (
     <Card>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-secondary px-6 py-4">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">
+          <h2 className="text-sm font-semibold text-foreground">
             Budget vs actual
           </h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-0.5 text-xs text-muted">
             Posted spend compared with the plan.
           </p>
         </div>
         {data ? (
           <div className="flex flex-wrap gap-5 text-sm">
-            <span className="text-slate-600">
+            <span className="text-muted">
               Budget{" "}
-              <span className="font-semibold text-slate-900">
+              <span className="font-semibold text-foreground">
                 {formatCurrency(data.totals.budget)}
               </span>
             </span>
-            <span className="text-slate-600">
+            <span className="text-muted">
               Actual{" "}
-              <span className="font-semibold text-slate-900">
+              <span className="font-semibold text-foreground">
                 {formatCurrency(data.totals.actual)}
               </span>
             </span>
-            <span className="text-slate-600">
+            <span className="text-muted">
               Variance{" "}
-              <span className="font-semibold text-slate-900">
+              <span className="font-semibold text-foreground">
                 {formatCurrency(data.totals.variance)}
               </span>
             </span>
@@ -247,49 +250,49 @@ function ActualsSection({ budgetId }: { budgetId: number }) {
       ) : !data || data.data.length === 0 ? (
         <EmptyState message="No budget lines to compare." />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-6 py-3 font-medium">Account</th>
-                <th className="px-6 py-3 text-right font-medium">Budget</th>
-                <th className="px-6 py-3 text-right font-medium">Actual</th>
-                <th className="px-6 py-3 text-right font-medium">Variance</th>
-                <th className="px-6 py-3 text-right font-medium">Utilization</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {data.data.map((row) => (
-                <tr key={row.chart_of_account_id} className="hover:bg-slate-50">
-                  <td className="px-6 py-3 text-slate-700">
-                    <Link
-                      href={`/dashboard/finance/accounts/${row.chart_of_account_id}`}
-                      className="hover:underline"
+        <Table variant="secondary">
+          <Table.ScrollContainer>
+            <Table.Content aria-label="Budget vs actual">
+              <Table.Header>
+                <Table.Column isRowHeader>Account</Table.Column>
+                <Table.Column className="text-right">Budget</Table.Column>
+                <Table.Column className="text-right">Actual</Table.Column>
+                <Table.Column className="text-right">Variance</Table.Column>
+                <Table.Column className="text-right">Utilization</Table.Column>
+              </Table.Header>
+              <Table.Body>
+                {data.data.map((row) => (
+                  <Table.Row key={row.chart_of_account_id} id={row.chart_of_account_id}>
+                    <Table.Cell className="text-foreground">
+                      <Link
+                        href={`/dashboard/finance/accounts/${row.chart_of_account_id}`}
+                        className="hover:underline"
+                      >
+                        {row.code} - {row.name}
+                      </Link>
+                    </Table.Cell>
+                    <Table.Cell className="text-right text-foreground">
+                      {formatCurrency(row.budget)}
+                    </Table.Cell>
+                    <Table.Cell className="text-right text-foreground">
+                      {formatCurrency(row.actual)}
+                    </Table.Cell>
+                    <Table.Cell
+                      className={`text-right font-medium ${
+                        row.favorable ? "text-success" : "text-danger"
+                      }`}
                     >
-                      {row.code} - {row.name}
-                    </Link>
-                  </td>
-                  <td className="px-6 py-3 text-right text-slate-700">
-                    {formatCurrency(row.budget)}
-                  </td>
-                  <td className="px-6 py-3 text-right text-slate-700">
-                    {formatCurrency(row.actual)}
-                  </td>
-                  <td
-                    className={`px-6 py-3 text-right font-medium ${
-                      row.favorable ? "text-emerald-600" : "text-rose-600"
-                    }`}
-                  >
-                    {formatCurrency(row.variance)}
-                  </td>
-                  <td className="px-6 py-3 text-right text-slate-600">
-                    {row.utilization === null ? "-" : `${row.utilization}%`}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                      {formatCurrency(row.variance)}
+                    </Table.Cell>
+                    <Table.Cell className="text-right text-muted">
+                      {row.utilization === null ? "-" : `${row.utilization}%`}
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+        </Table>
       )}
     </Card>
   );
@@ -343,8 +346,8 @@ function BudgetActions({
     <Card className="p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Actions</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Actions</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Approving locks the draft budget from further edits.
           </p>
         </div>

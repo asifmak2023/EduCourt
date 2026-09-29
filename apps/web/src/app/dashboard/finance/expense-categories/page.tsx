@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useAuth } from "@/lib/auth";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -13,7 +14,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { buttonClasses } from "@/components/Form";
+import { TextInput, buttonClasses } from "@/components/Form";
 import type { ExpenseCategory } from "@/lib/types";
 
 export default function ExpenseCategoriesPage() {
@@ -37,16 +38,17 @@ function CategoriesTable() {
         description="Map expense lines to ledger accounts."
         actions={
           <>
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => {
-                setPage(1);
-                setSearch(event.target.value);
-              }}
-              placeholder="Search code or name"
-              className="w-60 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-            />
+            <div className="w-60">
+              <TextInput
+                type="search"
+                value={search}
+                onChange={(event) => {
+                  setPage(1);
+                  setSearch(event.target.value);
+                }}
+                placeholder="Search code or name"
+              />
+            </div>
             {can("finance.create") ? (
               <Link
                 href="/dashboard/finance/expense-categories/new"
@@ -67,51 +69,54 @@ function CategoriesTable() {
         ) : items.length === 0 ? (
           <EmptyState message="No expense categories match your search." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Code</th>
-                  <th className="px-5 py-3 font-medium">Name</th>
-                  <th className="px-5 py-3 font-medium">Expense account</th>
-                  <th className="px-5 py-3 text-right font-medium">Sort</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((category) => (
-                  <tr key={category.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-mono text-xs text-slate-500">
-                      {category.code}
-                    </td>
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      {can("finance.edit") ? (
-                        <Link
-                          href={`/dashboard/finance/expense-categories/${category.id}/edit`}
-                          className="hover:underline"
-                        >
-                          {category.name}
-                        </Link>
-                      ) : (
-                        category.name
-                      )}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {category.expense_account
-                        ? `${category.expense_account.code} - ${category.expense_account.name}`
-                        : "Not set"}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {category.sort_order}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={category.is_active ? "active" : "inactive"} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content
+                aria-label="Expense categories"
+                className="min-w-[760px]"
+              >
+                <Table.Header>
+                  <Table.Column isRowHeader>Code</Table.Column>
+                  <Table.Column>Name</Table.Column>
+                  <Table.Column>Expense account</Table.Column>
+                  <Table.Column className="text-right">Sort</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((category) => (
+                    <Table.Row key={category.id} id={category.id}>
+                      <Table.Cell className="font-mono text-xs text-muted">
+                        {category.code}
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-foreground">
+                        {can("finance.edit") ? (
+                          <Link
+                            href={`/dashboard/finance/expense-categories/${category.id}/edit`}
+                            className="hover:underline"
+                          >
+                            {category.name}
+                          </Link>
+                        ) : (
+                          category.name
+                        )}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {category.expense_account
+                          ? `${category.expense_account.code} - ${category.expense_account.name}`
+                          : "Not set"}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-muted">
+                        {category.sort_order}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={category.is_active ? "active" : "inactive"} />
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {meta ? (

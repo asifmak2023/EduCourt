@@ -75,7 +75,7 @@ function ExpensePaymentView() {
 
       <div className="flex flex-wrap items-center gap-2">
         <Badge value={data.is_voided ? "void" : "posted"} />
-        <span className="text-sm text-slate-500">
+        <span className="text-sm text-muted">
           {formatCurrency(data.amount)} paid
         </span>
       </div>
@@ -110,7 +110,7 @@ function ExpensePaymentView() {
           />
         </DataList>
         {data.notes ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             {data.notes}
           </p>
         ) : null}
@@ -159,8 +159,8 @@ function VoidPayment({
     <Card className="p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Void payment</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Void payment</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Reverses the ledger entry and reopens the expense balance.
           </p>
         </div>
@@ -186,7 +186,7 @@ function VoidPayment({
       ) : null}
 
       {open ? (
-        <div className="mt-5 space-y-4 border-t border-slate-100 pt-5">
+        <div className="mt-5 space-y-4 border-t border-border-secondary pt-5">
           <Field label="Reason (optional)" htmlFor="void_expense_payment_memo">
             <TextArea
               id="void_expense_payment_memo"

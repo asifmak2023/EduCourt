@@ -154,7 +154,7 @@ function NewJournalEntryForm() {
             void submit();
           }}
         >
-          <div className="grid gap-4 border-b border-slate-100 px-6 py-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 border-b border-border-secondary px-6 py-5 sm:grid-cols-2 lg:grid-cols-4">
             <Field
               label="Fiscal year"
               htmlFor="fiscal_year_id"
@@ -210,7 +210,7 @@ function NewJournalEntryForm() {
 
           <div className="px-6 py-5">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-slate-900">Lines</h2>
+              <h2 className="text-sm font-semibold text-foreground">Lines</h2>
               <Button
                 type="button"
                 variant="secondary"
@@ -227,7 +227,7 @@ function NewJournalEntryForm() {
               {lines.map((line) => (
                 <div
                   key={line.key}
-                  className="grid gap-3 rounded-xl border border-slate-200 p-4 sm:grid-cols-12"
+                  className="grid gap-3 rounded-xl border border-border p-4 sm:grid-cols-12"
                 >
                   <div className="sm:col-span-5">
                     <Select
@@ -304,22 +304,22 @@ function NewJournalEntryForm() {
               ))}
             </div>
 
-            <div className="mt-5 flex flex-wrap items-center justify-end gap-6 border-t border-slate-100 pt-4 text-sm">
-              <span className="text-slate-600">
+            <div className="mt-5 flex flex-wrap items-center justify-end gap-6 border-t border-border-secondary pt-4 text-sm">
+              <span className="text-muted">
                 Debit{" "}
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-foreground">
                   {formatCurrency(totalDebit)}
                 </span>
               </span>
-              <span className="text-slate-600">
+              <span className="text-muted">
                 Credit{" "}
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-foreground">
                   {formatCurrency(totalCredit)}
                 </span>
               </span>
               <span
                 className={`font-medium ${
-                  balanced ? "text-emerald-600" : "text-rose-600"
+                  balanced ? "text-success" : "text-danger"
                 }`}
               >
                 {balanced ? "Balanced" : "Out of balance"}
@@ -327,7 +327,7 @@ function NewJournalEntryForm() {
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 border-t border-slate-100 px-6 py-4">
+          <div className="flex items-center justify-end gap-2 border-t border-border-secondary px-6 py-4">
             <Link
               href="/dashboard/finance/journal"
               className={buttonClasses("secondary")}

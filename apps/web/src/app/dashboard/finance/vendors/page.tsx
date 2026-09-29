@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useAuth } from "@/lib/auth";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -13,7 +14,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { buttonClasses } from "@/components/Form";
+import { TextInput, buttonClasses } from "@/components/Form";
 import type { Vendor } from "@/lib/types";
 
 export default function VendorsPage() {
@@ -37,16 +38,17 @@ function VendorsTable() {
         description="Suppliers and service providers."
         actions={
           <>
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => {
-                setPage(1);
-                setSearch(event.target.value);
-              }}
-              placeholder="Search name, code or phone"
-              className="w-64 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-            />
+            <div className="w-64">
+              <TextInput
+                type="search"
+                value={search}
+                onChange={(event) => {
+                  setPage(1);
+                  setSearch(event.target.value);
+                }}
+                placeholder="Search name, code or phone"
+              />
+            </div>
             {can("finance.create") ? (
               <Link
                 href="/dashboard/finance/vendors/new"
@@ -67,55 +69,55 @@ function VendorsTable() {
         ) : items.length === 0 ? (
           <EmptyState message="No vendors match your search." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Code</th>
-                  <th className="px-5 py-3 font-medium">Name</th>
-                  <th className="px-5 py-3 font-medium">Contact</th>
-                  <th className="px-5 py-3 font-medium">Phone</th>
-                  <th className="px-5 py-3 font-medium">Payable account</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((vendor) => (
-                  <tr key={vendor.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-mono text-xs text-slate-500">
-                      {vendor.code}
-                    </td>
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      {can("finance.edit") ? (
-                        <Link
-                          href={`/dashboard/finance/vendors/${vendor.id}/edit`}
-                          className="hover:underline"
-                        >
-                          {vendor.name}
-                        </Link>
-                      ) : (
-                        vendor.name
-                      )}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {vendor.contact_name ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {vendor.phone ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {vendor.payable_account
-                        ? `${vendor.payable_account.code} - ${vendor.payable_account.name}`
-                        : "Default"}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={vendor.is_active ? "active" : "inactive"} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Vendors" className="min-w-[860px]">
+                <Table.Header>
+                  <Table.Column isRowHeader>Code</Table.Column>
+                  <Table.Column>Name</Table.Column>
+                  <Table.Column>Contact</Table.Column>
+                  <Table.Column>Phone</Table.Column>
+                  <Table.Column>Payable account</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((vendor) => (
+                    <Table.Row key={vendor.id} id={vendor.id}>
+                      <Table.Cell className="font-mono text-xs text-muted">
+                        {vendor.code}
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-foreground">
+                        {can("finance.edit") ? (
+                          <Link
+                            href={`/dashboard/finance/vendors/${vendor.id}/edit`}
+                            className="hover:underline"
+                          >
+                            {vendor.name}
+                          </Link>
+                        ) : (
+                          vendor.name
+                        )}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {vendor.contact_name ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {vendor.phone ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {vendor.payable_account
+                          ? `${vendor.payable_account.code} - ${vendor.payable_account.name}`
+                          : "Default"}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={vendor.is_active ? "active" : "inactive"} />
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {meta ? (

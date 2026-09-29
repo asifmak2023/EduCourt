@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Pagination } from "@/components/Pagination";
@@ -13,7 +14,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { buttonClasses } from "@/components/Form";
+import { Select, TextInput, buttonClasses } from "@/components/Form";
 import { formatCurrency, formatDate, humanize } from "@/lib/format";
 import type { FeePayment } from "@/lib/types";
 
@@ -60,16 +61,17 @@ function PaymentsTable() {
         description="Receipts recorded across all vouchers."
         actions={
           <>
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => {
-                setPage(1);
-                setSearch(event.target.value);
-              }}
-              placeholder="Search receipt or student"
-              className="w-60 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-            />
+            <div className="w-60">
+              <TextInput
+                type="search"
+                value={search}
+                onChange={(event) => {
+                  setPage(1);
+                  setSearch(event.target.value);
+                }}
+                placeholder="Search receipt or student"
+              />
+            </div>
             <Link
               href="/dashboard/fees"
               className={buttonClasses("secondary")}
@@ -81,34 +83,36 @@ function PaymentsTable() {
       />
 
       <div className="flex flex-wrap gap-3">
-        <select
-          value={method}
-          onChange={(event) => {
-            setPage(1);
-            setMethod(event.target.value);
-          }}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
-        >
-          {METHODS.map((option) => (
-            <option key={option.value || "all"} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <select
-          value={status}
-          onChange={(event) => {
-            setPage(1);
-            setStatus(event.target.value);
-          }}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
-        >
-          {STATUSES.map((option) => (
-            <option key={option.value || "all"} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <div className="w-44">
+          <Select
+            value={method}
+            onChange={(event) => {
+              setPage(1);
+              setMethod(event.target.value);
+            }}
+          >
+            {METHODS.map((option) => (
+              <option key={option.value || "all"} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="w-44">
+          <Select
+            value={status}
+            onChange={(event) => {
+              setPage(1);
+              setStatus(event.target.value);
+            }}
+          >
+            {STATUSES.map((option) => (
+              <option key={option.value || "all"} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
 
       {error ? <ErrorNotice message={error} /> : null}
@@ -119,71 +123,71 @@ function PaymentsTable() {
         ) : items.length === 0 ? (
           <EmptyState message="No payments match your filters." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Receipt no</th>
-                  <th className="px-5 py-3 font-medium">Student</th>
-                  <th className="px-5 py-3 font-medium">Voucher</th>
-                  <th className="px-5 py-3 font-medium">Date</th>
-                  <th className="px-5 py-3 text-right font-medium">Amount</th>
-                  <th className="px-5 py-3 font-medium">Method</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-mono text-xs text-slate-500">
-                      <Link
-                        href={`/dashboard/fees/payments/${payment.id}`}
-                        className="hover:underline"
-                      >
-                        {payment.receipt_no}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      {payment.student ? (
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Fee payments" className="min-w-[960px]">
+                <Table.Header>
+                  <Table.Column isRowHeader>Receipt no</Table.Column>
+                  <Table.Column>Student</Table.Column>
+                  <Table.Column>Voucher</Table.Column>
+                  <Table.Column>Date</Table.Column>
+                  <Table.Column className="text-right">Amount</Table.Column>
+                  <Table.Column>Method</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((payment) => (
+                    <Table.Row key={payment.id} id={payment.id}>
+                      <Table.Cell className="font-mono text-xs text-muted">
                         <Link
-                          href={`/dashboard/students/${payment.student.id}`}
+                          href={`/dashboard/fees/payments/${payment.id}`}
                           className="hover:underline"
                         >
-                          {payment.student.full_name}
+                          {payment.receipt_no}
                         </Link>
-                      ) : (
-                        `Student #${payment.student_id}`
-                      )}
-                    </td>
-                    <td className="px-5 py-3 font-mono text-xs text-slate-500">
-                      {payment.voucher ? (
-                        <Link
-                          href={`/dashboard/fees/${payment.voucher.id}`}
-                          className="hover:underline"
-                        >
-                          {payment.voucher.voucher_no}
-                        </Link>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {formatDate(payment.payment_date)}
-                    </td>
-                    <td className="px-5 py-3 text-right font-medium text-slate-900">
-                      {formatCurrency(payment.amount)}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {humanize(payment.method)}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={payment.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-foreground">
+                        {payment.student ? (
+                          <Link
+                            href={`/dashboard/students/${payment.student.id}`}
+                            className="hover:underline"
+                          >
+                            {payment.student.full_name}
+                          </Link>
+                        ) : (
+                          `Student #${payment.student_id}`
+                        )}
+                      </Table.Cell>
+                      <Table.Cell className="font-mono text-xs text-muted">
+                        {payment.voucher ? (
+                          <Link
+                            href={`/dashboard/fees/${payment.voucher.id}`}
+                            className="hover:underline"
+                          >
+                            {payment.voucher.voucher_no}
+                          </Link>
+                        ) : (
+                          "-"
+                        )}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {formatDate(payment.payment_date)}
+                      </Table.Cell>
+                      <Table.Cell className="text-right font-medium text-foreground">
+                        {formatCurrency(payment.amount)}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {humanize(payment.method)}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={payment.status} />
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {meta ? (

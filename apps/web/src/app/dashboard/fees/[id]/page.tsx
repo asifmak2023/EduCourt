@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -93,7 +94,7 @@ function VoucherDetailView() {
       <div className="flex flex-wrap items-center gap-2">
         <Badge value={data.status} />
         {data.late_fee_applied_at ? <Badge value="late fee" /> : null}
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-muted">
           Due {formatDate(data.due_date)}
         </span>
       </div>
@@ -128,35 +129,40 @@ function VoucherDetailView() {
         </DataList>
 
         {data.lines.length > 0 ? (
-          <div className="mt-5 overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-4 py-2 font-medium">Fee head</th>
-                  <th className="px-4 py-2 text-right font-medium">Amount</th>
-                  <th className="px-4 py-2 text-right font-medium">Discount</th>
-                  <th className="px-4 py-2 text-right font-medium">Net</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {data.lines.map((line) => (
-                  <tr key={line.id}>
-                    <td className="px-4 py-2 text-slate-700">
-                      {line.fee_head?.name ?? `Head #${line.fee_head_id}`}
-                    </td>
-                    <td className="px-4 py-2 text-right text-slate-700">
-                      {formatCurrency(line.amount)}
-                    </td>
-                    <td className="px-4 py-2 text-right text-slate-700">
-                      {formatCurrency(line.discount_amount)}
-                    </td>
-                    <td className="px-4 py-2 text-right font-medium text-slate-900">
-                      {formatCurrency(line.net_amount)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="mt-5">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content
+                  aria-label="Voucher breakdown"
+                  className="min-w-[560px]"
+                >
+                  <Table.Header>
+                    <Table.Column isRowHeader>Fee head</Table.Column>
+                    <Table.Column className="text-right">Amount</Table.Column>
+                    <Table.Column className="text-right">Discount</Table.Column>
+                    <Table.Column className="text-right">Net</Table.Column>
+                  </Table.Header>
+                  <Table.Body>
+                    {data.lines.map((line) => (
+                      <Table.Row key={line.id} id={line.id}>
+                        <Table.Cell className="text-foreground">
+                          {line.fee_head?.name ?? `Head #${line.fee_head_id}`}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-foreground">
+                          {formatCurrency(line.amount)}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-foreground">
+                          {formatCurrency(line.discount_amount)}
+                        </Table.Cell>
+                        <Table.Cell className="text-right font-medium text-foreground">
+                          {formatCurrency(line.net_amount)}
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </div>
         ) : null}
       </SectionCard>
@@ -168,49 +174,52 @@ function VoucherDetailView() {
         {data.payments.length === 0 ? (
           <EmptyState message="No payments recorded." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-4 py-2 font-medium">Receipt no</th>
-                  <th className="px-4 py-2 font-medium">Date</th>
-                  <th className="px-4 py-2 text-right font-medium">Amount</th>
-                  <th className="px-4 py-2 font-medium">Method</th>
-                  <th className="px-4 py-2 font-medium">Reference</th>
-                  <th className="px-4 py-2 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {data.payments.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-2 font-mono text-xs text-slate-500">
-                      <Link
-                        href={`/dashboard/fees/payments/${payment.id}`}
-                        className="hover:underline"
-                      >
-                        {payment.receipt_no}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-2 text-slate-600">
-                      {formatDate(payment.payment_date)}
-                    </td>
-                    <td className="px-4 py-2 text-right text-slate-700">
-                      {formatCurrency(payment.amount)}
-                    </td>
-                    <td className="px-4 py-2 text-slate-600">
-                      {humanize(payment.method)}
-                    </td>
-                    <td className="px-4 py-2 text-slate-500">
-                      {payment.reference ?? "-"}
-                    </td>
-                    <td className="px-4 py-2">
-                      <Badge value={payment.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content
+                aria-label="Voucher payments"
+                className="min-w-[820px]"
+              >
+                <Table.Header>
+                  <Table.Column isRowHeader>Receipt no</Table.Column>
+                  <Table.Column>Date</Table.Column>
+                  <Table.Column className="text-right">Amount</Table.Column>
+                  <Table.Column>Method</Table.Column>
+                  <Table.Column>Reference</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {data.payments.map((payment) => (
+                    <Table.Row key={payment.id} id={payment.id}>
+                      <Table.Cell className="font-mono text-xs text-muted">
+                        <Link
+                          href={`/dashboard/fees/payments/${payment.id}`}
+                          className="hover:underline"
+                        >
+                          {payment.receipt_no}
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {formatDate(payment.payment_date)}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-foreground">
+                        {formatCurrency(payment.amount)}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {humanize(payment.method)}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {payment.reference ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={payment.status} />
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
       </SectionCard>
 
@@ -236,14 +245,14 @@ function SummaryTile({
   tone?: "default" | "positive" | "danger";
 }) {
   const tones: Record<string, string> = {
-    default: "text-slate-900",
-    positive: "text-emerald-600",
-    danger: "text-rose-600",
+    default: "text-foreground",
+    positive: "text-success",
+    danger: "text-danger",
   };
 
   return (
     <Card className="p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted">
         {label}
       </p>
       <p className={`mt-2 text-xl font-semibold ${tones[tone]}`}>{value}</p>
@@ -296,8 +305,8 @@ function VoucherActions({
     <Card className="p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Actions</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Actions</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Record receipts, apply a late fee or void the voucher.
           </p>
         </div>
@@ -397,7 +406,7 @@ function PaymentForm({
   const [notes, setNotes] = useState("");
 
   return (
-    <div className="mt-5 grid gap-4 border-t border-slate-100 pt-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="mt-5 grid gap-4 border-t border-border-secondary pt-5 sm:grid-cols-2 lg:grid-cols-3">
       <Field
         label="Amount"
         htmlFor="payment_amount"
@@ -491,7 +500,7 @@ function VoidForm({
   const [memo, setMemo] = useState("");
 
   return (
-    <div className="mt-5 space-y-4 border-t border-slate-100 pt-5">
+    <div className="mt-5 space-y-4 border-t border-border-secondary pt-5">
       <Field label="Reason (optional)" htmlFor="void_memo">
         <TextArea
           id="void_memo"

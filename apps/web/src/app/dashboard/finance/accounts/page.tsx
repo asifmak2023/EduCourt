@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useAuth } from "@/lib/auth";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -14,7 +15,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { buttonClasses } from "@/components/Form";
+import { Select, TextInput, buttonClasses } from "@/components/Form";
 import { humanize } from "@/lib/format";
 import type { ChartOfAccount } from "@/lib/types";
 
@@ -52,16 +53,17 @@ function AccountsTable() {
         description="Ledger accounts available for journal postings."
         actions={
           <>
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => {
-                setPage(1);
-                setSearch(event.target.value);
-              }}
-              placeholder="Search code or name"
-              className="w-60 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-            />
+            <div className="w-60">
+              <TextInput
+                type="search"
+                value={search}
+                onChange={(event) => {
+                  setPage(1);
+                  setSearch(event.target.value);
+                }}
+                placeholder="Search code or name"
+              />
+            </div>
             <Link
               href="/dashboard/finance/journal"
               className={buttonClasses("secondary")}
@@ -81,20 +83,21 @@ function AccountsTable() {
       />
 
       <div className="flex flex-wrap gap-3">
-        <select
-          value={type}
-          onChange={(event) => {
-            setPage(1);
-            setType(event.target.value);
-          }}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
-        >
-          {ACCOUNT_TYPES.map((option) => (
-            <option key={option.value || "all"} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <div className="w-44">
+          <Select
+            value={type}
+            onChange={(event) => {
+              setPage(1);
+              setType(event.target.value);
+            }}
+          >
+            {ACCOUNT_TYPES.map((option) => (
+              <option key={option.value || "all"} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
 
       {error ? <ErrorNotice message={error} /> : null}
@@ -105,54 +108,57 @@ function AccountsTable() {
         ) : items.length === 0 ? (
           <EmptyState message="No accounts match your filters." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Code</th>
-                  <th className="px-5 py-3 font-medium">Name</th>
-                  <th className="px-5 py-3 font-medium">Type</th>
-                  <th className="px-5 py-3 font-medium">Normal</th>
-                  <th className="px-5 py-3 font-medium">Kind</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((account) => (
-                  <tr key={account.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-mono text-xs text-slate-500">
-                      <Link
-                        href={`/dashboard/finance/accounts/${account.id}`}
-                        className="hover:underline"
-                      >
-                        {account.code}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      <Link
-                        href={`/dashboard/finance/accounts/${account.id}`}
-                        className="hover:underline"
-                      >
-                        {account.name}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {humanize(account.account_type)}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {humanize(account.normal_balance)}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {account.is_group ? "Group" : "Postable"}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={account.is_active ? "active" : "inactive"} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content
+                aria-label="Chart of accounts"
+                className="min-w-[760px]"
+              >
+                <Table.Header>
+                  <Table.Column isRowHeader>Code</Table.Column>
+                  <Table.Column>Name</Table.Column>
+                  <Table.Column>Type</Table.Column>
+                  <Table.Column>Normal</Table.Column>
+                  <Table.Column>Kind</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((account) => (
+                    <Table.Row key={account.id} id={account.id}>
+                      <Table.Cell className="font-mono text-xs text-muted">
+                        <Link
+                          href={`/dashboard/finance/accounts/${account.id}`}
+                          className="hover:underline"
+                        >
+                          {account.code}
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-foreground">
+                        <Link
+                          href={`/dashboard/finance/accounts/${account.id}`}
+                          className="hover:underline"
+                        >
+                          {account.name}
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {humanize(account.account_type)}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {humanize(account.normal_balance)}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {account.is_group ? "Group" : "Postable"}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={account.is_active ? "active" : "inactive"} />
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {meta ? (

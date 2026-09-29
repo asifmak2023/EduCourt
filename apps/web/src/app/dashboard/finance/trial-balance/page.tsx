@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useFiscalYears } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -116,65 +117,65 @@ function TrialBalanceView() {
         ) : rows.length === 0 ? (
           <EmptyState message="No posted entries for the selected period." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Code</th>
-                  <th className="px-5 py-3 font-medium">Account</th>
-                  <th className="px-5 py-3 font-medium">Type</th>
-                  <th className="px-5 py-3 text-right font-medium">Debit</th>
-                  <th className="px-5 py-3 text-right font-medium">Credit</th>
-                  <th className="px-5 py-3 text-right font-medium">Balance</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {rows.map((row) => (
-                  <tr key={row.chart_of_account_id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-mono text-xs text-slate-500">
-                      <Link
-                        href={`/dashboard/finance/accounts/${row.chart_of_account_id}`}
-                        className="hover:underline"
-                      >
-                        {row.code}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      {row.name}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {humanize(row.account_type)}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-700">
-                      {formatCurrency(row.total_debit)}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-700">
-                      {formatCurrency(row.total_credit)}
-                    </td>
-                    <td className="px-5 py-3 text-right font-medium text-slate-900">
-                      {formatCurrency(row.balance)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              {totals ? (
-                <tfoot className="bg-slate-50 text-sm font-semibold text-slate-900">
-                  <tr>
-                    <td className="px-5 py-3" colSpan={3}>
-                      Totals
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      {formatCurrency(totals.total_debit)}
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      {formatCurrency(totals.total_credit)}
-                    </td>
-                    <td className="px-5 py-3" />
-                  </tr>
-                </tfoot>
-              ) : null}
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Trial balance">
+                <Table.Header>
+                  <Table.Column isRowHeader>Code</Table.Column>
+                  <Table.Column>Account</Table.Column>
+                  <Table.Column>Type</Table.Column>
+                  <Table.Column className="text-right">Debit</Table.Column>
+                  <Table.Column className="text-right">Credit</Table.Column>
+                  <Table.Column className="text-right">Balance</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {rows.map((row) => (
+                    <Table.Row key={row.chart_of_account_id} id={row.chart_of_account_id}>
+                      <Table.Cell className="font-mono text-xs text-muted">
+                        <Link
+                          href={`/dashboard/finance/accounts/${row.chart_of_account_id}`}
+                          className="hover:underline"
+                        >
+                          {row.code}
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-foreground">
+                        {row.name}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {humanize(row.account_type)}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-muted">
+                        {formatCurrency(row.total_debit)}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-muted">
+                        {formatCurrency(row.total_credit)}
+                      </Table.Cell>
+                      <Table.Cell className="text-right font-medium text-foreground">
+                        {formatCurrency(row.balance)}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+                {totals ? (
+                  <Table.Footer>
+                    <Table.Row id="totals">
+                      <Table.Cell className="font-semibold">Totals</Table.Cell>
+                      <Table.Cell />
+                      <Table.Cell />
+                      <Table.Cell className="text-right font-semibold">
+                        {formatCurrency(totals.total_debit)}
+                      </Table.Cell>
+                      <Table.Cell className="text-right font-semibold">
+                        {formatCurrency(totals.total_credit)}
+                      </Table.Cell>
+                      <Table.Cell />
+                    </Table.Row>
+                  </Table.Footer>
+                ) : null}
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
       </Card>
     </div>

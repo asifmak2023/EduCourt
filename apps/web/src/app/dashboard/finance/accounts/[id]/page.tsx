@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -78,7 +79,7 @@ function AccountDetailView() {
       <div className="flex flex-wrap items-center gap-2">
         <Badge value={data.is_group ? "group" : "postable"} />
         <Badge value={data.is_active ? "active" : "inactive"} />
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-muted">
           Normal balance {humanize(data.normal_balance)}
         </span>
       </div>
@@ -153,17 +154,17 @@ function LedgerSection({ accountId }: { accountId: number }) {
 
   return (
     <Card>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-secondary px-6 py-4">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Account ledger</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Account ledger</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Posted lines with a running balance.
           </p>
         </div>
         {ledger ? (
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted">
             Closing balance:{" "}
-            <span className="font-semibold text-slate-900">
+            <span className="font-semibold text-foreground">
               {formatCurrency(ledger.closing_balance)}
             </span>
           </p>
@@ -179,52 +180,52 @@ function LedgerSection({ accountId }: { accountId: number }) {
       ) : !ledger || ledger.data.length === 0 ? (
         <EmptyState message="No posted lines for this account." />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-6 py-3 font-medium">Date</th>
-                <th className="px-6 py-3 font-medium">Entry</th>
-                <th className="px-6 py-3 font-medium">Description</th>
-                <th className="px-6 py-3 text-right font-medium">Debit</th>
-                <th className="px-6 py-3 text-right font-medium">Credit</th>
-                <th className="px-6 py-3 text-right font-medium">Balance</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {ledger.data.map((line, index) => (
-                <tr
-                  key={`${line.journal_entry_id}-${index}`}
-                  className="hover:bg-slate-50"
-                >
-                  <td className="px-6 py-3 text-slate-600">
-                    {formatDate(line.entry_date)}
-                  </td>
-                  <td className="px-6 py-3 font-mono text-xs text-slate-500">
-                    <Link
-                      href={`/dashboard/finance/journal/${line.journal_entry_id}`}
-                      className="hover:underline"
-                    >
-                      {line.reference}
-                    </Link>
-                  </td>
-                  <td className="px-6 py-3 text-slate-700">
-                    {line.description ?? "-"}
-                  </td>
-                  <td className="px-6 py-3 text-right text-slate-700">
-                    {formatCurrency(line.debit)}
-                  </td>
-                  <td className="px-6 py-3 text-right text-slate-700">
-                    {formatCurrency(line.credit)}
-                  </td>
-                  <td className="px-6 py-3 text-right font-medium text-slate-900">
-                    {formatCurrency(line.running_balance)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table variant="secondary">
+          <Table.ScrollContainer>
+            <Table.Content aria-label="Account ledger">
+              <Table.Header>
+                <Table.Column isRowHeader>Date</Table.Column>
+                <Table.Column>Entry</Table.Column>
+                <Table.Column>Description</Table.Column>
+                <Table.Column className="text-right">Debit</Table.Column>
+                <Table.Column className="text-right">Credit</Table.Column>
+                <Table.Column className="text-right">Balance</Table.Column>
+              </Table.Header>
+              <Table.Body>
+                {ledger.data.map((line, index) => (
+                  <Table.Row
+                    key={`${line.journal_entry_id}-${index}`}
+                    id={`${line.journal_entry_id}-${index}`}
+                  >
+                    <Table.Cell className="text-muted">
+                      {formatDate(line.entry_date)}
+                    </Table.Cell>
+                    <Table.Cell className="font-mono text-xs text-muted">
+                      <Link
+                        href={`/dashboard/finance/journal/${line.journal_entry_id}`}
+                        className="hover:underline"
+                      >
+                        {line.reference}
+                      </Link>
+                    </Table.Cell>
+                    <Table.Cell className="text-foreground">
+                      {line.description ?? "-"}
+                    </Table.Cell>
+                    <Table.Cell className="text-right text-foreground">
+                      {formatCurrency(line.debit)}
+                    </Table.Cell>
+                    <Table.Cell className="text-right text-foreground">
+                      {formatCurrency(line.credit)}
+                    </Table.Cell>
+                    <Table.Cell className="text-right font-medium text-foreground">
+                      {formatCurrency(line.running_balance)}
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+        </Table>
       )}
     </Card>
   );

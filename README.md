@@ -327,6 +327,10 @@ student readers so front-office staff can complete forms without holding the
 academic structure permission.
 
 Demo accounts (password `password`): `superadmin@demo-eis.test` (Super User),
-`campusadmin@demo-eis.test` (campus admin) and `teacher@demo-eis.test`.
+`campusadmin@demo-eis.test` (campus admin) and `teacher@demo-eis.test`. The
+demo seed also lays down a completed terminal exam (grade scale, exam type,
+papers and marks) so the exam and reporting screens have data out of the box;
+`php artisan db:seed --class=ExamSeeder` adds just that exam data to an
+existing database.
 
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

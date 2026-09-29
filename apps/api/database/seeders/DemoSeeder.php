@@ -196,6 +196,7 @@ class DemoSeeder extends Seeder
         $this->seedAcademics($institution, $campus, $teacher);
         $this->seedFinance($institution, $campus, $campusAdmin);
         $this->seedStudents($institution, $campus);
+        $this->call(ExamSeeder::class);
         $this->seedScholarships($institution, $campus, $campusAdmin);
         $this->seedConcessionPolicies($institution, $campus, $campusAdmin);
         $this->seedAdmissions($institution, $campus);

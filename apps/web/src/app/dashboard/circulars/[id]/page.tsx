@@ -114,8 +114,8 @@ function CircularDetailView() {
       </SectionCard>
 
       <Card className="p-6">
-        <h2 className="text-sm font-semibold text-slate-900">Body</h2>
-        <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
+        <h2 className="text-sm font-semibold text-foreground">Body</h2>
+        <p className="mt-2 whitespace-pre-wrap text-sm text-foreground">
           {data.body}
         </p>
       </Card>
@@ -123,8 +123,8 @@ function CircularDetailView() {
       {can("circular.approve") && data.status !== "archived" ? (
         <Card className="flex flex-wrap items-center justify-between gap-4 p-6">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">Lifecycle</h2>
-            <p className="mt-0.5 text-xs text-slate-500">
+            <h2 className="text-sm font-semibold text-foreground">Lifecycle</h2>
+            <p className="mt-0.5 text-xs text-muted">
               Publish to notify the audience, then archive when it is no longer
               relevant.
             </p>

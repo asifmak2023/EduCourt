@@ -49,7 +49,7 @@ function InstitutionsHome() {
       </div>
 
       <Card className="space-y-4 p-5">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted">
           A campus is the tenant boundary for data isolation. Institutions
           group campuses and act as a guardrail for cross-campus roles. Manage
           both from the tabs above.

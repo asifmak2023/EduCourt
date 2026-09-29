@@ -79,7 +79,7 @@ function CampusDetail() {
               data.institution ? (
                 <Link
                   href={`/dashboard/institutions/list/${data.institution.id}`}
-                  className="text-slate-900 hover:underline"
+                  className="text-foreground hover:underline"
                 >
                   {data.institution.name}
                 </Link>
@@ -94,7 +94,7 @@ function CampusDetail() {
           <DataItem label="Website" value={data.website ?? "-"} />
         </DataList>
         {data.address ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border pt-4 text-sm text-muted">
             {data.address}
           </p>
         ) : null}

@@ -3,10 +3,11 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useState } from "react";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useAuth } from "@/lib/auth";
 import { Pagination } from "@/components/Pagination";
-import { Select, buttonClasses } from "@/components/Form";
+import { Select, TextInput, buttonClasses } from "@/components/Form";
 import {
   Card,
   EmptyState,
@@ -74,16 +75,17 @@ export function MasterList<T extends { id: number }>({
         actions={
           <>
             {searchable ? (
-              <input
-                type="search"
-                value={search}
-                onChange={(event) => {
-                  setPage(1);
-                  setSearch(event.target.value);
-                }}
-                placeholder={searchPlaceholder}
-                className="w-56 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-              />
+              <div className="w-56">
+                <TextInput
+                  type="search"
+                  value={search}
+                  onChange={(event) => {
+                    setPage(1);
+                    setSearch(event.target.value);
+                  }}
+                  placeholder={searchPlaceholder}
+                />
+              </div>
             ) : null}
             {canCreate ? (
               <Link href={createHref} className={buttonClasses()}>
@@ -128,49 +130,48 @@ export function MasterList<T extends { id: number }>({
         ) : items.length === 0 ? (
           <EmptyState message="No records match your filters." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  {columns.map((column) => (
-                    <th
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label={title} className="min-w-[720px]">
+                <Table.Header>
+                  {columns.map((column, index) => (
+                    <Table.Column
                       key={column.header}
-                      className={`px-5 py-3 font-medium ${
-                        column.align === "right" ? "text-right" : ""
-                      }`}
+                      isRowHeader={index === 0}
+                      className={column.align === "right" ? "text-right" : undefined}
                     >
                       {column.header}
-                    </th>
+                    </Table.Column>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50">
-                    {columns.map((column, index) => (
-                      <td
-                        key={column.header}
-                        className={`px-5 py-3 ${
-                          column.align === "right" ? "text-right" : ""
-                        }`}
-                      >
-                        {index === 0 && editHref ? (
-                          <Link
-                            href={editHref(item)}
-                            className="font-medium text-slate-900 hover:underline"
-                          >
-                            {column.render(item)}
-                          </Link>
-                        ) : (
-                          column.render(item)
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((item) => (
+                    <Table.Row key={item.id} id={item.id}>
+                      {columns.map((column, index) => (
+                        <Table.Cell
+                          key={column.header}
+                          className={
+                            column.align === "right" ? "text-right" : undefined
+                          }
+                        >
+                          {index === 0 && editHref ? (
+                            <Link
+                              href={editHref(item)}
+                              className="font-medium text-foreground hover:underline"
+                            >
+                              {column.render(item)}
+                            </Link>
+                          ) : (
+                            column.render(item)
+                          )}
+                        </Table.Cell>
+                      ))}
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {meta ? (

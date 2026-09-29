@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
 import { useResource } from "@/lib/useResource";
@@ -80,7 +81,7 @@ function InstitutionDetail() {
           <DataItem label="Campuses" value={data.campuses_count ?? "-"} />
         </DataList>
         {data.address ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border pt-4 text-sm text-muted">
             {data.address}
           </p>
         ) : null}
@@ -99,8 +100,8 @@ function InstitutionCampuses({ institutionId }: { institutionId: number }) {
 
   return (
     <Card>
-      <div className="border-b border-slate-100 px-5 py-4">
-        <h2 className="text-sm font-semibold text-slate-900">Campuses</h2>
+      <div className="border-b border-border px-5 py-4">
+        <h2 className="text-sm font-semibold text-foreground">Campuses</h2>
       </div>
       {error ? (
         <div className="p-5">
@@ -113,37 +114,41 @@ function InstitutionCampuses({ institutionId }: { institutionId: number }) {
           <EmptyState message="No campuses under this institution." />
         </div>
       ) : (
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-5 py-3 font-medium">Campus</th>
-              <th className="px-5 py-3 font-medium">Code</th>
-              <th className="px-5 py-3 font-medium">Type</th>
-              <th className="px-5 py-3 font-medium">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {items.map((campus) => (
-              <tr key={campus.id}>
-                <td className="px-5 py-3">
-                  <Link
-                    href={`/dashboard/institutions/campuses/${campus.id}`}
-                    className="font-medium text-slate-900 hover:underline"
-                  >
-                    {campus.name}
-                  </Link>
-                </td>
-                <td className="px-5 py-3 text-slate-600">
-                  {campus.code ?? "-"}
-                </td>
-                <td className="px-5 py-3 text-slate-600">{campus.type ?? "-"}</td>
-                <td className="px-5 py-3">
-                  <Badge value={campus.is_active ? "active" : "inactive"} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Table variant="secondary">
+          <Table.ScrollContainer>
+            <Table.Content aria-label="Campuses" className="min-w-[640px]">
+              <Table.Header>
+                <Table.Column isRowHeader>Campus</Table.Column>
+                <Table.Column>Code</Table.Column>
+                <Table.Column>Type</Table.Column>
+                <Table.Column>Status</Table.Column>
+              </Table.Header>
+              <Table.Body>
+                {items.map((campus) => (
+                  <Table.Row key={campus.id} id={campus.id}>
+                    <Table.Cell>
+                      <Link
+                        href={`/dashboard/institutions/campuses/${campus.id}`}
+                        className="font-medium text-foreground hover:underline"
+                      >
+                        {campus.name}
+                      </Link>
+                    </Table.Cell>
+                    <Table.Cell className="text-muted">
+                      {campus.code ?? "-"}
+                    </Table.Cell>
+                    <Table.Cell className="text-muted">
+                      {campus.type ?? "-"}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Badge value={campus.is_active ? "active" : "inactive"} />
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+        </Table>
       )}
     </Card>
   );

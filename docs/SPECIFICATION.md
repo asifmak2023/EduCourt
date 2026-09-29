@@ -241,6 +241,12 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-7.6 | Moderation, re-evaluation, supplementary exams | S | Delivered (API: grace-marks and scaling moderations with approve/apply workflow that stores moderated marks separately and clamps to paper maximum, per-student re-evaluation requests with review/revise, and supplementary exam registration for failed students with approve/reject/complete; result cards, analysis and reports aggregate effective marks) |
 | FR-7.7 | Semester and credit-hour model for college/university | S | Delivered (API: per-term/semester course registration with credit hours defaulted from the subject, duplicate/tenancy guards and drop workflow, plus credit-weighted term GPA and cumulative transcript built from exam marks linked to the term and the campus grade scale; honours the campus academic_model/term_system/grading_system/credit_hours_enabled configuration) |
 
+The demo seed lays down a completed terminal exam - a percentage grade scale
+with banded grades, the term exam type, three papers (English, Maths, Science)
+and marks for one class - so the exam, results and reporting screens have data
+out of the box. `php artisan db:seed --class=ExamSeeder` adds just that exam
+data to an existing database.
+
 ### 6.8 HR and payroll
 
 | ID | Requirement | Priority | Status |
@@ -432,24 +438,147 @@ interface.
 Base path: `/api/v1`. Authentication: Bearer token (Laravel Sanctum). Campus
 selection: `X-Campus-Id` header.
 
-Delivered in the foundation:
+Every route is registered twice: a platform scope (product owner) and a
+campus scope (`campus` middleware + `X-Campus-Id`). CRUD families follow the
+same shape, so the tables below list the representative collection path; adding
+`/{id}` gives the show/update/delete members. Collection reads and member
+writes are gated by `view` and `create`/`edit`/`delete` on the module.
+
+### 12.1 Foundation, tenancy and identity
 
 | Method | Path | Permission |
 | --- | --- | --- |
 | POST | `/auth/login` | public (throttled) |
 | GET | `/auth/me` | authenticated |
 | POST | `/auth/logout` | authenticated |
-| GET | `/meta/roles` | authenticated |
-| GET | `/meta/scopes` | authenticated |
-| GET | `/meta/permissions` | authenticated (sensitive) |
+| POST | `/auth/password` | authenticated |
+| POST | `/auth/forgot-password` | public (throttled) |
+| POST | `/auth/reset-password` | public (throttled) |
+| GET/DELETE | `/auth/tokens` | authenticated |
+| GET | `/meta/roles`, `/meta/scopes`, `/meta/permissions` | authenticated (`permissions` is sensitive) |
 | GET/POST | `/institutions` | institution.view / institution.create |
-| GET/PUT/DELETE | `/institutions/{id}` | institution.view / edit / delete |
-| GET/POST | `/campuses` | campus.view / campus.create |
+| GET/PUT/DELETE | `/institutions/{id}` | institution.view / edit / delete (delete returns 409 while campuses exist) |
+| GET/POST | `/campuses` | campus.view / campus.create (index filters by `institution_id` / `search`) |
 | GET/PUT/DELETE | `/campuses/{id}` | campus.view / edit / delete |
 | GET/POST | `/users` | user.view / user.create |
 | GET/PUT/DELETE | `/users/{id}` | user.view / edit / delete |
 | GET/POST | `/scope-assignments` | role.view / role.edit |
 | DELETE | `/scope-assignments/{id}` | role.edit |
+| GET | `/reference/academic-options` | admission.view or student.view |
+
+### 12.2 Academic structure, curriculum and timetable
+
+| Method | Path | Permission |
+| --- | --- | --- |
+| CRUD | `/academic-years`, `/terms`, `/stages`, `/classes`, `/sections`, `/subjects`, `/class-subjects`, `/teaching-assignments`, `/academic-events`, `/periods`, `/rooms`, `/timetable-slots` | academic.view / create / edit / delete |
+| CRUD | `/syllabus-units`, `/class-books`, `/lesson-plans` | curriculum.view / create / edit / delete |
+| POST | `/lesson-plans/{id}/approve` | curriculum.approve |
+| POST | `/timetable-slots/publish`, `/timetable-slots/unpublish` | timetable.approve |
+| POST/DELETE | `/timetable/generate` | timetable.create / delete (dry-run supported) |
+| GET | `/timetable/me`, `/timetable/classes/{class}`, `/timetable/teachers/{user}` | timetable.view |
+| CRUD | `/substitute-assignments` (+ `/{id}/cancel`) | timetable.view / create / edit / delete |
+
+### 12.3 Finance and accounting (prime importance)
+
+| Method | Path | Permission |
+| --- | --- | --- |
+| CRUD | `/fiscal-years`, `/accounting-periods` (+ `/{id}/close`, `/{id}/lock`, `/{id}/reopen`), `/chart-of-accounts`, `/bank-accounts`, `/bank-reconciliations`, `/income-sources`, `/expense-categories`, `/vendors`, `/assets`, `/liabilities`, `/budgets`, `/tax-rules`, `/tax-returns`, `/approval-workflows` | finance.view / create / edit / approve / delete |
+| CRUD | `/journal-entries` | finance.view / create (posted entries are immutable and reversed) |
+| CRUD | `/expenses`, `/expense-payments`, `/other-incomes`, `/online-payments` (+ `/status`) | finance.* |
+| GET | `/finance/reports/{trial-balance,ledger/{account},budget-vs-actual,payables,expenses,cash-book,asset-register,liability-register,surplus-deficit,consolidated}` | finance.view |
+
+### 12.4 Fees, concessions, fines and reminders
+
+| Method | Path | Permission |
+| --- | --- | --- |
+| CRUD | `/fee-heads`, `/fee-plans`, `/fee-vouchers` (+ `/generate`, `/generate-prorated`), `/fee-payments`, `/fee-refunds`, `/concessions`, `/concession-policies`, `/fines`, `/fine-rules`, `/fee-reminders` (+ `/send`) | fee.* / concession.* / fine.* / reminder.* |
+| GET | `/fee-reports/{defaulters,classes/summary,collection}`, `/fee-reports/students/{student}/statement` | fee.view |
+
+### 12.5 Admissions and students
+
+| Method | Path | Permission |
+| --- | --- | --- |
+| CRUD | `/admissions` | admission.* |
+| CRUD | `/students`, `/guardians`, `/student-enrollments` | student.* |
+| POST | `/students/promote` | student.edit |
+| GET | `/students/{student}/term-gpa` | credit.view |
+
+### 12.6 Attendance and examinations
+
+| Method | Path | Permission |
+| --- | --- | --- |
+| CRUD | `/attendance/students`, `/attendance/staff` | attendance.* |
+| GET/POST | `/attendance/sync`, `/attendance/sync-batches` | attendance.view / create |
+| CRUD | `/exam-types`, `/grade-scales`, `/exams`, `/invigilation-duties`, `/exam-marks` (+ `/bulk`), `/exam-supplementaries`, `/exam-reevaluations`, `/exam-moderations` | exam.* |
+| GET | `/exams/{exam}/analysis/{class,subject,teachers}` | exam.view |
+| CRUD | `/course-registrations` | credit.* |
+
+### 12.7 HR and payroll
+
+| Method | Path | Permission |
+| --- | --- | --- |
+| CRUD | `/staff` (+ `/{id}/terminate`), `/leave-requests` | hr.* |
+| CRUD | `/payroll-runs`, `/payslips` | payroll.* (campus admin is read-only) |
+| GET | `/staff-reports/{headcount,joiners-leavers}` | hr.view |
+
+### 12.8 Operations - canteen, sports, student affairs, IT and support
+
+| Method | Path | Permission |
+| --- | --- | --- |
+| CRUD | `/canteen/{suppliers,items,sales,stock-entries,hygiene-checks,wallets}` | canteen.* |
+| GET | `/canteen/reports/{daily,item-wise,profit-loss,low-stock,wallet-summary}` | canteen.export / view |
+| CRUD | `/sports`, `/sports/{teams,training-sessions,fixtures,achievements,equipment}` | sports.* |
+| GET | `/sports/reports/summary` | sports.export |
+| CRUD | `/student-affairs/{clubs,events,certificates,welfare-records,alumni,council-members,complaints,counselling}` | student_affairs.* / complaint.* / counselling.* |
+| CRUD | `/it/{assets,tickets,change-requests,backups,systems}` | it.* |
+| GET | `/it/reports/summary` | it.view |
+| CRUD | `/circulars`, `/visitors`, `/ptm-events`, `/ptm-bookings` (+ `/ptm-slots/{id}`) | circular.* / front_office.* / ptm.* |
+| CRUD | `/inventory/{categories,items}`, `/library/books`, `/library/issues`, `/labs` (+ `/labs/{lab}/...`), `/lab-equipment/{id}`, `/lab-bookings` | inventory.* / library.* / lab.* |
+| CRUD | `/transport/{vehicles,routes,allocations}`, `/hostels` (+ `/{id}/rooms`), `/hostel-rooms/{id}`, `/hostel-allocations`, `/hostel-outpasses` | transport.* / hostel.* |
+| GET | `/inventory/reports/summary`, `/library/reports/summary`, `/labs/{lab}/reports/summary`, `/transport/reports/summary`, `/hostels/{hostel}/reports/summary` | matching `export` / `view` |
+
+### 12.9 Reports and analytics
+
+| Method | Path | Permission |
+| --- | --- | --- |
+| GET | `/reports/campus-dashboard`, `/reports/progress`, `/reports/attendance`, `/reports/staff`, `/reports/financial`, `/reports/payroll` | report.view |
+| GET | `/reports/results/{exam}` | report.view |
+| GET | `/reports/students/{student}/yearly` | report.view |
+| GET | `/reports/platform-overview` | platform admin (product owner) |
+
+### 12.10 Settings, SSO and audit
+
+| Method | Path | Permission |
+| --- | --- | --- |
+| CRUD | `/sso-providers` | setting.view (read) / setting.edit (write) |
+| GET | `/audit-logs` | audit.view (filters: `search`, `log_name`, `event`, `subject_type`, `causer_id`, `from`, `to`, `per_page`) |
+| GET | `/audit-logs/filters` | audit.view (returns `log_names`, `events`, `subject_types`) |
+
+`/sso-providers` stores generic OpenID Connect providers: OIDC endpoints,
+client id and a write-only `client_secret` (only `has_client_secret` is
+returned), optional just-in-time provisioning with a default role, and a
+per-institution unique `name`. `/audit-logs` is campus-scoped for campus users
+(only activity caused by users in the caller's allowed campuses) while the
+product owner sees every entry.
+
+### 12.11 Notifications
+
+| Method | Path | Permission |
+| --- | --- | --- |
+| GET | `/notifications` | notification.view (filters: `student_id`, `type`, `status`, `channel`, `from`, `to`, `per_page`) |
+| GET | `/notifications/{id}` | notification.view |
+| POST | `/notifications/queue-absences` | notification.create (`attendance_date`, optional `class_room_id`) |
+| POST | `/notifications/send` | notification.send (batch: sends every pending notice) |
+| POST | `/notifications/{id}/send` | notification.send |
+| POST | `/notifications/{id}/cancel` | notification.send |
+
+The notification resource exposes `type`/`type_label`,
+`channel`/`channel_label`, `status`/`status_label`, the student and guardian
+names, `recipient_name`/`recipient_email`/`recipient_phone`, `title`, `body`,
+`occurred_on`, `sent_at`, `failure_reason` and `created_at`. Absence notices are
+queued automatically when a student is marked absent, and
+`queue-absences` backfills a day (optionally one class) idempotently. Delivery
+uses the configured `REMINDER_GATEWAY` driver (`log` by default).
 
 All endpoints follow a consistent envelope and error shape defined in
 `docs/ARCHITECTURE.md`.
@@ -486,15 +615,33 @@ sensitive value is masked by default with reveal-and-log.
    (Delivered: years, terms, stages, classes, sections, subjects, mappings,
    assignments, calendar, periods, rooms, timetable slots with conflict checks,
    published views and a greedy generator with dry-run and manual override)
-3. Finance and accounts (prime importance).
-4. Fees and admissions.
-5. Attendance and exams.
-6. HR and payroll.
-7. Portals: parent, student, teacher dashboards and notifications.
-8. Student affairs, canteen and sports.
+3. Finance and accounts (prime importance). (Delivered: double-entry ledger,
+   chart of accounts, fiscal years, budgets, taxes, assets, liabilities and the
+   finance report suite)
+4. Fees and admissions. (Delivered: fee heads/plans/vouchers/payments/refunds,
+   concessions and policies, fines, reminders and the fee report suite;
+   admissions and student records with enrollment, promotion and guardians)
+5. Attendance and exams. (Delivered: student and staff attendance with sync
+   batches, exam types/scales/exams/papers, marks, invigilation, moderation,
+   re-evaluation, supplementary exams and credit-hour registration)
+6. HR and payroll. (Delivered: staff register and documents, departments,
+   designations, leave, payroll runs, payslips and approval-gated posting)
+7. Portals: parent, student, teacher dashboards and notifications. (API
+   delivered: teacher timetable view, absence notifications with queue, send,
+   cancel and batch send; parent/student portals remain on the roadmap)
+8. Student affairs, canteen and sports. (Delivered: canteen POS/wallet/stock,
+   sports teams/fixtures/equipment/achievements and the student affairs suite
+   including counselling and complaints)
 9. Support modules: inventory, library, labs, transport, hostel, complaints.
-10. IT department module.
-11. Analytics and consolidated reporting.
+   (Delivered)
+10. IT department module. (Delivered: assets, helpdesk, change requests,
+    backups, monitoring and an operations summary)
+11. Analytics and consolidated reporting. (Delivered: campus dashboard, progress,
+    attendance, results, staff, student yearly, financial and payroll reports,
+    plus a platform overview for the product owner)
+
+The Next.js web client covers every sidebar module listed above (40 entries,
+all marked ready); the Expo mobile app remains a thin shell.
 
 ---
 

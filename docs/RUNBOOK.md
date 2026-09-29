@@ -1085,6 +1085,35 @@ curl -s -H 'Accept: application/json' -H "X-Payment-Signature: $SIG" \
   http://127.0.0.1:8000/api/v1/webhooks/payments/manual
 ```
 
+Audit log quick check (campus admin token):
+
+```bash
+# List the most recent activity, then filter by event and date range
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/audit-logs?per_page=5"
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/api/v1/audit-logs?event=created&from=2026-09-01&to=2026-09-30"
+
+# Read the available log names, events and subject types
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/audit-logs/filters
+```
+
+Campus users only see activity caused by users in their allowed campuses; the
+product owner (`superadmin@demo-eis.test`) sees every entry.
+
+Notification detail quick check (campus admin token):
+
+```bash
+# Read one notice, then send or cancel it
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8000/api/v1/notifications/1
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/notifications/1/send
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -X POST http://127.0.0.1:8000/api/v1/notifications/1/cancel
+```
+
 ## Web (apps/web)
 
 ```bash

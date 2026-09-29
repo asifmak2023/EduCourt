@@ -209,12 +209,12 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
           void submit();
         }}
       >
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="rounded-2xl border border-border bg-surface">
           <StudentProfileFields profile={profile} set={set} errors={errText} />
 
-          <div className="border-b border-slate-100 px-6 py-5">
+          <div className="border-b border-border px-6 py-5">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 className="text-sm font-semibold text-foreground">
                 Guardians
               </h2>
               <Button
@@ -241,7 +241,7 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
             </div>
 
             {guardians.length === 0 ? (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted">
                 No guardians linked. Use Add guardian to attach one.
               </p>
             ) : (
@@ -249,7 +249,7 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
                 {guardians.map((row) => (
                   <div
                     key={row.key}
-                    className="grid gap-4 rounded-xl border border-slate-200 p-4 sm:grid-cols-2 lg:grid-cols-4"
+                    className="grid gap-4 rounded-xl border border-border p-4 sm:grid-cols-2 lg:grid-cols-4"
                   >
                     <Field
                       label="Name"
@@ -333,7 +333,7 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-muted">
               Enrollments are managed from the student record:{" "}
               {student.enrollments.length === 0
                 ? "none recorded"

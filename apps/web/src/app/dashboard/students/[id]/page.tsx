@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -111,17 +112,17 @@ function StudentDetailView() {
         {data.guardians.length === 0 ? (
           <EmptyState message="No guardians linked yet." />
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-border">
             {data.guardians.map((guardian) => (
               <li
                 key={guardian.id}
                 className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
               >
                 <div>
-                  <p className="text-sm font-medium text-slate-900">
+                  <p className="text-sm font-medium text-foreground">
                     {guardian.name}
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted">
                     {[guardian.phone, guardian.email]
                       .filter(Boolean)
                       .join(" · ") || "No contact details"}
@@ -149,48 +150,48 @@ function StudentDetailView() {
         {data.enrollments.length === 0 ? (
           <EmptyState message="No enrollments recorded." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-4 py-2 font-medium">Academic year</th>
-                  <th className="px-4 py-2 font-medium">Class</th>
-                  <th className="px-4 py-2 font-medium">Section</th>
-                  <th className="px-4 py-2 font-medium">Roll no</th>
-                  <th className="px-4 py-2 font-medium">Status</th>
-                  <th className="px-4 py-2 font-medium">Starts</th>
-                  <th className="px-4 py-2 font-medium">Ends</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {data.enrollments.map((enrollment) => (
-                  <tr key={enrollment.id}>
-                    <td className="px-4 py-2 text-slate-700">
-                      {enrollment.academic_year?.name ?? "-"}
-                    </td>
-                    <td className="px-4 py-2 text-slate-700">
-                      {enrollment.class_room?.name ?? "-"}
-                    </td>
-                    <td className="px-4 py-2 text-slate-700">
-                      {enrollment.section?.name ?? "-"}
-                    </td>
-                    <td className="px-4 py-2 text-slate-700">
-                      {enrollment.roll_number ?? "-"}
-                    </td>
-                    <td className="px-4 py-2">
-                      <Badge value={enrollment.status} />
-                    </td>
-                    <td className="px-4 py-2 text-slate-500">
-                      {formatDate(enrollment.starts_on)}
-                    </td>
-                    <td className="px-4 py-2 text-slate-500">
-                      {formatDate(enrollment.ends_on)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Enrollments" className="min-w-[880px]">
+                <Table.Header>
+                  <Table.Column isRowHeader>Academic year</Table.Column>
+                  <Table.Column>Class</Table.Column>
+                  <Table.Column>Section</Table.Column>
+                  <Table.Column>Roll no</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                  <Table.Column>Starts</Table.Column>
+                  <Table.Column>Ends</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {data.enrollments.map((enrollment) => (
+                    <Table.Row key={enrollment.id} id={enrollment.id}>
+                      <Table.Cell className="text-foreground">
+                        {enrollment.academic_year?.name ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-foreground">
+                        {enrollment.class_room?.name ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-foreground">
+                        {enrollment.section?.name ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-foreground">
+                        {enrollment.roll_number ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={enrollment.status} />
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {formatDate(enrollment.starts_on)}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {formatDate(enrollment.ends_on)}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
       </SectionCard>
 
@@ -247,10 +248,10 @@ function WithdrawPanel({
     <Card className="p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">
+          <h2 className="text-sm font-semibold text-foreground">
             Withdraw or transfer
           </h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-0.5 text-xs text-muted">
             Closes all active enrollments for this student.
           </p>
         </div>

@@ -150,7 +150,7 @@ function AdmissionDetailView() {
         <div className="text-sm">
           <Link
             href={`/dashboard/students/${data.student_id}`}
-            className="font-medium text-slate-900 underline"
+            className="font-medium text-foreground underline"
           >
             View student record
           </Link>
@@ -220,8 +220,8 @@ function WorkflowActions({
     <Card className="p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Workflow</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Workflow</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Move the application through review, decision and enrollment.
           </p>
         </div>
@@ -317,7 +317,7 @@ function RejectForm({
   const [reason, setReason] = useState("");
 
   return (
-    <div className="mt-5 space-y-4 border-t border-slate-100 pt-5">
+    <div className="mt-5 space-y-4 border-t border-border pt-5">
       <Field label="Rejection reason" htmlFor="rejection_reason" required>
         <TextArea
           id="rejection_reason"
@@ -394,7 +394,7 @@ function EnrollForm({
   };
 
   return (
-    <div className="mt-5 space-y-4 border-t border-slate-100 pt-5">
+    <div className="mt-5 space-y-4 border-t border-border pt-5">
       {loading ? (
         <Spinner />
       ) : (

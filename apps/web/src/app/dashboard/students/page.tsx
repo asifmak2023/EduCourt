@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useAuth } from "@/lib/auth";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Pagination } from "@/components/Pagination";
-import { buttonClasses } from "@/components/Form";
+import { Select, TextInput, buttonClasses } from "@/components/Form";
 import {
   Badge,
   Card,
@@ -50,16 +51,17 @@ function StudentsTable() {
         description="Student register for the active campus."
         actions={
           <>
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => {
-                setPage(1);
-                setSearch(event.target.value);
-              }}
-              placeholder="Search name or admission no"
-              className="w-56 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-            />
+            <div className="w-56">
+              <TextInput
+                type="search"
+                value={search}
+                onChange={(event) => {
+                  setPage(1);
+                  setSearch(event.target.value);
+                }}
+                placeholder="Search name or admission no"
+              />
+            </div>
             {can("student.create") ? (
               <Link
                 href="/dashboard/students/new"
@@ -73,33 +75,35 @@ function StudentsTable() {
       />
 
       <div className="flex flex-wrap gap-3">
-        <select
-          value={status}
-          onChange={(event) => {
-            setPage(1);
-            setStatus(event.target.value);
-          }}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
-        >
-          {STATUS_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <select
-          value={gender}
-          onChange={(event) => {
-            setPage(1);
-            setGender(event.target.value);
-          }}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
-        >
-          <option value="">All genders</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
-        </select>
+        <div className="w-52">
+          <Select
+            value={status}
+            onChange={(event) => {
+              setPage(1);
+              setStatus(event.target.value);
+            }}
+          >
+            {STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="w-52">
+          <Select
+            value={gender}
+            onChange={(event) => {
+              setPage(1);
+              setGender(event.target.value);
+            }}
+          >
+            <option value="">All genders</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </Select>
+        </div>
       </div>
 
       {error ? <ErrorNotice message={error} /> : null}
@@ -110,45 +114,45 @@ function StudentsTable() {
         ) : items.length === 0 ? (
           <EmptyState message="No students match your search." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Admission no</th>
-                  <th className="px-5 py-3 font-medium">Name</th>
-                  <th className="px-5 py-3 font-medium">Gender</th>
-                  <th className="px-5 py-3 font-medium">Date of birth</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((student) => (
-                  <tr key={student.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-mono text-xs text-slate-500">
-                      {student.admission_no}
-                    </td>
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      <Link
-                        href={`/dashboard/students/${student.id}`}
-                        className="hover:underline"
-                      >
-                        {student.full_name}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 capitalize text-slate-600">
-                      {student.gender ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {formatDate(student.date_of_birth)}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={student.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Students" className="min-w-[760px]">
+                <Table.Header>
+                  <Table.Column isRowHeader>Admission no</Table.Column>
+                  <Table.Column>Name</Table.Column>
+                  <Table.Column>Gender</Table.Column>
+                  <Table.Column>Date of birth</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((student) => (
+                    <Table.Row key={student.id} id={student.id}>
+                      <Table.Cell className="font-mono text-xs text-muted">
+                        {student.admission_no}
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-foreground">
+                        <Link
+                          href={`/dashboard/students/${student.id}`}
+                          className="hover:underline"
+                        >
+                          {student.full_name}
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell className="capitalize text-muted">
+                        {student.gender ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {formatDate(student.date_of_birth)}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={student.status} />
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {meta ? (

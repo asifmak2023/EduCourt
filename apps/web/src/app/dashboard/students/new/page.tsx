@@ -198,9 +198,9 @@ function NewStudentForm() {
             admissionHint
           />
 
-          <div className="border-b border-slate-100 px-6 py-5">
+          <div className="border-b border-border px-6 py-5">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 className="text-sm font-semibold text-foreground">
                 Guardians
               </h2>
               <Button
@@ -222,7 +222,7 @@ function NewStudentForm() {
               {guardians.map((row) => (
                 <div
                   key={row.key}
-                  className="grid gap-4 rounded-xl border border-slate-200 p-4 sm:grid-cols-2 lg:grid-cols-4"
+                  className="grid gap-4 rounded-xl border border-border p-4 sm:grid-cols-2 lg:grid-cols-4"
                 >
                   <Field label="Name" htmlFor={`gname-${row.key}`} required>
                     <TextInput
@@ -298,13 +298,13 @@ function NewStudentForm() {
             </div>
           </div>
 
-          <div className="border-b border-slate-100 px-6 py-5">
+          <div className="border-b border-border px-6 py-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">
+                <h2 className="text-sm font-semibold text-foreground">
                   Enrollment
                 </h2>
-                <p className="mt-0.5 text-xs text-slate-500">
+                <p className="mt-0.5 text-xs text-muted">
                   Optional first class placement.
                 </p>
               </div>

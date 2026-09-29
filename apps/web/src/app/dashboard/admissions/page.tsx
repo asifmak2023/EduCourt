@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useAuth } from "@/lib/auth";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Pagination } from "@/components/Pagination";
-import { buttonClasses } from "@/components/Form";
+import { Select, TextInput, buttonClasses } from "@/components/Form";
 import {
   Badge,
   Card,
@@ -50,16 +51,17 @@ function AdmissionsTable() {
         description="Applications and their current stage."
         actions={
           <>
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => {
-                setPage(1);
-                setSearch(event.target.value);
-              }}
-              placeholder="Search name, application no or phone"
-              className="w-64 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-            />
+            <div className="w-64">
+              <TextInput
+                type="search"
+                value={search}
+                onChange={(event) => {
+                  setPage(1);
+                  setSearch(event.target.value);
+                }}
+                placeholder="Search name, application no or phone"
+              />
+            </div>
             {can("admission.create") ? (
               <Link
                 href="/dashboard/admissions/new"
@@ -73,20 +75,21 @@ function AdmissionsTable() {
       />
 
       <div className="flex flex-wrap gap-3">
-        <select
-          value={status}
-          onChange={(event) => {
-            setPage(1);
-            setStatus(event.target.value);
-          }}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
-        >
-          {STATUS_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <div className="w-52">
+          <Select
+            value={status}
+            onChange={(event) => {
+              setPage(1);
+              setStatus(event.target.value);
+            }}
+          >
+            {STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
 
       {error ? <ErrorNotice message={error} /> : null}
@@ -97,49 +100,49 @@ function AdmissionsTable() {
         ) : items.length === 0 ? (
           <EmptyState message="No applications match your search." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Application no</th>
-                  <th className="px-5 py-3 font-medium">Applicant</th>
-                  <th className="px-5 py-3 font-medium">Class</th>
-                  <th className="px-5 py-3 font-medium">Guardian phone</th>
-                  <th className="px-5 py-3 font-medium">Applied</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((admission) => (
-                  <tr key={admission.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-mono text-xs text-slate-500">
-                      {admission.application_no}
-                    </td>
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      <Link
-                        href={`/dashboard/admissions/${admission.id}`}
-                        className="hover:underline"
-                      >
-                        {admission.full_name}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {admission.class_room ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {admission.guardian_phone ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {formatDate(admission.applied_on)}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={admission.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Admissions" className="min-w-[880px]">
+                <Table.Header>
+                  <Table.Column isRowHeader>Application no</Table.Column>
+                  <Table.Column>Applicant</Table.Column>
+                  <Table.Column>Class</Table.Column>
+                  <Table.Column>Guardian phone</Table.Column>
+                  <Table.Column>Applied</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((admission) => (
+                    <Table.Row key={admission.id} id={admission.id}>
+                      <Table.Cell className="font-mono text-xs text-muted">
+                        {admission.application_no}
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-foreground">
+                        <Link
+                          href={`/dashboard/admissions/${admission.id}`}
+                          className="hover:underline"
+                        >
+                          {admission.full_name}
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {admission.class_room ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {admission.guardian_phone ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {formatDate(admission.applied_on)}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={admission.status} />
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {meta ? (

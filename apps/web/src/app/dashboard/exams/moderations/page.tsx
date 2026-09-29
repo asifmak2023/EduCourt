@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useExams } from "@/lib/useLookups";
 import { useAuth } from "@/lib/auth";
@@ -112,50 +113,53 @@ function ModerationsTable() {
         ) : items.length === 0 ? (
           <EmptyState message="No moderations match your filters." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Paper</th>
-                  <th className="px-5 py-3 font-medium">Type</th>
-                  <th className="px-5 py-3 font-medium text-right">Value</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                  <th className="px-5 py-3 font-medium">Reason</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((moderation) => (
-                  <tr key={moderation.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      <Link
-                        href={`/dashboard/exams/moderations/${moderation.id}`}
-                        className="hover:underline"
-                      >
-                        {moderation.paper?.class_room?.name ?? "-"} -{" "}
-                        {moderation.paper?.subject?.name ?? "-"}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {moderation.type === "grace_marks"
-                        ? "Grace marks"
-                        : moderation.type === "scaling"
-                          ? "Scaling"
-                          : "-"}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {formatNumber(moderation.value)}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={moderation.status} />
-                    </td>
-                    <td className="px-5 py-3 text-slate-500">
-                      {moderation.reason ?? "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content
+                aria-label="Exam moderations"
+                className="min-w-[760px]"
+              >
+                <Table.Header>
+                  <Table.Column isRowHeader>Paper</Table.Column>
+                  <Table.Column>Type</Table.Column>
+                  <Table.Column className="text-right">Value</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                  <Table.Column>Reason</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((moderation) => (
+                    <Table.Row key={moderation.id} id={moderation.id}>
+                      <Table.Cell className="font-medium text-foreground">
+                        <Link
+                          href={`/dashboard/exams/moderations/${moderation.id}`}
+                          className="hover:underline"
+                        >
+                          {moderation.paper?.class_room?.name ?? "-"} -{" "}
+                          {moderation.paper?.subject?.name ?? "-"}
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {moderation.type === "grace_marks"
+                          ? "Grace marks"
+                          : moderation.type === "scaling"
+                            ? "Scaling"
+                            : "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-muted">
+                        {formatNumber(moderation.value)}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={moderation.status} />
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {moderation.reason ?? "-"}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {meta ? (

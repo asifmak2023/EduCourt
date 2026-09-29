@@ -69,7 +69,7 @@ function LeaveDetailView() {
 
       <div className="flex flex-wrap items-center gap-2">
         <Badge value={data.status} />
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-muted">
           {formatDate(data.from_date)} - {formatDate(data.to_date)}
         </span>
       </div>
@@ -89,13 +89,13 @@ function LeaveDetailView() {
         </DataList>
 
         {data.reason ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             {data.reason}
           </p>
         ) : null}
 
         {data.decision_note ? (
-          <p className="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+          <p className="mt-4 rounded-lg bg-surface-secondary px-3 py-2 text-sm text-muted">
             Decision note: {data.decision_note}
           </p>
         ) : null}
@@ -153,8 +153,8 @@ function DecisionActions({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Decision</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">Decision</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Approve, reject or cancel this pending request.
       </p>
 

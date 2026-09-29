@@ -70,7 +70,7 @@ function SupplementaryDetailView() {
           <DataItem label="Approved at" value={data.approved_at ?? "-"} />
         </DataList>
         {data.remarks ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             Remarks: {data.remarks}
           </p>
         ) : null}
@@ -117,7 +117,7 @@ function StatusActions({
   if (data.status === "completed") {
     return (
       <Card className="p-6">
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted">
           This supplementary exam is completed; no further actions are available.
         </p>
       </Card>
@@ -134,7 +134,7 @@ function StatusActions({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Actions</h2>
+      <h2 className="text-sm font-semibold text-foreground">Actions</h2>
       <div className="mt-4 flex flex-wrap gap-2">
         {showApprove ? (
           <Button
@@ -196,8 +196,8 @@ function DeleteAction({ id }: { id: number }) {
     <Card className="p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Remove</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Remove</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Archive this registration.
           </p>
         </div>

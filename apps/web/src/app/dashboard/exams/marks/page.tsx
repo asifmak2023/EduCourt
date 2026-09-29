@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useExamPapers, useExams } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -227,13 +228,13 @@ function MarksSheet() {
       {error ? <ErrorNotice message={error} /> : null}
 
       <Card>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-secondary px-6 py-4">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">
+            <h2 className="text-sm font-semibold text-foreground">
               Students {students.length > 0 ? `(${students.length})` : ""}
             </h2>
             {selectedPaper ? (
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="mt-0.5 text-xs text-muted">
                 Maximum marks {selectedPaper.max_marks}, pass marks{" "}
                 {selectedPaper.pass_marks}
               </p>
@@ -248,67 +249,67 @@ function MarksSheet() {
         ) : students.length === 0 ? (
           <EmptyState message="No students are enrolled in this class." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Student</th>
-                  <th className="px-5 py-3 font-medium">Marks</th>
-                  <th className="px-5 py-3 font-medium">Absent</th>
-                  <th className="px-5 py-3 font-medium">Remarks</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {students.map((student) => (
-                  <tr key={student.id}>
-                    <td className="px-5 py-3">
-                      <div className="font-medium text-slate-900">
-                        {student.full_name}
-                      </div>
-                      <div className="font-mono text-xs text-slate-400">
-                        {student.admission_no}
-                      </div>
-                    </td>
-                    <td className="px-5 py-3">
-                      <TextInput
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={drafts[student.id]?.marks ?? ""}
-                        disabled={drafts[student.id]?.absent ?? false}
-                        onChange={(event) =>
-                          update(student.id, { marks: event.target.value })
-                        }
-                        className="w-28"
-                      />
-                    </td>
-                    <td className="px-5 py-3">
-                      <Checkbox
-                        label=""
-                        checked={drafts[student.id]?.absent ?? false}
-                        onChange={(event) =>
-                          update(student.id, { absent: event.target.checked })
-                        }
-                      />
-                    </td>
-                    <td className="px-5 py-3">
-                      <TextInput
-                        value={drafts[student.id]?.remarks ?? ""}
-                        placeholder="Optional"
-                        onChange={(event) =>
-                          update(student.id, { remarks: event.target.value })
-                        }
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Marks entry" className="min-w-[760px]">
+                <Table.Header>
+                  <Table.Column isRowHeader>Student</Table.Column>
+                  <Table.Column>Marks</Table.Column>
+                  <Table.Column>Absent</Table.Column>
+                  <Table.Column>Remarks</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {students.map((student) => (
+                    <Table.Row key={student.id} id={student.id}>
+                      <Table.Cell>
+                        <div className="font-medium text-foreground">
+                          {student.full_name}
+                        </div>
+                        <div className="font-mono text-xs text-muted">
+                          {student.admission_no}
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <TextInput
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={drafts[student.id]?.marks ?? ""}
+                          disabled={drafts[student.id]?.absent ?? false}
+                          onChange={(event) =>
+                            update(student.id, { marks: event.target.value })
+                          }
+                          className="w-28"
+                        />
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Checkbox
+                          label=""
+                          checked={drafts[student.id]?.absent ?? false}
+                          onChange={(event) =>
+                            update(student.id, { absent: event.target.checked })
+                          }
+                        />
+                      </Table.Cell>
+                      <Table.Cell>
+                        <TextInput
+                          value={drafts[student.id]?.remarks ?? ""}
+                          placeholder="Optional"
+                          onChange={(event) =>
+                            update(student.id, { remarks: event.target.value })
+                          }
+                        />
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {selectedPaper && students.length > 0 ? (
-          <div className="flex items-center justify-end border-t border-slate-100 px-6 py-4">
+          <div className="flex items-center justify-end border-t border-border-secondary px-6 py-4">
             <Button type="button" loading={busy} onClick={submit}>
               Save marks
             </Button>

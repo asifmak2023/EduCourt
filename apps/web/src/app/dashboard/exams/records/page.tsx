@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useAcademicYears, useExamTypes } from "@/lib/useLookups";
 import { useAuth } from "@/lib/auth";
@@ -134,45 +135,45 @@ function RecordsTable() {
         ) : items.length === 0 ? (
           <EmptyState message="No exams match your filters." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Name</th>
-                  <th className="px-5 py-3 font-medium">Type</th>
-                  <th className="px-5 py-3 font-medium">Starts</th>
-                  <th className="px-5 py-3 font-medium">Ends</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((exam) => (
-                  <tr key={exam.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      <Link
-                        href={`/dashboard/exams/records/${exam.id}`}
-                        className="hover:underline"
-                      >
-                        {exam.name}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {exam.exam_type?.name ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-500">
-                      {formatDate(exam.starts_on)}
-                    </td>
-                    <td className="px-5 py-3 text-slate-500">
-                      {formatDate(exam.ends_on)}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={exam.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Examinations" className="min-w-[720px]">
+                <Table.Header>
+                  <Table.Column isRowHeader>Name</Table.Column>
+                  <Table.Column>Type</Table.Column>
+                  <Table.Column>Starts</Table.Column>
+                  <Table.Column>Ends</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((exam) => (
+                    <Table.Row key={exam.id} id={exam.id}>
+                      <Table.Cell className="font-medium text-foreground">
+                        <Link
+                          href={`/dashboard/exams/records/${exam.id}`}
+                          className="hover:underline"
+                        >
+                          {exam.name}
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {exam.exam_type?.name ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {formatDate(exam.starts_on)}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {formatDate(exam.ends_on)}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={exam.status} />
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {meta ? (

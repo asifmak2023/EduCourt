@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useClassRooms, useExams } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -202,7 +203,7 @@ function ResultCardView() {
           <Card className="p-6">
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <Badge value={card.result} />
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-muted">
                 {card.failed_subjects} failed subject(s)
               </span>
             </div>
@@ -219,62 +220,66 @@ function ResultCardView() {
           </Card>
 
           <Card>
-            <div className="border-b border-slate-100 px-6 py-4">
-              <h2 className="text-sm font-semibold text-slate-900">Subjects</h2>
+            <div className="border-b border-border-secondary px-6 py-4">
+              <h2 className="text-sm font-semibold text-foreground">Subjects</h2>
             </div>
             {card.subjects.length === 0 ? (
               <EmptyState message="No subjects are scheduled for this exam." />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                    <tr>
-                      <th className="px-5 py-3 font-medium">Subject</th>
-                      <th className="px-5 py-3 font-medium text-right">Max</th>
-                      <th className="px-5 py-3 font-medium text-right">Pass</th>
-                      <th className="px-5 py-3 font-medium text-right">
-                        Obtained
-                      </th>
-                      <th className="px-5 py-3 font-medium">Status</th>
-                      <th className="px-5 py-3 font-medium">Remarks</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {card.subjects.map((subject) => (
-                      <tr key={subject.exam_paper_id}>
-                        <td className="px-5 py-3 font-medium text-slate-900">
-                          {subject.subject ?? `#${subject.subject_id}`}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(subject.max_marks)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(subject.pass_marks)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-700">
-                          {subject.is_absent
-                            ? "Absent"
-                            : subject.marks_obtained === null
-                              ? "-"
-                              : formatNumber(subject.marks_obtained)}
-                        </td>
-                        <td className="px-5 py-3">
-                          {subject.is_absent ? (
-                            <Badge value="inactive" />
-                          ) : (
-                            <Badge
-                              value={subject.passed ? "active" : "rejected"}
-                            />
-                          )}
-                        </td>
-                        <td className="px-5 py-3 text-slate-500">
-                          {subject.remarks ?? "-"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table variant="secondary">
+                <Table.ScrollContainer>
+                  <Table.Content
+                    aria-label="Result card subjects"
+                    className="min-w-[820px]"
+                  >
+                    <Table.Header>
+                      <Table.Column isRowHeader>Subject</Table.Column>
+                      <Table.Column className="text-right">Max</Table.Column>
+                      <Table.Column className="text-right">Pass</Table.Column>
+                      <Table.Column className="text-right">Obtained</Table.Column>
+                      <Table.Column>Status</Table.Column>
+                      <Table.Column>Remarks</Table.Column>
+                    </Table.Header>
+                    <Table.Body>
+                      {card.subjects.map((subject) => (
+                        <Table.Row
+                          key={subject.exam_paper_id}
+                          id={subject.exam_paper_id}
+                        >
+                          <Table.Cell className="font-medium text-foreground">
+                            {subject.subject ?? `#${subject.subject_id}`}
+                          </Table.Cell>
+                          <Table.Cell className="text-right text-muted">
+                            {formatNumber(subject.max_marks)}
+                          </Table.Cell>
+                          <Table.Cell className="text-right text-muted">
+                            {formatNumber(subject.pass_marks)}
+                          </Table.Cell>
+                          <Table.Cell className="text-right text-foreground">
+                            {subject.is_absent
+                              ? "Absent"
+                              : subject.marks_obtained === null
+                                ? "-"
+                                : formatNumber(subject.marks_obtained)}
+                          </Table.Cell>
+                          <Table.Cell>
+                            {subject.is_absent ? (
+                              <Badge value="inactive" />
+                            ) : (
+                              <Badge
+                                value={subject.passed ? "active" : "rejected"}
+                              />
+                            )}
+                          </Table.Cell>
+                          <Table.Cell className="text-muted">
+                            {subject.remarks ?? "-"}
+                          </Table.Cell>
+                        </Table.Row>
+                      ))}
+                    </Table.Body>
+                  </Table.Content>
+                </Table.ScrollContainer>
+              </Table>
             )}
           </Card>
         </>

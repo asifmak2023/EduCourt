@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
@@ -82,7 +83,7 @@ function ExamDetailView() {
 
       <div className="flex flex-wrap items-center gap-2">
         <Badge value={data.status} />
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-muted">
           {formatDate(data.starts_on)} - {formatDate(data.ends_on)}
         </span>
       </div>
@@ -95,7 +96,7 @@ function ExamDetailView() {
           <DataItem label="Papers" value={formatNumber(papers.length)} />
         </DataList>
         {data.description ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             {data.description}
           </p>
         ) : null}
@@ -105,55 +106,55 @@ function ExamDetailView() {
         {papers.length === 0 ? (
           <EmptyState message="No papers have been scheduled for this exam." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-4 py-2 font-medium">Date</th>
-                  <th className="px-4 py-2 font-medium">Class</th>
-                  <th className="px-4 py-2 font-medium">Subject</th>
-                  <th className="px-4 py-2 font-medium">Room</th>
-                  <th className="px-4 py-2 font-medium text-right">Max</th>
-                  <th className="px-4 py-2 font-medium text-right">Pass</th>
-                  <th className="px-4 py-2 font-medium" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {papers.map((paper) => (
-                  <tr key={paper.id}>
-                    <td className="px-4 py-2 text-slate-500">
-                      {formatDate(paper.exam_date)}
-                    </td>
-                    <td className="px-4 py-2 text-slate-700">
-                      {paper.class_room?.name ?? `#${paper.class_room_id}`}
-                    </td>
-                    <td className="px-4 py-2 text-slate-700">
-                      {paper.subject?.name ?? `#${paper.subject_id}`}
-                    </td>
-                    <td className="px-4 py-2 text-slate-600">
-                      {paper.room?.name ?? "-"}
-                    </td>
-                    <td className="px-4 py-2 text-right text-slate-600">
-                      {formatNumber(paper.max_marks)}
-                    </td>
-                    <td className="px-4 py-2 text-right text-slate-600">
-                      {formatNumber(paper.pass_marks)}
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      {can("exam.marks") ? (
-                        <Link
-                          href={`/dashboard/exams/marks?paper=${paper.id}`}
-                          className="text-xs font-medium text-slate-700 hover:underline"
-                        >
-                          Enter marks
-                        </Link>
-                      ) : null}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Exam papers" className="min-w-[840px]">
+                <Table.Header>
+                  <Table.Column isRowHeader>Date</Table.Column>
+                  <Table.Column>Class</Table.Column>
+                  <Table.Column>Subject</Table.Column>
+                  <Table.Column>Room</Table.Column>
+                  <Table.Column className="text-right">Max</Table.Column>
+                  <Table.Column className="text-right">Pass</Table.Column>
+                  <Table.Column className="text-right">Actions</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {papers.map((paper) => (
+                    <Table.Row key={paper.id} id={paper.id}>
+                      <Table.Cell className="text-muted">
+                        {formatDate(paper.exam_date)}
+                      </Table.Cell>
+                      <Table.Cell className="text-foreground">
+                        {paper.class_room?.name ?? `#${paper.class_room_id}`}
+                      </Table.Cell>
+                      <Table.Cell className="text-foreground">
+                        {paper.subject?.name ?? `#${paper.subject_id}`}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {paper.room?.name ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-muted">
+                        {formatNumber(paper.max_marks)}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-muted">
+                        {formatNumber(paper.pass_marks)}
+                      </Table.Cell>
+                      <Table.Cell className="text-right">
+                        {can("exam.marks") ? (
+                          <Link
+                            href={`/dashboard/exams/marks?paper=${paper.id}`}
+                            className="text-xs font-medium text-foreground hover:underline"
+                          >
+                            Enter marks
+                          </Link>
+                        ) : null}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
       </SectionCard>
 
@@ -233,36 +234,38 @@ function MeritListSection({ examId }: { examId: number }) {
       ) : loading ? (
         <Spinner />
       ) : rows && rows.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-2 font-medium">Rank</th>
-                <th className="px-4 py-2 font-medium">Student</th>
-                <th className="px-4 py-2 font-medium text-right">Total</th>
-                <th className="px-4 py-2 font-medium text-right">Percentage</th>
-                <th className="px-4 py-2 font-medium">Grade</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {rows.map((row) => (
-                <tr key={row.student_id}>
-                  <td className="px-4 py-2 text-slate-500">{row.rank}</td>
-                  <td className="px-4 py-2 font-medium text-slate-900">
-                    {row.student}
-                  </td>
-                  <td className="px-4 py-2 text-right text-slate-600">
-                    {formatNumber(row.total_obtained)}
-                  </td>
-                  <td className="px-4 py-2 text-right text-slate-600">
-                    {row.percentage}%
-                  </td>
-                  <td className="px-4 py-2 text-slate-600">{row.grade ?? "-"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table variant="secondary">
+          <Table.ScrollContainer>
+            <Table.Content aria-label="Merit list" className="min-w-[640px]">
+              <Table.Header>
+                <Table.Column isRowHeader>Rank</Table.Column>
+                <Table.Column>Student</Table.Column>
+                <Table.Column className="text-right">Total</Table.Column>
+                <Table.Column className="text-right">Percentage</Table.Column>
+                <Table.Column>Grade</Table.Column>
+              </Table.Header>
+              <Table.Body>
+                {rows.map((row) => (
+                  <Table.Row key={row.student_id} id={row.student_id}>
+                    <Table.Cell className="text-muted">{row.rank}</Table.Cell>
+                    <Table.Cell className="font-medium text-foreground">
+                      {row.student}
+                    </Table.Cell>
+                    <Table.Cell className="text-right text-muted">
+                      {formatNumber(row.total_obtained)}
+                    </Table.Cell>
+                    <Table.Cell className="text-right text-muted">
+                      {row.percentage}%
+                    </Table.Cell>
+                    <Table.Cell className="text-muted">
+                      {row.grade ?? "-"}
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+        </Table>
       ) : (
         <EmptyState message="No marks have been recorded for this class." />
       )}
@@ -300,10 +303,10 @@ function PublishExam({
     <Card className="p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">
+          <h2 className="text-sm font-semibold text-foreground">
             Publish results
           </h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-0.5 text-xs text-muted">
             Publishing marks the exam results as final for parents and students.
           </p>
         </div>

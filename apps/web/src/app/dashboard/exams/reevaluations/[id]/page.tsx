@@ -89,12 +89,12 @@ function ReevaluationDetailView() {
           <DataItem label="Reviewed at" value={data.reviewed_at ?? "-"} />
         </DataList>
         {data.reason ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             Reason: {data.reason}
           </p>
         ) : null}
         {data.remarks ? (
-          <p className="mt-2 text-sm text-slate-600">Remarks: {data.remarks}</p>
+          <p className="mt-2 text-sm text-muted">Remarks: {data.remarks}</p>
         ) : null}
       </Card>
 
@@ -148,8 +148,8 @@ function ReviewActions({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Review</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">Review</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Approving with revised marks updates the effective score for the student.
       </p>
 
@@ -239,8 +239,8 @@ function DeleteAction({ reevaluationId }: { reevaluationId: number }) {
     <Card className="p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Remove</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Remove</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Archive this re-evaluation request.
           </p>
         </div>

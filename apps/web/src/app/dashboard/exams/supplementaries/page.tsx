@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useExams, useStudents } from "@/lib/useLookups";
 import { useAuth } from "@/lib/auth";
@@ -132,49 +133,52 @@ function SupplementariesTable() {
         ) : items.length === 0 ? (
           <EmptyState message="No supplementary registrations match your filters." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Student</th>
-                  <th className="px-5 py-3 font-medium">Original exam</th>
-                  <th className="px-5 py-3 font-medium">Subject</th>
-                  <th className="px-5 py-3 font-medium text-right">Fee</th>
-                  <th className="px-5 py-3 font-medium">Paid</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      <Link
-                        href={`/dashboard/exams/supplementaries/${row.id}`}
-                        className="hover:underline"
-                      >
-                        {row.student?.full_name ?? `#${row.student_id}`}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {row.original_exam?.name ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {row.subject?.name ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {formatCurrency(row.fee_amount)}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={row.is_paid ? "paid" : "unpaid"} />
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={row.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content
+                aria-label="Supplementary registrations"
+                className="min-w-[820px]"
+              >
+                <Table.Header>
+                  <Table.Column isRowHeader>Student</Table.Column>
+                  <Table.Column>Original exam</Table.Column>
+                  <Table.Column>Subject</Table.Column>
+                  <Table.Column className="text-right">Fee</Table.Column>
+                  <Table.Column>Paid</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((row) => (
+                    <Table.Row key={row.id} id={row.id}>
+                      <Table.Cell className="font-medium text-foreground">
+                        <Link
+                          href={`/dashboard/exams/supplementaries/${row.id}`}
+                          className="hover:underline"
+                        >
+                          {row.student?.full_name ?? `#${row.student_id}`}
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {row.original_exam?.name ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {row.subject?.name ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-muted">
+                        {formatCurrency(row.fee_amount)}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={row.is_paid ? "paid" : "unpaid"} />
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={row.status} />
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {meta ? (

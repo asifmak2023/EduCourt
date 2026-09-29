@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useUsers } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -129,8 +130,8 @@ function StaffMarkSheet() {
       {error ? <ErrorNotice message={error} /> : null}
 
       <Card>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-secondary px-6 py-4">
+          <h2 className="text-sm font-semibold text-foreground">
             Staff {users.length > 0 ? `(${users.length})` : ""}
           </h2>
           {users.length > 0 ? (
@@ -158,69 +159,72 @@ function StaffMarkSheet() {
         ) : users.length === 0 ? (
           <EmptyState message="No staff users are available for this campus." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Employee</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                  <th className="px-5 py-3 font-medium">Check in</th>
-                  <th className="px-5 py-3 font-medium">Check out</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td className="px-5 py-3">
-                      <div className="font-medium text-slate-900">
-                        {user.name}
-                      </div>
-                      <div className="text-xs text-slate-400">{user.email}</div>
-                    </td>
-                    <td className="px-5 py-3">
-                      <Select
-                        value={marks[user.id]?.status ?? "present"}
-                        onChange={(event) =>
-                          update(user.id, { status: event.target.value })
-                        }
-                        className="w-36"
-                      >
-                        {STATUS_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </Select>
-                    </td>
-                    <td className="px-5 py-3">
-                      <TextInput
-                        type="time"
-                        value={marks[user.id]?.checkIn ?? ""}
-                        onChange={(event) =>
-                          update(user.id, { checkIn: event.target.value })
-                        }
-                        className="w-32"
-                      />
-                    </td>
-                    <td className="px-5 py-3">
-                      <TextInput
-                        type="time"
-                        value={marks[user.id]?.checkOut ?? ""}
-                        onChange={(event) =>
-                          update(user.id, { checkOut: event.target.value })
-                        }
-                        className="w-32"
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content
+                aria-label="Mark staff attendance"
+                className="min-w-[820px]"
+              >
+                <Table.Header>
+                  <Table.Column isRowHeader>Employee</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                  <Table.Column>Check in</Table.Column>
+                  <Table.Column>Check out</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {users.map((user) => (
+                    <Table.Row key={user.id} id={user.id}>
+                      <Table.Cell>
+                        <div className="font-medium text-foreground">
+                          {user.name}
+                        </div>
+                        <div className="text-xs text-muted">{user.email}</div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Select
+                          value={marks[user.id]?.status ?? "present"}
+                          onChange={(event) =>
+                            update(user.id, { status: event.target.value })
+                          }
+                          className="w-36"
+                        >
+                          {STATUS_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </Select>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <TextInput
+                          type="time"
+                          value={marks[user.id]?.checkIn ?? ""}
+                          onChange={(event) =>
+                            update(user.id, { checkIn: event.target.value })
+                          }
+                          className="w-32"
+                        />
+                      </Table.Cell>
+                      <Table.Cell>
+                        <TextInput
+                          type="time"
+                          value={marks[user.id]?.checkOut ?? ""}
+                          onChange={(event) =>
+                            update(user.id, { checkOut: event.target.value })
+                          }
+                          className="w-32"
+                        />
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {users.length > 0 ? (
-          <div className="flex items-center justify-end border-t border-slate-100 px-6 py-4">
+          <div className="flex items-center justify-end border-t border-border-secondary px-6 py-4">
             <Button type="button" loading={busy} onClick={submit}>
               Save attendance
             </Button>

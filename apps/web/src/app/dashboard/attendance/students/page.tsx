@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useClassRooms, useSections } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Pagination } from "@/components/Pagination";
-import { Select, buttonClasses } from "@/components/Form";
+import { Select, TextInput, buttonClasses } from "@/components/Form";
 import {
   Badge,
   Card,
@@ -82,15 +83,16 @@ function RecordsTable() {
       />
 
       <div className="flex flex-wrap gap-3">
-        <input
-          type="date"
-          value={date}
-          onChange={(event) => {
-            setPage(1);
-            setDate(event.target.value);
-          }}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
-        />
+        <div className="w-44">
+          <TextInput
+            type="date"
+            value={date}
+            onChange={(event) => {
+              setPage(1);
+              setDate(event.target.value);
+            }}
+          />
+        </div>
         <div className="w-48">
           <Select
             value={classId}
@@ -150,54 +152,57 @@ function RecordsTable() {
         ) : items.length === 0 ? (
           <EmptyState message="No attendance records match your filters." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Date</th>
-                  <th className="px-5 py-3 font-medium">Student</th>
-                  <th className="px-5 py-3 font-medium">Class</th>
-                  <th className="px-5 py-3 font-medium">Section</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                  <th className="px-5 py-3 font-medium">Remarks</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((record) => (
-                  <tr key={record.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 text-slate-500">
-                      {formatDate(record.attendance_date)}
-                    </td>
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      <Link
-                        href={`/dashboard/students/${record.student_id}`}
-                        className="hover:underline"
-                      >
-                        {record.student?.name ?? `#${record.student_id}`}
-                      </Link>
-                      {record.student?.admission_no ? (
-                        <span className="ml-2 font-mono text-xs text-slate-400">
-                          {record.student.admission_no}
-                        </span>
-                      ) : null}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {record.class_room ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {record.section ?? "-"}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={record.status} />
-                    </td>
-                    <td className="px-5 py-3 text-slate-500">
-                      {record.remarks ?? "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content
+                aria-label="Student attendance"
+                className="min-w-[880px]"
+              >
+                <Table.Header>
+                  <Table.Column isRowHeader>Date</Table.Column>
+                  <Table.Column>Student</Table.Column>
+                  <Table.Column>Class</Table.Column>
+                  <Table.Column>Section</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                  <Table.Column>Remarks</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((record) => (
+                    <Table.Row key={record.id} id={record.id}>
+                      <Table.Cell className="text-muted">
+                        {formatDate(record.attendance_date)}
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-foreground">
+                        <Link
+                          href={`/dashboard/students/${record.student_id}`}
+                          className="hover:underline"
+                        >
+                          {record.student?.name ?? `#${record.student_id}`}
+                        </Link>
+                        {record.student?.admission_no ? (
+                          <span className="ml-2 font-mono text-xs text-muted">
+                            {record.student.admission_no}
+                          </span>
+                        ) : null}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {record.class_room ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {record.section ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={record.status} />
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {record.remarks ?? "-"}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {meta ? (

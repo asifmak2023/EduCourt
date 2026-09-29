@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useExams, useStudents } from "@/lib/useLookups";
 import { useAuth } from "@/lib/auth";
@@ -132,45 +133,48 @@ function ReevaluationsTable() {
         ) : items.length === 0 ? (
           <EmptyState message="No re-evaluation requests match your filters." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Student</th>
-                  <th className="px-5 py-3 font-medium">Paper</th>
-                  <th className="px-5 py-3 font-medium text-right">Original</th>
-                  <th className="px-5 py-3 font-medium text-right">Revised</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      <Link
-                        href={`/dashboard/exams/reevaluations/${row.id}`}
-                        className="hover:underline"
-                      >
-                        {row.student?.full_name ?? `#${row.student_id}`}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {row.paper?.subject?.name ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {row.original_marks ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {row.revised_marks ?? "-"}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={row.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content
+                aria-label="Exam re-evaluations"
+                className="min-w-[760px]"
+              >
+                <Table.Header>
+                  <Table.Column isRowHeader>Student</Table.Column>
+                  <Table.Column>Paper</Table.Column>
+                  <Table.Column className="text-right">Original</Table.Column>
+                  <Table.Column className="text-right">Revised</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((row) => (
+                    <Table.Row key={row.id} id={row.id}>
+                      <Table.Cell className="font-medium text-foreground">
+                        <Link
+                          href={`/dashboard/exams/reevaluations/${row.id}`}
+                          className="hover:underline"
+                        >
+                          {row.student?.full_name ?? `#${row.student_id}`}
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {row.paper?.subject?.name ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-muted">
+                        {row.original_marks ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-muted">
+                        {row.revised_marks ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={row.status} />
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {meta ? (

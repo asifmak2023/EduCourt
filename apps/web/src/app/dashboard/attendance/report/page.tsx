@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useClassRooms, useSections } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -176,71 +177,79 @@ function ReportView() {
             {report.classes.length === 0 ? (
               <EmptyState message="No attendance was recorded in this period." />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                    <tr>
-                      <th className="px-5 py-3 font-medium">Class</th>
-                      <th className="px-5 py-3 font-medium text-right">Students</th>
-                      <th className="px-5 py-3 font-medium text-right">Boys</th>
-                      <th className="px-5 py-3 font-medium text-right">Girls</th>
-                      <th className="px-5 py-3 font-medium text-right">Present</th>
-                      <th className="px-5 py-3 font-medium text-right">Leave</th>
-                      <th className="px-5 py-3 font-medium text-right">Absent</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {report.classes.map((row) => (
-                      <tr key={row.class_room_id ?? "none"} className="hover:bg-slate-50">
-                        <td className="px-5 py-3 font-medium text-slate-900">
-                          {row.class_room ?? "Unassigned"}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.total)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.boys)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.girls)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.present)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.leave)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.absent)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="bg-slate-50 font-medium text-slate-900">
-                    <tr>
-                      <td className="px-5 py-3">Total</td>
-                      <td className="px-5 py-3 text-right">
-                        {formatNumber(totals?.total ?? 0)}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        {formatNumber(totals?.boys ?? 0)}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        {formatNumber(totals?.girls ?? 0)}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        {formatNumber(totals?.present ?? 0)}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        {formatNumber(totals?.leave ?? 0)}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        {formatNumber(totals?.absent ?? 0)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
+              <Table variant="secondary">
+                <Table.ScrollContainer>
+                  <Table.Content
+                    aria-label="Attendance report"
+                    className="min-w-[880px]"
+                  >
+                    <Table.Header>
+                      <Table.Column isRowHeader>Class</Table.Column>
+                      <Table.Column className="text-right">Students</Table.Column>
+                      <Table.Column className="text-right">Boys</Table.Column>
+                      <Table.Column className="text-right">Girls</Table.Column>
+                      <Table.Column className="text-right">Present</Table.Column>
+                      <Table.Column className="text-right">Leave</Table.Column>
+                      <Table.Column className="text-right">Absent</Table.Column>
+                    </Table.Header>
+                    <Table.Body>
+                      {report.classes.map((row) => (
+                        <Table.Row
+                          key={row.class_room_id ?? "none"}
+                          id={row.class_room_id ?? "none"}
+                        >
+                          <Table.Cell className="font-medium text-foreground">
+                            {row.class_room ?? "Unassigned"}
+                          </Table.Cell>
+                          <Table.Cell className="text-right text-muted">
+                            {formatNumber(row.total)}
+                          </Table.Cell>
+                          <Table.Cell className="text-right text-muted">
+                            {formatNumber(row.boys)}
+                          </Table.Cell>
+                          <Table.Cell className="text-right text-muted">
+                            {formatNumber(row.girls)}
+                          </Table.Cell>
+                          <Table.Cell className="text-right text-muted">
+                            {formatNumber(row.present)}
+                          </Table.Cell>
+                          <Table.Cell className="text-right text-muted">
+                            {formatNumber(row.leave)}
+                          </Table.Cell>
+                          <Table.Cell className="text-right text-muted">
+                            {formatNumber(row.absent)}
+                          </Table.Cell>
+                        </Table.Row>
+                      ))}
+                    </Table.Body>
+                    <Table.Footer>
+                      <Table.Row id="total">
+                        <Table.Cell className="font-medium text-foreground">
+                          Total
+                        </Table.Cell>
+                        <Table.Cell className="text-right font-medium text-foreground">
+                          {formatNumber(totals?.total ?? 0)}
+                        </Table.Cell>
+                        <Table.Cell className="text-right font-medium text-foreground">
+                          {formatNumber(totals?.boys ?? 0)}
+                        </Table.Cell>
+                        <Table.Cell className="text-right font-medium text-foreground">
+                          {formatNumber(totals?.girls ?? 0)}
+                        </Table.Cell>
+                        <Table.Cell className="text-right font-medium text-foreground">
+                          {formatNumber(totals?.present ?? 0)}
+                        </Table.Cell>
+                        <Table.Cell className="text-right font-medium text-foreground">
+                          {formatNumber(totals?.leave ?? 0)}
+                        </Table.Cell>
+                        <Table.Cell className="text-right font-medium text-foreground">
+                          {formatNumber(totals?.absent ?? 0)}
+                        </Table.Cell>
+                      </Table.Row>
+                    </Table.Footer>
+                  </Table.Content>
+                </Table.ScrollContainer>
+              </Table>
             )}
           </Card>
         </>

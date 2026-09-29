@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useExamPapers, useUsers } from "@/lib/useLookups";
 import { useAuth } from "@/lib/auth";
@@ -107,45 +108,48 @@ function InvigilationTable() {
         ) : items.length === 0 ? (
           <EmptyState message="No invigilation duties match your filters." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Invigilator</th>
-                  <th className="px-5 py-3 font-medium">Paper</th>
-                  <th className="px-5 py-3 font-medium">Role</th>
-                  <th className="px-5 py-3 font-medium">Notes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((duty) => (
-                  <tr key={duty.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      <Link
-                        href={`/dashboard/exams/invigilation/${duty.id}`}
-                        className="hover:underline"
-                      >
-                        {duty.user?.name ?? `User #${duty.user_id}`}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {duty.paper
-                        ? `${duty.paper.class_room?.name ?? "-"} - ${
-                            duty.paper.subject?.name ?? "-"
-                          }`
-                        : `Paper #${duty.exam_paper_id}`}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={duty.role} />
-                    </td>
-                    <td className="px-5 py-3 text-slate-500">
-                      {duty.notes ?? "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content
+                aria-label="Invigilation duties"
+                className="min-w-[720px]"
+              >
+                <Table.Header>
+                  <Table.Column isRowHeader>Invigilator</Table.Column>
+                  <Table.Column>Paper</Table.Column>
+                  <Table.Column>Role</Table.Column>
+                  <Table.Column>Notes</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((duty) => (
+                    <Table.Row key={duty.id} id={duty.id}>
+                      <Table.Cell className="font-medium text-foreground">
+                        <Link
+                          href={`/dashboard/exams/invigilation/${duty.id}`}
+                          className="hover:underline"
+                        >
+                          {duty.user?.name ?? `User #${duty.user_id}`}
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {duty.paper
+                          ? `${duty.paper.class_room?.name ?? "-"} - ${
+                              duty.paper.subject?.name ?? "-"
+                            }`
+                          : `Paper #${duty.exam_paper_id}`}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={duty.role} />
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {duty.notes ?? "-"}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {meta ? (

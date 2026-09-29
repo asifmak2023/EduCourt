@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useExams } from "@/lib/useLookups";
 import { useResource } from "@/lib/useResource";
@@ -179,61 +180,63 @@ function SupplementaryRegistration() {
       {rows.length > 0 ? (
         <Card className="p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-900">
+            <h2 className="text-sm font-semibold text-foreground">
               Eligible students ({rows.length})
             </h2>
-            <label className="flex items-center gap-2 text-xs text-slate-600">
-              <input
-                type="checkbox"
-                checked={selectedRows.length === rows.length && rows.length > 0}
-                onChange={(event) => toggleAll(event.target.checked)}
-              />
-              Select all
-            </label>
+            <Checkbox
+              label="Select all"
+              checked={selectedRows.length === rows.length && rows.length > 0}
+              onChange={(event) => toggleAll(event.target.checked)}
+            />
           </div>
 
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-3 py-3 font-medium">Select</th>
-                  <th className="px-3 py-3 font-medium">Student</th>
-                  <th className="px-3 py-3 font-medium">Paper</th>
-                  <th className="px-3 py-3 font-medium text-right">Obtained</th>
-                  <th className="px-3 py-3 font-medium text-right">Pass mark</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {rows.map((row) => (
-                  <tr key={row.exam_paper_id} className="hover:bg-slate-50">
-                    <td className="px-3 py-3">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(selected[row.exam_paper_id])}
-                        onChange={(event) =>
-                          setSelected((current) => ({
-                            ...current,
-                            [row.exam_paper_id]: event.target.checked,
-                          }))
-                        }
-                      />
-                    </td>
-                    <td className="px-3 py-3 text-slate-900">
-                      {row.student ?? `#${row.student_id}`}
-                    </td>
-                    <td className="px-3 py-3 text-slate-600">
-                      Paper #{row.exam_paper_id}
-                    </td>
-                    <td className="px-3 py-3 text-right text-slate-600">
-                      {row.marks_obtained}
-                    </td>
-                    <td className="px-3 py-3 text-right text-slate-600">
-                      {row.pass_marks}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="mt-4">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content
+                  aria-label="Eligible students"
+                  className="min-w-[720px]"
+                >
+                  <Table.Header>
+                    <Table.Column isRowHeader>Select</Table.Column>
+                    <Table.Column>Student</Table.Column>
+                    <Table.Column>Paper</Table.Column>
+                    <Table.Column className="text-right">Obtained</Table.Column>
+                    <Table.Column className="text-right">Pass mark</Table.Column>
+                  </Table.Header>
+                  <Table.Body>
+                    {rows.map((row) => (
+                      <Table.Row key={row.exam_paper_id} id={row.exam_paper_id}>
+                        <Table.Cell>
+                          <Checkbox
+                            label=""
+                            checked={Boolean(selected[row.exam_paper_id])}
+                            onChange={(event) =>
+                              setSelected((current) => ({
+                                ...current,
+                                [row.exam_paper_id]: event.target.checked,
+                              }))
+                            }
+                          />
+                        </Table.Cell>
+                        <Table.Cell className="text-foreground">
+                          {row.student ?? `#${row.student_id}`}
+                        </Table.Cell>
+                        <Table.Cell className="text-muted">
+                          Paper #{row.exam_paper_id}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {row.marks_obtained}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {row.pass_marks}
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </div>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-3">

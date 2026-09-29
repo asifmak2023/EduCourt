@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useUsers } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -150,46 +151,49 @@ function StaffReportView() {
             {report.by_staff.length === 0 ? (
               <EmptyState message="No staff attendance was recorded in this period." />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                    <tr>
-                      <th className="px-5 py-3 font-medium">Employee</th>
-                      <th className="px-5 py-3 font-medium text-right">Present</th>
-                      <th className="px-5 py-3 font-medium text-right">Late</th>
-                      <th className="px-5 py-3 font-medium text-right">Leave</th>
-                      <th className="px-5 py-3 font-medium text-right">Absent</th>
-                      <th className="px-5 py-3 font-medium text-right">
+              <Table variant="secondary">
+                <Table.ScrollContainer>
+                  <Table.Content
+                    aria-label="Staff attendance report"
+                    className="min-w-[760px]"
+                  >
+                    <Table.Header>
+                      <Table.Column isRowHeader>Employee</Table.Column>
+                      <Table.Column className="text-right">Present</Table.Column>
+                      <Table.Column className="text-right">Late</Table.Column>
+                      <Table.Column className="text-right">Leave</Table.Column>
+                      <Table.Column className="text-right">Absent</Table.Column>
+                      <Table.Column className="text-right">
                         Marked days
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {report.by_staff.map((row) => (
-                      <tr key={row.user_id} className="hover:bg-slate-50">
-                        <td className="px-5 py-3 font-medium text-slate-900">
-                          {row.user ?? `#${row.user_id}`}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.present)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.late)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.leave)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.absent)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.days)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                      </Table.Column>
+                    </Table.Header>
+                    <Table.Body>
+                      {report.by_staff.map((row) => (
+                        <Table.Row key={row.user_id} id={row.user_id}>
+                          <Table.Cell className="font-medium text-foreground">
+                            {row.user ?? `#${row.user_id}`}
+                          </Table.Cell>
+                          <Table.Cell className="text-right text-muted">
+                            {formatNumber(row.present)}
+                          </Table.Cell>
+                          <Table.Cell className="text-right text-muted">
+                            {formatNumber(row.late)}
+                          </Table.Cell>
+                          <Table.Cell className="text-right text-muted">
+                            {formatNumber(row.leave)}
+                          </Table.Cell>
+                          <Table.Cell className="text-right text-muted">
+                            {formatNumber(row.absent)}
+                          </Table.Cell>
+                          <Table.Cell className="text-right text-muted">
+                            {formatNumber(row.days)}
+                          </Table.Cell>
+                        </Table.Row>
+                      ))}
+                    </Table.Body>
+                  </Table.Content>
+                </Table.ScrollContainer>
+              </Table>
             )}
           </Card>
         </>
@@ -201,10 +205,10 @@ function StaffReportView() {
 function SummaryTile({ label, value }: { label: string; value?: number }) {
   return (
     <Card className="p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-semibold text-slate-900">
+      <p className="mt-2 text-2xl font-semibold text-foreground">
         {formatNumber(value ?? 0)}
       </p>
     </Card>

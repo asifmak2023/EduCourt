@@ -79,7 +79,7 @@ function ModerationDetailView() {
           <DataItem label="Applied at" value={data.applied_at ?? "-"} />
         </DataList>
         {data.reason ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             {data.reason}
           </p>
         ) : null}
@@ -147,8 +147,8 @@ function Actions({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Actions</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">Actions</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Approve a moderation, then apply it to rewrite the paper marks.
       </p>
 

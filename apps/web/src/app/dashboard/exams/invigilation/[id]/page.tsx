@@ -92,7 +92,7 @@ function InvigilationDetailView() {
           />
         </DataList>
         {data.notes ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             Notes: {data.notes}
           </p>
         ) : null}
@@ -139,7 +139,7 @@ function EditActions({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Edit duty</h2>
+      <h2 className="text-sm font-semibold text-foreground">Edit duty</h2>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <Field label="Role" htmlFor="edit_role" required>
@@ -207,8 +207,8 @@ function DeleteAction({ id }: { id: number }) {
     <Card className="p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Remove</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Remove</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Unassign this invigilator.
           </p>
         </div>

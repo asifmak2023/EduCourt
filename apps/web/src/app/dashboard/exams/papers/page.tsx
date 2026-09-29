@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useAuth } from "@/lib/auth";
 import {
@@ -134,55 +135,55 @@ function PapersTable() {
         ) : items.length === 0 ? (
           <EmptyState message="No exam papers match your filters." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Date</th>
-                  <th className="px-5 py-3 font-medium">Class</th>
-                  <th className="px-5 py-3 font-medium">Subject</th>
-                  <th className="px-5 py-3 font-medium">Room</th>
-                  <th className="px-5 py-3 font-medium">Time</th>
-                  <th className="px-5 py-3 font-medium text-right">Max</th>
-                  <th className="px-5 py-3 font-medium text-right">Pass</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((paper) => (
-                  <tr key={paper.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 text-slate-500">
-                      {formatDate(paper.exam_date)}
-                    </td>
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      <Link
-                        href={`/dashboard/exams/papers/${paper.id}/edit`}
-                        className="hover:underline"
-                      >
-                        {paper.class_room?.name ?? `#${paper.class_room_id}`}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {paper.subject?.name ?? `#${paper.subject_id}`}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {paper.room?.name ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-500">
-                      {paper.starts_at && paper.ends_at
-                        ? `${paper.starts_at} - ${paper.ends_at}`
-                        : paper.starts_at ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {formatNumber(paper.max_marks)}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {formatNumber(paper.pass_marks)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Exam papers" className="min-w-[900px]">
+                <Table.Header>
+                  <Table.Column isRowHeader>Date</Table.Column>
+                  <Table.Column>Class</Table.Column>
+                  <Table.Column>Subject</Table.Column>
+                  <Table.Column>Room</Table.Column>
+                  <Table.Column>Time</Table.Column>
+                  <Table.Column className="text-right">Max</Table.Column>
+                  <Table.Column className="text-right">Pass</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((paper) => (
+                    <Table.Row key={paper.id} id={paper.id}>
+                      <Table.Cell className="text-muted">
+                        {formatDate(paper.exam_date)}
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-foreground">
+                        <Link
+                          href={`/dashboard/exams/papers/${paper.id}/edit`}
+                          className="hover:underline"
+                        >
+                          {paper.class_room?.name ?? `#${paper.class_room_id}`}
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {paper.subject?.name ?? `#${paper.subject_id}`}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {paper.room?.name ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {paper.starts_at && paper.ends_at
+                          ? `${paper.starts_at} - ${paper.ends_at}`
+                          : paper.starts_at ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-muted">
+                        {formatNumber(paper.max_marks)}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-muted">
+                        {formatNumber(paper.pass_marks)}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {meta ? (

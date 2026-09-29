@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import {
   useClassRooms,
@@ -64,11 +65,7 @@ function AnalysisView() {
             key={item.key}
             type="button"
             onClick={() => setTab(item.key)}
-            className={
-              tab === item.key
-                ? "rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white"
-                : "rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-            }
+            className={buttonClasses(tab === item.key ? "primary" : "secondary")}
           >
             {item.label}
           </button>
@@ -171,56 +168,59 @@ function ClassAnalysis() {
           </div>
 
           <Card>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="px-5 py-3 font-medium">Subject</th>
-                    <th className="px-5 py-3 font-medium text-right">Appeared</th>
-                    <th className="px-5 py-3 font-medium text-right">Absent</th>
-                    <th className="px-5 py-3 font-medium text-right">Passed</th>
-                    <th className="px-5 py-3 font-medium text-right">Pass rate</th>
-                    <th className="px-5 py-3 font-medium text-right">Average</th>
-                    <th className="px-5 py-3 font-medium text-right">High</th>
-                    <th className="px-5 py-3 font-medium text-right">Low</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {result.subjects.map((row) => (
-                    <tr key={row.subject_id} className="hover:bg-slate-50">
-                      <td className="px-5 py-3 text-slate-900">
-                        {row.subject ?? `#${row.subject_id}`}
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {row.appeared}
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {row.absent}
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {row.passed}
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {formatNumber(row.pass_rate)}%
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {formatNumber(row.average_percentage)}%
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {row.highest === null ? "-" : formatNumber(row.highest)}
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {row.lowest === null ? "-" : formatNumber(row.lowest)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content
+                  aria-label="Class performance analysis"
+                  className="min-w-[900px]"
+                >
+                  <Table.Header>
+                    <Table.Column isRowHeader>Subject</Table.Column>
+                    <Table.Column className="text-right">Appeared</Table.Column>
+                    <Table.Column className="text-right">Absent</Table.Column>
+                    <Table.Column className="text-right">Passed</Table.Column>
+                    <Table.Column className="text-right">Pass rate</Table.Column>
+                    <Table.Column className="text-right">Average</Table.Column>
+                    <Table.Column className="text-right">High</Table.Column>
+                    <Table.Column className="text-right">Low</Table.Column>
+                  </Table.Header>
+                  <Table.Body>
+                    {result.subjects.map((row) => (
+                      <Table.Row key={row.subject_id} id={row.subject_id}>
+                        <Table.Cell className="text-foreground">
+                          {row.subject ?? `#${row.subject_id}`}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {row.appeared}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {row.absent}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {row.passed}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {formatNumber(row.pass_rate)}%
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {formatNumber(row.average_percentage)}%
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {row.highest === null ? "-" : formatNumber(row.highest)}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {row.lowest === null ? "-" : formatNumber(row.lowest)}
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
 
             {Object.keys(result.grade_distribution).length > 0 ? (
-              <div className="border-t border-slate-100 px-5 py-4">
-                <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              <div className="border-t border-border-secondary px-5 py-4">
+                <h3 className="text-xs font-medium uppercase tracking-wide text-muted">
                   Grade distribution
                 </h3>
                 <div className="mt-3 flex flex-wrap gap-3">
@@ -228,12 +228,12 @@ function ClassAnalysis() {
                     ([grade, count]) => (
                       <div
                         key={grade}
-                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                        className="rounded-lg border border-border px-3 py-2 text-sm"
                       >
-                        <span className="font-medium text-slate-900">
+                        <span className="font-medium text-foreground">
                           {grade}
                         </span>
-                        <span className="ml-2 text-slate-500">{count}</span>
+                        <span className="ml-2 text-muted">{count}</span>
                       </div>
                     )
                   )}
@@ -325,40 +325,43 @@ function SubjectAnalysis() {
           <EmptyState message="No papers found for this subject in the exam." />
         ) : (
           <Card>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="px-5 py-3 font-medium">Class</th>
-                    <th className="px-5 py-3 font-medium text-right">Appeared</th>
-                    <th className="px-5 py-3 font-medium text-right">Passed</th>
-                    <th className="px-5 py-3 font-medium text-right">Pass rate</th>
-                    <th className="px-5 py-3 font-medium text-right">Average</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {result.classes.map((row) => (
-                    <tr key={row.exam_paper_id} className="hover:bg-slate-50">
-                      <td className="px-5 py-3 text-slate-900">
-                        Class #{row.class_room_id}
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {row.appeared}
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {row.passed}
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {formatNumber(row.pass_rate)}%
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {formatNumber(row.average_percentage)}%
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content
+                  aria-label="Subject analysis"
+                  className="min-w-[720px]"
+                >
+                  <Table.Header>
+                    <Table.Column isRowHeader>Class</Table.Column>
+                    <Table.Column className="text-right">Appeared</Table.Column>
+                    <Table.Column className="text-right">Passed</Table.Column>
+                    <Table.Column className="text-right">Pass rate</Table.Column>
+                    <Table.Column className="text-right">Average</Table.Column>
+                  </Table.Header>
+                  <Table.Body>
+                    {result.classes.map((row) => (
+                      <Table.Row key={row.exam_paper_id} id={row.exam_paper_id}>
+                        <Table.Cell className="text-foreground">
+                          Class #{row.class_room_id}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {row.appeared}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {row.passed}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {formatNumber(row.pass_rate)}%
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {formatNumber(row.average_percentage)}%
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </Card>
         )
       ) : null}
@@ -428,40 +431,43 @@ function TeacherAnalysis() {
           <EmptyState message="No teaching assignments found for this exam." />
         ) : (
           <Card>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="px-5 py-3 font-medium">Teacher</th>
-                    <th className="px-5 py-3 font-medium text-right">Appeared</th>
-                    <th className="px-5 py-3 font-medium text-right">Passed</th>
-                    <th className="px-5 py-3 font-medium text-right">Pass rate</th>
-                    <th className="px-5 py-3 font-medium text-right">Average</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {rows.map((row) => (
-                    <tr key={row.teacher_id} className="hover:bg-slate-50">
-                      <td className="px-5 py-3 text-slate-900">
-                        {row.teacher ?? `#${row.teacher_id}`}
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {row.appeared}
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {row.passed}
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {formatNumber(row.pass_rate)}%
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {formatNumber(row.average_percentage)}%
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content
+                  aria-label="Teacher achievement analysis"
+                  className="min-w-[720px]"
+                >
+                  <Table.Header>
+                    <Table.Column isRowHeader>Teacher</Table.Column>
+                    <Table.Column className="text-right">Appeared</Table.Column>
+                    <Table.Column className="text-right">Passed</Table.Column>
+                    <Table.Column className="text-right">Pass rate</Table.Column>
+                    <Table.Column className="text-right">Average</Table.Column>
+                  </Table.Header>
+                  <Table.Body>
+                    {rows.map((row) => (
+                      <Table.Row key={row.teacher_id} id={row.teacher_id}>
+                        <Table.Cell className="text-foreground">
+                          {row.teacher ?? `#${row.teacher_id}`}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {row.appeared}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {row.passed}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {formatNumber(row.pass_rate)}%
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {formatNumber(row.average_percentage)}%
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </Card>
         )
       ) : null}
@@ -550,32 +556,35 @@ function YearOnYearAnalysis() {
           <EmptyState message="No exams of this type across academic years." />
         ) : (
           <Card>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="px-5 py-3 font-medium">Academic year</th>
-                    <th className="px-5 py-3 font-medium text-right">Appeared</th>
-                    <th className="px-5 py-3 font-medium text-right">Average</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {rows.map((row) => (
-                    <tr key={row.exam_id} className="hover:bg-slate-50">
-                      <td className="px-5 py-3 text-slate-900">
-                        {row.academic_year ?? `#${row.academic_year_id}`}
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {row.appeared}
-                      </td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {formatNumber(row.average_percentage)}%
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content
+                  aria-label="Year on year analysis"
+                  className="min-w-[520px]"
+                >
+                  <Table.Header>
+                    <Table.Column isRowHeader>Academic year</Table.Column>
+                    <Table.Column className="text-right">Appeared</Table.Column>
+                    <Table.Column className="text-right">Average</Table.Column>
+                  </Table.Header>
+                  <Table.Body>
+                    {rows.map((row) => (
+                      <Table.Row key={row.exam_id} id={row.exam_id}>
+                        <Table.Cell className="text-foreground">
+                          {row.academic_year ?? `#${row.academic_year_id}`}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {row.appeared}
+                        </Table.Cell>
+                        <Table.Cell className="text-right text-muted">
+                          {formatNumber(row.average_percentage)}%
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </Card>
         )
       ) : null}

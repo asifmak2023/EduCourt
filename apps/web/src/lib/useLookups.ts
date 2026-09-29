@@ -21,6 +21,7 @@ import type {
   GradeScale,
   Hostel,
   HostelRoom,
+  Institution,
   InventoryCategory,
   Lab,
   Paginated,
@@ -404,6 +405,12 @@ export function useRoleOptions(enabled = true): ListLookupState<RoleOption> {
 
 export function useCampuses(enabled = true): ListLookupState<Campus> {
   return useCollection<Campus>(enabled ? "/v1/campuses?per_page=200" : null);
+}
+
+export function useInstitutions(enabled = true): ListLookupState<Institution> {
+  return useCollection<Institution>(
+    enabled ? "/v1/institutions?per_page=200" : null
+  );
 }
 
 export interface PermissionCatalogState {

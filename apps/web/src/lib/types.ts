@@ -17,13 +17,31 @@ export interface Paginated<T> {
 export interface Institution {
   id: number;
   name: string;
-  code?: string | null;
+  code: string | null;
+  legal_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  website?: string | null;
+  address?: string | null;
+  is_active?: boolean;
+  campuses_count?: number;
+  created_at?: string;
 }
 
 export interface Campus {
   id: number;
+  institution_id?: number;
   name: string;
-  code?: string | null;
+  code: string | null;
+  type?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  website?: string | null;
+  address?: string | null;
+  is_active?: boolean;
+  institution?: Institution;
+  created_at?: string;
 }
 
 export interface Student {

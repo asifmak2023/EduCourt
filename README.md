@@ -305,6 +305,10 @@ built on top of it, one surface at a time:
   staff, student yearly, financial and payroll reports, each with its own
   filters such as academic year, class, exam, fiscal year and date range, and
   stat cards plus breakdown tables over the campus data).
+- Delivered: institutions and campuses (an institutions/campuses hub with
+  institution CRUD, campus CRUD scoped to an institution, a campus-type and
+  institution filter, per-institution campus lists and an archive guard that
+  blocks removing an institution that still has campuses).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

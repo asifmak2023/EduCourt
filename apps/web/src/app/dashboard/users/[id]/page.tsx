@@ -83,7 +83,7 @@ function UserDetailView() {
       </SectionCard>
 
       <Card className="p-6">
-        <h2 className="text-sm font-semibold text-slate-900">Roles</h2>
+        <h2 className="text-sm font-semibold text-foreground">Roles</h2>
         {data.roles && data.roles.length > 0 ? (
           <div className="mt-3 flex flex-wrap gap-2">
             {data.roles.map((role) => (
@@ -91,20 +91,20 @@ function UserDetailView() {
             ))}
           </div>
         ) : (
-          <p className="mt-2 text-sm text-slate-500">No roles assigned.</p>
+          <p className="mt-2 text-sm text-muted">No roles assigned.</p>
         )}
       </Card>
 
       {data.permissions && data.permissions.length > 0 ? (
         <Card className="p-6">
-          <h2 className="text-sm font-semibold text-slate-900">
+          <h2 className="text-sm font-semibold text-foreground">
             Effective permissions
           </h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {data.permissions.map((permission) => (
               <span
                 key={permission}
-                className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"
+                className="rounded-md bg-surface-secondary px-2 py-1 text-xs text-muted"
               >
                 {permission}
               </span>

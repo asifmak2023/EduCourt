@@ -189,13 +189,13 @@ export function UserForm({
             </Field>
           </div>
 
-          <div className="border-t border-slate-100 px-6 py-5">
-            <p className="text-sm font-medium text-slate-900">Roles</p>
-            <p className="mt-0.5 text-xs text-slate-500">
+          <div className="border-t border-border px-6 py-5">
+            <p className="text-sm font-medium text-foreground">Roles</p>
+            <p className="mt-0.5 text-xs text-muted">
               At least one role is required.
             </p>
             {errorFor("roles") ? (
-              <p className="mt-1 text-xs text-rose-600">{errorFor("roles")}</p>
+              <p className="mt-1 text-xs text-danger">{errorFor("roles")}</p>
             ) : null}
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
               {roleOptions.map((role) => (
@@ -209,7 +209,7 @@ export function UserForm({
             </div>
           </div>
 
-          <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4">
+          <div className="flex items-center justify-between border-t border-border px-6 py-4">
             <Checkbox
               label="Active"
               checked={values.is_active}

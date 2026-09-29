@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
@@ -78,12 +79,12 @@ function RolesView() {
             {roles.map((role) => (
               <div
                 key={role.value}
-                className="rounded-lg border border-slate-200 px-3 py-2"
+                className="rounded-lg border border-border px-3 py-2"
               >
-                <p className="text-sm font-medium text-slate-900">
+                <p className="text-sm font-medium text-foreground">
                   {role.label}
                 </p>
-                <p className="text-xs text-slate-500">{role.value}</p>
+                <p className="text-xs text-muted">{role.value}</p>
               </div>
             ))}
           </div>
@@ -91,7 +92,7 @@ function RolesView() {
       </SectionCard>
 
       <Card className="p-6">
-        <h2 className="text-sm font-semibold text-slate-900">
+        <h2 className="text-sm font-semibold text-foreground">
           Permission reference
         </h2>
         {permissionCatalog.loading ? (
@@ -106,14 +107,14 @@ function RolesView() {
           <div className="mt-4 space-y-4">
             {grouped.map((group) => (
               <div key={group.module}>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                   {group.module}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {group.permissions.map((permission) => (
                     <span
                       key={permission}
-                      className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"
+                      className="rounded-md bg-surface-secondary px-2 py-1 text-xs text-muted"
                     >
                       {permission}
                     </span>
@@ -123,14 +124,14 @@ function RolesView() {
             ))}
             {other.length > 0 ? (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                   Other
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {other.map((permission) => (
                     <span
                       key={permission}
-                      className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"
+                      className="rounded-md bg-surface-secondary px-2 py-1 text-xs text-muted"
                     >
                       {permission}
                     </span>
@@ -147,8 +148,8 @@ function RolesView() {
       ) : null}
 
       <Card>
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">
+        <div className="border-b border-border px-5 py-4">
+          <h2 className="text-sm font-semibold text-foreground">
             Scope assignments
           </h2>
         </div>
@@ -161,54 +162,59 @@ function RolesView() {
             <EmptyState message="No scope assignments yet." />
           </div>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-5 py-3 font-medium">Role</th>
-                <th className="px-5 py-3 font-medium">Scope</th>
-                <th className="px-5 py-3 font-medium">Campus</th>
-                <th className="px-5 py-3 font-medium">Valid from</th>
-                <th className="px-5 py-3 font-medium">Valid to</th>
-                <th className="px-5 py-3 font-medium">Status</th>
-                {can("role.edit") ? <th className="px-5 py-3" /> : null}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {assignments.items.map((assignment) => (
-                <tr key={assignment.id}>
-                  <td className="px-5 py-3 text-slate-900">
-                    {assignment.role_label ?? assignment.role ?? "-"}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {assignment.scope_type ?? "-"}
-                    {assignment.scope_id ? ` #${assignment.scope_id}` : ""}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {assignment.campus?.name ?? "-"}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {assignment.starts_at ?? "-"}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {assignment.ends_at ?? "-"}
-                  </td>
-                  <td className="px-5 py-3">
-                    <Badge
-                      value={assignment.is_active ? "active" : "inactive"}
-                    />
-                  </td>
-                  {can("role.edit") ? (
-                    <td className="px-5 py-3 text-right">
-                      <RevokeButton
-                        assignmentId={assignment.id}
-                        onRevoked={bump}
-                      />
-                    </td>
-                  ) : null}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content
+                aria-label="Scope assignments"
+                className="min-w-[880px]"
+              >
+                <Table.Header>
+                  <Table.Column isRowHeader>Role</Table.Column>
+                  <Table.Column>Scope</Table.Column>
+                  <Table.Column>Campus</Table.Column>
+                  <Table.Column>Valid from</Table.Column>
+                  <Table.Column>Valid to</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                  {can("role.edit") ? <Table.Column>{""}</Table.Column> : null}
+                </Table.Header>
+                <Table.Body>
+                  {assignments.items.map((assignment) => (
+                    <Table.Row key={assignment.id} id={assignment.id}>
+                      <Table.Cell className="text-foreground">
+                        {assignment.role_label ?? assignment.role ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {assignment.scope_type ?? "-"}
+                        {assignment.scope_id ? ` #${assignment.scope_id}` : ""}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {assignment.campus?.name ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {assignment.starts_at ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {assignment.ends_at ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge
+                          value={assignment.is_active ? "active" : "inactive"}
+                        />
+                      </Table.Cell>
+                      {can("role.edit") ? (
+                        <Table.Cell className="text-right">
+                          <RevokeButton
+                            assignmentId={assignment.id}
+                            onRevoked={bump}
+                          />
+                        </Table.Cell>
+                      ) : null}
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {assignments.meta ? (
@@ -277,10 +283,10 @@ function ScopeAssignmentForm({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">
+      <h2 className="text-sm font-semibold text-foreground">
         Grant scope assignment
       </h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <p className="mt-0.5 text-xs text-muted">
         Scope an existing account to a role within a campus. Granting the campus
         admin role is reserved for the Super User.
       </p>

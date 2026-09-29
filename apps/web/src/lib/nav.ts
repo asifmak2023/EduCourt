@@ -114,7 +114,6 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Settings", href: "/dashboard/settings", icon: "cog", permission: "setting.view", ready: true },
       { label: "Audit log", href: "/dashboard/audit", icon: "history", permission: "audit.view", ready: true },
       { label: "Institutions", href: "/dashboard/institutions", icon: "building", permission: "institution.view", ready: true },
-      { label: "Subscription", href: "/dashboard/subscription", icon: "creditCard", permission: "subscription.view", ready: false },
     ],
   },
 ];

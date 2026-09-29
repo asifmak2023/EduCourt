@@ -86,7 +86,7 @@ function IssueDetailView() {
           <DataItem label="Fine" value={formatCurrency(data.fine_amount)} />
         </DataList>
         {data.notes ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             Notes: {data.notes}
           </p>
         ) : null}
@@ -144,8 +144,8 @@ function ReturnAction({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Return</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">Return</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Fines accrue per day past the due date unless the copy is lost.
       </p>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">

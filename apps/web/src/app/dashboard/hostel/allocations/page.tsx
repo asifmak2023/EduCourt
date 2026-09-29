@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
 import { useHostels } from "@/lib/useLookups";
@@ -90,56 +91,42 @@ export default function HostelAllocationsPage() {
           <EmptyState message="No allocations match your filters." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Student</th>
-                  <th className="px-5 py-3 font-medium">Hostel</th>
-                  <th className="px-5 py-3 font-medium">Room</th>
-                  <th className="px-5 py-3 font-medium">Bed</th>
-                  <th className="px-5 py-3 font-medium">Allocated</th>
-                  <th className="px-5 py-3 font-medium">Vacated</th>
-                  <th className="px-5 py-3 font-medium text-right">Fee</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content aria-label="Hostel allocations">
+                <Table.Header>
+                  <Table.Column isRowHeader>Student</Table.Column>
+                  <Table.Column>Hostel</Table.Column>
+                  <Table.Column>Room</Table.Column>
+                  <Table.Column>Bed</Table.Column>
+                  <Table.Column>Allocated</Table.Column>
+                  <Table.Column>Vacated</Table.Column>
+                  <Table.Column className="text-right">Fee</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
                 {items.map((allocation) => (
-                  <tr key={allocation.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3">
-                      <Link
+                  <Table.Row key={allocation.id} className="hover:bg-surface-secondary" id={allocation.id}>
+                    <Table.Cell><Link
                         href={`/dashboard/hostel/allocations/${allocation.id}`}
-                        className="font-medium text-slate-900 hover:underline"
+                        className="font-medium text-foreground hover:underline"
                       >
                         {allocation.student?.full_name ??
                           `#${allocation.student_id}`}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {allocation.hostel?.name ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {allocation.room?.room_no ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {allocation.bed_no ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {allocation.allocated_on ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {allocation.vacated_on ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-900">
-                      {formatCurrency(allocation.monthly_fee)}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={allocation.status ?? "unknown"} />
-                    </td>
-                  </tr>
+                      </Link></Table.Cell>
+                    <Table.Cell className="text-muted">{allocation.hostel?.name ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{allocation.room?.room_no ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{allocation.bed_no ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{allocation.allocated_on ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{allocation.vacated_on ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-right text-foreground">{formatCurrency(allocation.monthly_fee)}</Table.Cell>
+                    <Table.Cell><Badge value={allocation.status ?? "unknown"} /></Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+                </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </div>
         )}
 

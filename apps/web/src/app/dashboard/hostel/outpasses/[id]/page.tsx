@@ -112,7 +112,7 @@ function OutpassActions({
   if (outpass.status === "pending") {
     return (
       <Card className="p-6">
-        <h2 className="text-sm font-semibold text-slate-900">Decision</h2>
+        <h2 className="text-sm font-semibold text-foreground">Decision</h2>
         <div className="mt-4 flex justify-end gap-2">
           <Button
             type="button"
@@ -142,8 +142,8 @@ function OutpassActions({
   if (outpass.status === "approved") {
     return (
       <Card className="p-6">
-        <h2 className="text-sm font-semibold text-slate-900">Return</h2>
-        <p className="mt-0.5 text-xs text-slate-500">
+        <h2 className="text-sm font-semibold text-foreground">Return</h2>
+        <p className="mt-0.5 text-xs text-muted">
           Mark the boarder as returned to close the outpass.
         </p>
         <div className="mt-4 flex justify-end">

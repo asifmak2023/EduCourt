@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Button } from "@/components/Form";
@@ -62,11 +63,11 @@ function ReportView() {
       </div>
 
       <Card>
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">
+        <div className="border-b border-border-secondary px-5 py-4">
+          <h2 className="text-sm font-semibold text-foreground">
             Items at or below reorder level
           </h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-0.5 text-xs text-muted">
             Replenish these items to avoid stock-outs.
           </p>
         </div>
@@ -77,37 +78,33 @@ function ReportView() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Item</th>
-                  <th className="px-5 py-3 font-medium">Code</th>
-                  <th className="px-5 py-3 font-medium text-right">On hand</th>
-                  <th className="px-5 py-3 font-medium text-right">Reorder at</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content aria-label="Items at or below reorder level">
+                <Table.Header>
+                  <Table.Column isRowHeader>Item</Table.Column>
+                  <Table.Column>Code</Table.Column>
+                  <Table.Column className="text-right">On hand</Table.Column>
+                  <Table.Column className="text-right">Reorder at</Table.Column>
+                </Table.Header>
+                <Table.Body>
                 {data.low_stock_items.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3">
-                      <Link
+                  <Table.Row key={item.id} className="hover:bg-surface-secondary" id={item.id}>
+                    <Table.Cell><Link
                         href={`/dashboard/inventory/items/${item.id}`}
-                        className="text-slate-900 hover:underline"
+                        className="text-foreground hover:underline"
                       >
                         {item.name}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">{item.code}</td>
-                    <td className="px-5 py-3 text-right text-slate-900">
-                      {formatNumber(item.quantity)}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {formatNumber(item.reorder_level)}
-                    </td>
-                  </tr>
+                      </Link></Table.Cell>
+                    <Table.Cell className="text-muted">{item.code}</Table.Cell>
+                    <Table.Cell className="text-right text-foreground">{formatNumber(item.quantity)}</Table.Cell>
+                    <Table.Cell className="text-right text-muted">{formatNumber(item.reorder_level)}</Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+                </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </div>
         )}
       </Card>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
 import { useCanteenItems } from "@/lib/useLookups";
@@ -118,55 +119,41 @@ export default function CanteenStockEntriesPage() {
           <EmptyState message="No stock entries match your filters." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Date</th>
-                  <th className="px-5 py-3 font-medium">Item</th>
-                  <th className="px-5 py-3 font-medium">Type</th>
-                  <th className="px-5 py-3 font-medium text-right">Quantity</th>
-                  <th className="px-5 py-3 font-medium text-right">Unit cost</th>
-                  <th className="px-5 py-3 font-medium text-right">Total</th>
-                  <th className="px-5 py-3 font-medium text-right">Balance</th>
-                  <th className="px-5 py-3 font-medium">Reference</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content aria-label="Stock entries">
+                <Table.Header>
+                  <Table.Column isRowHeader>Date</Table.Column>
+                  <Table.Column>Item</Table.Column>
+                  <Table.Column>Type</Table.Column>
+                  <Table.Column className="text-right">Quantity</Table.Column>
+                  <Table.Column className="text-right">Unit cost</Table.Column>
+                  <Table.Column className="text-right">Total</Table.Column>
+                  <Table.Column className="text-right">Balance</Table.Column>
+                  <Table.Column>Reference</Table.Column>
+                </Table.Header>
+                <Table.Body>
                 {items.map((entry) => (
-                  <tr key={entry.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 text-slate-600">
-                      {entry.entry_date ?? "-"}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Link
+                  <Table.Row key={entry.id} className="hover:bg-surface-secondary" id={entry.id}>
+                    <Table.Cell className="text-muted">{entry.entry_date ?? "-"}</Table.Cell>
+                    <Table.Cell><Link
                         href={`/dashboard/canteen/items/${entry.canteen_item_id}`}
-                        className="text-slate-900 hover:underline"
+                        className="text-foreground hover:underline"
                       >
                         {entry.item?.name ?? `#${entry.canteen_item_id}`}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={entry.type ?? "unknown"} />
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-900">
-                      {formatNumber(entry.quantity)}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {formatCurrency(entry.unit_cost)}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {formatCurrency(entry.total_cost)}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {formatNumber(entry.balance_after)}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {entry.reference ?? entry.supplier?.name ?? "-"}
-                    </td>
-                  </tr>
+                      </Link></Table.Cell>
+                    <Table.Cell><Badge value={entry.type ?? "unknown"} /></Table.Cell>
+                    <Table.Cell className="text-right text-foreground">{formatNumber(entry.quantity)}</Table.Cell>
+                    <Table.Cell className="text-right text-muted">{formatCurrency(entry.unit_cost)}</Table.Cell>
+                    <Table.Cell className="text-right text-muted">{formatCurrency(entry.total_cost)}</Table.Cell>
+                    <Table.Cell className="text-right text-muted">{formatNumber(entry.balance_after)}</Table.Cell>
+                    <Table.Cell className="text-muted">{entry.reference ?? entry.supplier?.name ?? "-"}</Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+                </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </div>
         )}
 

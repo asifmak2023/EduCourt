@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
@@ -177,7 +178,7 @@ function RoomForm({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Add room</h2>
+      <h2 className="text-sm font-semibold text-foreground">Add room</h2>
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Field label="Room no." htmlFor="room_no">
           <TextInput
@@ -279,8 +280,8 @@ function RoomsPanel({
 
   return (
     <Card>
-      <div className="border-b border-slate-100 px-5 py-4">
-        <h2 className="text-sm font-semibold text-slate-900">
+      <div className="border-b border-border-secondary px-5 py-4">
+        <h2 className="text-sm font-semibold text-foreground">
           Rooms{meta ? ` (${formatNumber(meta.total)})` : ""}
         </h2>
       </div>
@@ -300,32 +301,27 @@ function RoomsPanel({
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-5 py-3 font-medium">Room</th>
-                <th className="px-5 py-3 font-medium">Floor</th>
-                <th className="px-5 py-3 font-medium">Type</th>
-                <th className="px-5 py-3 font-medium text-right">Occupancy</th>
-                <th className="px-5 py-3 font-medium text-right">Fee</th>
-                <th className="px-5 py-3 font-medium">Status</th>
-                <th className="px-5 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Rooms">
+              <Table.Header>
+                <Table.Column isRowHeader>Room</Table.Column>
+                <Table.Column>Floor</Table.Column>
+                <Table.Column>Type</Table.Column>
+                <Table.Column className="text-right">Occupancy</Table.Column>
+                <Table.Column className="text-right">Fee</Table.Column>
+                <Table.Column>Status</Table.Column>
+                <Table.Column aria-label="Actions" />
+              </Table.Header>
+              <Table.Body>
               {items.map((room) => (
-                <tr key={room.id}>
-                  <td className="px-5 py-3 text-slate-900">{room.room_no}</td>
-                  <td className="px-5 py-3 text-slate-600">{room.floor ?? "-"}</td>
-                  <td className="px-5 py-3 text-slate-600">{room.type ?? "-"}</td>
-                  <td className="px-5 py-3 text-right text-slate-900">
-                    {formatNumber(room.occupied)} / {formatNumber(room.capacity)}
-                  </td>
-                  <td className="px-5 py-3 text-right text-slate-600">
-                    {formatCurrency(room.monthly_fee)}
-                  </td>
-                  <td className="px-5 py-3">
-                    <Badge
+                <Table.Row key={room.id} id={room.id}>
+                  <Table.Cell className="text-foreground">{room.room_no}</Table.Cell>
+                  <Table.Cell className="text-muted">{room.floor ?? "-"}</Table.Cell>
+                  <Table.Cell className="text-muted">{room.type ?? "-"}</Table.Cell>
+                  <Table.Cell className="text-right text-foreground">{formatNumber(room.occupied)} / {formatNumber(room.capacity)}</Table.Cell>
+                  <Table.Cell className="text-right text-muted">{formatCurrency(room.monthly_fee)}</Table.Cell>
+                  <Table.Cell><Badge
                       value={
                         room.available > 0
                           ? room.occupied > 0
@@ -333,10 +329,8 @@ function RoomsPanel({
                             : "vacant"
                           : "full"
                       }
-                    />
-                  </td>
-                  <td className="px-5 py-3">
-                    <div className="flex justify-end gap-2">
+                    /></Table.Cell>
+                  <Table.Cell><div className="flex justify-end gap-2">
                       {canEdit ? (
                         <Link
                           href={`/dashboard/hostel/rooms/${room.id}/edit`}
@@ -355,12 +349,13 @@ function RoomsPanel({
                           Delete
                         </Button>
                       ) : null}
-                    </div>
-                  </td>
-                </tr>
+                    </div></Table.Cell>
+                </Table.Row>
               ))}
-            </tbody>
-          </table>
+              </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         </div>
       )}
     </Card>

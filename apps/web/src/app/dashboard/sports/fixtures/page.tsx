@@ -79,11 +79,11 @@ export default function SportFixturesPage() {
           },
         ]}
       />
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-muted">
         Open a fixture to record its result.{" "}
         <Link
           href="/dashboard/sports/reports"
-          className="text-slate-700 underline"
+          className="text-foreground underline"
         >
           View the season report
         </Link>

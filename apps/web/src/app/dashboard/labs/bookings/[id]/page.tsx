@@ -81,7 +81,7 @@ function BookingDetailView() {
 
       {can("lab.edit") && active ? (
         <Card className="p-6">
-          <h2 className="text-sm font-semibold text-slate-900">
+          <h2 className="text-sm font-semibold text-foreground">
             Update status
           </h2>
           <div className="mt-4 flex flex-wrap gap-3">
@@ -173,8 +173,8 @@ function DeleteAction({ id }: { id: number }) {
     <Card className="p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Remove</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Remove</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Archive this booking record.
           </p>
         </div>

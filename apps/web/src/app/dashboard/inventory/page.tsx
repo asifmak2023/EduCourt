@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -67,11 +68,11 @@ function InventoryHome() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {SECTIONS.map((section) => (
           <Link key={section.href} href={section.href}>
-            <Card className="h-full p-5 transition hover:border-slate-400">
-              <p className="text-sm font-semibold text-slate-900">
+            <Card className="h-full p-5 transition hover:border-accent">
+              <p className="text-sm font-semibold text-foreground">
                 {section.title}
               </p>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-muted">
                 {section.description}
               </p>
             </Card>
@@ -81,42 +82,38 @@ function InventoryHome() {
 
       {data && data.low_stock_items.length > 0 ? (
         <Card>
-          <div className="border-b border-slate-100 px-5 py-4">
-            <h2 className="text-sm font-semibold text-slate-900">
+          <div className="border-b border-border-secondary px-5 py-4">
+            <h2 className="text-sm font-semibold text-foreground">
               Items to reorder
             </h2>
           </div>
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-5 py-3 font-medium">Item</th>
-                <th className="px-5 py-3 font-medium">Code</th>
-                <th className="px-5 py-3 font-medium text-right">On hand</th>
-                <th className="px-5 py-3 font-medium text-right">Reorder at</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Items to reorder">
+              <Table.Header>
+                <Table.Column isRowHeader>Item</Table.Column>
+                <Table.Column>Code</Table.Column>
+                <Table.Column className="text-right">On hand</Table.Column>
+                <Table.Column className="text-right">Reorder at</Table.Column>
+              </Table.Header>
+              <Table.Body>
               {data.low_stock_items.map((item) => (
-                <tr key={item.id}>
-                  <td className="px-5 py-3">
-                    <Link
+                <Table.Row key={item.id} id={item.id}>
+                  <Table.Cell><Link
                       href={`/dashboard/inventory/items/${item.id}`}
-                      className="font-medium text-slate-900 hover:underline"
+                      className="font-medium text-foreground hover:underline"
                     >
                       {item.name}
-                    </Link>
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">{item.code}</td>
-                  <td className="px-5 py-3 text-right text-slate-900">
-                    {formatNumber(item.quantity)}
-                  </td>
-                  <td className="px-5 py-3 text-right text-slate-600">
-                    {formatNumber(item.reorder_level)}
-                  </td>
-                </tr>
+                    </Link></Table.Cell>
+                  <Table.Cell className="text-muted">{item.code}</Table.Cell>
+                  <Table.Cell className="text-right text-foreground">{formatNumber(item.quantity)}</Table.Cell>
+                  <Table.Cell className="text-right text-muted">{formatNumber(item.reorder_level)}</Table.Cell>
+                </Table.Row>
               ))}
-            </tbody>
-          </table>
+              </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         </Card>
       ) : null}
     </div>

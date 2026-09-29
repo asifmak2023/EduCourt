@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
@@ -116,8 +117,8 @@ function EventDetailView() {
       ) : null}
 
       <Card>
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">Participants</h2>
+        <div className="border-b border-border-secondary px-5 py-4">
+          <h2 className="text-sm font-semibold text-foreground">Participants</h2>
         </div>
         {participants.loading ? (
           <div className="p-6">
@@ -128,31 +129,24 @@ function EventDetailView() {
             <EmptyState message="No participants registered yet." />
           </div>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-5 py-3 font-medium">Student</th>
-                <th className="px-5 py-3 font-medium">Role</th>
-                <th className="px-5 py-3 font-medium">Position</th>
-                <th className="px-5 py-3 font-medium">Status</th>
-                {can("student_affairs.edit") ? <th className="px-5 py-3" /> : null}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Participants">
+              <Table.Header>
+                <Table.Column isRowHeader>Student</Table.Column>
+                <Table.Column>Role</Table.Column>
+                <Table.Column>Position</Table.Column>
+                <Table.Column>Status</Table.Column>
+                {can("student_affairs.edit") ? <Table.Column aria-label="Actions" /> : null}
+              </Table.Header>
+              <Table.Body>
               {participants.items.map((participant) => (
-                <tr key={participant.id}>
-                  <td className="px-5 py-3 text-slate-900">
-                    {participant.student?.full_name ??
-                      `Student #${participant.student_id}`}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {participant.role ?? "-"}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {participant.position ?? "-"}
-                  </td>
-                  <td className="px-5 py-3">
-                    {can("student_affairs.edit") ? (
+                <Table.Row key={participant.id} id={participant.id}>
+                  <Table.Cell className="text-foreground">{participant.student?.full_name ??
+                      `Student #${participant.student_id}`}</Table.Cell>
+                  <Table.Cell className="text-muted">{participant.role ?? "-"}</Table.Cell>
+                  <Table.Cell className="text-muted">{participant.position ?? "-"}</Table.Cell>
+                  <Table.Cell>{can("student_affairs.edit") ? (
                       <ParticipantStatusSelect
                         eventId={data.id}
                         participant={participant}
@@ -160,21 +154,20 @@ function EventDetailView() {
                       />
                     ) : (
                       <Badge value={participant.status ?? "unknown"} />
-                    )}
-                  </td>
+                    )}</Table.Cell>
                   {can("student_affairs.edit") ? (
-                    <td className="px-5 py-3 text-right">
-                      <RemoveParticipantButton
+                    <Table.Cell className="text-right"><RemoveParticipantButton
                         eventId={data.id}
                         participantId={participant.id}
                         onRemoved={bump}
-                      />
-                    </td>
+                      /></Table.Cell>
                   ) : null}
-                </tr>
+                </Table.Row>
               ))}
-            </tbody>
-          </table>
+              </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {participants.meta ? (
@@ -276,8 +269,8 @@ function AddParticipantForm({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Add participant</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">Add participant</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Adding an existing participant updates their entry.
       </p>
       {error ? (

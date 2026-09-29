@@ -1,5 +1,6 @@
 "use client";
 
+import { Table } from "@heroui/react";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Button } from "@/components/Form";
@@ -58,8 +59,8 @@ function ReportView() {
       </div>
 
       <Card>
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">
+        <div className="border-b border-border-secondary px-5 py-4">
+          <h2 className="text-sm font-semibold text-foreground">
             Routes and ridership
           </h2>
         </div>
@@ -69,30 +70,28 @@ function ReportView() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Route</th>
-                  <th className="px-5 py-3 font-medium">Code</th>
-                  <th className="px-5 py-3 font-medium text-right">Stops</th>
-                  <th className="px-5 py-3 font-medium text-right">Riders</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content aria-label="Routes and ridership">
+                <Table.Header>
+                  <Table.Column isRowHeader>Route</Table.Column>
+                  <Table.Column>Code</Table.Column>
+                  <Table.Column className="text-right">Stops</Table.Column>
+                  <Table.Column className="text-right">Riders</Table.Column>
+                </Table.Header>
+                <Table.Body>
                 {data.routes_detail.map((route) => (
-                  <tr key={route.id}>
-                    <td className="px-5 py-3 text-slate-900">{route.name}</td>
-                    <td className="px-5 py-3 text-slate-600">{route.code}</td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {formatNumber(route.stops)}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-900">
-                      {formatNumber(route.allocations)}
-                    </td>
-                  </tr>
+                  <Table.Row key={route.id} id={route.id}>
+                    <Table.Cell className="text-foreground">{route.name}</Table.Cell>
+                    <Table.Cell className="text-muted">{route.code}</Table.Cell>
+                    <Table.Cell className="text-right text-muted">{formatNumber(route.stops)}</Table.Cell>
+                    <Table.Cell className="text-right text-foreground">{formatNumber(route.allocations)}</Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+                </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </div>
         )}
       </Card>

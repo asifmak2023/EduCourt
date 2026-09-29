@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
@@ -108,10 +109,10 @@ function LabDetailView() {
       <Card className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">
+            <h2 className="text-sm font-semibold text-foreground">
               Bookings
             </h2>
-            <p className="mt-0.5 text-xs text-slate-500">
+            <p className="mt-0.5 text-xs text-muted">
               Sessions scheduled in this lab.
             </p>
           </div>
@@ -173,11 +174,11 @@ function EquipmentSection({
 }) {
   return (
     <Card>
-      <div className="border-b border-slate-100 px-5 py-4">
-        <h2 className="text-sm font-semibold text-slate-900">
+      <div className="border-b border-border-secondary px-5 py-4">
+        <h2 className="text-sm font-semibold text-foreground">
           Equipment ({equipment.length})
         </h2>
-        <p className="mt-0.5 text-xs text-slate-500">
+        <p className="mt-0.5 text-xs text-muted">
           Registers held in this lab.
         </p>
       </div>
@@ -188,47 +189,39 @@ function EquipmentSection({
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-5 py-3 font-medium">Name</th>
-                <th className="px-5 py-3 font-medium">Code</th>
-                <th className="px-5 py-3 font-medium">Quantity</th>
-                <th className="px-5 py-3 font-medium">Condition</th>
-                <th className="px-5 py-3 font-medium">Purchased</th>
-                <th className="px-5 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Equipment">
+              <Table.Header>
+                <Table.Column isRowHeader>Name</Table.Column>
+                <Table.Column>Code</Table.Column>
+                <Table.Column>Quantity</Table.Column>
+                <Table.Column>Condition</Table.Column>
+                <Table.Column>Purchased</Table.Column>
+                <Table.Column aria-label="Actions" />
+              </Table.Header>
+              <Table.Body>
               {equipment.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50">
-                  <td className="px-5 py-3 text-slate-900">{item.name}</td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {item.code ?? "-"}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {formatNumber(item.quantity)}
-                  </td>
-                  <td className="px-5 py-3">
-                    <Badge value={item.condition ?? "unknown"} />
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {item.purchased_on ?? "-"}
-                  </td>
-                  <td className="px-5 py-3 text-right">
-                    {canEdit ? (
+                <Table.Row key={item.id} className="hover:bg-surface-secondary" id={item.id}>
+                  <Table.Cell className="text-foreground">{item.name}</Table.Cell>
+                  <Table.Cell className="text-muted">{item.code ?? "-"}</Table.Cell>
+                  <Table.Cell className="text-muted">{formatNumber(item.quantity)}</Table.Cell>
+                  <Table.Cell><Badge value={item.condition ?? "unknown"} /></Table.Cell>
+                  <Table.Cell className="text-muted">{item.purchased_on ?? "-"}</Table.Cell>
+                  <Table.Cell className="text-right">{canEdit ? (
                       <Link
                         href={`/dashboard/labs/${labId}/equipment/${item.id}/edit`}
-                        className="text-sm font-medium text-slate-900 hover:underline"
+                        className="text-sm font-medium text-foreground hover:underline"
                       >
                         Edit
                       </Link>
-                    ) : null}
-                  </td>
-                </tr>
+                    ) : null}</Table.Cell>
+                </Table.Row>
               ))}
-            </tbody>
-          </table>
+              </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         </div>
       )}
 
@@ -286,8 +279,8 @@ function AddEquipmentForm({
   };
 
   return (
-    <div className="border-t border-slate-100 px-5 py-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+    <div className="border-t border-border-secondary px-5 py-4">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
         Add equipment
       </h3>
       <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

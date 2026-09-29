@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
@@ -98,7 +99,7 @@ function ItemDetailView() {
           <DataItem label="Category" value={data.category ?? "-"} />
         </DataList>
         {data.description ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             {data.description}
           </p>
         ) : null}
@@ -158,8 +159,8 @@ function AdjustStockForm({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Adjust stock</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">Adjust stock</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Enter a positive quantity to add stock or a negative quantity to
         correct it down.
       </p>
@@ -218,8 +219,8 @@ function StockEntryPanel({ itemId }: { itemId: number }) {
 
   return (
     <Card>
-      <div className="border-b border-slate-100 px-5 py-4">
-        <h2 className="text-sm font-semibold text-slate-900">Stock history</h2>
+      <div className="border-b border-border-secondary px-5 py-4">
+        <h2 className="text-sm font-semibold text-foreground">Stock history</h2>
       </div>
       {error ? (
         <div className="p-5">
@@ -232,38 +233,30 @@ function StockEntryPanel({ itemId }: { itemId: number }) {
           <EmptyState message="No stock movements recorded." />
         </div>
       ) : (
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-5 py-3 font-medium">Date</th>
-              <th className="px-5 py-3 font-medium">Type</th>
-              <th className="px-5 py-3 font-medium text-right">Quantity</th>
-              <th className="px-5 py-3 font-medium text-right">Balance</th>
-              <th className="px-5 py-3 font-medium">Reference</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
+        <Table variant="secondary">
+          <Table.ScrollContainer>
+            <Table.Content aria-label="Stock history">
+            <Table.Header>
+              <Table.Column isRowHeader>Date</Table.Column>
+              <Table.Column>Type</Table.Column>
+              <Table.Column className="text-right">Quantity</Table.Column>
+              <Table.Column className="text-right">Balance</Table.Column>
+              <Table.Column>Reference</Table.Column>
+            </Table.Header>
+            <Table.Body>
             {items.map((entry) => (
-              <tr key={entry.id}>
-                <td className="px-5 py-3 text-slate-900">
-                  {entry.entry_date ?? "-"}
-                </td>
-                <td className="px-5 py-3">
-                  <Badge value={entry.type ?? "unknown"} />
-                </td>
-                <td className="px-5 py-3 text-right text-slate-900">
-                  {formatNumber(entry.quantity)}
-                </td>
-                <td className="px-5 py-3 text-right text-slate-600">
-                  {formatNumber(entry.balance_after)}
-                </td>
-                <td className="px-5 py-3 text-slate-600">
-                  {entry.reference ?? entry.notes ?? "-"}
-                </td>
-              </tr>
+              <Table.Row key={entry.id} id={entry.id}>
+                <Table.Cell className="text-foreground">{entry.entry_date ?? "-"}</Table.Cell>
+                <Table.Cell><Badge value={entry.type ?? "unknown"} /></Table.Cell>
+                <Table.Cell className="text-right text-foreground">{formatNumber(entry.quantity)}</Table.Cell>
+                <Table.Cell className="text-right text-muted">{formatNumber(entry.balance_after)}</Table.Cell>
+                <Table.Cell className="text-muted">{entry.reference ?? entry.notes ?? "-"}</Table.Cell>
+              </Table.Row>
             ))}
-          </tbody>
-        </table>
+            </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+        </Table>
       )}
     </Card>
   );

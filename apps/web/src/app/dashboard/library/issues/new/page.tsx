@@ -118,7 +118,7 @@ function IssueForm() {
               ))}
             </Select>
             {available.length === 0 ? (
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted">
                 No copies are currently available.
               </p>
             ) : null}

@@ -189,7 +189,7 @@ function AllocationForm() {
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 border-t border-slate-100 px-6 py-4">
+          <div className="flex items-center justify-end gap-2 border-t border-border-secondary px-6 py-4">
             <Link
               href="/dashboard/hostel/allocations"
               className={buttonClasses("secondary")}

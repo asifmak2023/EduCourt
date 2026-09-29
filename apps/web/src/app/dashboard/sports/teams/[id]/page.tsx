@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
@@ -105,8 +106,8 @@ function TeamDetailView() {
       ) : null}
 
       <Card>
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">Roster</h2>
+        <div className="border-b border-border-secondary px-5 py-4">
+          <h2 className="text-sm font-semibold text-foreground">Roster</h2>
         </div>
         {members.loading ? (
           <div className="p-6">
@@ -117,50 +118,40 @@ function TeamDetailView() {
             <EmptyState message="No players on this team yet." />
           </div>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-5 py-3 font-medium">Student</th>
-                <th className="px-5 py-3 font-medium">Position</th>
-                <th className="px-5 py-3 font-medium">Jersey</th>
-                <th className="px-5 py-3 font-medium">Joined</th>
-                <th className="px-5 py-3 font-medium">Status</th>
-                {can("sports.edit") ? <th className="px-5 py-3" /> : null}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Roster">
+              <Table.Header>
+                <Table.Column isRowHeader>Student</Table.Column>
+                <Table.Column>Position</Table.Column>
+                <Table.Column>Jersey</Table.Column>
+                <Table.Column>Joined</Table.Column>
+                <Table.Column>Status</Table.Column>
+                {can("sports.edit") ? <Table.Column aria-label="Actions" /> : null}
+              </Table.Header>
+              <Table.Body>
               {members.items.map((member) => (
-                <tr key={member.id}>
-                  <td className="px-5 py-3 text-slate-900">
-                    {member.student?.full_name ?? `Student #${member.student_id}`}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {member.position ?? "-"}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {member.jersey_no ?? "-"}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {member.joined_on ?? "-"}
-                  </td>
-                  <td className="px-5 py-3">
-                    <Badge value={member.status ?? "unknown"} />
-                  </td>
+                <Table.Row key={member.id} id={member.id}>
+                  <Table.Cell className="text-foreground">{member.student?.full_name ?? `Student #${member.student_id}`}</Table.Cell>
+                  <Table.Cell className="text-muted">{member.position ?? "-"}</Table.Cell>
+                  <Table.Cell className="text-muted">{member.jersey_no ?? "-"}</Table.Cell>
+                  <Table.Cell className="text-muted">{member.joined_on ?? "-"}</Table.Cell>
+                  <Table.Cell><Badge value={member.status ?? "unknown"} /></Table.Cell>
                   {can("sports.edit") ? (
-                    <td className="px-5 py-3 text-right">
-                      <RemoveMemberButton
+                    <Table.Cell className="text-right"><RemoveMemberButton
                         teamId={data.id}
                         memberId={member.id}
                         onRemoved={() =>
                           setVersion((current) => current + 1)
                         }
-                      />
-                    </td>
+                      /></Table.Cell>
                   ) : null}
-                </tr>
+                </Table.Row>
               ))}
-            </tbody>
-          </table>
+              </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {members.meta ? (
@@ -220,8 +211,8 @@ function AddMemberForm({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Add player</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">Add player</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Adding an existing player updates their roster entry.
       </p>
       <div className="mt-4 grid gap-4 sm:grid-cols-4">
@@ -314,7 +305,7 @@ function RemoveMemberButton({
       <Button type="button" variant="secondary" loading={busy} onClick={remove}>
         Remove
       </Button>
-      {error ? <span className="text-xs text-red-600">{error}</span> : null}
+      {error ? <span className="text-xs text-danger">{error}</span> : null}
     </div>
   );
 }

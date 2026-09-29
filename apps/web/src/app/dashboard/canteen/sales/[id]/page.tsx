@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
@@ -112,7 +113,7 @@ export default function CanteenSaleDetailPage() {
           <DataItem
             label="Total"
             value={
-              <span className="font-semibold text-slate-900">
+              <span className="font-semibold text-foreground">
                 {formatCurrency(data.total)}
               </span>
             }
@@ -129,35 +130,31 @@ export default function CanteenSaleDetailPage() {
       </SectionCard>
 
       <Card>
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">Items</h2>
+        <div className="border-b border-border-secondary px-5 py-4">
+          <h2 className="text-sm font-semibold text-foreground">Items</h2>
         </div>
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-5 py-3 font-medium">Item</th>
-              <th className="px-5 py-3 font-medium text-right">Unit price</th>
-              <th className="px-5 py-3 font-medium text-right">Quantity</th>
-              <th className="px-5 py-3 font-medium text-right">Line total</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
+        <Table variant="secondary">
+          <Table.ScrollContainer>
+            <Table.Content aria-label="Items">
+            <Table.Header>
+              <Table.Column isRowHeader>Item</Table.Column>
+              <Table.Column className="text-right">Unit price</Table.Column>
+              <Table.Column className="text-right">Quantity</Table.Column>
+              <Table.Column className="text-right">Line total</Table.Column>
+            </Table.Header>
+            <Table.Body>
             {(data.items ?? []).map((item) => (
-              <tr key={item.id}>
-                <td className="px-5 py-3 text-slate-900">{item.item_name}</td>
-                <td className="px-5 py-3 text-right text-slate-600">
-                  {formatCurrency(item.unit_price)}
-                </td>
-                <td className="px-5 py-3 text-right text-slate-600">
-                  {item.quantity}
-                </td>
-                <td className="px-5 py-3 text-right text-slate-900">
-                  {formatCurrency(item.line_total)}
-                </td>
-              </tr>
+              <Table.Row key={item.id} id={item.id}>
+                <Table.Cell className="text-foreground">{item.item_name}</Table.Cell>
+                <Table.Cell className="text-right text-muted">{formatCurrency(item.unit_price)}</Table.Cell>
+                <Table.Cell className="text-right text-muted">{item.quantity}</Table.Cell>
+                <Table.Cell className="text-right text-foreground">{formatCurrency(item.line_total)}</Table.Cell>
+              </Table.Row>
             ))}
-          </tbody>
-        </table>
+            </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+        </Table>
       </Card>
     </div>
   );

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
@@ -140,7 +141,7 @@ export default function StudentWalletDetailPage() {
           <DataItem
             label="Balance"
             value={
-              <span className="text-lg font-semibold text-slate-900">
+              <span className="text-lg font-semibold text-foreground">
                 {formatCurrency(data.balance)}
               </span>
             }
@@ -167,7 +168,7 @@ export default function StudentWalletDetailPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         {can("canteen.create") ? (
           <Card className="p-6">
-            <h2 className="text-sm font-semibold text-slate-900">Top up</h2>
+            <h2 className="text-sm font-semibold text-foreground">Top up</h2>
             {topUpError ? (
               <div className="mt-4">
                 <ErrorNotice message={topUpError} />
@@ -224,10 +225,10 @@ export default function StudentWalletDetailPage() {
 
         {can("canteen.approve") ? (
           <Card className="p-6">
-            <h2 className="text-sm font-semibold text-slate-900">
+            <h2 className="text-sm font-semibold text-foreground">
               Adjust balance
             </h2>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-muted">
               Use a negative amount to debit the wallet.
             </p>
             {adjustError ? (
@@ -268,8 +269,8 @@ export default function StudentWalletDetailPage() {
       </div>
 
       <Card>
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">
+        <div className="border-b border-border-secondary px-5 py-4">
+          <h2 className="text-sm font-semibold text-foreground">
             Transactions
           </h2>
         </div>
@@ -282,38 +283,30 @@ export default function StudentWalletDetailPage() {
             <EmptyState message="No transactions yet." />
           </div>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-5 py-3 font-medium">Date</th>
-                <th className="px-5 py-3 font-medium">Type</th>
-                <th className="px-5 py-3 font-medium">Description</th>
-                <th className="px-5 py-3 font-medium text-right">Amount</th>
-                <th className="px-5 py-3 font-medium text-right">Balance</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Transactions">
+              <Table.Header>
+                <Table.Column isRowHeader>Date</Table.Column>
+                <Table.Column>Type</Table.Column>
+                <Table.Column>Description</Table.Column>
+                <Table.Column className="text-right">Amount</Table.Column>
+                <Table.Column className="text-right">Balance</Table.Column>
+              </Table.Header>
+              <Table.Body>
               {transactions.items.map((txn) => (
-                <tr key={txn.id}>
-                  <td className="px-5 py-3 text-slate-600">
-                    {txn.transaction_date ?? "-"}
-                  </td>
-                  <td className="px-5 py-3">
-                    <Badge value={txn.type ?? "unknown"} />
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {txn.description ?? txn.reference ?? "-"}
-                  </td>
-                  <td className="px-5 py-3 text-right text-slate-900">
-                    {formatCurrency(txn.amount)}
-                  </td>
-                  <td className="px-5 py-3 text-right text-slate-600">
-                    {formatCurrency(txn.balance_after)}
-                  </td>
-                </tr>
+                <Table.Row key={txn.id} id={txn.id}>
+                  <Table.Cell className="text-muted">{txn.transaction_date ?? "-"}</Table.Cell>
+                  <Table.Cell><Badge value={txn.type ?? "unknown"} /></Table.Cell>
+                  <Table.Cell className="text-muted">{txn.description ?? txn.reference ?? "-"}</Table.Cell>
+                  <Table.Cell className="text-right text-foreground">{formatCurrency(txn.amount)}</Table.Cell>
+                  <Table.Cell className="text-right text-muted">{formatCurrency(txn.balance_after)}</Table.Cell>
+                </Table.Row>
               ))}
-            </tbody>
-          </table>
+              </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {transactions.meta ? (

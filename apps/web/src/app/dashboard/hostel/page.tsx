@@ -26,8 +26,8 @@ export default function HostelsPage() {
             href={tab.href}
             className={
               tab.href === "/dashboard/hostel"
-                ? "rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white"
-                : "rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:border-slate-400"
+                ? "rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground"
+                : "rounded-lg border border-border-secondary px-3 py-1.5 text-sm font-medium text-foreground hover:border-accent"
             }
           >
             {tab.label}

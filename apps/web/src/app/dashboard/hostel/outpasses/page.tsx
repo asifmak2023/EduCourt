@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
 import { Pagination } from "@/components/Pagination";
@@ -68,42 +69,36 @@ export default function HostelOutpassesPage() {
           <EmptyState message="No outpasses match your filters." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Student</th>
-                  <th className="px-5 py-3 font-medium">From</th>
-                  <th className="px-5 py-3 font-medium">To</th>
-                  <th className="px-5 py-3 font-medium">Reason</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content aria-label="Outpasses">
+                <Table.Header>
+                  <Table.Column isRowHeader>Student</Table.Column>
+                  <Table.Column>From</Table.Column>
+                  <Table.Column>To</Table.Column>
+                  <Table.Column>Reason</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
                 {items.map((outpass) => (
-                  <tr key={outpass.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3">
-                      <Link
+                  <Table.Row key={outpass.id} className="hover:bg-surface-secondary" id={outpass.id}>
+                    <Table.Cell><Link
                         href={`/dashboard/hostel/outpasses/${outpass.id}`}
-                        className="font-medium text-slate-900 hover:underline"
+                        className="font-medium text-foreground hover:underline"
                       >
                         {outpass.student?.full_name ??
                           `#${outpass.student_id}`}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {outpass.from_datetime ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {outpass.to_datetime ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">{outpass.reason}</td>
-                    <td className="px-5 py-3">
-                      <Badge value={outpass.status ?? "unknown"} />
-                    </td>
-                  </tr>
+                      </Link></Table.Cell>
+                    <Table.Cell className="text-muted">{outpass.from_datetime ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{outpass.to_datetime ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{outpass.reason}</Table.Cell>
+                    <Table.Cell><Badge value={outpass.status ?? "unknown"} /></Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+                </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </div>
         )}
 

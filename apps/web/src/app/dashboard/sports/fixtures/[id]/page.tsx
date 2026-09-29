@@ -131,10 +131,10 @@ function FixtureDetailView() {
 
       {can("sports.edit") ? (
         <Card className="p-6">
-          <h2 className="text-sm font-semibold text-slate-900">
+          <h2 className="text-sm font-semibold text-foreground">
             Record result
           </h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-0.5 text-xs text-muted">
             Saving the score marks the fixture completed and derives the
             outcome.
           </p>

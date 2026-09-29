@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
@@ -155,8 +156,8 @@ function MovementForm({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Record movement</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">Record movement</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Purchases and returns add stock; issues and wastage reduce it. An
         adjustment applies the quantity as a signed change.
       </p>
@@ -247,8 +248,8 @@ function MovementsPanel({ itemId }: { itemId: number }) {
 
   return (
     <Card>
-      <div className="border-b border-slate-100 px-5 py-4">
-        <h2 className="text-sm font-semibold text-slate-900">
+      <div className="border-b border-border-secondary px-5 py-4">
+        <h2 className="text-sm font-semibold text-foreground">
           Stock movements
           {meta ? ` (${formatNumber(meta.total)})` : ""}
         </h2>
@@ -265,38 +266,30 @@ function MovementsPanel({ itemId }: { itemId: number }) {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-5 py-3 font-medium">Date</th>
-                <th className="px-5 py-3 font-medium">Type</th>
-                <th className="px-5 py-3 font-medium text-right">Quantity</th>
-                <th className="px-5 py-3 font-medium text-right">Unit cost</th>
-                <th className="px-5 py-3 font-medium">Reference</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Stock movements">
+              <Table.Header>
+                <Table.Column isRowHeader>Date</Table.Column>
+                <Table.Column>Type</Table.Column>
+                <Table.Column className="text-right">Quantity</Table.Column>
+                <Table.Column className="text-right">Unit cost</Table.Column>
+                <Table.Column>Reference</Table.Column>
+              </Table.Header>
+              <Table.Body>
               {items.map((movement) => (
-                <tr key={movement.id}>
-                  <td className="px-5 py-3 text-slate-900">
-                    {movement.moved_on ?? "-"}
-                  </td>
-                  <td className="px-5 py-3">
-                    <Badge value={movement.type ?? "unknown"} />
-                  </td>
-                  <td className="px-5 py-3 text-right text-slate-900">
-                    {formatNumber(movement.quantity)}
-                  </td>
-                  <td className="px-5 py-3 text-right text-slate-600">
-                    {formatCurrency(movement.unit_cost)}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {movement.reference ?? "-"}
-                  </td>
-                </tr>
+                <Table.Row key={movement.id} id={movement.id}>
+                  <Table.Cell className="text-foreground">{movement.moved_on ?? "-"}</Table.Cell>
+                  <Table.Cell><Badge value={movement.type ?? "unknown"} /></Table.Cell>
+                  <Table.Cell className="text-right text-foreground">{formatNumber(movement.quantity)}</Table.Cell>
+                  <Table.Cell className="text-right text-muted">{formatCurrency(movement.unit_cost)}</Table.Cell>
+                  <Table.Cell className="text-muted">{movement.reference ?? "-"}</Table.Cell>
+                </Table.Row>
               ))}
-            </tbody>
-          </table>
+              </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         </div>
       )}
     </Card>

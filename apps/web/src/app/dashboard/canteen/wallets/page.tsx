@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Table } from "@heroui/react";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
 import { CanteenTabs } from "@/components/CanteenTabs";
@@ -80,56 +81,44 @@ export default function CanteenWalletsPage() {
           <EmptyState message="No wallets found." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Student</th>
-                  <th className="px-5 py-3 font-medium text-right">Balance</th>
-                  <th className="px-5 py-3 font-medium text-right">
-                    Daily limit
-                  </th>
-                  <th className="px-5 py-3 font-medium text-right">
-                    Low threshold
-                  </th>
-                  <th className="px-5 py-3 font-medium">Active</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content aria-label="Wallets">
+                <Table.Header>
+                  <Table.Column isRowHeader>Student</Table.Column>
+                  <Table.Column className="text-right">Balance</Table.Column>
+                  <Table.Column className="text-right">Daily limit</Table.Column>
+                  <Table.Column className="text-right">Low threshold</Table.Column>
+                  <Table.Column>Active</Table.Column>
+                </Table.Header>
+                <Table.Body>
                 {items.map((wallet) => (
-                  <tr key={wallet.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3">
-                      <Link
+                  <Table.Row key={wallet.id} className="hover:bg-surface-secondary" id={wallet.id}>
+                    <Table.Cell><Link
                         href={`/dashboard/canteen/wallets/${wallet.id}`}
-                        className="font-medium text-slate-900 hover:underline"
+                        className="font-medium text-foreground hover:underline"
                       >
                         {wallet.student?.full_name ?? `Student #${wallet.student_id}`}
                       </Link>
                       {wallet.student?.admission_no ? (
-                        <span className="ml-2 text-xs text-slate-400">
+                        <span className="ml-2 text-xs text-muted">
                           {wallet.student.admission_no}
                         </span>
-                      ) : null}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-900">
-                      {formatCurrency(wallet.balance)}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {wallet.daily_limit
+                      ) : null}</Table.Cell>
+                    <Table.Cell className="text-right text-foreground">{formatCurrency(wallet.balance)}</Table.Cell>
+                    <Table.Cell className="text-right text-muted">{wallet.daily_limit
                         ? formatCurrency(wallet.daily_limit)
-                        : "-"}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {wallet.low_balance_threshold
+                        : "-"}</Table.Cell>
+                    <Table.Cell className="text-right text-muted">{wallet.low_balance_threshold
                         ? formatCurrency(wallet.low_balance_threshold)
-                        : "-"}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={wallet.is_active ? "active" : "inactive"} />
-                    </td>
-                  </tr>
+                        : "-"}</Table.Cell>
+                    <Table.Cell><Badge value={wallet.is_active ? "active" : "inactive"} /></Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+                </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </div>
         )}
 

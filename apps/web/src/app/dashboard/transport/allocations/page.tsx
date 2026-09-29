@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
 import { useTransportRoutes } from "@/lib/useLookups";
@@ -89,56 +90,42 @@ export default function TransportAllocationsPage() {
           <EmptyState message="No allocations match your filters." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Student</th>
-                  <th className="px-5 py-3 font-medium">Route</th>
-                  <th className="px-5 py-3 font-medium">Stop</th>
-                  <th className="px-5 py-3 font-medium">Direction</th>
-                  <th className="px-5 py-3 font-medium">From</th>
-                  <th className="px-5 py-3 font-medium">To</th>
-                  <th className="px-5 py-3 font-medium text-right">Fare</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content aria-label="Transport allocations">
+                <Table.Header>
+                  <Table.Column isRowHeader>Student</Table.Column>
+                  <Table.Column>Route</Table.Column>
+                  <Table.Column>Stop</Table.Column>
+                  <Table.Column>Direction</Table.Column>
+                  <Table.Column>From</Table.Column>
+                  <Table.Column>To</Table.Column>
+                  <Table.Column className="text-right">Fare</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
                 {items.map((allocation) => (
-                  <tr key={allocation.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3">
-                      <Link
+                  <Table.Row key={allocation.id} className="hover:bg-surface-secondary" id={allocation.id}>
+                    <Table.Cell><Link
                         href={`/dashboard/transport/allocations/${allocation.id}`}
-                        className="font-medium text-slate-900 hover:underline"
+                        className="font-medium text-foreground hover:underline"
                       >
                         {allocation.student?.full_name ??
                           `#${allocation.student_id}`}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {allocation.route?.name ?? `#${allocation.transport_route_id}`}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {allocation.stop?.name ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {allocation.direction ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {allocation.start_date ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {allocation.end_date ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-900">
-                      {formatCurrency(allocation.fare)}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={allocation.status ?? "unknown"} />
-                    </td>
-                  </tr>
+                      </Link></Table.Cell>
+                    <Table.Cell className="text-muted">{allocation.route?.name ?? `#${allocation.transport_route_id}`}</Table.Cell>
+                    <Table.Cell className="text-muted">{allocation.stop?.name ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{allocation.direction ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{allocation.start_date ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{allocation.end_date ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-right text-foreground">{formatCurrency(allocation.fare)}</Table.Cell>
+                    <Table.Cell><Badge value={allocation.status ?? "unknown"} /></Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+                </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </div>
         )}
 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useCanteenItems, useStudents } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -134,7 +135,7 @@ function SaleForm() {
       {error ? <ErrorNotice message={error} /> : null}
 
       <Card className="p-6">
-        <h2 className="text-sm font-semibold text-slate-900">Add items</h2>
+        <h2 className="text-sm font-semibold text-foreground">Add items</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_auto_auto]">
           <Field label="Item" htmlFor="sale_item">
             <Select
@@ -172,8 +173,8 @@ function SaleForm() {
       </Card>
 
       <Card>
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">
+        <div className="border-b border-border-secondary px-5 py-4">
+          <h2 className="text-sm font-semibold text-foreground">
             Bill lines ({lines.length})
           </h2>
         </div>
@@ -182,55 +183,47 @@ function SaleForm() {
             <EmptyState message="Add at least one item to the bill." />
           </div>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-5 py-3 font-medium">Item</th>
-                <th className="px-5 py-3 font-medium text-right">Unit price</th>
-                <th className="px-5 py-3 font-medium text-right">Quantity</th>
-                <th className="px-5 py-3 font-medium text-right">Line total</th>
-                <th className="px-5 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Bill lines">
+              <Table.Header>
+                <Table.Column isRowHeader>Item</Table.Column>
+                <Table.Column className="text-right">Unit price</Table.Column>
+                <Table.Column className="text-right">Quantity</Table.Column>
+                <Table.Column className="text-right">Line total</Table.Column>
+                <Table.Column aria-label="Actions" />
+              </Table.Header>
+              <Table.Body>
               {lines.map((line, index) => {
                 const item = itemById.get(Number(line.canteen_item_id));
                 const lineTotal = item
                   ? Number(item.price) * Number(line.quantity || 0)
                   : 0;
                 return (
-                  <tr key={`${line.canteen_item_id}-${index}`}>
-                    <td className="px-5 py-3 text-slate-900">
-                      {item?.name ?? `#${line.canteen_item_id}`}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {item ? formatCurrency(item.price) : "-"}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {line.quantity}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-900">
-                      {formatCurrency(lineTotal)}
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      <Button
+                  <Table.Row key={`${line.canteen_item_id}-${index}`} id={`${line.canteen_item_id}-${index}`}>
+                    <Table.Cell className="text-foreground">{item?.name ?? `#${line.canteen_item_id}`}</Table.Cell>
+                    <Table.Cell className="text-right text-muted">{item ? formatCurrency(item.price) : "-"}</Table.Cell>
+                    <Table.Cell className="text-right text-muted">{line.quantity}</Table.Cell>
+                    <Table.Cell className="text-right text-foreground">{formatCurrency(lineTotal)}</Table.Cell>
+                    <Table.Cell className="text-right"><Button
                         type="button"
                         variant="secondary"
                         onClick={() => removeLine(index)}
                       >
                         Remove
-                      </Button>
-                    </td>
-                  </tr>
+                      </Button></Table.Cell>
+                  </Table.Row>
                 );
               })}
-            </tbody>
-          </table>
+              </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
       </Card>
 
       <Card className="p-6">
-        <h2 className="text-sm font-semibold text-slate-900">Payment</h2>
+        <h2 className="text-sm font-semibold text-foreground">Payment</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Payment method" htmlFor="sale_method">
             <Select
@@ -303,12 +296,12 @@ function SaleForm() {
           </div>
         </div>
 
-        <div className="mt-5 flex flex-col items-end gap-1 border-t border-slate-100 pt-4 text-sm">
-          <span className="text-slate-500">
+        <div className="mt-5 flex flex-col items-end gap-1 border-t border-border-secondary pt-4 text-sm">
+          <span className="text-muted">
             Subtotal {formatCurrency(subtotal)} · Discount{" "}
             {formatCurrency(discountValue)}
           </span>
-          <span className="text-lg font-semibold text-slate-900">
+          <span className="text-lg font-semibold text-foreground">
             Total {formatCurrency(total)}
           </span>
         </div>

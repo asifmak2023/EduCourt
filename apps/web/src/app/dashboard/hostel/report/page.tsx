@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Table } from "@heroui/react";
 import { useResource } from "@/lib/useResource";
 import { useHostels } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -83,8 +84,8 @@ function ReportView() {
           </div>
 
           <Card>
-            <div className="border-b border-slate-100 px-5 py-4">
-              <h2 className="text-sm font-semibold text-slate-900">
+            <div className="border-b border-border-secondary px-5 py-4">
+              <h2 className="text-sm font-semibold text-foreground">
                 Rooms by type
               </h2>
             </div>
@@ -93,24 +94,24 @@ function ReportView() {
                 <EmptyState message="No rooms recorded." />
               </div>
             ) : (
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="px-5 py-3 font-medium">Type</th>
-                    <th className="px-5 py-3 font-medium text-right">Rooms</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
+              <Table variant="secondary">
+                <Table.ScrollContainer>
+                  <Table.Content aria-label="Rooms by type">
+                  <Table.Header>
+                    <Table.Column isRowHeader>Type</Table.Column>
+                    <Table.Column className="text-right">Rooms</Table.Column>
+                  </Table.Header>
+                  <Table.Body>
                   {Object.entries(data.by_type).map(([type, count]) => (
-                    <tr key={type}>
-                      <td className="px-5 py-3 text-slate-900">{type}</td>
-                      <td className="px-5 py-3 text-right text-slate-600">
-                        {formatNumber(count)}
-                      </td>
-                    </tr>
+                    <Table.Row key={type} id={type}>
+                      <Table.Cell className="text-foreground">{type}</Table.Cell>
+                      <Table.Cell className="text-right text-muted">{formatNumber(count)}</Table.Cell>
+                    </Table.Row>
                   ))}
-                </tbody>
-              </table>
+                  </Table.Body>
+                  </Table.Content>
+                </Table.ScrollContainer>
+              </Table>
             )}
           </Card>
         </>

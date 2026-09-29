@@ -81,7 +81,7 @@ function AllocationDetailView() {
           <DataItem label="Monthly fee" value={formatCurrency(data.monthly_fee)} />
         </DataList>
         {data.notes ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             Notes: {data.notes}
           </p>
         ) : null}
@@ -124,8 +124,8 @@ function VacateAction({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Vacate room</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">Vacate room</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Frees the bed and closes the allocation.
       </p>
       <div className="mt-4 max-w-xs">

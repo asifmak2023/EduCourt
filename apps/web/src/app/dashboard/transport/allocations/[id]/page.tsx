@@ -79,7 +79,7 @@ function AllocationDetailView() {
           <DataItem label="Fare" value={formatCurrency(data.fare)} />
         </DataList>
         {data.notes ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             Notes: {data.notes}
           </p>
         ) : null}
@@ -124,8 +124,8 @@ function DeallocateAction({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">End allocation</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">End allocation</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Ends the student&apos;s transport allocation on the chosen date.
       </p>
       <div className="mt-4 max-w-xs">

@@ -117,10 +117,10 @@ function CertificateDetailView() {
       {can("student_affairs.approve") && data.status !== "issued" ? (
         <Card className="flex flex-wrap items-center justify-between gap-4 p-6">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">
+            <h2 className="text-sm font-semibold text-foreground">
               Issue certificate
             </h2>
-            <p className="mt-0.5 text-xs text-slate-500">
+            <p className="mt-0.5 text-xs text-muted">
               Assigns a serial number and marks the certificate as issued.
             </p>
           </div>

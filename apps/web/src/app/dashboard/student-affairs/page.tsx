@@ -68,7 +68,7 @@ function StudentAffairsHome() {
       </div>
 
       <Card className="p-5">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted">
           Use the tabs above to manage clubs and rosters, plan events with
           participants, record council members, issue certificates, log welfare
           and counselling records, and follow complaints through to resolution.

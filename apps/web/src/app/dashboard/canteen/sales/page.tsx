@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
 import { CanteenTabs } from "@/components/CanteenTabs";
@@ -112,55 +113,41 @@ export default function CanteenSalesPage() {
           <EmptyState message="No sales match your filters." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Bill</th>
-                  <th className="px-5 py-3 font-medium">Customer</th>
-                  <th className="px-5 py-3 font-medium">Method</th>
-                  <th className="px-5 py-3 font-medium">Sold on</th>
-                  <th className="px-5 py-3 font-medium text-right">Subtotal</th>
-                  <th className="px-5 py-3 font-medium text-right">Discount</th>
-                  <th className="px-5 py-3 font-medium text-right">Total</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content aria-label="Sales">
+                <Table.Header>
+                  <Table.Column isRowHeader>Bill</Table.Column>
+                  <Table.Column>Customer</Table.Column>
+                  <Table.Column>Method</Table.Column>
+                  <Table.Column>Sold on</Table.Column>
+                  <Table.Column className="text-right">Subtotal</Table.Column>
+                  <Table.Column className="text-right">Discount</Table.Column>
+                  <Table.Column className="text-right">Total</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
                 {items.map((sale) => (
-                  <tr key={sale.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3">
-                      <Link
+                  <Table.Row key={sale.id} className="hover:bg-surface-secondary" id={sale.id}>
+                    <Table.Cell><Link
                         href={`/dashboard/canteen/sales/${sale.id}`}
-                        className="font-medium text-slate-900 hover:underline"
+                        className="font-medium text-foreground hover:underline"
                       >
                         {sale.bill_no}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {sale.student?.full_name ?? sale.customer_name ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {sale.payment_method ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {sale.sold_on ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {formatCurrency(sale.subtotal)}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {formatCurrency(sale.discount)}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-900">
-                      {formatCurrency(sale.total)}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={sale.status ?? "unknown"} />
-                    </td>
-                  </tr>
+                      </Link></Table.Cell>
+                    <Table.Cell className="text-muted">{sale.student?.full_name ?? sale.customer_name ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{sale.payment_method ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{sale.sold_on ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-right text-muted">{formatCurrency(sale.subtotal)}</Table.Cell>
+                    <Table.Cell className="text-right text-muted">{formatCurrency(sale.discount)}</Table.Cell>
+                    <Table.Cell className="text-right text-foreground">{formatCurrency(sale.total)}</Table.Cell>
+                    <Table.Cell><Badge value={sale.status ?? "unknown"} /></Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+                </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </div>
         )}
 

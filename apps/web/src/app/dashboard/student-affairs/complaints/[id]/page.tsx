@@ -172,8 +172,8 @@ function AssignComplaintCard({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Assign complaint</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">Assign complaint</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Assigning sets the status to in progress.
       </p>
       <div className="mt-4 flex flex-wrap items-end gap-4">
@@ -231,8 +231,8 @@ function ResolutionCard({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Resolution</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">Resolution</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Record the outcome and close the complaint.
       </p>
       <div className="mt-4">

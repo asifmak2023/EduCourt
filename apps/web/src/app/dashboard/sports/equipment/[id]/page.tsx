@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
@@ -175,8 +176,8 @@ function MovementForm({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Record movement</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">Record movement</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Issue reduces availability; purchase, return and adjustment change the
         tracked stock.
       </p>
@@ -263,8 +264,8 @@ function MovementHistory({ equipmentId }: { equipmentId: number }) {
 
   return (
     <Card>
-      <div className="border-b border-slate-100 px-5 py-4">
-        <h2 className="text-sm font-semibold text-slate-900">
+      <div className="border-b border-border-secondary px-5 py-4">
+        <h2 className="text-sm font-semibold text-foreground">
           Movement history
         </h2>
       </div>
@@ -279,42 +280,32 @@ function MovementHistory({ equipmentId }: { equipmentId: number }) {
           <EmptyState message="No movements recorded yet." />
         </div>
       ) : (
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-5 py-3 font-medium">Date</th>
-              <th className="px-5 py-3 font-medium">Type</th>
-              <th className="px-5 py-3 font-medium text-right">Quantity</th>
-              <th className="px-5 py-3 font-medium text-right">Balance</th>
-              <th className="px-5 py-3 font-medium">Issued to</th>
-              <th className="px-5 py-3 font-medium">Remarks</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
+        <Table variant="secondary">
+          <Table.ScrollContainer>
+            <Table.Content aria-label="Movement history">
+            <Table.Header>
+              <Table.Column isRowHeader>Date</Table.Column>
+              <Table.Column>Type</Table.Column>
+              <Table.Column className="text-right">Quantity</Table.Column>
+              <Table.Column className="text-right">Balance</Table.Column>
+              <Table.Column>Issued to</Table.Column>
+              <Table.Column>Remarks</Table.Column>
+            </Table.Header>
+            <Table.Body>
             {items.map((movement) => (
-              <tr key={movement.id}>
-                <td className="px-5 py-3 text-slate-600">
-                  {movement.movement_date ?? "-"}
-                </td>
-                <td className="px-5 py-3">
-                  <Badge value={movement.type ?? "unknown"} />
-                </td>
-                <td className="px-5 py-3 text-right text-slate-900">
-                  {formatNumber(movement.quantity)}
-                </td>
-                <td className="px-5 py-3 text-right text-slate-600">
-                  {formatNumber(movement.balance_after)}
-                </td>
-                <td className="px-5 py-3 text-slate-600">
-                  {movement.issued_to_user?.name ?? "-"}
-                </td>
-                <td className="px-5 py-3 text-slate-600">
-                  {movement.remarks ?? "-"}
-                </td>
-              </tr>
+              <Table.Row key={movement.id} id={movement.id}>
+                <Table.Cell className="text-muted">{movement.movement_date ?? "-"}</Table.Cell>
+                <Table.Cell><Badge value={movement.type ?? "unknown"} /></Table.Cell>
+                <Table.Cell className="text-right text-foreground">{formatNumber(movement.quantity)}</Table.Cell>
+                <Table.Cell className="text-right text-muted">{formatNumber(movement.balance_after)}</Table.Cell>
+                <Table.Cell className="text-muted">{movement.issued_to_user?.name ?? "-"}</Table.Cell>
+                <Table.Cell className="text-muted">{movement.remarks ?? "-"}</Table.Cell>
+              </Table.Row>
             ))}
-          </tbody>
-        </table>
+            </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+        </Table>
       )}
 
       {meta ? (

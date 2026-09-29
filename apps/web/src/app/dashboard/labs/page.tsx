@@ -60,7 +60,7 @@ export default function LabsPage() {
           render: (item) => (
             <Link
               href={`/dashboard/labs/${item.id}`}
-              className="text-sm font-medium text-slate-900 hover:underline"
+              className="text-sm font-medium text-foreground hover:underline"
             >
               Open
             </Link>

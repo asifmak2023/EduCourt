@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -73,12 +74,12 @@ function ReportView() {
       </div>
 
       <Card>
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-border-secondary px-5 py-4">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">
+            <h2 className="text-sm font-semibold text-foreground">
               Overdue loans
             </h2>
-            <p className="mt-0.5 text-xs text-slate-500">
+            <p className="mt-0.5 text-xs text-muted">
               Copies past their due date.
             </p>
           </div>
@@ -100,45 +101,39 @@ function ReportView() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Book</th>
-                  <th className="px-5 py-3 font-medium">Member</th>
-                  <th className="px-5 py-3 font-medium">Due</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content aria-label="Overdue loans">
+                <Table.Header>
+                  <Table.Column isRowHeader>Book</Table.Column>
+                  <Table.Column>Member</Table.Column>
+                  <Table.Column>Due</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
                 {overdue.items.map((issue) => (
-                  <tr key={issue.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3">
-                      <Link
+                  <Table.Row key={issue.id} className="hover:bg-surface-secondary" id={issue.id}>
+                    <Table.Cell><Link
                         href={`/dashboard/library/issues/${issue.id}`}
-                        className="text-slate-900 hover:underline"
+                        className="text-foreground hover:underline"
                       >
                         {issue.book?.title ?? `#${issue.book_id}`}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {issue.student?.full_name ??
-                        (issue.user_id ? `Staff #${issue.user_id}` : "-")}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {issue.due_on ?? "-"}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={issue.status ?? "unknown"} />
-                    </td>
-                  </tr>
+                      </Link></Table.Cell>
+                    <Table.Cell className="text-muted">{issue.student?.full_name ??
+                        (issue.user_id ? `Staff #${issue.user_id}` : "-")}</Table.Cell>
+                    <Table.Cell className="text-muted">{issue.due_on ?? "-"}</Table.Cell>
+                    <Table.Cell><Badge value={issue.status ?? "unknown"} /></Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+                </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </div>
         )}
 
         {overdue.meta && overdue.meta.last_page > 1 ? (
-          <div className="border-t border-slate-100 px-5 py-4">
+          <div className="border-t border-border-secondary px-5 py-4">
             <Pagination
               page={overdue.page}
               lastPage={overdue.meta.last_page}

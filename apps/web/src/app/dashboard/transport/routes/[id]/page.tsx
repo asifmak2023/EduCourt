@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
@@ -175,8 +176,8 @@ function StopForm({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Add stop</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">Add stop</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Stops are ordered by sequence along the route.
       </p>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -272,8 +273,8 @@ function StopsPanel({
 
   return (
     <Card>
-      <div className="border-b border-slate-100 px-5 py-4">
-        <h2 className="text-sm font-semibold text-slate-900">
+      <div className="border-b border-border-secondary px-5 py-4">
+        <h2 className="text-sm font-semibold text-foreground">
           Stops ({stops.length})
         </h2>
       </div>
@@ -286,47 +287,41 @@ function StopsPanel({
           <EmptyState message="No stops defined for this route." />
         </div>
       ) : (
-        <table className="w-full text-left text-sm" key={version}>
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-5 py-3 font-medium">#</th>
-              <th className="px-5 py-3 font-medium">Stop</th>
-              <th className="px-5 py-3 font-medium">Pickup</th>
-              <th className="px-5 py-3 font-medium">Drop</th>
-              <th className="px-5 py-3 font-medium text-right">Fare</th>
-              {canEdit ? <th className="px-5 py-3" /> : null}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
+        <Table variant="secondary" key={version}>
+          <Table.ScrollContainer>
+            <Table.Content aria-label="Stops">
+            <Table.Header>
+              <Table.Column isRowHeader>#</Table.Column>
+              <Table.Column>Stop</Table.Column>
+              <Table.Column>Pickup</Table.Column>
+              <Table.Column>Drop</Table.Column>
+              <Table.Column className="text-right">Fare</Table.Column>
+              {canEdit ? <Table.Column aria-label="Actions" /> : null}
+            </Table.Header>
+            <Table.Body>
             {stops.map((stop) => (
-              <tr key={stop.id}>
-                <td className="px-5 py-3 text-slate-500">{stop.sequence}</td>
-                <td className="px-5 py-3 text-slate-900">{stop.name}</td>
-                <td className="px-5 py-3 text-slate-600">
-                  {stop.pickup_time ?? "-"}
-                </td>
-                <td className="px-5 py-3 text-slate-600">
-                  {stop.drop_time ?? "-"}
-                </td>
-                <td className="px-5 py-3 text-right text-slate-900">
-                  {stop.fare === null ? "-" : formatCurrency(stop.fare)}
-                </td>
+              <Table.Row key={stop.id} id={stop.id}>
+                <Table.Cell className="text-muted">{stop.sequence}</Table.Cell>
+                <Table.Cell className="text-foreground">{stop.name}</Table.Cell>
+                <Table.Cell className="text-muted">{stop.pickup_time ?? "-"}</Table.Cell>
+                <Table.Cell className="text-muted">{stop.drop_time ?? "-"}</Table.Cell>
+                <Table.Cell className="text-right text-foreground">{stop.fare === null ? "-" : formatCurrency(stop.fare)}</Table.Cell>
                 {canEdit ? (
-                  <td className="px-5 py-3 text-right">
-                    <Button
+                  <Table.Cell className="text-right"><Button
                       type="button"
                       variant="secondary"
                       loading={busyId === stop.id}
                       onClick={() => remove(stop.id)}
                     >
                       Remove
-                    </Button>
-                  </td>
+                    </Button></Table.Cell>
                 ) : null}
-              </tr>
+              </Table.Row>
             ))}
-          </tbody>
-        </table>
+            </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+        </Table>
       )}
     </Card>
   );

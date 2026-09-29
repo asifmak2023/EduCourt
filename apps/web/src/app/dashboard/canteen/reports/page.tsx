@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Table } from "@heroui/react";
 import { CanteenTabs } from "@/components/CanteenTabs";
 import { TextInput } from "@/components/Form";
 import {
@@ -164,89 +165,77 @@ export default function CanteenReportsPage() {
 
       {daily.data ? (
         <Card>
-          <div className="border-b border-slate-100 px-5 py-4">
-            <h2 className="text-sm font-semibold text-slate-900">By day</h2>
+          <div className="border-b border-border-secondary px-5 py-4">
+            <h2 className="text-sm font-semibold text-foreground">By day</h2>
           </div>
           {daily.data.by_day.length === 0 ? (
-            <div className="px-5 py-6 text-sm text-slate-500">
+            <div className="px-5 py-6 text-sm text-muted">
               No sales in this range.
             </div>
           ) : (
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Date</th>
-                  <th className="px-5 py-3 font-medium text-right">Bills</th>
-                  <th className="px-5 py-3 font-medium text-right">Revenue</th>
-                  <th className="px-5 py-3 font-medium text-right">Cost</th>
-                  <th className="px-5 py-3 font-medium text-right">Profit</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content aria-label="By day">
+                <Table.Header>
+                  <Table.Column isRowHeader>Date</Table.Column>
+                  <Table.Column className="text-right">Bills</Table.Column>
+                  <Table.Column className="text-right">Revenue</Table.Column>
+                  <Table.Column className="text-right">Cost</Table.Column>
+                  <Table.Column className="text-right">Profit</Table.Column>
+                </Table.Header>
+                <Table.Body>
                 {daily.data.by_day.map((row) => (
-                  <tr key={row.sold_on}>
-                    <td className="px-5 py-3 text-slate-600">{row.sold_on}</td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {row.bills}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-900">
-                      {formatCurrency(row.revenue)}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {formatCurrency(row.cost)}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-900">
-                      {formatCurrency(row.profit)}
-                    </td>
-                  </tr>
+                  <Table.Row key={row.sold_on} id={row.sold_on}>
+                    <Table.Cell className="text-muted">{row.sold_on}</Table.Cell>
+                    <Table.Cell className="text-right text-muted">{row.bills}</Table.Cell>
+                    <Table.Cell className="text-right text-foreground">{formatCurrency(row.revenue)}</Table.Cell>
+                    <Table.Cell className="text-right text-muted">{formatCurrency(row.cost)}</Table.Cell>
+                    <Table.Cell className="text-right text-foreground">{formatCurrency(row.profit)}</Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+                </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           )}
         </Card>
       ) : null}
 
       <Card>
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">
+        <div className="border-b border-border-secondary px-5 py-4">
+          <h2 className="text-sm font-semibold text-foreground">
             Item-wise sales
           </h2>
         </div>
         {!itemWise.data || itemWise.data.length === 0 ? (
-          <div className="px-5 py-6 text-sm text-slate-500">
+          <div className="px-5 py-6 text-sm text-muted">
             No item sales in this range.
           </div>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-5 py-3 font-medium">Item</th>
-                <th className="px-5 py-3 font-medium text-right">Quantity</th>
-                <th className="px-5 py-3 font-medium text-right">Revenue</th>
-                <th className="px-5 py-3 font-medium text-right">Cost</th>
-                <th className="px-5 py-3 font-medium text-right">Profit</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Item-wise sales">
+              <Table.Header>
+                <Table.Column isRowHeader>Item</Table.Column>
+                <Table.Column className="text-right">Quantity</Table.Column>
+                <Table.Column className="text-right">Revenue</Table.Column>
+                <Table.Column className="text-right">Cost</Table.Column>
+                <Table.Column className="text-right">Profit</Table.Column>
+              </Table.Header>
+              <Table.Body>
               {itemWise.data.map((row) => (
-                <tr key={row.canteen_item_id}>
-                  <td className="px-5 py-3 text-slate-900">{row.item_name}</td>
-                  <td className="px-5 py-3 text-right text-slate-600">
-                    {row.quantity}
-                  </td>
-                  <td className="px-5 py-3 text-right text-slate-900">
-                    {formatCurrency(row.revenue)}
-                  </td>
-                  <td className="px-5 py-3 text-right text-slate-600">
-                    {formatCurrency(row.cost)}
-                  </td>
-                  <td className="px-5 py-3 text-right text-slate-900">
-                    {formatCurrency(row.profit)}
-                  </td>
-                </tr>
+                <Table.Row key={row.canteen_item_id} id={row.canteen_item_id}>
+                  <Table.Cell className="text-foreground">{row.item_name}</Table.Cell>
+                  <Table.Cell className="text-right text-muted">{row.quantity}</Table.Cell>
+                  <Table.Cell className="text-right text-foreground">{formatCurrency(row.revenue)}</Table.Cell>
+                  <Table.Cell className="text-right text-muted">{formatCurrency(row.cost)}</Table.Cell>
+                  <Table.Cell className="text-right text-foreground">{formatCurrency(row.profit)}</Table.Cell>
+                </Table.Row>
               ))}
-            </tbody>
-          </table>
+              </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
       </Card>
     </div>

@@ -75,7 +75,7 @@ function CanteenHome() {
       ) : null}
 
       <Card className="p-5">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted">
           Use the tabs above to manage menu items, record stock, ring up sales,
           top up student wallets and log hygiene checks.
         </p>

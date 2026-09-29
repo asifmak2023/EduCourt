@@ -78,7 +78,7 @@ function SportsHome() {
       ) : null}
 
       <Card className="p-5">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted">
           Use the tabs above to manage the sports catalogue, build teams and
           rosters, schedule training and fixtures, log achievements and track
           equipment.

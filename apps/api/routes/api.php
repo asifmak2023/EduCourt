@@ -680,6 +680,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('attendance/staff/{staffAttendance}', [StaffAttendanceController::class, 'destroy'])->middleware('permission:attendance.edit');
 
             Route::get('notifications', [NotificationController::class, 'index'])->middleware('permission:notification.view');
+            Route::get('notifications/{notification}', [NotificationController::class, 'show'])->middleware('permission:notification.view');
             Route::post('notifications/queue-absences', [NotificationController::class, 'queueAbsences'])->middleware('permission:notification.create');
             Route::post('notifications/send', [NotificationController::class, 'sendBatch'])->middleware('permission:notification.send');
             Route::post('notifications/{notification}/send', [NotificationController::class, 'send'])->middleware('permission:notification.send');

@@ -34,6 +34,13 @@ class NotificationController extends Controller
         return AppNotificationResource::collection($notifications);
     }
 
+    public function show(AppNotification $notification): AppNotificationResource
+    {
+        return new AppNotificationResource(
+            $notification->load(['student', 'guardian'])
+        );
+    }
+
     public function queueAbsences(Request $request): JsonResponse
     {
         $tenant = $this->academicTenantAttributes();

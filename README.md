@@ -318,6 +318,11 @@ built on top of it, one surface at a time:
   `GET /api/v1/audit-logs` and `GET /api/v1/audit-logs/filters`; campus users
   only see activity from their own campus while the product owner sees
   everything).
+- Delivered: notifications (a guardian notice queue with status, type, channel
+  and date-range filters, single-notice detail, per-notice send and cancel, a
+  batch "send all pending" action, and a "queue absence notices" form that
+  creates a pending notice for every student marked absent on a chosen day,
+  backed by `GET /api/v1/notifications` and `GET /api/v1/notifications/{id}`).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

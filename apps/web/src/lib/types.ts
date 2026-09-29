@@ -589,6 +589,30 @@ export interface AuditLogFilters {
   subject_types: string[];
 }
 
+export interface AppNotification {
+  id: number;
+  type: string | null;
+  type_label: string | null;
+  channel: string | null;
+  channel_label: string | null;
+  student_id: number | null;
+  student?: string | null;
+  admission_no?: string | null;
+  guardian_id: number | null;
+  guardian?: string | null;
+  recipient_name: string | null;
+  recipient_email: string | null;
+  recipient_phone: string | null;
+  title: string;
+  body: string;
+  occurred_on: string | null;
+  status: string | null;
+  status_label: string | null;
+  sent_at: string | null;
+  failure_reason: string | null;
+  created_at: string | null;
+}
+
 export interface SsoProvider {
   id: number;
   institution_id: number | null;

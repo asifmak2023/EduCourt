@@ -184,6 +184,33 @@ class AbsenceNotificationTest extends TestCase
         $this->assertFalse($this->teacher->hasPermissionTo('notification.send'));
     }
 
+    public function test_a_notification_can_be_viewed_in_detail(): void
+    {
+        $this->as($this->teacher)->postJson('/api/v1/attendance/students', [
+            'student_id' => $this->student->id,
+            'attendance_date' => '2026-09-21',
+            'status' => 'absent',
+            'academic_year_id' => $this->year->id,
+        ])->assertStatus(201);
+
+        $list = $this->as($this->admin)->getJson('/api/v1/notifications')
+            ->assertOk();
+
+        $id = $list->json('data.0.id');
+
+        $this->as($this->admin)->getJson("/api/v1/notifications/{$id}")
+            ->assertOk()
+            ->assertJsonPath('data.id', $id)
+            ->assertJsonPath('data.type', 'absence')
+            ->assertJsonPath('data.recipient_email', 'imran@example.test');
+    }
+
+    public function test_a_teacher_cannot_view_notifications(): void
+    {
+        $this->as($this->teacher)->getJson('/api/v1/notifications')
+            ->assertStatus(403);
+    }
+
     private function userWithRole(RoleName $role): User
     {
         $user = User::factory()->create([

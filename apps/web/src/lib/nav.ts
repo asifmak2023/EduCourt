@@ -23,6 +23,7 @@ export type NavIcon =
   | "heart"
   | "message"
   | "megaphone"
+  | "bell"
   | "shield"
   | "cog"
   | "history"
@@ -104,6 +105,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Student affairs", href: "/dashboard/student-affairs", icon: "heart", permission: "student_affairs.view", ready: true },
       { label: "Complaints", href: "/dashboard/student-affairs/complaints", icon: "message", permission: "complaint.view", ready: true },
       { label: "Circulars", href: "/dashboard/circulars", icon: "megaphone", permission: "circular.view", ready: true },
+      { label: "Notifications", href: "/dashboard/notifications", icon: "bell", permission: "notification.view", ready: true },
     ],
   },
   {

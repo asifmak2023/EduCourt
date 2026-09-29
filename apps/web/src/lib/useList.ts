@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ApiError, apiFetch } from "./api";
 import type { Paginated } from "./types";
 
@@ -13,6 +13,7 @@ export interface ListState<T> {
   setPage: (page: number) => void;
   search: string;
   setSearch: (search: string) => void;
+  reload: () => void;
 }
 
 export function useList<T>(
@@ -25,6 +26,7 @@ export function useList<T>(
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [nonce, setNonce] = useState(0);
 
   const paramsKey = JSON.stringify(params);
 
@@ -82,7 +84,21 @@ export function useList<T>(
       active = false;
       controller.abort();
     };
-  }, [basePath, page, search, paramsKey]);
+  }, [basePath, page, search, paramsKey, nonce]);
 
-  return { items, meta, loading, error, page, setPage, search, setSearch };
+  const reload = useCallback(() => {
+    setNonce((value) => value + 1);
+  }, []);
+
+  return {
+    items,
+    meta,
+    loading,
+    error,
+    page,
+    setPage,
+    search,
+    setSearch,
+    reload,
+  };
 }

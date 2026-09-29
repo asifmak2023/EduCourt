@@ -171,18 +171,18 @@ function Breakdown({
   rows: { label: string; total: number }[];
 }) {
   return (
-    <div className="rounded-lg border border-slate-200 p-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+    <div className="rounded-lg border border-border-secondary p-4">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
         {title}
       </h3>
       {rows.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-500">No data.</p>
+        <p className="mt-2 text-sm text-muted">No data.</p>
       ) : (
         <ul className="mt-2 space-y-1 text-sm">
           {rows.map((row) => (
             <li key={row.label} className="flex justify-between">
-              <span className="text-slate-600">{row.label}</span>
-              <span className="font-medium text-slate-900">
+              <span className="text-muted">{row.label}</span>
+              <span className="font-medium text-muted">
                 {formatNumber(row.total)}
               </span>
             </li>
@@ -201,8 +201,8 @@ function MovementTable({
   rows: StaffJoinersLeavers["joiners"];
 }) {
   return (
-    <div className="rounded-lg border border-slate-200 p-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+    <div className="rounded-lg border border-border-secondary p-4">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
         {title}
       </h3>
       {rows.length === 0 ? (
@@ -213,13 +213,13 @@ function MovementTable({
         <ul className="mt-2 space-y-2 text-sm">
           {rows.map((row) => (
             <li key={row.id} className="flex justify-between gap-3">
-              <span className="text-slate-700">
+              <span className="text-foreground">
                 {row.name}
-                <span className="ml-1 text-xs text-slate-400">
+                <span className="ml-1 text-xs text-muted">
                   {row.employee_no}
                 </span>
               </span>
-              <span className="text-slate-500">{row.date ?? "-"}</span>
+              <span className="text-muted">{row.date ?? "-"}</span>
             </li>
           ))}
         </ul>

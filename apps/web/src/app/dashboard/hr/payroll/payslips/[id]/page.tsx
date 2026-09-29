@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Table } from "@heroui/react";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
 import { buttonClasses } from "@/components/Form";
@@ -80,15 +81,15 @@ function PayslipDetailView() {
           />
         </DataList>
         {data.notes ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             Notes: {data.notes}
           </p>
         ) : null}
       </Card>
 
       <Card>
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">
+        <div className="border-b border-border-secondary px-5 py-4">
+          <h2 className="text-sm font-semibold text-foreground">
             Breakdown ({items.length})
           </h2>
         </div>
@@ -97,32 +98,36 @@ function PayslipDetailView() {
             <EmptyState message="No breakdown lines." />
           </div>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-5 py-3 font-medium">Label</th>
-                <th className="px-5 py-3 font-medium">Type</th>
-                <th className="px-5 py-3 font-medium">Source</th>
-                <th className="px-5 py-3 font-medium text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {items.map((item) => (
-                <tr key={item.id}>
-                  <td className="px-5 py-3 text-slate-900">{item.label}</td>
-                  <td className="px-5 py-3">
-                    <Badge value={item.type ?? "unknown"} />
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {item.source ?? "-"}
-                  </td>
-                  <td className="px-5 py-3 text-right text-slate-900">
-                    {formatCurrency(Number(item.amount))}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Payslip breakdown">
+                <Table.Header>
+                  <Table.Column isRowHeader>Label</Table.Column>
+                  <Table.Column>Type</Table.Column>
+                  <Table.Column>Source</Table.Column>
+                  <Table.Column className="text-right">Amount</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((item) => (
+                    <Table.Row key={item.id} id={item.id}>
+                      <Table.Cell className="text-foreground">
+                        {item.label}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={item.type ?? "unknown"} />
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {item.source ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-foreground">
+                        {formatCurrency(Number(item.amount))}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
       </Card>
     </div>
@@ -132,10 +137,10 @@ function PayslipDetailView() {
 function Summary({ label, value }: { label: string; value: number }) {
   return (
     <Card className="p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted">
         {label}
       </p>
-      <p className="mt-1 text-xl font-semibold text-slate-900">
+      <p className="mt-1 text-xl font-semibold text-foreground">
         {formatCurrency(value)}
       </p>
     </Card>

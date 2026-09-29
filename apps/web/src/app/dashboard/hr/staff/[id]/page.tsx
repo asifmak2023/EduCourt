@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiDownload, apiFetch, apiUpload } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
@@ -116,7 +117,7 @@ function StaffDetailView() {
           <DataItem label="Address" value={data.address ?? "-"} />
         </DataList>
         {data.notes ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             Notes: {data.notes}
           </p>
         ) : null}
@@ -204,11 +205,11 @@ function DocumentsSection({
 
   return (
     <Card>
-      <div className="border-b border-slate-100 px-5 py-4">
-        <h2 className="text-sm font-semibold text-slate-900">
+      <div className="border-b border-border-secondary px-5 py-4">
+        <h2 className="text-sm font-semibold text-foreground">
           Documents ({documents.length})
         </h2>
-        <p className="mt-0.5 text-xs text-slate-500">
+        <p className="mt-0.5 text-xs text-muted">
           Contracts, qualifications and identity records.
         </p>
       </div>
@@ -224,72 +225,72 @@ function DocumentsSection({
           <EmptyState message="No documents uploaded yet." />
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-5 py-3 font-medium">Title</th>
-                <th className="px-5 py-3 font-medium">Type</th>
-                <th className="px-5 py-3 font-medium">Issued</th>
-                <th className="px-5 py-3 font-medium">Expires</th>
-                <th className="px-5 py-3 font-medium">Status</th>
-                <th className="px-5 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {documents.map((document) => (
-                <tr key={document.id} className="hover:bg-slate-50">
-                  <td className="px-5 py-3 text-slate-900">
-                    {document.title ?? document.original_name ?? "-"}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {document.type_label ?? document.type ?? "-"}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {document.issued_on ?? "-"}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {document.expires_on ?? "-"}
-                  </td>
-                  <td className="px-5 py-3">
-                    <Badge
-                      value={document.is_verified ? "verified" : "pending"}
-                    />
-                  </td>
-                  <td className="px-5 py-3">
-                    <div className="flex justify-end gap-3 text-sm font-medium">
-                      <button
-                        type="button"
-                        onClick={() => void download(document)}
-                        className="text-slate-900 hover:underline"
-                      >
-                        Download
-                      </button>
-                      {canApprove && !document.is_verified ? (
+        <Table variant="secondary">
+          <Table.ScrollContainer>
+            <Table.Content aria-label="Staff documents">
+              <Table.Header>
+                <Table.Column isRowHeader>Title</Table.Column>
+                <Table.Column>Type</Table.Column>
+                <Table.Column>Issued</Table.Column>
+                <Table.Column>Expires</Table.Column>
+                <Table.Column>Status</Table.Column>
+                <Table.Column aria-label="Actions" />
+              </Table.Header>
+              <Table.Body>
+                {documents.map((document) => (
+                  <Table.Row key={document.id} id={document.id}>
+                    <Table.Cell className="text-foreground">
+                      {document.title ?? document.original_name ?? "-"}
+                    </Table.Cell>
+                    <Table.Cell className="text-muted">
+                      {document.type_label ?? document.type ?? "-"}
+                    </Table.Cell>
+                    <Table.Cell className="text-muted">
+                      {document.issued_on ?? "-"}
+                    </Table.Cell>
+                    <Table.Cell className="text-muted">
+                      {document.expires_on ?? "-"}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Badge
+                        value={document.is_verified ? "verified" : "pending"}
+                      />
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="flex justify-end gap-3 text-sm font-medium">
                         <button
                           type="button"
-                          onClick={() => void verify(document)}
-                          className="text-emerald-700 hover:underline"
+                          onClick={() => void download(document)}
+                          className="text-foreground hover:underline"
                         >
-                          Verify
+                          Download
                         </button>
-                      ) : null}
-                      {canDelete ? (
-                        <button
-                          type="button"
-                          onClick={() => void remove(document)}
-                          className="text-rose-600 hover:underline"
-                        >
-                          Delete
-                        </button>
-                      ) : null}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                        {canApprove && !document.is_verified ? (
+                          <button
+                            type="button"
+                            onClick={() => void verify(document)}
+                            className="text-success hover:underline"
+                          >
+                            Verify
+                          </button>
+                        ) : null}
+                        {canDelete ? (
+                          <button
+                            type="button"
+                            onClick={() => void remove(document)}
+                            className="text-danger hover:underline"
+                          >
+                            Delete
+                          </button>
+                        ) : null}
+                      </div>
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+        </Table>
       )}
 
       {canCreate ? (
@@ -348,8 +349,8 @@ function UploadDocumentForm({
   };
 
   return (
-    <div className="border-t border-slate-100 px-5 py-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+    <div className="border-t border-border-secondary px-5 py-4">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
         Upload document
       </h3>
       {done ? (
@@ -384,7 +385,7 @@ function UploadDocumentForm({
             type="file"
             accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
             onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-            className="block w-full text-sm text-slate-600"
+            className="block w-full text-sm text-muted"
           />
         </Field>
         <Field label="Issued on" htmlFor="doc_issued">
@@ -461,8 +462,8 @@ function TerminateAction({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Offboarding</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">Offboarding</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Record a leaving date and final status.
       </p>
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -539,8 +540,8 @@ function DeleteAction({ id }: { id: number }) {
     <Card className="p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Remove</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Remove</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Archive this staff record.
           </p>
         </div>

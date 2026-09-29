@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
@@ -83,7 +84,7 @@ function RunDetailView() {
           />
         </DataList>
         {data.notes ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             Notes: {data.notes}
           </p>
         ) : null}
@@ -91,10 +92,10 @@ function RunDetailView() {
 
       {data.status === "draft" ? (
         <Card className="p-6">
-          <h2 className="text-sm font-semibold text-slate-900">
+          <h2 className="text-sm font-semibold text-foreground">
             Generation
           </h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-0.5 text-xs text-muted">
             Generate payslips from active salary structures, then approve the
             run.
           </p>
@@ -124,8 +125,8 @@ function RunDetailView() {
       ) : null}
 
       <Card>
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">
+        <div className="border-b border-border-secondary px-5 py-4">
+          <h2 className="text-sm font-semibold text-foreground">
             Payslips ({payslips.length})
           </h2>
         </div>
@@ -134,48 +135,46 @@ function RunDetailView() {
             <EmptyState message="No payslips generated yet." />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Staff</th>
-                  <th className="px-5 py-3 font-medium text-right">Basic</th>
-                  <th className="px-5 py-3 font-medium text-right">Gross</th>
-                  <th className="px-5 py-3 font-medium text-right">
-                    Deductions
-                  </th>
-                  <th className="px-5 py-3 font-medium text-right">Net</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {payslips.map((payslip) => (
-                  <tr key={payslip.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3">
-                      <Link
-                        href={`/dashboard/hr/payroll/payslips/${payslip.id}`}
-                        className="font-medium text-slate-900 hover:underline"
-                      >
-                        {payslip.staff_member?.full_name ??
-                          `#${payslip.staff_member_id}`}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {formatCurrency(Number(payslip.basic))}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {formatCurrency(Number(payslip.gross))}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {formatCurrency(Number(payslip.deductions))}
-                    </td>
-                    <td className="px-5 py-3 text-right font-medium text-slate-900">
-                      {formatCurrency(Number(payslip.net))}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Payslips">
+                <Table.Header>
+                  <Table.Column isRowHeader>Staff</Table.Column>
+                  <Table.Column className="text-right">Basic</Table.Column>
+                  <Table.Column className="text-right">Gross</Table.Column>
+                  <Table.Column className="text-right">Deductions</Table.Column>
+                  <Table.Column className="text-right">Net</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {payslips.map((payslip) => (
+                    <Table.Row key={payslip.id} id={payslip.id}>
+                      <Table.Cell>
+                        <Link
+                          href={`/dashboard/hr/payroll/payslips/${payslip.id}`}
+                          className="font-medium text-foreground hover:underline"
+                        >
+                          {payslip.staff_member?.full_name ??
+                            `#${payslip.staff_member_id}`}
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-muted">
+                        {formatCurrency(Number(payslip.basic))}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-muted">
+                        {formatCurrency(Number(payslip.gross))}
+                      </Table.Cell>
+                      <Table.Cell className="text-right text-muted">
+                        {formatCurrency(Number(payslip.deductions))}
+                      </Table.Cell>
+                      <Table.Cell className="text-right font-medium text-foreground">
+                        {formatCurrency(Number(payslip.net))}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
       </Card>
 
@@ -189,10 +188,10 @@ function RunDetailView() {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <Card className="p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted">
         {label}
       </p>
-      <p className="mt-1 text-xl font-semibold text-slate-900">
+      <p className="mt-1 text-xl font-semibold text-foreground">
         {formatCurrency(value)}
       </p>
     </Card>
@@ -265,8 +264,8 @@ function PayAction({ id, onChanged }: { id: number; onChanged: () => void }) {
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Mark paid</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">Mark paid</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Post the payment to the ledger and close the run.
       </p>
       <div className="mt-4 flex flex-wrap items-end gap-4">
@@ -318,8 +317,8 @@ function DeleteAction({ id }: { id: number }) {
     <Card className="p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Remove</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Remove</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Only draft runs can be removed.
           </p>
         </div>

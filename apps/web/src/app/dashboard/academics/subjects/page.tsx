@@ -41,7 +41,7 @@ export default function SubjectsPage() {
           {
             header: "Code",
             render: (subject) => (
-              <span className="font-mono text-xs text-slate-500">
+              <span className="font-mono text-xs text-muted">
                 {subject.code}
               </span>
             ),

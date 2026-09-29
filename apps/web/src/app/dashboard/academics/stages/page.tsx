@@ -32,7 +32,7 @@ export default function StagesPage() {
           {
             header: "Code",
             render: (stage) => (
-              <span className="font-mono text-xs text-slate-500">
+              <span className="font-mono text-xs text-muted">
                 {stage.code}
               </span>
             ),

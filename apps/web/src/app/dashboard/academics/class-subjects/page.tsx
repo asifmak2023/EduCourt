@@ -67,7 +67,7 @@ function ClassSubjectsTable() {
         {
           header: "Code",
           render: (mapping) => (
-            <span className="font-mono text-xs text-slate-500">
+            <span className="font-mono text-xs text-muted">
               {mapping.subject?.code ?? "-"}
             </span>
           ),

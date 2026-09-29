@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useAcademicYears } from "@/lib/useLookups";
 import { useAuth } from "@/lib/auth";
@@ -82,47 +83,49 @@ function TermsTable() {
         ) : items.length === 0 ? (
           <EmptyState message="No terms match your filters." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Name</th>
-                  <th className="px-5 py-3 font-medium">Academic year</th>
-                  <th className="px-5 py-3 font-medium">Sequence</th>
-                  <th className="px-5 py-3 font-medium">Dates</th>
-                  <th className="px-5 py-3 font-medium">Current</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((term) => (
-                  <tr key={term.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      {can("academic.edit") ? (
-                        <Link
-                          href={`/dashboard/academics/terms/${term.id}/edit`}
-                          className="hover:underline"
-                        >
-                          {term.name}
-                        </Link>
-                      ) : (
-                        term.name
-                      )}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {term.academic_year?.name ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">{term.sequence}</td>
-                    <td className="px-5 py-3 text-slate-500">
-                      {formatDate(term.starts_on)} - {formatDate(term.ends_on)}
-                    </td>
-                    <td className="px-5 py-3">
-                      {term.is_current ? <Badge value="active" /> : "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Terms" className="min-w-[720px]">
+                <Table.Header>
+                  <Table.Column isRowHeader>Name</Table.Column>
+                  <Table.Column>Academic year</Table.Column>
+                  <Table.Column>Sequence</Table.Column>
+                  <Table.Column>Dates</Table.Column>
+                  <Table.Column>Current</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((term) => (
+                    <Table.Row key={term.id} id={term.id}>
+                      <Table.Cell className="font-medium text-foreground">
+                        {can("academic.edit") ? (
+                          <Link
+                            href={`/dashboard/academics/terms/${term.id}/edit`}
+                            className="hover:underline"
+                          >
+                            {term.name}
+                          </Link>
+                        ) : (
+                          term.name
+                        )}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {term.academic_year?.name ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {term.sequence}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {formatDate(term.starts_on)} - {formatDate(term.ends_on)}
+                      </Table.Cell>
+                      <Table.Cell>
+                        {term.is_current ? <Badge value="active" /> : "-"}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
 
         {meta ? (

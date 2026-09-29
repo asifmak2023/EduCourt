@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { Table } from "@heroui/react";
 import { useResource } from "@/lib/useResource";
 import { useAuth } from "@/lib/auth";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -100,7 +101,7 @@ function YearDetail() {
           <DataItem label="Terms" value={String(terms.length)} />
         </DataList>
         {data.notes ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border pt-4 text-sm text-muted">
             {data.notes}
           </p>
         ) : null}
@@ -123,45 +124,45 @@ function YearDetail() {
         {terms.length === 0 ? (
           <EmptyState message="No terms have been added to this year." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-4 py-2 font-medium">Sequence</th>
-                  <th className="px-4 py-2 font-medium">Name</th>
-                  <th className="px-4 py-2 font-medium">Dates</th>
-                  <th className="px-4 py-2 font-medium">Current</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {terms.map((term) => (
-                  <tr key={term.id}>
-                    <td className="px-4 py-2 text-slate-500">
-                      {term.sequence}
-                    </td>
-                    <td className="px-4 py-2 font-medium text-slate-900">
-                      {can("academic.edit") ? (
-                        <Link
-                          href={`/dashboard/academics/terms/${term.id}/edit`}
-                          className="hover:underline"
-                        >
-                          {term.name}
-                        </Link>
-                      ) : (
-                        term.name
-                      )}
-                    </td>
-                    <td className="px-4 py-2 text-slate-500">
-                      {formatDate(term.starts_on)} - {formatDate(term.ends_on)}
-                    </td>
-                    <td className="px-4 py-2">
-                      {term.is_current ? <Badge value="active" /> : "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Terms" className="min-w-[640px]">
+                <Table.Header>
+                  <Table.Column isRowHeader>Sequence</Table.Column>
+                  <Table.Column>Name</Table.Column>
+                  <Table.Column>Dates</Table.Column>
+                  <Table.Column>Current</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {terms.map((term) => (
+                    <Table.Row key={term.id} id={term.id}>
+                      <Table.Cell className="text-muted">
+                        {term.sequence}
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-foreground">
+                        {can("academic.edit") ? (
+                          <Link
+                            href={`/dashboard/academics/terms/${term.id}/edit`}
+                            className="hover:underline"
+                          >
+                            {term.name}
+                          </Link>
+                        ) : (
+                          term.name
+                        )}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {formatDate(term.starts_on)} - {formatDate(term.ends_on)}
+                      </Table.Cell>
+                      <Table.Cell>
+                        {term.is_current ? <Badge value="active" /> : "-"}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
       </SectionCard>
 
@@ -169,8 +170,8 @@ function YearDetail() {
         <Card className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">Archive</h2>
-              <p className="mt-0.5 text-xs text-slate-500">
+              <h2 className="text-sm font-semibold text-foreground">Archive</h2>
+              <p className="mt-0.5 text-xs text-muted">
                 Archived years are removed from the active lists.
               </p>
             </div>

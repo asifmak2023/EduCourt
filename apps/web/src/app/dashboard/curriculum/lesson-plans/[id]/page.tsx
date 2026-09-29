@@ -80,7 +80,7 @@ function LessonPlanDetailView() {
           <DataItem label="Approved at" value={data.approved_at ?? "-"} />
         </DataList>
 
-        <div className="mt-5 space-y-4 border-t border-slate-100 pt-4">
+        <div className="mt-5 space-y-4 border-t border-border pt-4">
           {(
             [
               ["Objectives", data.objectives],
@@ -92,10 +92,10 @@ function LessonPlanDetailView() {
           ).map(([label, value]) =>
             value ? (
               <div key={label}>
-                <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                <h3 className="text-xs font-medium uppercase tracking-wide text-muted">
                   {label}
                 </h3>
-                <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">
+                <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
                   {value}
                 </p>
               </div>
@@ -140,8 +140,8 @@ function ApproveAction({
     <Card className="p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Approval</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Approval</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Approve this lesson plan to lock it.
           </p>
         </div>
@@ -180,8 +180,8 @@ function DeleteAction({ id }: { id: number }) {
     <Card className="p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Remove</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Remove</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Delete this lesson plan.
           </p>
         </div>

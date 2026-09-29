@@ -54,7 +54,7 @@ function ClassesTable() {
         {
           header: "Code",
           render: (room) => (
-            <span className="font-mono text-xs text-slate-500">
+            <span className="font-mono text-xs text-muted">
               {room.code}
             </span>
           ),

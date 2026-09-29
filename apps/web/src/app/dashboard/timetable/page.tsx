@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import {
@@ -330,8 +331,8 @@ function TimetableView() {
       {error ? <ErrorNotice message={error} /> : null}
 
       <Card>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">Weekly grid</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-4">
+          <h2 className="text-sm font-semibold text-foreground">Weekly grid</h2>
           {can("timetable.approve") && mode === "class" && classId ? (
             <div className="flex gap-2">
               <Button
@@ -359,71 +360,71 @@ function TimetableView() {
         ) : slots.length === 0 ? (
           <EmptyState message="No timetable slots for this selection." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr>
-                  <th className="border-b border-slate-100 px-3 py-2 text-left text-xs uppercase tracking-wide text-slate-500">
-                    Period
-                  </th>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content
+                aria-label="Weekly timetable grid"
+                className="min-w-[720px]"
+              >
+                <Table.Header>
+                  <Table.Column isRowHeader>Period</Table.Column>
                   {days.map((day) => (
-                    <th
-                      key={day}
-                      className="border-b border-slate-100 px-3 py-2 text-left text-xs uppercase tracking-wide text-slate-500"
-                    >
+                    <Table.Column key={day} className="min-w-[9rem]">
                       {DAY_NAMES[day]}
-                    </th>
+                    </Table.Column>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {orderedPeriods.map((period) => (
-                  <tr key={period.id}>
-                    <td className="border-b border-slate-100 px-3 py-2 align-top">
-                      <div className="font-medium text-slate-700">
-                        {period.name}
-                      </div>
-                      <div className="text-xs text-slate-400">
-                        {period.starts_at} - {period.ends_at}
-                      </div>
-                    </td>
-                    {days.map((day) => {
-                      const slot = cellMap.get(`${day}:${period.id}`);
-                      return (
-                        <td
-                          key={`${day}:${period.id}`}
-                          className="min-w-[9rem] border-b border-slate-100 px-3 py-2 align-top"
-                        >
-                          {slot ? (
-                            <div className="space-y-1">
-                              <div className="font-medium text-slate-900">
-                                {slot.subject?.code ?? slot.subject?.name ?? "-"}
-                              </div>
-                              <div className="text-xs text-slate-500">
-                                {slot.teacher?.name ?? "Unassigned"}
-                              </div>
-                              {slot.room ? (
-                                <div className="text-xs text-slate-400">
-                                  {slot.room.name}
+                </Table.Header>
+                <Table.Body>
+                  {orderedPeriods.map((period) => (
+                    <Table.Row key={period.id} id={period.id}>
+                      <Table.Cell>
+                        <div className="font-medium text-foreground">
+                          {period.name}
+                        </div>
+                        <div className="text-xs text-muted">
+                          {period.starts_at} - {period.ends_at}
+                        </div>
+                      </Table.Cell>
+                      {days.map((day) => {
+                        const slot = cellMap.get(`${day}:${period.id}`);
+                        return (
+                          <Table.Cell
+                            key={`${day}:${period.id}`}
+                            className="align-top"
+                          >
+                            {slot ? (
+                              <div className="space-y-1">
+                                <div className="font-medium text-foreground">
+                                  {slot.subject?.code ??
+                                    slot.subject?.name ??
+                                    "-"}
                                 </div>
-                              ) : null}
-                              {!slot.is_published ? (
-                                <Badge value="draft" />
-                              ) : null}
-                            </div>
-                          ) : period.is_break ? (
-                            <span className="text-xs text-slate-300">Break</span>
-                          ) : (
-                            <span className="text-xs text-slate-300">-</span>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                                <div className="text-xs text-muted">
+                                  {slot.teacher?.name ?? "Unassigned"}
+                                </div>
+                                {slot.room ? (
+                                  <div className="text-xs text-muted">
+                                    {slot.room.name}
+                                  </div>
+                                ) : null}
+                                {!slot.is_published ? (
+                                  <Badge value="draft" />
+                                ) : null}
+                              </div>
+                            ) : period.is_break ? (
+                              <span className="text-xs text-muted">Break</span>
+                            ) : (
+                              <span className="text-xs text-muted">-</span>
+                            )}
+                          </Table.Cell>
+                        );
+                      })}
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
       </Card>
 
@@ -431,10 +432,10 @@ function TimetableView() {
         <Card className="p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 className="text-sm font-semibold text-foreground">
                 Generate timetable
               </h2>
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="mt-0.5 text-xs text-muted">
                 {mode === "class" && classId
                   ? "Generate for the selected class."
                   : "Generate for every class in the year."}

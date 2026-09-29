@@ -313,6 +313,11 @@ built on top of it, one surface at a time:
   OpenID Connect providers, including OIDC endpoints, client credentials with
   write-only secrets, optional just-in-time provisioning with a default role,
   and per-institution provider names).
+- Delivered: audit log (a read-only activity log viewer with search, log-name,
+  event and date-range filters, causer and subject columns, backed by
+  `GET /api/v1/audit-logs` and `GET /api/v1/audit-logs/filters`; campus users
+  only see activity from their own campus while the product owner sees
+  everything).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

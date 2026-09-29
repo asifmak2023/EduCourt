@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\ApprovalRequestController;
 use App\Http\Controllers\Api\ApprovalWorkflowController;
 use App\Http\Controllers\Api\AssetController;
 use App\Http\Controllers\Api\AttendanceSyncController;
+use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BankAccountController;
 use App\Http\Controllers\Api\BankReconciliationController;
@@ -185,6 +186,11 @@ Route::prefix('v1')->group(function () {
         Route::get('sso-providers/{provider}', [SsoProviderController::class, 'show'])->middleware('permission:setting.view');
         Route::put('sso-providers/{provider}', [SsoProviderController::class, 'update'])->middleware('permission:setting.edit');
         Route::delete('sso-providers/{provider}', [SsoProviderController::class, 'destroy'])->middleware('permission:setting.edit');
+
+        Route::get('audit-logs', [AuditLogController::class, 'index'])
+            ->middleware('permission:audit.view');
+        Route::get('audit-logs/filters', [AuditLogController::class, 'filters'])
+            ->middleware('permission:audit.view');
 
         Route::get('auth/tokens', [SessionController::class, 'index']);
         Route::delete('auth/tokens', [SessionController::class, 'destroyOthers']);

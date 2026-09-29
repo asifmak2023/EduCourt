@@ -569,6 +569,26 @@ export interface RoleOption {
   label: string;
 }
 
+export interface ActivityLog {
+  id: number;
+  log_name: string | null;
+  description: string;
+  event: string | null;
+  subject_type: string | null;
+  subject_id: number | null;
+  causer_type: string | null;
+  causer_id: number | null;
+  causer_name: string | null;
+  properties: Record<string, unknown>;
+  created_at: string | null;
+}
+
+export interface AuditLogFilters {
+  log_names: string[];
+  events: string[];
+  subject_types: string[];
+}
+
 export interface SsoProvider {
   id: number;
   institution_id: number | null;

@@ -2130,3 +2130,178 @@ export interface Circular {
   author?: User | null;
   created_at?: string | null;
 }
+
+export interface CountRow {
+  total: number;
+}
+
+export interface ReportProgress {
+  filters: {
+    from: string | null;
+    to: string | null;
+    academic_year_id: number | null;
+  };
+  students: {
+    total: number;
+    active: number;
+    by_status: { status: string; total: number }[];
+    by_gender: { gender: string | null; total: number }[];
+  };
+  admissions: {
+    total: number;
+    by_status: { status: string; total: number }[];
+  };
+  enrollments: {
+    total: number;
+    by_status: { status: string; total: number }[];
+  };
+  scholarships: {
+    active_awards: number;
+    total_value: number;
+    by_type: { type: string; awards: number; value: number }[];
+  };
+  events: { total: number };
+}
+
+export interface ReportAttendance {
+  filters: {
+    class_room_id: number | null;
+    academic_year_id: number | null;
+    from: string | null;
+    to: string | null;
+  };
+  totals: {
+    total: number;
+    present: number;
+    late: number;
+    absent: number;
+    leave: number;
+    excused: number;
+    attendance_percentage: number;
+  };
+  by_class: {
+    class_room_id: number;
+    class_room: string | null;
+    total: number;
+    attended: number;
+    absent: number;
+    attendance_percentage: number;
+  }[];
+}
+
+export interface ReportResults {
+  exam: {
+    id: number;
+    name: string;
+    academic_year_id: number;
+    status: string | null;
+  };
+  totals: {
+    papers: number;
+    marks_entered: number;
+    graded: number;
+    absent: number;
+    passed: number;
+    failed: number;
+    pass_percentage: number;
+    average_percentage: number;
+    highest_percentage: number;
+    lowest_percentage: number;
+  };
+  by_paper: {
+    exam_paper_id: number;
+    subject: string | null;
+    class_room: string | null;
+    max_marks: number;
+    pass_marks: number;
+    entered: number;
+    absent: number;
+    average: number;
+    average_percentage: number;
+    passed: number;
+    failed: number;
+  }[];
+}
+
+export interface ReportStaff {
+  filters: { as_on: string; from: string | null; to: string | null };
+  headcount: {
+    total: number;
+    by_department: {
+      department_id: number | null;
+      department: string | null;
+      total: number;
+    }[];
+    by_employment_type: { employment_type: string | null; total: number }[];
+  };
+  attendance: {
+    total: number;
+    by_status: { status: string | null; total: number }[];
+  };
+  leave: {
+    total: number;
+    by_status: { status: string | null; total: number }[];
+    approved_days: number;
+  };
+}
+
+export interface ReportStudentYearly {
+  student: { id: number; admission_no: string; name: string };
+  years: {
+    academic_year_id: number;
+    academic_year: string | null;
+    class_room: string | null;
+    section: string | null;
+    status: string | null;
+    attendance: {
+      total: number;
+      attended: number;
+      absent: number;
+      attendance_percentage: number;
+    };
+    academics: {
+      subjects: number;
+      obtained: number;
+      possible: number;
+      percentage: number | null;
+    };
+    conduct_records: number;
+  }[];
+  summary: {
+    years: number;
+    attendance_percentage: number;
+    conduct_records: number;
+  };
+}
+
+export interface ReportFinancial {
+  filters: {
+    fiscal_year_id: number | null;
+    from: string | null;
+    to: string | null;
+  };
+  income: number;
+  expense: number;
+  surplus: number;
+  surplus_percentage: number | null;
+}
+
+export interface ReportPayroll {
+  filters: { from: string | null; to: string | null };
+  totals: {
+    runs: number;
+    gross: number;
+    deductions: number;
+    net: number;
+    approved: number;
+    paid: number;
+  };
+  by_period: {
+    id: number;
+    period: string;
+    status: string | null;
+    gross: number;
+    deductions: number;
+    net: number;
+  }[];
+}

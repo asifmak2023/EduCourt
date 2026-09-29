@@ -301,6 +301,10 @@ built on top of it, one surface at a time:
   by module, and campus scope assignments that can be granted to an account with
   an optional campus, scope type, target id and validity window, then revoked;
   granting the campus admin role remains reserved for the Super User).
+- Delivered: reports (a reporting hub with progress, attendance, results,
+  staff, student yearly, financial and payroll reports, each with its own
+  filters such as academic year, class, exam, fiscal year and date range, and
+  stat cards plus breakdown tables over the campus data).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

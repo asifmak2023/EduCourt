@@ -80,7 +80,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Vendors", href: "/dashboard/finance/vendors", icon: "building", permission: "finance.view", ready: true },
       { label: "Expense categories", href: "/dashboard/finance/expense-categories", icon: "list", permission: "finance.view", ready: true },
       { label: "Budgets", href: "/dashboard/finance/budgets", icon: "chart", permission: "finance.view", ready: true },
-      { label: "Reports", href: "/dashboard/reports", icon: "chart", permission: "report.view", ready: false },
+      { label: "Reports", href: "/dashboard/reports", icon: "chart", permission: "report.view", ready: true },
     ],
   },
   {

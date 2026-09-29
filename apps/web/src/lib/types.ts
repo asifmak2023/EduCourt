@@ -569,6 +569,25 @@ export interface RoleOption {
   label: string;
 }
 
+export interface SsoProvider {
+  id: number;
+  institution_id: number | null;
+  name: string;
+  provider: string | null;
+  client_id: string;
+  authorize_url: string;
+  token_url: string;
+  userinfo_url: string;
+  logout_url: string | null;
+  redirect_uri: string;
+  scopes: string | null;
+  is_active: boolean;
+  jit_provisioning: boolean;
+  default_role: string | null;
+  has_client_secret: boolean;
+  created_at?: string | null;
+}
+
 export interface ScopeAssignment {
   id: number;
   user_id: number;

@@ -309,6 +309,10 @@ built on top of it, one surface at a time:
   institution CRUD, campus CRUD scoped to an institution, a campus-type and
   institution filter, per-institution campus lists and an archive guard that
   blocks removing an institution that still has campuses).
+- Delivered: settings (a settings hub and SSO provider CRUD for generic
+  OpenID Connect providers, including OIDC endpoints, client credentials with
+  write-only secrets, optional just-in-time provisioning with a default role,
+  and per-institution provider names).
 - Planned: the remaining module screens, reached from the sidebar entries
   marked "Soon".
 

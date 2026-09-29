@@ -24,9 +24,17 @@ class SsoProviderController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $data = $request->validate($this->rules());
+        $institutionId = $this->institutionId($request);
 
-        $data['institution_id'] = $this->institutionId($request);
+        $rules = $this->rules();
+        $rules['name'] = [
+            'required', 'string', 'max:100',
+            Rule::unique('sso_providers', 'name')
+                ->where(fn ($query) => $query->where('institution_id', $institutionId)),
+        ];
+
+        $data = $request->validate($rules);
+        $data['institution_id'] = $institutionId;
 
         $provider = SsoProvider::create($data);
 
@@ -40,7 +48,15 @@ class SsoProviderController extends Controller
 
     public function update(Request $request, SsoProvider $provider): SsoProviderResource
     {
-        $data = $request->validate($this->rules(false));
+        $rules = $this->rules(false);
+        $rules['name'] = [
+            'required', 'string', 'max:100',
+            Rule::unique('sso_providers', 'name')
+                ->where(fn ($query) => $query->where('institution_id', $provider->institution_id))
+                ->ignore($provider->id),
+        ];
+
+        $data = $request->validate($rules);
         unset($data['institution_id']);
 
         if (! array_key_exists('client_secret', $data)) {

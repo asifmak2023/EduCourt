@@ -1,15 +1,28 @@
 "use client";
 
-import type {
-  ButtonHTMLAttributes,
-  InputHTMLAttributes,
-  ReactNode,
-  SelectHTMLAttributes,
-  TextareaHTMLAttributes,
+import {
+  Children,
+  Fragment,
+  isValidElement,
+  type ButtonHTMLAttributes,
+  type ChangeEvent,
+  type ComponentProps,
+  type InputHTMLAttributes,
+  type MouseEvent,
+  type ReactElement,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
 } from "react";
-
-const CONTROL_CLASS =
-  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-1 focus:ring-slate-900 disabled:bg-slate-50 disabled:text-slate-400";
+import {
+  Button as HeroButton,
+  Checkbox as HeroCheckbox,
+  Input,
+  ListBox,
+  Select as HeroSelect,
+  Spinner,
+  TextArea as HeroTextArea,
+} from "@heroui/react";
 
 export function Field({
   label,
@@ -32,16 +45,16 @@ export function Field({
     <div className={className}>
       <label
         htmlFor={htmlFor}
-        className="mb-1 block text-sm font-medium text-slate-700"
+        className="mb-1 block text-sm font-medium text-foreground"
       >
         {label}
-        {required ? <span className="ml-0.5 text-rose-500">*</span> : null}
+        {required ? <span className="ml-0.5 text-danger">*</span> : null}
       </label>
       {children}
       {hint && !error ? (
-        <p className="mt-1 text-xs text-slate-400">{hint}</p>
+        <p className="mt-1 text-xs text-muted">{hint}</p>
       ) : null}
-      {error ? <p className="mt-1 text-xs text-rose-600">{error}</p> : null}
+      {error ? <p className="mt-1 text-xs text-danger">{error}</p> : null}
     </div>
   );
 }
@@ -50,18 +63,126 @@ export function TextInput({
   className = "",
   ...props
 }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className={`${CONTROL_CLASS} ${className}`} />;
+  return <Input fullWidth {...props} className={className} />;
+}
+
+type OptionEntry = {
+  value: string;
+  label: ReactNode;
+  textValue: string;
+  disabled: boolean;
+};
+
+function nodeToText(node: ReactNode): string {
+  if (node === null || node === undefined || typeof node === "boolean") {
+    return "";
+  }
+  if (typeof node === "string" || typeof node === "number") {
+    return String(node);
+  }
+  if (Array.isArray(node)) {
+    return node.map(nodeToText).join("");
+  }
+  if (isValidElement(node)) {
+    return nodeToText((node.props as { children?: ReactNode }).children);
+  }
+  return "";
+}
+
+function collectOptions(children: ReactNode, out: OptionEntry[]) {
+  Children.forEach(children, (child) => {
+    if (child === null || child === undefined || typeof child === "boolean") {
+      return;
+    }
+    if (Array.isArray(child)) {
+      collectOptions(child, out);
+      return;
+    }
+    if (!isValidElement(child)) {
+      return;
+    }
+
+    const element = child as ReactElement<{
+      value?: unknown;
+      children?: ReactNode;
+      disabled?: boolean;
+    }>;
+
+    if (element.type === "option") {
+      const value =
+        element.props.value === undefined ? "" : String(element.props.value);
+      out.push({
+        value,
+        label: element.props.children,
+        textValue: nodeToText(element.props.children) || value,
+        disabled: Boolean(element.props.disabled),
+      });
+      return;
+    }
+
+    if (element.type === "optgroup" || element.type === Fragment) {
+      collectOptions(element.props.children, out);
+    }
+  });
 }
 
 export function Select({
   className = "",
   children,
-  ...props
+  value,
+  defaultValue,
+  onChange,
+  disabled,
+  required,
+  name,
+  id,
 }: SelectHTMLAttributes<HTMLSelectElement>) {
+  const options: OptionEntry[] = [];
+  collectOptions(children, options);
+
+  const selectedKey =
+    value === undefined || value === null ? undefined : String(value);
+  const defaultKey =
+    defaultValue === undefined || defaultValue === null
+      ? undefined
+      : String(defaultValue);
+  const disabledKeys = options.filter((o) => o.disabled).map((o) => o.value);
+
   return (
-    <select {...props} className={`${CONTROL_CLASS} ${className}`}>
-      {children}
-    </select>
+    <HeroSelect
+      fullWidth
+      className={className}
+      name={name}
+      isDisabled={disabled}
+      isRequired={required}
+      selectedKey={selectedKey}
+      defaultSelectedKey={defaultKey}
+      disabledKeys={disabledKeys}
+      onSelectionChange={(key) => {
+        const next = key === null ? "" : String(key);
+        onChange?.({
+          target: { value: next, name },
+        } as unknown as ChangeEvent<HTMLSelectElement>);
+      }}
+    >
+      <HeroSelect.Trigger id={id}>
+        <HeroSelect.Value />
+        <HeroSelect.Indicator />
+      </HeroSelect.Trigger>
+      <HeroSelect.Popover>
+        <ListBox>
+          {options.map((option) => (
+            <ListBox.Item
+              key={option.value}
+              id={option.value}
+              textValue={option.textValue}
+            >
+              {option.label}
+            </ListBox.Item>
+          ))}
+        </ListBox>
+      </HeroSelect.Popover>
+    </HeroSelect>
   );
 }
 
@@ -69,42 +190,59 @@ export function TextArea({
   className = "",
   ...props
 }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return (
-    <textarea
-      {...props}
-      className={`${CONTROL_CLASS} min-h-[90px] ${className}`}
-    />
-  );
+  return <HeroTextArea fullWidth {...props} className={className} />;
 }
 
 export function Checkbox({
   label,
-  ...props
+  checked,
+  defaultChecked,
+  disabled,
+  name,
+  id,
+  value,
+  onChange,
 }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   return (
-    <label className="flex items-center gap-2 text-sm text-slate-700">
-      <input
-        type="checkbox"
-        {...props}
-        className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-      />
-      {label}
-    </label>
+    <HeroCheckbox
+      id={id}
+      name={name}
+      value={value === undefined ? undefined : String(value)}
+      isSelected={checked}
+      defaultSelected={defaultChecked}
+      isDisabled={disabled}
+      onChange={(isSelected) => {
+        onChange?.({
+          target: {
+            checked: isSelected,
+            value: value === undefined ? "on" : String(value),
+            name,
+            type: "checkbox",
+          },
+        } as unknown as ChangeEvent<HTMLInputElement>);
+      }}
+    >
+      <HeroCheckbox.Content>
+        <HeroCheckbox.Control>
+          <HeroCheckbox.Indicator />
+        </HeroCheckbox.Control>
+        {label}
+      </HeroCheckbox.Content>
+    </HeroCheckbox>
   );
 }
 
 export type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 
-const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-slate-900 text-white hover:bg-slate-800",
-  secondary:
-    "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
-  danger: "bg-rose-600 text-white hover:bg-rose-500",
-  ghost: "text-slate-600 hover:bg-slate-100",
+const BUTTON_VARIANT_CLASSES: Record<ButtonVariant, string> = {
+  primary: "button--primary",
+  secondary: "button--secondary",
+  danger: "button--danger",
+  ghost: "button--ghost",
 };
 
 export function buttonClasses(variant: ButtonVariant = "primary"): string {
-  return `inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${BUTTON_VARIANTS[variant]}`;
+  return `button button--md ${BUTTON_VARIANT_CLASSES[variant]}`;
 }
 
 export function Button({
@@ -113,22 +251,33 @@ export function Button({
   className = "",
   children,
   disabled,
+  onClick,
+  type,
+  value,
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   loading?: boolean;
 }) {
+  const heroProps = {
+    ...props,
+    type,
+    value: value === undefined ? undefined : String(value),
+    variant,
+    className,
+    isDisabled: disabled || loading,
+    isPending: loading,
+    onPress: onClick
+      ? (event: unknown) =>
+          onClick(event as MouseEvent<HTMLButtonElement>)
+      : undefined,
+  } as unknown as ComponentProps<typeof HeroButton>;
+
   return (
-    <button
-      {...props}
-      disabled={disabled || loading}
-      className={`${buttonClasses(variant)} ${className}`}
-    >
-      {loading ? (
-        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-      ) : null}
+    <HeroButton {...heroProps}>
+      {loading ? <Spinner size="sm" color="current" /> : null}
       {children}
-    </button>
+    </HeroButton>
   );
 }
 
@@ -142,11 +291,11 @@ export function FormSection({
   children: ReactNode;
 }) {
   return (
-    <section className="border-b border-slate-100 px-6 py-5 last:border-b-0">
+    <section className="border-b border-border px-6 py-5 last:border-b-0">
       <div className="mb-4">
-        <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
         {description ? (
-          <p className="mt-0.5 text-xs text-slate-500">{description}</p>
+          <p className="mt-0.5 text-xs text-muted">{description}</p>
         ) : null}
       </div>
       {children}

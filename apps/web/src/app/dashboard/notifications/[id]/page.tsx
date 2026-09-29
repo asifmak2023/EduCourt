@@ -133,21 +133,21 @@ function NotificationDetail() {
           />
         </DataList>
 
-        <div className="mt-5 border-t border-slate-100 pt-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+        <div className="mt-5 border-t border-border pt-4">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">
             Message
           </p>
-          <p className="mt-1 whitespace-pre-line text-sm text-slate-700">
+          <p className="mt-1 whitespace-pre-line text-sm text-foreground">
             {data.body}
           </p>
         </div>
 
         {data.failure_reason ? (
-          <div className="mt-5 border-t border-slate-100 pt-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-rose-400">
+          <div className="mt-5 border-t border-border pt-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-danger">
               Failure reason
             </p>
-            <p className="mt-1 text-sm text-rose-600">{data.failure_reason}</p>
+            <p className="mt-1 text-sm text-danger">{data.failure_reason}</p>
           </div>
         ) : null}
       </Card>

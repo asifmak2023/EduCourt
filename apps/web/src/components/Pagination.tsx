@@ -1,5 +1,6 @@
 "use client";
 
+import { Pagination as HeroPagination } from "@heroui/react";
 import { formatNumber } from "@/lib/format";
 
 export function Pagination({
@@ -18,31 +19,35 @@ export function Pagination({
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 text-sm text-slate-500">
-      <span>
+    <HeroPagination size="sm">
+      <HeroPagination.Summary>
         {formatNumber(total)} record{total === 1 ? "" : "s"}
-      </span>
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          disabled={page <= 1}
-          onClick={() => onPage(page - 1)}
-          className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span className="text-xs text-slate-500">
-          Page {page} of {lastPage}
-        </span>
-        <button
-          type="button"
-          disabled={page >= lastPage}
-          onClick={() => onPage(page + 1)}
-          className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
-    </div>
+      </HeroPagination.Summary>
+      <HeroPagination.Content>
+        <HeroPagination.Item>
+          <HeroPagination.Previous
+            isDisabled={page <= 1}
+            onPress={() => onPage(page - 1)}
+          >
+            <HeroPagination.PreviousIcon />
+            Previous
+          </HeroPagination.Previous>
+        </HeroPagination.Item>
+        <HeroPagination.Item>
+          <span className="px-2 text-xs text-muted">
+            Page {page} of {lastPage}
+          </span>
+        </HeroPagination.Item>
+        <HeroPagination.Item>
+          <HeroPagination.Next
+            isDisabled={page >= lastPage}
+            onPress={() => onPage(page + 1)}
+          >
+            Next
+            <HeroPagination.NextIcon />
+          </HeroPagination.Next>
+        </HeroPagination.Item>
+      </HeroPagination.Content>
+    </HeroPagination>
   );
 }

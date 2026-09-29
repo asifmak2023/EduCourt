@@ -1,4 +1,11 @@
 import type { ReactNode } from "react";
+import {
+  Alert,
+  Card as HeroCard,
+  Chip,
+  EmptyState as HeroEmptyState,
+  Spinner as HeroSpinner,
+} from "@heroui/react";
 
 export function Card({
   children,
@@ -7,13 +14,7 @@ export function Card({
   children: ReactNode;
   className?: string;
 }) {
-  return (
-    <div
-      className={`rounded-2xl border border-slate-200 bg-white shadow-sm ${className}`}
-    >
-      {children}
-    </div>
-  );
+  return <HeroCard className={`gap-0 p-0 ${className}`}>{children}</HeroCard>;
 }
 
 export function StatCard({
@@ -28,53 +29,56 @@ export function StatCard({
   tone?: "default" | "positive" | "warning" | "danger";
 }) {
   const tones: Record<string, string> = {
-    default: "text-slate-900",
-    positive: "text-emerald-600",
-    warning: "text-amber-600",
-    danger: "text-rose-600",
+    default: "text-foreground",
+    positive: "text-success",
+    warning: "text-warning",
+    danger: "text-danger",
   };
 
   return (
     <Card className="p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted">
         {label}
       </p>
       <p className={`mt-2 text-2xl font-semibold ${tones[tone]}`}>{value}</p>
-      {hint ? <p className="mt-1 text-xs text-slate-400">{hint}</p> : null}
+      {hint ? <p className="mt-1 text-xs text-muted">{hint}</p> : null}
     </Card>
   );
 }
 
-const BADGE_TONES: Record<string, string> = {
-  active: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  paid: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  approved: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  enrolled: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  partial: "bg-amber-50 text-amber-700 ring-amber-200",
-  unpaid: "bg-rose-50 text-rose-700 ring-rose-200",
-  pending: "bg-amber-50 text-amber-700 ring-amber-200",
-  draft: "bg-amber-50 text-amber-700 ring-amber-200",
-  posted: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  reversed: "bg-slate-100 text-slate-600 ring-slate-200",
-  inactive: "bg-slate-100 text-slate-500 ring-slate-200",
-  applied: "bg-sky-50 text-sky-700 ring-sky-200",
-  enquiry: "bg-slate-100 text-slate-600 ring-slate-200",
-  under_review: "bg-indigo-50 text-indigo-700 ring-indigo-200",
-  rejected: "bg-rose-50 text-rose-700 ring-rose-200",
-  void: "bg-slate-100 text-slate-500 ring-slate-200",
-  default: "bg-slate-100 text-slate-600 ring-slate-200",
+type BadgeColor = "success" | "warning" | "danger" | "accent" | "default";
+
+const BADGE_COLORS: Record<string, BadgeColor> = {
+  active: "success",
+  paid: "success",
+  approved: "success",
+  enrolled: "success",
+  posted: "success",
+  partial: "warning",
+  unpaid: "danger",
+  pending: "warning",
+  draft: "warning",
+  reversed: "default",
+  inactive: "default",
+  applied: "accent",
+  enquiry: "default",
+  under_review: "accent",
+  rejected: "danger",
+  void: "default",
+  failed: "danger",
+  sent: "success",
+  cancelled: "default",
+  default: "default",
 };
 
 export function Badge({ value }: { value: string | null | undefined }) {
   const key = (value ?? "default").toLowerCase();
-  const tone = BADGE_TONES[key] ?? BADGE_TONES.default;
+  const color = BADGE_COLORS[key] ?? BADGE_COLORS.default;
 
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ring-1 ring-inset ${tone}`}
-    >
+    <Chip color={color} size="sm" variant="soft" className="capitalize">
       {(value ?? "-").replace(/_/g, " ")}
-    </span>
+    </Chip>
   );
 }
 
@@ -90,11 +94,11 @@ export function PageHeader({
   return (
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-slate-900">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
           {title}
         </h1>
         {description ? (
-          <p className="mt-1 text-sm text-slate-500">{description}</p>
+          <p className="mt-1 text-sm text-muted">{description}</p>
         ) : null}
       </div>
       {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
@@ -104,17 +108,17 @@ export function PageHeader({
 
 export function EmptyState({ message }: { message: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-1 px-6 py-14 text-center">
-      <p className="text-sm font-medium text-slate-600">Nothing here yet</p>
-      <p className="text-sm text-slate-400">{message}</p>
-    </div>
+    <HeroEmptyState className="flex flex-col items-center justify-center gap-1 px-6 py-14 text-center">
+      <p className="text-sm font-medium text-foreground">Nothing here yet</p>
+      <p className="text-sm text-muted">{message}</p>
+    </HeroEmptyState>
   );
 }
 
 export function Spinner({ label = "Loading..." }: { label?: string }) {
   return (
-    <div className="flex items-center justify-center gap-3 py-14 text-sm text-slate-500">
-      <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+    <div className="flex items-center justify-center gap-3 py-14 text-sm text-muted">
+      <HeroSpinner size="md" />
       {label}
     </div>
   );
@@ -122,17 +126,23 @@ export function Spinner({ label = "Loading..." }: { label?: string }) {
 
 export function ErrorNotice({ message }: { message: string }) {
   return (
-    <div className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
-      {message}
-    </div>
+    <Alert status="danger">
+      <Alert.Indicator />
+      <Alert.Content>
+        <Alert.Title>{message}</Alert.Title>
+      </Alert.Content>
+    </Alert>
   );
 }
 
 export function SuccessNotice({ message }: { message: string }) {
   return (
-    <div className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-      {message}
-    </div>
+    <Alert status="success">
+      <Alert.Indicator />
+      <Alert.Content>
+        <Alert.Title>{message}</Alert.Title>
+      </Alert.Content>
+    </Alert>
   );
 }
 
@@ -153,10 +163,10 @@ export function DataItem({
 }) {
   return (
     <div>
-      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">
+      <dt className="text-xs font-medium uppercase tracking-wide text-muted">
         {label}
       </dt>
-      <dd className="mt-1 break-words text-sm text-slate-800">
+      <dd className="mt-1 break-words text-sm text-foreground">
         {value ?? "-"}
       </dd>
     </div>
@@ -176,11 +186,11 @@ export function SectionCard({
 }) {
   return (
     <Card>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-4">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
           {description ? (
-            <p className="mt-0.5 text-xs text-slate-500">{description}</p>
+            <p className="mt-0.5 text-xs text-muted">{description}</p>
           ) : null}
         </div>
         {actions}

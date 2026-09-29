@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useClassRooms } from "@/lib/useLookups";
@@ -185,61 +186,64 @@ function NotificationsView() {
         <QueueAbsences onQueued={reload} />
       ) : null}
 
-      <Card>
-        {error ? (
-          <div className="p-5">
-            <ErrorNotice message={error} />
-          </div>
-        ) : loading ? (
+      {error ? (
+        <Card className="p-5">
+          <ErrorNotice message={error} />
+        </Card>
+      ) : loading ? (
+        <Card>
           <Spinner />
-        ) : items.length === 0 ? (
-          <div className="p-6">
-            <EmptyState message="No notifications match these filters." />
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Title</th>
-                  <th className="px-5 py-3 font-medium">Student</th>
-                  <th className="px-5 py-3 font-medium">Recipient</th>
-                  <th className="px-5 py-3 font-medium">Type</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                  <th className="px-5 py-3 font-medium">Created</th>
-                  <th className="px-5 py-3 text-right font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+        </Card>
+      ) : items.length === 0 ? (
+        <Card className="p-6">
+          <EmptyState message="No notifications match these filters." />
+        </Card>
+      ) : (
+        <Table variant="secondary">
+          <Table.ScrollContainer>
+            <Table.Content
+              aria-label="Notifications"
+              className="min-w-[960px]"
+            >
+              <Table.Header>
+                <Table.Column isRowHeader>Title</Table.Column>
+                <Table.Column>Student</Table.Column>
+                <Table.Column>Recipient</Table.Column>
+                <Table.Column>Type</Table.Column>
+                <Table.Column>Status</Table.Column>
+                <Table.Column>Created</Table.Column>
+                <Table.Column className="text-right">Actions</Table.Column>
+              </Table.Header>
+              <Table.Body>
                 {items.map((notification) => (
-                  <tr key={notification.id}>
-                    <td className="px-5 py-3">
+                  <Table.Row key={notification.id} id={notification.id}>
+                    <Table.Cell>
                       <Link
                         href={`/dashboard/notifications/${notification.id}`}
-                        className="font-medium text-slate-900 hover:underline"
+                        className="font-medium text-foreground hover:underline"
                       >
                         {notification.title}
                       </Link>
-                      <p className="max-w-md truncate text-xs text-slate-400">
+                      <p className="max-w-md truncate text-xs text-muted">
                         {notification.body}
                       </p>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
+                    </Table.Cell>
+                    <Table.Cell className="text-muted">
                       {notification.student ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
+                    </Table.Cell>
+                    <Table.Cell className="text-muted">
                       {notification.recipient_name ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
+                    </Table.Cell>
+                    <Table.Cell className="text-muted">
                       {notification.type_label ?? notification.type ?? "-"}
-                    </td>
-                    <td className="px-5 py-3">
+                    </Table.Cell>
+                    <Table.Cell>
                       <Badge value={notification.status ?? "unknown"} />
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-3 text-slate-600">
+                    </Table.Cell>
+                    <Table.Cell className="whitespace-nowrap text-muted">
                       {formatDateTime(notification.created_at)}
-                    </td>
-                    <td className="px-5 py-3">
+                    </Table.Cell>
+                    <Table.Cell>
                       {can("notification.send") &&
                       notification.status === "pending" ? (
                         <div className="flex justify-end gap-2">
@@ -270,24 +274,24 @@ function NotificationsView() {
                           </Link>
                         </div>
                       )}
-                    </td>
-                  </tr>
+                    </Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {meta && meta.last_page > 1 ? (
-          <div className="border-t border-slate-100 px-5 py-4">
-            <Pagination
-              page={page}
-              lastPage={meta.last_page}
-              total={meta.total}
-              onPage={setPage}
-            />
-          </div>
-        ) : null}
-      </Card>
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+          {meta && meta.last_page > 1 ? (
+            <Table.Footer>
+              <Pagination
+                page={page}
+                lastPage={meta.last_page}
+                total={meta.total}
+                onPage={setPage}
+              />
+            </Table.Footer>
+          ) : null}
+        </Table>
+      )}
     </div>
   );
 }
@@ -329,8 +333,10 @@ function QueueAbsences({ onQueued }: { onQueued: () => void }) {
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Queue absence notices</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">
+        Queue absence notices
+      </h2>
+      <p className="mt-0.5 text-xs text-muted">
         Create a pending notice for every student marked absent on the chosen day.
       </p>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">

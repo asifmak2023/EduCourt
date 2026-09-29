@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -134,55 +135,55 @@ function AuditLogView() {
             <EmptyState message="No activity matches these filters." />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">When</th>
-                  <th className="px-5 py-3 font-medium">Event</th>
-                  <th className="px-5 py-3 font-medium">Description</th>
-                  <th className="px-5 py-3 font-medium">Causer</th>
-                  <th className="px-5 py-3 font-medium">Subject</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((entry) => (
-                  <tr key={entry.id}>
-                    <td className="whitespace-nowrap px-5 py-3 text-slate-600">
-                      {formatDateTime(entry.created_at)}
-                    </td>
-                    <td className="px-5 py-3">
-                      {entry.event ? (
-                        <Badge value={entry.event} />
-                      ) : (
-                        <span className="text-slate-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-5 py-3">
-                      <p className="text-slate-900">{entry.description}</p>
-                      <p className="text-xs text-slate-400">
-                        {entry.log_name ?? "-"}
-                      </p>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {entry.causer_name ??
-                        (entry.causer_id ? `User #${entry.causer_id}` : "-")}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {entry.subject_type
-                        ? `${entry.subject_type}${
-                            entry.subject_id ? ` #${entry.subject_id}` : ""
-                          }`
-                        : "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table variant="secondary">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Audit log" className="min-w-[880px]">
+                <Table.Header>
+                  <Table.Column isRowHeader>When</Table.Column>
+                  <Table.Column>Event</Table.Column>
+                  <Table.Column>Description</Table.Column>
+                  <Table.Column>Causer</Table.Column>
+                  <Table.Column>Subject</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {items.map((entry) => (
+                    <Table.Row key={entry.id} id={entry.id}>
+                      <Table.Cell className="whitespace-nowrap text-muted">
+                        {formatDateTime(entry.created_at)}
+                      </Table.Cell>
+                      <Table.Cell>
+                        {entry.event ? (
+                          <Badge value={entry.event} />
+                        ) : (
+                          <span className="text-muted">-</span>
+                        )}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <p className="text-foreground">{entry.description}</p>
+                        <p className="text-xs text-muted">
+                          {entry.log_name ?? "-"}
+                        </p>
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {entry.causer_name ??
+                          (entry.causer_id ? `User #${entry.causer_id}` : "-")}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {entry.subject_type
+                          ? `${entry.subject_type}${
+                              entry.subject_id ? ` #${entry.subject_id}` : ""
+                            }`
+                          : "-"}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
         )}
         {meta && meta.last_page > 1 ? (
-          <div className="border-t border-slate-100 px-5 py-4">
+          <div className="border-t border-border px-5 py-4">
             <Pagination
               page={page}
               lastPage={meta.last_page}

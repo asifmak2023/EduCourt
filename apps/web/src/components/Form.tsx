@@ -3,7 +3,9 @@
 import {
   Children,
   Fragment,
+  createContext,
   isValidElement,
+  useContext,
   type ButtonHTMLAttributes,
   type ChangeEvent,
   type ComponentProps,
@@ -24,6 +26,8 @@ import {
   TextArea as HeroTextArea,
 } from "@heroui/react";
 
+const FieldContext = createContext<{ label: string } | null>(null);
+
 export function Field({
   label,
   htmlFor,
@@ -42,28 +46,39 @@ export function Field({
   className?: string;
 }) {
   return (
-    <div className={className}>
-      <label
-        htmlFor={htmlFor}
-        className="mb-1 block text-sm font-medium text-foreground"
-      >
-        {label}
-        {required ? <span className="ml-0.5 text-danger">*</span> : null}
-      </label>
-      {children}
-      {hint && !error ? (
-        <p className="mt-1 text-xs text-muted">{hint}</p>
-      ) : null}
-      {error ? <p className="mt-1 text-xs text-danger">{error}</p> : null}
-    </div>
+    <FieldContext.Provider value={{ label }}>
+      <div className={className}>
+        <label
+          htmlFor={htmlFor}
+          className="mb-1 block text-sm font-medium text-foreground"
+        >
+          {label}
+          {required ? <span className="ml-0.5 text-danger">*</span> : null}
+        </label>
+        {children}
+        {hint && !error ? (
+          <p className="mt-1 text-xs text-muted">{hint}</p>
+        ) : null}
+        {error ? <p className="mt-1 text-xs text-danger">{error}</p> : null}
+      </div>
+    </FieldContext.Provider>
   );
 }
 
 export function TextInput({
   className = "",
+  "aria-label": ariaLabel,
   ...props
 }: InputHTMLAttributes<HTMLInputElement>) {
-  return <Input fullWidth {...props} className={className} />;
+  const field = useContext(FieldContext);
+  return (
+    <Input
+      fullWidth
+      aria-label={ariaLabel ?? field?.label ?? props.placeholder ?? props.name}
+      {...props}
+      className={className}
+    />
+  );
 }
 
 type OptionEntry = {
@@ -136,7 +151,9 @@ export function Select({
   required,
   name,
   id,
+  "aria-label": ariaLabel,
 }: SelectHTMLAttributes<HTMLSelectElement>) {
+  const field = useContext(FieldContext);
   const options: OptionEntry[] = [];
   collectOptions(children, options);
 
@@ -147,12 +164,19 @@ export function Select({
       ? undefined
       : String(defaultValue);
   const disabledKeys = options.filter((o) => o.disabled).map((o) => o.value);
+  const accessibleLabel =
+    ariaLabel ??
+    field?.label ??
+    options.find((option) => option.value !== "")?.textValue ??
+    options[0]?.textValue ??
+    name;
 
   return (
     <HeroSelect
       fullWidth
       className={className}
       name={name}
+      aria-label={accessibleLabel}
       isDisabled={disabled}
       isRequired={required}
       selectedKey={selectedKey}
@@ -188,9 +212,18 @@ export function Select({
 
 export function TextArea({
   className = "",
+  "aria-label": ariaLabel,
   ...props
 }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <HeroTextArea fullWidth {...props} className={className} />;
+  const field = useContext(FieldContext);
+  return (
+    <HeroTextArea
+      fullWidth
+      aria-label={ariaLabel ?? field?.label ?? props.placeholder ?? props.name}
+      {...props}
+      className={className}
+    />
+  );
 }
 
 export function Checkbox({

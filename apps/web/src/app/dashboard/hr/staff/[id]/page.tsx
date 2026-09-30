@@ -25,6 +25,7 @@ import {
   SuccessNotice,
 } from "@/components/ui";
 import type { StaffDocument, StaffMember } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 export default function StaffDetailPage() {
   return (
@@ -89,8 +90,8 @@ function StaffDetailView() {
             label="Employment"
             value={data.employment_type_label ?? data.employment_type ?? "-"}
           />
-          <DataItem label="Joining date" value={data.joining_date ?? "-"} />
-          <DataItem label="Leaving date" value={data.leaving_date ?? "-"} />
+          <DataItem label="Joining date" value={formatDate(data.joining_date)} />
+          <DataItem label="Leaving date" value={formatDate(data.leaving_date)} />
           <DataItem label="Gender" value={data.gender ?? "-"} />
           <DataItem label="Date of birth" value={data.date_of_birth ?? "-"} />
           <DataItem label="CNIC" value={data.cnic ?? "-"} />
@@ -246,10 +247,10 @@ function DocumentsSection({
                       {document.type_label ?? document.type ?? "-"}
                     </Table.Cell>
                     <Table.Cell className="text-muted">
-                      {document.issued_on ?? "-"}
+                      {formatDate(document.issued_on)}
                     </Table.Cell>
                     <Table.Cell className="text-muted">
-                      {document.expires_on ?? "-"}
+                      {formatDate(document.expires_on)}
                     </Table.Cell>
                     <Table.Cell>
                       <Badge

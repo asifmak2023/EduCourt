@@ -9,6 +9,7 @@ import {
 import { MasterList } from "@/components/MasterList";
 import { Badge } from "@/components/ui";
 import type { StaffMember } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 export default function StaffPage() {
   const { can } = useAuth();
@@ -68,7 +69,7 @@ export default function StaffPage() {
           render: (item) =>
             item.employment_type_label ?? item.employment_type ?? "-",
         },
-        { header: "Joining", render: (item) => item.joining_date ?? "-" },
+        { header: "Joining", render: (item) => formatDate(item.joining_date) },
         {
           header: "Status",
           render: (item) => (

@@ -29,7 +29,7 @@ import {
   SectionCard,
   Spinner,
 } from "@/components/ui";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import { useStudents } from "@/lib/useLookups";
 import { EVENT_PARTICIPANT_STATUS_OPTIONS } from "@/lib/studentAffairsOptions";
 import type { EventParticipant, StudentEvent } from "@/lib/types";
@@ -90,8 +90,8 @@ function EventDetailView() {
 
       <SectionCard title="Event profile">
         <DataList>
-          <DataItem label="Starts" value={data.starts_on ?? "-"} />
-          <DataItem label="Ends" value={data.ends_on ?? "-"} />
+          <DataItem label="Starts" value={formatDate(data.starts_on)} />
+          <DataItem label="Ends" value={formatDate(data.ends_on)} />
           <DataItem label="Venue" value={data.venue ?? "-"} />
           <DataItem
             label="Budget"

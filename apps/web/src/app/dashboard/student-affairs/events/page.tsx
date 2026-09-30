@@ -3,7 +3,7 @@
 import { StudentAffairsTabs } from "@/components/StudentAffairsTabs";
 import { MasterList } from "@/components/MasterList";
 import { Badge } from "@/components/ui";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import { EVENT_STATUS_OPTIONS } from "@/lib/studentAffairsOptions";
 import type { StudentEvent } from "@/lib/types";
 
@@ -30,8 +30,8 @@ export default function EventsPage() {
         columns={[
           { header: "Event", render: (event) => event.title },
           { header: "Type", render: (event) => event.type ?? "-" },
-          { header: "Starts", render: (event) => event.starts_on ?? "-" },
-          { header: "Ends", render: (event) => event.ends_on ?? "-" },
+          { header: "Starts", render: (event) => formatDate(event.starts_on) },
+          { header: "Ends", render: (event) => formatDate(event.ends_on) },
           { header: "Venue", render: (event) => event.venue ?? "-" },
           {
             header: "Budget",

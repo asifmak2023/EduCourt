@@ -12,7 +12,7 @@ import {
   Spinner,
   StatCard,
 } from "@/components/ui";
-import { formatNumber } from "@/lib/format";
+import { formatDate, formatNumber } from "@/lib/format";
 import { useReport } from "@/lib/useReport";
 import type { ReportStaff } from "@/lib/types";
 
@@ -85,7 +85,7 @@ function StaffReport() {
             <StatCard
               label="Headcount"
               value={formatNumber(data.headcount.total)}
-              hint={`As on ${data.filters.as_on}`}
+              hint={`As on ${formatDate(data.filters.as_on)}`}
             />
             <StatCard
               label="Attendance records"

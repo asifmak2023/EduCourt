@@ -20,7 +20,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
 import { INVENTORY_MOVEMENT_TYPE_OPTIONS } from "@/lib/inventoryOptions";
 import type { InventoryItem, InventoryStockMovement } from "@/lib/types";
 
@@ -279,7 +279,7 @@ function MovementsPanel({ itemId }: { itemId: number }) {
               <Table.Body>
               {items.map((movement) => (
                 <Table.Row key={movement.id} id={movement.id}>
-                  <Table.Cell className="text-foreground">{movement.moved_on ?? "-"}</Table.Cell>
+                  <Table.Cell className="text-foreground">{formatDate(movement.moved_on)}</Table.Cell>
                   <Table.Cell><Badge value={movement.type ?? "unknown"} /></Table.Cell>
                   <Table.Cell className="text-right text-foreground">{formatNumber(movement.quantity)}</Table.Cell>
                   <Table.Cell className="text-right text-muted">{formatCurrency(movement.unit_cost)}</Table.Cell>

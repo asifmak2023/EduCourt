@@ -8,6 +8,7 @@ import {
   COUNSELLING_TYPE_OPTIONS,
 } from "@/lib/studentAffairsOptions";
 import type { CounsellingSession } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 export default function CounsellingPage() {
   return (
@@ -42,7 +43,7 @@ export default function CounsellingPage() {
             render: (session) =>
               session.student?.full_name ?? `Student #${session.student_id}`,
           },
-          { header: "Date", render: (session) => session.session_date ?? "-" },
+          { header: "Date", render: (session) => formatDate(session.session_date) },
           {
             header: "Type",
             render: (session) => <Badge value={session.type ?? "unknown"} />,
@@ -51,7 +52,7 @@ export default function CounsellingPage() {
             header: "Counsellor",
             render: (session) => session.counsellor?.name ?? "-",
           },
-          { header: "Follow up", render: (session) => session.follow_up_on ?? "-" },
+          { header: "Follow up", render: (session) => formatDate(session.follow_up_on) },
           {
             header: "Status",
             render: (session) => (

@@ -13,7 +13,7 @@ import {
   StatCard,
 } from "@/components/ui";
 import { useResource } from "@/lib/useResource";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type {
   CanteenDailyReport,
   CanteenItemWiseRow,
@@ -186,7 +186,7 @@ export default function CanteenReportsPage() {
                 <Table.Body>
                 {daily.data.by_day.map((row) => (
                   <Table.Row key={row.sold_on} id={row.sold_on}>
-                    <Table.Cell className="text-muted">{row.sold_on}</Table.Cell>
+                    <Table.Cell className="text-muted">{formatDate(row.sold_on)}</Table.Cell>
                     <Table.Cell className="text-right text-muted">{row.bills}</Table.Cell>
                     <Table.Cell className="text-right text-foreground">{formatCurrency(row.revenue)}</Table.Cell>
                     <Table.Cell className="text-right text-muted">{formatCurrency(row.cost)}</Table.Cell>

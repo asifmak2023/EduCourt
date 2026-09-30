@@ -6,6 +6,7 @@ import {
   CIRCULAR_AUDIENCE_OPTIONS,
   CIRCULAR_STATUS_OPTIONS,
 } from "@/lib/circularOptions";
+import { formatDate, formatDateTime } from "@/lib/format";
 import type { Circular } from "@/lib/types";
 
 export default function CircularsPage() {
@@ -47,9 +48,9 @@ export default function CircularsPage() {
         },
         {
           header: "Published",
-          render: (circular) => circular.published_at ?? "-",
+          render: (circular) => formatDateTime(circular.published_at),
         },
-        { header: "Expires", render: (circular) => circular.expires_on ?? "-" },
+        { header: "Expires", render: (circular) => formatDate(circular.expires_on) },
         {
           header: "Status",
           render: (circular) => (

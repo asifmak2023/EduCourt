@@ -18,7 +18,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDateTime } from "@/lib/format";
 import type { ExamSupplementary } from "@/lib/types";
 
 export default function SupplementaryDetailPage() {
@@ -67,7 +67,7 @@ function SupplementaryDetailView() {
           <DataItem label="Target exam" value={data.exam?.name ?? "-"} />
           <DataItem label="Subject" value={data.subject?.name ?? "-"} />
           <DataItem label="Fee" value={formatCurrency(data.fee_amount)} />
-          <DataItem label="Approved at" value={data.approved_at ?? "-"} />
+          <DataItem label="Approved at" value={formatDateTime(data.approved_at)} />
         </DataList>
         {data.remarks ? (
           <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">

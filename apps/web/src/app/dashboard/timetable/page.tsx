@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { formatTime } from "@/lib/format";
 import {
   useAcademicYears,
   useClassRooms,
@@ -382,7 +383,7 @@ function TimetableView() {
                           {period.name}
                         </div>
                         <div className="text-xs text-muted">
-                          {period.starts_at} - {period.ends_at}
+                          {formatTime(period.starts_at)} - {formatTime(period.ends_at)}
                         </div>
                       </Table.Cell>
                       {days.map((day) => {

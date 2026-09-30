@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Button, buttonClasses } from "@/components/Form";
 import {
@@ -75,9 +76,9 @@ function LessonPlanDetailView() {
         <DataList>
           <DataItem label="Syllabus unit" value={data.syllabus_unit?.title ?? "-"} />
           <DataItem label="Term" value={data.syllabus_unit?.term?.name ?? "-"} />
-          <DataItem label="Planned from" value={data.planned_from ?? "-"} />
-          <DataItem label="Planned to" value={data.planned_to ?? "-"} />
-          <DataItem label="Approved at" value={data.approved_at ?? "-"} />
+          <DataItem label="Planned from" value={formatDate(data.planned_from)} />
+          <DataItem label="Planned to" value={formatDate(data.planned_to)} />
+          <DataItem label="Approved at" value={formatDateTime(data.approved_at)} />
         </DataList>
 
         <div className="mt-5 space-y-4 border-t border-border pt-4">

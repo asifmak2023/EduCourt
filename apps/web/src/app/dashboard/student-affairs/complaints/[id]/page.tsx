@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
+import { formatDateTime } from "@/lib/format";
 import { PermissionGate } from "@/components/PermissionGate";
 import { StudentAffairsTabs } from "@/components/StudentAffairsTabs";
 import {
@@ -116,7 +117,7 @@ function ComplaintDetailView() {
             <DataItem label="Resolution" value={data.resolution} />
           ) : null}
           {data.resolved_at ? (
-            <DataItem label="Resolved at" value={data.resolved_at} />
+            <DataItem label="Resolved at" value={formatDateTime(data.resolved_at)} />
           ) : null}
         </DataList>
       </SectionCard>

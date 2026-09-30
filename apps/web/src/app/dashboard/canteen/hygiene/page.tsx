@@ -5,6 +5,7 @@ import { MasterList } from "@/components/MasterList";
 import { Badge } from "@/components/ui";
 import { HYGIENE_STATUS_OPTIONS } from "@/lib/canteenOptions";
 import type { CanteenHygieneCheck } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 export default function CanteenHygienePage() {
   return (
@@ -30,7 +31,7 @@ export default function CanteenHygienePage() {
           { header: "Area", render: (check) => check.area },
           {
             header: "Date",
-            render: (check) => check.check_date ?? "-",
+            render: (check) => formatDate(check.check_date),
           },
           {
             header: "Status",

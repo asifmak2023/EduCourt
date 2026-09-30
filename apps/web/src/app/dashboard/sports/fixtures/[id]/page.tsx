@@ -20,6 +20,7 @@ import {
   Spinner,
 } from "@/components/ui";
 import type { SportFixture } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 export default function SportFixtureDetailPage() {
   return (
@@ -100,7 +101,7 @@ function FixtureDetailView() {
         <DataList>
           <DataItem label="Sport" value={data.sport?.name ?? "-"} />
           <DataItem label="Team" value={data.team?.name ?? "-"} />
-          <DataItem label="Date" value={data.fixture_date ?? "-"} />
+          <DataItem label="Date" value={formatDate(data.fixture_date)} />
           <DataItem
             label="Time"
             value={(data.start_time ?? "").slice(0, 5) || "-"}

@@ -5,6 +5,7 @@ import { MasterList } from "@/components/MasterList";
 import { Badge } from "@/components/ui";
 import { CERTIFICATE_STATUS_OPTIONS } from "@/lib/studentAffairsOptions";
 import type { StudentCertificate } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 export default function CertificatesPage() {
   return (
@@ -38,7 +39,7 @@ export default function CertificatesPage() {
               `Student #${certificate.student_id}`,
           },
           { header: "Serial", render: (certificate) => certificate.serial_no ?? "-" },
-          { header: "Issued on", render: (certificate) => certificate.issued_on ?? "-" },
+          { header: "Issued on", render: (certificate) => formatDate(certificate.issued_on) },
           {
             header: "Status",
             render: (certificate) => (

@@ -3,6 +3,7 @@
 import { MasterList } from "@/components/MasterList";
 import { Badge } from "@/components/ui";
 import { useRoleOptions } from "@/lib/useLookups";
+import { formatDateTime } from "@/lib/format";
 import type { User } from "@/lib/types";
 
 export default function UsersPage() {
@@ -50,7 +51,7 @@ export default function UsersPage() {
             <Badge value={user.two_factor_enabled ? "enabled" : "disabled"} />
           ),
         },
-        { header: "Last login", render: (user) => user.last_login_at ?? "-" },
+        { header: "Last login", render: (user) => formatDateTime(user.last_login_at) },
         {
           header: "Status",
           render: (user) => (

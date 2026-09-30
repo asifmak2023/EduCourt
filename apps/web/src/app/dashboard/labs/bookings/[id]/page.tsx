@@ -19,6 +19,7 @@ import {
   Spinner,
 } from "@/components/ui";
 import type { LabBooking } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 export default function LabBookingDetailPage() {
   return (
@@ -66,7 +67,7 @@ function BookingDetailView() {
           <DataItem label="Lab" value={data.lab?.name ?? `#${data.lab_id}`} />
           <DataItem label="Class" value={data.class_room?.name ?? "-"} />
           <DataItem label="Teacher" value={data.teacher?.name ?? "-"} />
-          <DataItem label="Session date" value={data.session_date ?? "-"} />
+          <DataItem label="Session date" value={formatDate(data.session_date)} />
           <DataItem
             label="Time"
             value={

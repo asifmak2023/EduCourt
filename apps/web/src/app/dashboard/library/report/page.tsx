@@ -16,7 +16,7 @@ import {
   Spinner,
   StatCard,
 } from "@/components/ui";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
 import type { BookIssue, LibrarySummary } from "@/lib/types";
 
 export default function LibraryReportPage() {
@@ -121,7 +121,7 @@ function ReportView() {
                       </Link></Table.Cell>
                     <Table.Cell className="text-muted">{issue.student?.full_name ??
                         (issue.user_id ? `Staff #${issue.user_id}` : "-")}</Table.Cell>
-                    <Table.Cell className="text-muted">{issue.due_on ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{formatDate(issue.due_on)}</Table.Cell>
                     <Table.Cell><Badge value={issue.status ?? "unknown"} /></Table.Cell>
                   </Table.Row>
                 ))}

@@ -19,7 +19,7 @@ import {
   SectionCard,
   Spinner,
 } from "@/components/ui";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import type { CanteenSale } from "@/lib/types";
 
 export default function CanteenSaleDetailPage() {
@@ -103,7 +103,7 @@ export default function CanteenSaleDetailPage() {
             value={<Badge value={data.status ?? "unknown"} />}
           />
           <DataItem label="Payment method" value={data.payment_method ?? "-"} />
-          <DataItem label="Sold on" value={data.sold_on ?? "-"} />
+          <DataItem label="Sold on" value={formatDate(data.sold_on)} />
           <DataItem
             label="Student"
             value={data.student?.full_name ?? data.customer_name ?? "-"}
@@ -123,7 +123,7 @@ export default function CanteenSaleDetailPage() {
             <DataItem label="Journal entry" value={`#${data.journal_entry_id}`} />
           ) : null}
           {data.voided_at ? (
-            <DataItem label="Voided at" value={data.voided_at} />
+            <DataItem label="Voided at" value={formatDateTime(data.voided_at)} />
           ) : null}
           {data.notes ? <DataItem label="Notes" value={data.notes} /> : null}
         </DataList>

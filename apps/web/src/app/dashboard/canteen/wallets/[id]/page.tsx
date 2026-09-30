@@ -23,7 +23,7 @@ import {
   Spinner,
   SuccessNotice,
 } from "@/components/ui";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type { StudentWallet, WalletTransaction } from "@/lib/types";
 
 export default function StudentWalletDetailPage() {
@@ -296,7 +296,7 @@ export default function StudentWalletDetailPage() {
               <Table.Body>
               {transactions.items.map((txn) => (
                 <Table.Row key={txn.id} id={txn.id}>
-                  <Table.Cell className="text-muted">{txn.transaction_date ?? "-"}</Table.Cell>
+                  <Table.Cell className="text-muted">{formatDate(txn.transaction_date)}</Table.Cell>
                   <Table.Cell><Badge value={txn.type ?? "unknown"} /></Table.Cell>
                   <Table.Cell className="text-muted">{txn.description ?? txn.reference ?? "-"}</Table.Cell>
                   <Table.Cell className="text-right text-foreground">{formatCurrency(txn.amount)}</Table.Cell>

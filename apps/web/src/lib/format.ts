@@ -64,6 +64,29 @@ export function formatDateTime(value: string | null | undefined): string {
   });
 }
 
+export function formatTime(value: string | null | undefined): string {
+  if (!value) {
+    return "-";
+  }
+
+  const match = /^(\d{1,2}):(\d{2})/.exec(value);
+
+  if (match) {
+    return `${match[1].padStart(2, "0")}:${match[2]}`;
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export function humanize(value: string | null | undefined): string {
   if (!value) {
     return "-";

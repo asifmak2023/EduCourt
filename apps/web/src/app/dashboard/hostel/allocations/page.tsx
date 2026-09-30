@@ -16,7 +16,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type { HostelAllocation } from "@/lib/types";
 
 export default function HostelAllocationsPage() {
@@ -117,8 +117,8 @@ export default function HostelAllocationsPage() {
                     <Table.Cell className="text-muted">{allocation.hostel?.name ?? "-"}</Table.Cell>
                     <Table.Cell className="text-muted">{allocation.room?.room_no ?? "-"}</Table.Cell>
                     <Table.Cell className="text-muted">{allocation.bed_no ?? "-"}</Table.Cell>
-                    <Table.Cell className="text-muted">{allocation.allocated_on ?? "-"}</Table.Cell>
-                    <Table.Cell className="text-muted">{allocation.vacated_on ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{formatDate(allocation.allocated_on)}</Table.Cell>
+                    <Table.Cell className="text-muted">{formatDate(allocation.vacated_on)}</Table.Cell>
                     <Table.Cell className="text-right text-foreground">{formatCurrency(allocation.monthly_fee)}</Table.Cell>
                     <Table.Cell><Badge value={allocation.status ?? "unknown"} /></Table.Cell>
                   </Table.Row>

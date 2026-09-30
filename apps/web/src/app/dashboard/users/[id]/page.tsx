@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
+import { formatDateTime } from "@/lib/format";
 import { PermissionGate } from "@/components/PermissionGate";
 import { buttonClasses } from "@/components/Form";
 import {
@@ -78,7 +79,7 @@ function UserDetailView() {
               <Badge value={data.two_factor_enabled ? "enabled" : "disabled"} />
             }
           />
-          <DataItem label="Last login" value={data.last_login_at ?? "-"} />
+          <DataItem label="Last login" value={formatDateTime(data.last_login_at)} />
         </DataList>
       </SectionCard>
 

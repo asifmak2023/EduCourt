@@ -18,7 +18,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { formatNumber } from "@/lib/format";
+import { formatDate, formatNumber } from "@/lib/format";
 import type { CourseRegistration } from "@/lib/types";
 
 export default function RegistrationDetailPage() {
@@ -69,7 +69,7 @@ function RegistrationDetailView() {
             label="Credit hours"
             value={formatNumber(data.credit_hours)}
           />
-          <DataItem label="Registered on" value={data.registered_on ?? "-"} />
+          <DataItem label="Registered on" value={formatDate(data.registered_on)} />
         </DataList>
         {data.remarks ? (
           <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">

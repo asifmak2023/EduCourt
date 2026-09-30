@@ -20,7 +20,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { formatDate, formatNumber } from "@/lib/format";
+import { formatDate, formatNumber, formatTime } from "@/lib/format";
 import type { ExamPaper } from "@/lib/types";
 
 export default function ExamPapersPage() {
@@ -169,8 +169,8 @@ function PapersTable() {
                       </Table.Cell>
                       <Table.Cell className="text-muted">
                         {paper.starts_at && paper.ends_at
-                          ? `${paper.starts_at} - ${paper.ends_at}`
-                          : paper.starts_at ?? "-"}
+                          ? `${formatTime(paper.starts_at)} - ${formatTime(paper.ends_at)}`
+                          : formatTime(paper.starts_at)}
                       </Table.Cell>
                       <Table.Cell className="text-right text-muted">
                         {formatNumber(paper.max_marks)}

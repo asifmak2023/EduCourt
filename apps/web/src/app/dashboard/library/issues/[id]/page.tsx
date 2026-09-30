@@ -18,7 +18,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type { BookIssue } from "@/lib/types";
 
 export default function BookIssueDetailPage() {
@@ -80,9 +80,9 @@ function IssueDetailView() {
             label="Staff"
             value={data.user_id ? `#${data.user_id}` : "-"}
           />
-          <DataItem label="Issued on" value={data.issued_on ?? "-"} />
-          <DataItem label="Due on" value={data.due_on ?? "-"} />
-          <DataItem label="Returned on" value={data.returned_on ?? "-"} />
+          <DataItem label="Issued on" value={formatDate(data.issued_on)} />
+          <DataItem label="Due on" value={formatDate(data.due_on)} />
+          <DataItem label="Returned on" value={formatDate(data.returned_on)} />
           <DataItem label="Fine" value={formatCurrency(data.fine_amount)} />
         </DataList>
         {data.notes ? (

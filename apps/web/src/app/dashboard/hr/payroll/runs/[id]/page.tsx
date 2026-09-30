@@ -20,7 +20,7 @@ import {
   Spinner,
 } from "@/components/ui";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/payrollOptions";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDateTime } from "@/lib/format";
 import type { PayrollRun } from "@/lib/types";
 
 export default function PayrollRunDetailPage() {
@@ -75,8 +75,8 @@ function RunDetailView() {
           <DataItem label="Period" value={data.period} />
           <DataItem label="Status" value={data.status_label ?? data.status ?? "-"} />
           <DataItem label="Payslips" value={String(payslips.length)} />
-          <DataItem label="Approved at" value={data.approved_at ?? "-"} />
-          <DataItem label="Paid at" value={data.paid_at ?? "-"} />
+          <DataItem label="Approved at" value={formatDateTime(data.approved_at)} />
+          <DataItem label="Paid at" value={formatDateTime(data.paid_at)} />
           <DataItem label="Payment method" value={data.payment_method ?? "-"} />
           <DataItem
             label="Journal entry"

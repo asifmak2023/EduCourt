@@ -9,6 +9,7 @@ import {
   FIXTURE_STATUS_OPTIONS,
 } from "@/lib/sportsOptions";
 import type { SportFixture } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 export default function SportFixturesPage() {
   const { items: sports } = useSports();
@@ -52,7 +53,7 @@ export default function SportFixturesPage() {
         columns={[
           {
             header: "Date",
-            render: (fixture) => fixture.fixture_date ?? "-",
+            render: (fixture) => formatDate(fixture.fixture_date),
           },
           { header: "Sport", render: (fixture) => fixture.sport?.name ?? "-" },
           { header: "Team", render: (fixture) => fixture.team?.name ?? "-" },

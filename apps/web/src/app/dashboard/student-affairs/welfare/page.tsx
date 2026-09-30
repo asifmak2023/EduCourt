@@ -8,6 +8,7 @@ import {
   WELFARE_TYPE_OPTIONS,
 } from "@/lib/studentAffairsOptions";
 import type { WelfareRecord } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 export default function WelfarePage() {
   return (
@@ -47,7 +48,7 @@ export default function WelfarePage() {
             header: "Type",
             render: (record) => <Badge value={record.type ?? "unknown"} />,
           },
-          { header: "Recorded on", render: (record) => record.recorded_on ?? "-" },
+          { header: "Recorded on", render: (record) => formatDate(record.recorded_on) },
           {
             header: "Status",
             render: (record) => (

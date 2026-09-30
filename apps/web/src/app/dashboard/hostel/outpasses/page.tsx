@@ -16,6 +16,7 @@ import {
   Spinner,
 } from "@/components/ui";
 import type { HostelOutpass } from "@/lib/types";
+import { formatDateTime } from "@/lib/format";
 
 export default function HostelOutpassesPage() {
   const { can } = useAuth();
@@ -89,8 +90,8 @@ export default function HostelOutpassesPage() {
                         {outpass.student?.full_name ??
                           `#${outpass.student_id}`}
                       </Link></Table.Cell>
-                    <Table.Cell className="text-muted">{outpass.from_datetime ?? "-"}</Table.Cell>
-                    <Table.Cell className="text-muted">{outpass.to_datetime ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{formatDateTime(outpass.from_datetime)}</Table.Cell>
+                    <Table.Cell className="text-muted">{formatDateTime(outpass.to_datetime)}</Table.Cell>
                     <Table.Cell className="text-muted">{outpass.reason}</Table.Cell>
                     <Table.Cell><Badge value={outpass.status ?? "unknown"} /></Table.Cell>
                   </Table.Row>

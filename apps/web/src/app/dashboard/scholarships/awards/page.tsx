@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useScholarships, useStudents } from "@/lib/useLookups";
 import { MasterList } from "@/components/MasterList";
 import { Badge } from "@/components/ui";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
 import type { ScholarshipAward } from "@/lib/types";
 
 export default function ScholarshipAwardsPage() {
@@ -62,7 +62,7 @@ export default function ScholarshipAwardsPage() {
         },
         {
           header: "Awarded",
-          render: (award) => award.awarded_on ?? "-",
+          render: (award) => formatDate(award.awarded_on),
         },
         {
           header: "Value",

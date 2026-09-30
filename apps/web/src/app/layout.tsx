@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ACCENTS } from "@eis/appearance";
 import { AuthProvider } from "@/lib/auth";
+import { AppearanceProvider } from "@/lib/appearance";
+import { AppBackground } from "@/components/AppBackground";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,14 +22,29 @@ export const metadata: Metadata = {
     "Multi-campus school, college and university information system.",
 };
 
+const accentMap = Object.fromEntries(
+  ACCENTS.map((accent) => [accent.id, [accent.accent, accent.accentForeground]])
+);
+
+const bootScript = `(function(){try{var d=document.documentElement;var a=JSON.parse(localStorage.getItem("eis.appearance")||"{}");var m=a.mode||"system";var dark=m==="dark"||(m==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);d.dataset.theme=dark?"dark":"light";var accents=${JSON.stringify(
+  accentMap
+)};var id=a.accentId||"indigo";var acc=accents[id]||accents.indigo;d.dataset.accent=id;d.style.setProperty("--accent",acc[0]);d.style.setProperty("--accent-foreground",acc[1]);d.dataset.vibrantPalette=String(a.vibrant!==false);d.dataset.animations=String(a.animations!==false);d.dataset.background=a.backgroundId||"default";}catch(e){}})();`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-surface-secondary text-foreground">
-        <AuthProvider>{children}</AuthProvider>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: bootScript }} />
+      </head>
+      <body className="min-h-full flex flex-col text-foreground">
+        <AppearanceProvider>
+          <AppBackground />
+          <AuthProvider>{children}</AuthProvider>
+        </AppearanceProvider>
       </body>
     </html>
   );

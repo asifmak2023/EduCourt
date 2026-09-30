@@ -27,7 +27,12 @@ export type NavIcon =
   | "shield"
   | "cog"
   | "history"
-  | "creditCard";
+  | "creditCard"
+  | "chevronDown"
+  | "palette"
+  | "sun"
+  | "moon"
+  | "sparkles";
 
 export interface NavItem {
   label: string;
@@ -145,4 +150,23 @@ export function findNavItem(pathname: string): NavItem | null {
   }
 
   return null;
+}
+
+export function sectionForPath(pathname: string): NavSection | null {
+  let best: NavSection | null = null;
+  let bestLength = 0;
+
+  for (const section of NAV_SECTIONS) {
+    for (const item of section.items) {
+      if (
+        (pathname === item.href || pathname.startsWith(`${item.href}/`)) &&
+        item.href.length >= bestLength
+      ) {
+        best = section;
+        bestLength = item.href.length;
+      }
+    }
+  }
+
+  return best;
 }

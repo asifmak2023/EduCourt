@@ -10,6 +10,11 @@ export const SETTINGS_TABS = [
     href: "/dashboard/settings/sso-providers",
     label: "SSO providers",
   },
+  {
+    key: "appearance",
+    href: "/dashboard/settings/appearance",
+    label: "Appearance",
+  },
 ];
 
 export function SettingsTabs({ active }: { active: string }) {

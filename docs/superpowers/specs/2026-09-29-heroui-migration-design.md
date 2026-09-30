@@ -1,7 +1,7 @@
 # Web frontend migration to HeroUI v3 (module by module)
 
 Date: 2026-09-29
-Status: Approved
+Status: Completed (2026-09-30)
 
 ## Goal
 
@@ -72,6 +72,31 @@ Notifications → Institutions (introduces `MasterList`/`MasterForm`) →
 Circulars → Settings (SSO) → Audit → Users/Roles → Academic →
 Students/Admissions → Attendance/Exams → Fees/Finance → HR → Operations
 (canteen, sports, student-affairs, IT, support) → Reports.
+
+## Completion
+
+The whole web surface (`apps/web/src/app` + `apps/web/src/components`) is
+migrated. Final sweep asserts zero legacy Tailwind palette classes and zero
+hand-rolled `<table>` elements. `tsc --noEmit` and `eslint src` are clean and
+the representative shell, shared-component and module routes return HTTP 200.
+
+Batch commits on `master`:
+
+- `a1fda03` shared UI primitives + Notifications
+- `7e3aa69` Institutions + Campuses
+- `57c0c51` Circulars
+- `51bce13` Audit table
+- `697df25` Settings + SSO
+- `696cb73` Users + Roles
+- `cf4e2cb` Academic / Curriculum / Timetable
+- `e908278` Students + Admissions
+- `39b7570` Attendance + Exams
+- `5e68565` Fees + Finance
+- `7186d47` HR + Payroll
+- `a631c99` Operations (canteen, inventory, labs, library, sports,
+  student-affairs, transport, hostel)
+- `77006d2` Reports + Credits + Scholarships + Promotions
+- `d881c60` shared components, shell and landing pages
 
 ## Risks
 

@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -10,13 +10,30 @@ import {
   View,
 } from "react-native";
 import { ApiError, apiFetch, setToken, type AuthUser } from "./src/lib/api";
+import { AppearanceModal } from "./src/components/AppearanceModal";
+import { AppBackground } from "./src/theme/AppBackground";
+import { ThemeProvider, useTheme } from "./src/theme/ThemeProvider";
+import { withAlpha, type ThemeColors } from "./src/theme/colors";
 
 export default function App() {
+  return (
+    <ThemeProvider>
+      <AppInner />
+    </ThemeProvider>
+  );
+}
+
+function AppInner() {
+  const { colors, resolvedMode, ready, background } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const hasBackground = background.kind !== "default";
+  const headerStyle = [styles.headerBlock, hasBackground ? styles.headerScrim : null];
   const [user, setUser] = useState<AuthUser | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showAppearance, setShowAppearance] = useState(false);
 
   async function signIn() {
     setLoading(true);
@@ -46,152 +63,233 @@ export default function App() {
     setUser(null);
   }
 
-  if (user) {
-    const modules = Array.from(
-      new Set(user.permissions.map((permission) => permission.split(".")[0]))
-    ).sort();
-
+  if (!ready) {
     return (
-      <ScrollView contentContainerStyle={styles.screen}>
-        <StatusBar style="dark" />
-        <Text style={styles.title}>Dashboard</Text>
-        <Text style={styles.subtitle}>
-          {user.institution?.name ?? "Institution"} - {user.campus?.name ?? "All campuses"}
-        </Text>
-
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Signed in as</Text>
-          <Text style={styles.cardValue}>{user.name}</Text>
-          <Text style={styles.subtitle}>{user.email}</Text>
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Roles</Text>
-          <Text style={styles.cardValue}>{user.roles.join(", ")}</Text>
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Accessible modules</Text>
-          <Text style={styles.cardValue}>{modules.join(", ")}</Text>
-        </View>
-
-        <Pressable style={styles.buttonGhost} onPress={signOut}>
-          <Text style={styles.buttonGhostText}>Sign out</Text>
-        </Pressable>
-      </ScrollView>
+      <View style={styles.loading}>
+        <StatusBar style={resolvedMode === "dark" ? "light" : "dark"} />
+        <ActivityIndicator color={colors.accent} />
+      </View>
     );
   }
 
   return (
-    <View style={styles.screen}>
-      <StatusBar style="dark" />
-      <Text style={styles.title}>Education Information System</Text>
-      <Text style={styles.subtitle}>Sign in to your campus dashboard.</Text>
+    <View style={styles.root}>
+      <AppBackground />
+      <StatusBar style={resolvedMode === "dark" ? "light" : "dark"} />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
+      {user ? (
+        <ScrollView contentContainerStyle={styles.screen}>
+          <View style={headerStyle}>
+            <View style={styles.headerRow}>
+              <Text style={styles.title}>Dashboard</Text>
+              <Pressable
+                style={styles.pill}
+                onPress={() => setShowAppearance(true)}
+                accessibilityRole="button"
+              >
+                <Text style={styles.pillText}>Appearance</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.subtitle}>
+              {user.institution?.name ?? "Institution"} -{" "}
+              {user.campus?.name ?? "All campuses"}
+            </Text>
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>Signed in as</Text>
+            <Text style={styles.cardValue}>{user.name}</Text>
+            <Text style={styles.subtitle}>{user.email}</Text>
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>Roles</Text>
+            <Text style={styles.cardValue}>{user.roles.join(", ")}</Text>
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>Accessible modules</Text>
+            <Text style={styles.cardValue}>
+              {Array.from(
+                new Set(user.permissions.map((permission) => permission.split(".")[0]))
+              )
+                .sort()
+                .join(", ")}
+            </Text>
+          </View>
+
+          <Pressable style={styles.buttonGhost} onPress={signOut}>
+            <Text style={styles.buttonGhostText}>Sign out</Text>
+          </Pressable>
+        </ScrollView>
+      ) : (
+        <ScrollView contentContainerStyle={styles.screen}>
+          <View style={headerStyle}>
+            <View style={styles.headerRow}>
+              <Text style={styles.title}>Education Information System</Text>
+              <Pressable
+                style={styles.pill}
+                onPress={() => setShowAppearance(true)}
+                accessibilityRole="button"
+              >
+                <Text style={styles.pillText}>Appearance</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.subtitle}>Sign in to your campus dashboard.</Text>
+          </View>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor={colors.muted}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor={colors.muted}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <Pressable style={styles.button} onPress={signIn} disabled={loading}>
+            {loading ? (
+              <ActivityIndicator color={colors.accentForeground} />
+            ) : (
+              <Text style={styles.buttonText}>Sign in</Text>
+            )}
+          </Pressable>
+        </ScrollView>
+      )}
+
+      <AppearanceModal
+        visible={showAppearance}
+        onClose={() => setShowAppearance(false)}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-
-      <Pressable style={styles.button} onPress={signIn} disabled={loading}>
-        {loading ? (
-          <ActivityIndicator color="#ffffff" />
-        ) : (
-          <Text style={styles.buttonText}>Sign in</Text>
-        )}
-      </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flexGrow: 1,
-    padding: 24,
-    paddingTop: 72,
-    backgroundColor: "#f8fafc",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-  subtitle: {
-    marginTop: 4,
-    fontSize: 14,
-    color: "#64748b",
-  },
-  input: {
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: "#ffffff",
-    fontSize: 15,
-  },
-  button: {
-    marginTop: 20,
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: "center",
-    backgroundColor: "#0f172a",
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  buttonGhost: {
-    marginTop: 24,
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#cbd5e1",
-  },
-  buttonGhostText: {
-    color: "#334155",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  error: {
-    marginTop: 12,
-    color: "#b91c1c",
-    fontSize: 14,
-  },
-  card: {
-    marginTop: 16,
-    borderRadius: 14,
-    padding: 16,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-  cardLabel: {
-    fontSize: 12,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    color: "#64748b",
-  },
-  cardValue: {
-    marginTop: 6,
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#0f172a",
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    loading: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.background,
+    },
+    screen: {
+      flexGrow: 1,
+      padding: 24,
+      paddingTop: 72,
+    },
+    headerBlock: {
+      marginBottom: 4,
+    },
+    headerScrim: {
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      backgroundColor: withAlpha(colors.surface, 0.82),
+    },
+    headerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+    },
+    title: {
+      flexShrink: 1,
+      fontSize: 22,
+      fontWeight: "700",
+      color: colors.foreground,
+    },
+    subtitle: {
+      marginTop: 4,
+      fontSize: 14,
+      color: colors.muted,
+    },
+    pill: {
+      borderRadius: 999,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      backgroundColor: colors.accentSoft,
+    },
+    pillText: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: colors.accent,
+    },
+    input: {
+      marginTop: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      backgroundColor: colors.surface,
+      color: colors.foreground,
+      fontSize: 15,
+    },
+    button: {
+      marginTop: 20,
+      borderRadius: 10,
+      paddingVertical: 14,
+      alignItems: "center",
+      backgroundColor: colors.accent,
+    },
+    buttonText: {
+      color: colors.accentForeground,
+      fontSize: 15,
+      fontWeight: "600",
+    },
+    buttonGhost: {
+      marginTop: 24,
+      borderRadius: 10,
+      paddingVertical: 12,
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    buttonGhostText: {
+      color: colors.foreground,
+      fontSize: 15,
+      fontWeight: "600",
+    },
+    error: {
+      marginTop: 12,
+      color: colors.danger,
+      fontSize: 14,
+    },
+    card: {
+      marginTop: 16,
+      borderRadius: 14,
+      padding: 16,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    cardLabel: {
+      fontSize: 12,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      color: colors.muted,
+    },
+    cardValue: {
+      marginTop: 6,
+      fontSize: 16,
+      fontWeight: "600",
+      color: colors.foreground,
+    },
+  });
+}

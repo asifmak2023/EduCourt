@@ -1,0 +1,483 @@
+import { LinearGradient } from "expo-linear-gradient";
+import { useState } from "react";
+import {
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from "react-native";
+import {
+  ACCENTS,
+  GRADIENTS,
+  SOLIDS,
+  WALLPAPERS,
+  type BackgroundKind,
+  type ColorMode,
+} from "@eis/appearance";
+import { useTheme } from "../theme/ThemeProvider";
+import { withAlpha, type ThemeColors } from "../theme/colors";
+
+const MODES: { value: ColorMode; label: string }[] = [
+  { value: "system", label: "System" },
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+];
+
+const FAMILIES: { value: BackgroundKind; label: string }[] = [
+  { value: "default", label: "Default" },
+  { value: "solid", label: "Solid" },
+  { value: "gradient", label: "Gradient" },
+  { value: "wallpaper", label: "Wallpaper" },
+];
+
+function familyOf(backgroundId: string): BackgroundKind {
+  if (SOLIDS.some((solid) => solid.id === backgroundId)) return "solid";
+  if (GRADIENTS.some((gradient) => gradient.id === backgroundId)) return "gradient";
+  if (WALLPAPERS.some((wallpaper) => wallpaper.id === backgroundId)) {
+    return "wallpaper";
+  }
+  return "default";
+}
+
+export function AppearanceModal({
+  visible,
+  onClose,
+}: {
+  visible: boolean;
+  onClose: () => void;
+}) {
+  const theme = useTheme();
+  const { colors, config, resolvedMode } = theme;
+  const styles = makeStyles(colors);
+  const [family, setFamily] = useState<BackgroundKind>(familyOf(config.backgroundId));
+  const isDark = resolvedMode === "dark";
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      <View style={styles.sheet}>
+        <View style={styles.sheetHeader}>
+          <Text style={styles.sheetTitle}>Appearance</Text>
+          <Pressable onPress={onClose} accessibilityRole="button" hitSlop={8}>
+            <Text style={styles.sheetClose}>Done</Text>
+          </Pressable>
+        </View>
+
+        <ScrollView contentContainerStyle={styles.sheetBody}>
+          <Text style={styles.sectionTitle}>Color mode</Text>
+          <View style={styles.segmented}>
+            {MODES.map((mode) => {
+              const selected = config.mode === mode.value;
+              return (
+                <Pressable
+                  key={mode.value}
+                  onPress={() => theme.setMode(mode.value)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected }}
+                  style={[styles.segment, selected ? styles.segmentActive : null]}
+                >
+                  <Text
+                    style={[
+                      styles.segmentText,
+                      selected ? styles.segmentTextActive : null,
+                    ]}
+                  >
+                    {mode.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Text style={styles.sectionTitle}>Accent color</Text>
+          <View style={styles.row}>
+            {ACCENTS.map((accent) => {
+              const selected = config.accentId === accent.id;
+              return (
+                <Pressable
+                  key={accent.id}
+                  onPress={() => theme.setAccent(accent.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={accent.label}
+                  style={[
+                    styles.accentSwatch,
+                    { backgroundColor: accent.accent },
+                    selected ? styles.accentSwatchActive : null,
+                  ]}
+                />
+              );
+            })}
+          </View>
+
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleLabel}>
+              <Text style={styles.rowTitle}>Vibrant palette</Text>
+              <Text style={styles.rowHint}>
+                Tint surfaces with the accent color.
+              </Text>
+            </View>
+            <Switch value={config.vibrant} onValueChange={theme.setVibrant} />
+          </View>
+
+          <Text style={styles.sectionTitle}>Background</Text>
+          <View style={styles.segmented}>
+            {FAMILIES.map((item) => {
+              const selected = family === item.value;
+              return (
+                <Pressable
+                  key={item.value}
+                  onPress={() => setFamily(item.value)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected }}
+                  style={[styles.segment, selected ? styles.segmentActive : null]}
+                >
+                  <Text
+                    style={[
+                      styles.segmentText,
+                      selected ? styles.segmentTextActive : null,
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {family === "default" ? (
+            <Pressable
+              onPress={() => theme.setBackground("default")}
+              accessibilityRole="button"
+              accessibilityState={{ selected: config.backgroundId === "default" }}
+              style={[
+                styles.defaultOption,
+                config.backgroundId === "default" ? styles.swatchActive : null,
+              ]}
+            >
+              <Text style={styles.defaultOptionText}>
+                Default surface background
+              </Text>
+            </Pressable>
+          ) : null}
+
+          {family === "solid" ? (
+            <View style={styles.grid}>
+              {SOLIDS.map((solid) => (
+                <Pressable
+                  key={solid.id}
+                  onPress={() => theme.setBackground(solid.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={solid.label}
+                  style={[
+                    styles.gridSwatch,
+                    config.backgroundId === solid.id ? styles.swatchActive : null,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.gridSwatchFill,
+                      { backgroundColor: isDark ? solid.dark : solid.light },
+                    ]}
+                  />
+                  <Text style={styles.gridCaption}>{solid.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+
+          {family === "gradient" ? (
+            <View style={styles.grid}>
+              {GRADIENTS.map((gradient) => (
+                <Pressable
+                  key={gradient.id}
+                  onPress={() => theme.setBackground(gradient.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={gradient.label}
+                  style={[
+                    styles.gridSwatch,
+                    config.backgroundId === gradient.id ? styles.swatchActive : null,
+                  ]}
+                >
+                  <LinearGradient
+                    colors={
+                      (isDark ? gradient.dark : gradient.light) as [
+                        string,
+                        string,
+                        ...string[],
+                      ]
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.gridSwatchFill}
+                  />
+                  <Text style={styles.gridCaption}>{gradient.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+
+          {family === "wallpaper" ? (
+            <View style={styles.grid}>
+              {WALLPAPERS.map((wallpaper) => (
+                <Pressable
+                  key={wallpaper.id}
+                  onPress={() => theme.setBackground(wallpaper.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={wallpaper.label}
+                  style={[
+                    styles.gridSwatch,
+                    config.backgroundId === wallpaper.id ? styles.swatchActive : null,
+                  ]}
+                >
+                  <Image
+                    source={{ uri: wallpaper.thumbUrl }}
+                    style={styles.gridSwatchFill}
+                  />
+                  <Text style={styles.gridCaption} numberOfLines={1}>
+                    {wallpaper.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+
+          {family === "wallpaper" ? (
+            <View style={styles.dimRow}>
+              <Text style={styles.rowTitle}>Dimming</Text>
+              <View style={styles.stepper}>
+                <Pressable
+                  onPress={() =>
+                    theme.setWallpaperDim(Math.max(0, config.wallpaperDim - 10))
+                  }
+                  style={styles.stepperButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Decrease dimming"
+                >
+                  <Text style={styles.stepperText}>-</Text>
+                </Pressable>
+                <Text style={styles.stepperValue}>{config.wallpaperDim}%</Text>
+                <Pressable
+                  onPress={() =>
+                    theme.setWallpaperDim(Math.min(80, config.wallpaperDim + 10))
+                  }
+                  style={styles.stepperButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Increase dimming"
+                >
+                  <Text style={styles.stepperText}>+</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : null}
+
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleLabel}>
+              <Text style={styles.rowTitle}>Interface animations</Text>
+              <Text style={styles.rowHint}>
+                Disabled when reduced motion is on.
+              </Text>
+            </View>
+            <Switch value={config.animations} onValueChange={theme.setAnimations} />
+          </View>
+
+          <Pressable
+            onPress={theme.reset}
+            accessibilityRole="button"
+            style={styles.resetButton}
+          >
+            <Text style={styles.resetText}>Reset to defaults</Text>
+          </Pressable>
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+}
+
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    sheet: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    sheetHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 20,
+      paddingTop: 20,
+      paddingBottom: 12,
+    },
+    sheetTitle: {
+      fontSize: 20,
+      fontWeight: "700",
+      color: colors.foreground,
+    },
+    sheetClose: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: colors.accent,
+    },
+    sheetBody: {
+      paddingHorizontal: 20,
+      paddingBottom: 48,
+    },
+    sectionTitle: {
+      marginTop: 20,
+      marginBottom: 10,
+      fontSize: 13,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      color: colors.muted,
+    },
+    segmented: {
+      flexDirection: "row",
+      backgroundColor: colors.surfaceSecondary,
+      borderRadius: 10,
+      padding: 4,
+    },
+    segment: {
+      flex: 1,
+      paddingVertical: 9,
+      borderRadius: 8,
+      alignItems: "center",
+    },
+    segmentActive: {
+      backgroundColor: colors.accent,
+    },
+    segmentText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.muted,
+    },
+    segmentTextActive: {
+      color: colors.accentForeground,
+    },
+    row: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 10,
+    },
+    accentSwatch: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      borderWidth: 2,
+      borderColor: "transparent",
+    },
+    accentSwatchActive: {
+      borderColor: colors.foreground,
+    },
+    toggleRow: {
+      marginTop: 20,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    toggleLabel: {
+      flex: 1,
+      paddingRight: 12,
+    },
+    rowTitle: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: colors.foreground,
+    },
+    rowHint: {
+      marginTop: 2,
+      fontSize: 12,
+      color: colors.muted,
+    },
+    defaultOption: {
+      marginTop: 12,
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: colors.border,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+    },
+    defaultOptionText: {
+      fontSize: 14,
+      color: colors.foreground,
+    },
+    grid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 10,
+      marginTop: 12,
+    },
+    gridSwatch: {
+      width: "30%",
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: colors.border,
+      overflow: "hidden",
+    },
+    swatchActive: {
+      borderColor: colors.accent,
+    },
+    gridSwatchFill: {
+      width: "100%",
+      height: 56,
+    },
+    gridCaption: {
+      paddingHorizontal: 8,
+      paddingVertical: 6,
+      fontSize: 12,
+      color: colors.muted,
+    },
+    dimRow: {
+      marginTop: 20,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    stepper: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    stepperButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.surfaceSecondary,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    stepperText: {
+      fontSize: 20,
+      fontWeight: "700",
+      color: colors.foreground,
+    },
+    stepperValue: {
+      minWidth: 48,
+      textAlign: "center",
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.foreground,
+    },
+    resetButton: {
+      marginTop: 28,
+      borderRadius: 10,
+      paddingVertical: 14,
+      alignItems: "center",
+      backgroundColor: withAlpha(colors.accent, 0.14),
+    },
+    resetText: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: colors.accent,
+    },
+  });
+}

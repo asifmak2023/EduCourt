@@ -32,7 +32,7 @@ class NotificationService
     /**
      * Queue an absence notice for the student's primary guardian, if absent.
      */
-    public function notifyAbsence(StudentAttendance $attendance, ?int $userId): ?AppNotification
+    public function notifyAbsence(StudentAttendance $attendance, ?int $userId, bool $onlyNew = false): ?AppNotification
     {
         if ($attendance->status !== AttendanceStatus::Absent) {
             return null;
@@ -46,7 +46,7 @@ class NotificationService
             ->first();
 
         if ($existing !== null) {
-            return $existing;
+            return $onlyNew ? null : $existing;
         }
 
         $student = Student::query()->with('guardians')->find($attendance->student_id);
@@ -95,10 +95,15 @@ class NotificationService
             ->when($classRoomId !== null, fn ($q) => $q->where('class_room_id', $classRoomId))
             ->get();
 
-        return $absences
-            ->map(fn (StudentAttendance $attendance) => $this->notifyAbsence($attendance, $userId))
+        $queued = $absences
+            ->map(fn (StudentAttendance $attendance) => $this->notifyAbsence($attendance, $userId, true))
             ->filter()
             ->values();
+
+        return AppNotification::query()
+            ->with(['student', 'guardian'])
+            ->whereKey($queued->pluck('id')->all())
+            ->get();
     }
 
     /**

@@ -141,8 +141,8 @@ function AttendanceReport() {
                     </Table.Row>
                   ) : (
                     data.by_class.map((row) => (
-                      <Table.Row key={row.class_room_id} id={row.class_room_id}>
-                        <Table.Cell className="text-foreground">{row.class_room ?? `Class #${row.class_room_id}`}</Table.Cell>
+                      <Table.Row key={row.class_room_id ?? "unassigned"} id={row.class_room_id ?? "unassigned"}>
+                        <Table.Cell className="text-foreground">{row.class_room ?? (row.class_room_id ? `Class #${row.class_room_id}` : "Unassigned")}</Table.Cell>
                         <Table.Cell className="text-right text-muted">{formatNumber(row.total)}</Table.Cell>
                         <Table.Cell className="text-right text-muted">{formatNumber(row.attended)}</Table.Cell>
                         <Table.Cell className="text-right text-muted">{formatNumber(row.absent)}</Table.Cell>

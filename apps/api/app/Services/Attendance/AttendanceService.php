@@ -3,10 +3,12 @@
 namespace App\Services\Attendance;
 
 use App\Enums\AttendanceStatus;
+use App\Enums\EnrollmentStatus;
 use App\Models\ClassRoom;
 use App\Models\StaffAttendance;
 use App\Models\Student;
 use App\Models\StudentAttendance;
+use App\Models\StudentEnrollment;
 use App\Models\User;
 use App\Services\Notifications\NotificationService;
 use Illuminate\Database\Eloquent\Collection;
@@ -41,14 +43,18 @@ class AttendanceService
             ]);
         }
 
-        return DB::transaction(function () use ($tenant, $user, $date, $records, $context) {
-            $marked = collect($records)->map(function (array $record) use ($tenant, $user, $date, $context) {
+        $enrollments = $this->activeEnrollments($studentIds);
+
+        return DB::transaction(function () use ($tenant, $user, $date, $records, $context, $enrollments) {
+            $marked = collect($records)->map(function (array $record) use ($tenant, $user, $date, $context, $enrollments) {
+                $enrollment = $enrollments->get($record['student_id']);
+
                 return StudentAttendance::updateOrCreate(
                     ['student_id' => $record['student_id'], 'attendance_date' => $date],
                     $tenant + [
-                        'academic_year_id' => $context['academic_year_id'] ?? null,
-                        'class_room_id' => $context['class_room_id'] ?? null,
-                        'section_id' => $context['section_id'] ?? null,
+                        'academic_year_id' => $context['academic_year_id'] ?? $enrollment?->academic_year_id,
+                        'class_room_id' => $context['class_room_id'] ?? $enrollment?->class_room_id,
+                        'section_id' => $context['section_id'] ?? $enrollment?->section_id,
                         'status' => AttendanceStatus::from($record['status']),
                         'remarks' => $record['remarks'] ?? null,
                         'marked_by' => $user->id,
@@ -60,6 +66,23 @@ class AttendanceService
 
             return new Collection($marked->all());
         });
+    }
+
+    /**
+     * Resolve each student's current active enrollment, keyed by student id.
+     *
+     * @param  array<int, int>  $studentIds
+     * @return \Illuminate\Support\Collection<int, StudentEnrollment>
+     */
+    private function activeEnrollments(array $studentIds): \Illuminate\Support\Collection
+    {
+        return StudentEnrollment::query()
+            ->whereIn('student_id', $studentIds)
+            ->where('status', EnrollmentStatus::Active)
+            ->orderByDesc('starts_on')
+            ->orderByDesc('id')
+            ->get()
+            ->keyBy('student_id');
     }
 
     /**

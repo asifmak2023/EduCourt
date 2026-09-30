@@ -224,7 +224,9 @@ class ReportService
             ->get()
             ->map(fn ($row) => [
                 'class_room_id' => $row->class_room_id,
-                'class_room' => optional(ClassRoom::find($row->class_room_id))->name,
+                'class_room' => $row->class_room_id
+                    ? optional(ClassRoom::find($row->class_room_id))->name
+                    : 'Unassigned',
                 'total' => (int) $row->total,
                 'attended' => (int) $row->attended,
                 'absent' => (int) $row->absent,

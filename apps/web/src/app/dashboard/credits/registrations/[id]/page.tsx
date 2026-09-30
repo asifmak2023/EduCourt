@@ -72,7 +72,7 @@ function RegistrationDetailView() {
           <DataItem label="Registered on" value={data.registered_on ?? "-"} />
         </DataList>
         {data.remarks ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             Remarks: {data.remarks}
           </p>
         ) : null}
@@ -114,8 +114,8 @@ function DropAction({
     <Card className="p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Drop course</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Drop course</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Mark this registration as dropped for the term.
           </p>
         </div>
@@ -154,8 +154,8 @@ function DeleteAction({ id }: { id: number }) {
     <Card className="p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Remove</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Remove</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Delete this registration record.
           </p>
         </div>

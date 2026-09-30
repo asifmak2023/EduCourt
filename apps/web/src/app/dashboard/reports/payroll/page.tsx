@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Table } from "@heroui/react";
 import { PermissionGate } from "@/components/PermissionGate";
 import { ReportsTabs } from "@/components/ReportsTabs";
 import { Field, TextInput } from "@/components/Form";
@@ -87,46 +88,36 @@ function PayrollReport() {
 
           <Card>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="px-5 py-3 font-medium">Period</th>
-                    <th className="px-5 py-3 font-medium">Status</th>
-                    <th className="px-5 py-3 text-right font-medium">Gross</th>
-                    <th className="px-5 py-3 text-right font-medium">
-                      Deductions
-                    </th>
-                    <th className="px-5 py-3 text-right font-medium">Net</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
+              <Table variant="secondary">
+                <Table.ScrollContainer>
+                  <Table.Content aria-label="Payroll runs">
+                  <Table.Header>
+                    <Table.Column isRowHeader>Period</Table.Column>
+                    <Table.Column>Status</Table.Column>
+                    <Table.Column className="text-right">Gross</Table.Column>
+                    <Table.Column className="text-right">Deductions</Table.Column>
+                    <Table.Column className="text-right">Net</Table.Column>
+                  </Table.Header>
+                  <Table.Body>
                   {data.by_period.length === 0 ? (
-                    <tr>
-                      <td className="px-5 py-3 text-slate-500" colSpan={5}>
-                        No payroll runs for this selection.
-                      </td>
-                    </tr>
+                    <Table.Row id="row-1">
+                      <Table.Cell className="text-muted">No payroll runs for this selection.</Table.Cell><Table.Cell /><Table.Cell /><Table.Cell /><Table.Cell />
+                    </Table.Row>
                   ) : (
                     data.by_period.map((run) => (
-                      <tr key={run.id}>
-                        <td className="px-5 py-3 text-slate-900">{run.period}</td>
-                        <td className="px-5 py-3">
-                          <Badge value={run.status ?? "unknown"} />
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatCurrency(run.gross)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatCurrency(run.deductions)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatCurrency(run.net)}
-                        </td>
-                      </tr>
+                      <Table.Row key={run.id} id={run.id}>
+                        <Table.Cell className="text-foreground">{run.period}</Table.Cell>
+                        <Table.Cell><Badge value={run.status ?? "unknown"} /></Table.Cell>
+                        <Table.Cell className="text-right text-muted">{formatCurrency(run.gross)}</Table.Cell>
+                        <Table.Cell className="text-right text-muted">{formatCurrency(run.deductions)}</Table.Cell>
+                        <Table.Cell className="text-right text-muted">{formatCurrency(run.net)}</Table.Cell>
+                      </Table.Row>
                     ))
                   )}
-                </tbody>
-              </table>
+                  </Table.Body>
+                  </Table.Content>
+                </Table.ScrollContainer>
+              </Table>
             </div>
           </Card>
         </>

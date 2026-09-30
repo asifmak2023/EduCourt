@@ -60,11 +60,11 @@ export default function ReportsPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {REPORTS.map((report) => (
             <Link key={report.href} href={report.href}>
-              <Card className="h-full p-5 transition hover:border-slate-400">
-                <h2 className="text-sm font-semibold text-slate-900">
+              <Card className="h-full p-5 transition hover:border-accent">
+                <h2 className="text-sm font-semibold text-foreground">
                   {report.title}
                 </h2>
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-1 text-sm text-muted">
                   {report.description}
                 </p>
               </Card>

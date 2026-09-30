@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import {
   useAcademicYears,
@@ -130,7 +131,7 @@ function PromotionView() {
       {done ? <SuccessNotice message={done} /> : null}
 
       <Card className="p-6">
-        <h2 className="text-sm font-semibold text-slate-900">From</h2>
+        <h2 className="text-sm font-semibold text-foreground">From</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <Field label="Academic year" htmlFor="prom_from_year" required>
             <Select
@@ -179,7 +180,7 @@ function PromotionView() {
           </div>
         </div>
 
-        <h2 className="mt-8 text-sm font-semibold text-slate-900">To</h2>
+        <h2 className="mt-8 text-sm font-semibold text-foreground">To</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <Field label="Academic year" htmlFor="prom_to_year" required>
             <Select
@@ -234,38 +235,31 @@ function PromotionView() {
         <Spinner />
       ) : students.length > 0 ? (
         <Card>
-          <div className="border-b border-slate-100 px-5 py-4">
-            <h2 className="text-sm font-semibold text-slate-900">
+          <div className="border-b border-border-secondary px-5 py-4">
+            <h2 className="text-sm font-semibold text-foreground">
               Candidates ({students.length})
             </h2>
-            <p className="mt-0.5 text-xs text-slate-500">
+            <p className="mt-0.5 text-xs text-muted">
               Tick repeat to hold a student back in the same year.
             </p>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Student</th>
-                  <th className="px-5 py-3 font-medium">Admission no</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                  <th className="px-5 py-3 font-medium">Repeat</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content aria-label="Candidates">
+                <Table.Header>
+                  <Table.Column isRowHeader>Student</Table.Column>
+                  <Table.Column>Admission no</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                  <Table.Column>Repeat</Table.Column>
+                </Table.Header>
+                <Table.Body>
                 {students.map((student) => (
-                  <tr key={student.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 text-slate-900">
-                      {student.full_name}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {student.admission_no}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {student.status ?? "-"}
-                    </td>
-                    <td className="px-5 py-3">
-                      <input
+                  <Table.Row key={student.id} className="hover:bg-surface-secondary" id={student.id}>
+                    <Table.Cell className="text-foreground">{student.full_name}</Table.Cell>
+                    <Table.Cell className="text-muted">{student.admission_no}</Table.Cell>
+                    <Table.Cell className="text-muted">{student.status ?? "-"}</Table.Cell>
+                    <Table.Cell><input
                         type="checkbox"
                         checked={Boolean(repeat[student.id])}
                         onChange={(event) =>
@@ -274,14 +268,15 @@ function PromotionView() {
                             [student.id]: event.target.checked,
                           }))
                         }
-                      />
-                    </td>
-                  </tr>
+                      /></Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+                </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </div>
-          <div className="flex justify-end border-t border-slate-100 px-5 py-4">
+          <div className="flex justify-end border-t border-border-secondary px-5 py-4">
             <Button
               type="button"
               loading={busy}

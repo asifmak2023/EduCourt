@@ -85,7 +85,7 @@ function AwardDetailView() {
           <DataItem label="Revoked on" value={data.revoked_on ?? "-"} />
         </DataList>
         {data.notes ? (
-          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">
             Notes: {data.notes}
           </p>
         ) : null}
@@ -129,8 +129,8 @@ function RevokeAction({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-slate-900">Revoke</h2>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h2 className="text-sm font-semibold text-foreground">Revoke</h2>
+      <p className="mt-0.5 text-xs text-muted">
         Revoking keeps the record but ends the concession.
       </p>
       <div className="mt-4 flex items-end gap-3">
@@ -139,7 +139,7 @@ function RevokeAction({
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           placeholder="Revocation note (optional)"
-          className="w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
+          className="w-full max-w-md rounded-lg border border-border-secondary px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
         />
         <Button type="button" loading={busy} onClick={revoke}>
           Revoke
@@ -176,8 +176,8 @@ function DeleteAction({ id }: { id: number }) {
     <Card className="p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Remove</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Remove</h2>
+          <p className="mt-0.5 text-xs text-muted">
             Archive this award record.
           </p>
         </div>

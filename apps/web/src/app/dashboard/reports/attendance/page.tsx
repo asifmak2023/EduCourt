@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Table } from "@heroui/react";
 import { PermissionGate } from "@/components/PermissionGate";
 import { ReportsTabs } from "@/components/ReportsTabs";
 import { Field, Select, TextInput } from "@/components/Form";
@@ -123,46 +124,36 @@ function AttendanceReport() {
 
           <Card>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="px-5 py-3 font-medium">Class</th>
-                    <th className="px-5 py-3 text-right font-medium">Records</th>
-                    <th className="px-5 py-3 text-right font-medium">Attended</th>
-                    <th className="px-5 py-3 text-right font-medium">Absent</th>
-                    <th className="px-5 py-3 text-right font-medium">Rate</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
+              <Table variant="secondary">
+                <Table.ScrollContainer>
+                  <Table.Content aria-label="Attendance by class">
+                  <Table.Header>
+                    <Table.Column isRowHeader>Class</Table.Column>
+                    <Table.Column className="text-right">Records</Table.Column>
+                    <Table.Column className="text-right">Attended</Table.Column>
+                    <Table.Column className="text-right">Absent</Table.Column>
+                    <Table.Column className="text-right">Rate</Table.Column>
+                  </Table.Header>
+                  <Table.Body>
                   {data.by_class.length === 0 ? (
-                    <tr>
-                      <td className="px-5 py-3 text-slate-500" colSpan={5}>
-                        No attendance records for this selection.
-                      </td>
-                    </tr>
+                    <Table.Row id="row-1">
+                      <Table.Cell className="text-muted">No attendance records for this selection.</Table.Cell><Table.Cell /><Table.Cell /><Table.Cell /><Table.Cell />
+                    </Table.Row>
                   ) : (
                     data.by_class.map((row) => (
-                      <tr key={row.class_room_id}>
-                        <td className="px-5 py-3 text-slate-900">
-                          {row.class_room ?? `Class #${row.class_room_id}`}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.total)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.attended)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.absent)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {row.attendance_percentage}%
-                        </td>
-                      </tr>
+                      <Table.Row key={row.class_room_id} id={row.class_room_id}>
+                        <Table.Cell className="text-foreground">{row.class_room ?? `Class #${row.class_room_id}`}</Table.Cell>
+                        <Table.Cell className="text-right text-muted">{formatNumber(row.total)}</Table.Cell>
+                        <Table.Cell className="text-right text-muted">{formatNumber(row.attended)}</Table.Cell>
+                        <Table.Cell className="text-right text-muted">{formatNumber(row.absent)}</Table.Cell>
+                        <Table.Cell className="text-right text-muted">{row.attendance_percentage}%</Table.Cell>
+                      </Table.Row>
                     ))
                   )}
-                </tbody>
-              </table>
+                  </Table.Body>
+                  </Table.Content>
+                </Table.ScrollContainer>
+              </Table>
             </div>
           </Card>
         </>

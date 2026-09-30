@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Table } from "@heroui/react";
 import { PermissionGate } from "@/components/PermissionGate";
 import { ReportsTabs } from "@/components/ReportsTabs";
 import { Field, Select } from "@/components/Form";
@@ -87,60 +88,46 @@ function ResultsReport() {
           </div>
 
           <Card>
-            <div className="border-b border-slate-100 px-5 py-4">
-              <h2 className="text-sm font-semibold text-slate-900">
+            <div className="border-b border-border-secondary px-5 py-4">
+              <h2 className="text-sm font-semibold text-foreground">
                 {data.exam.name} by subject
               </h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="px-5 py-3 font-medium">Subject</th>
-                    <th className="px-5 py-3 font-medium">Class</th>
-                    <th className="px-5 py-3 text-right font-medium">Entered</th>
-                    <th className="px-5 py-3 text-right font-medium">Average</th>
-                    <th className="px-5 py-3 text-right font-medium">Avg %</th>
-                    <th className="px-5 py-3 text-right font-medium">Passed</th>
-                    <th className="px-5 py-3 text-right font-medium">Failed</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
+              <Table variant="secondary">
+                <Table.ScrollContainer>
+                  <Table.Content aria-label="Subject results">
+                  <Table.Header>
+                    <Table.Column isRowHeader>Subject</Table.Column>
+                    <Table.Column>Class</Table.Column>
+                    <Table.Column className="text-right">Entered</Table.Column>
+                    <Table.Column className="text-right">Average</Table.Column>
+                    <Table.Column className="text-right">Avg %</Table.Column>
+                    <Table.Column className="text-right">Passed</Table.Column>
+                    <Table.Column className="text-right">Failed</Table.Column>
+                  </Table.Header>
+                  <Table.Body>
                   {data.by_paper.length === 0 ? (
-                    <tr>
-                      <td className="px-5 py-3 text-slate-500" colSpan={7}>
-                        No marks entered for this exam.
-                      </td>
-                    </tr>
+                    <Table.Row id="row-1">
+                      <Table.Cell className="text-muted">No marks entered for this exam.</Table.Cell><Table.Cell /><Table.Cell /><Table.Cell /><Table.Cell /><Table.Cell /><Table.Cell />
+                    </Table.Row>
                   ) : (
                     data.by_paper.map((row) => (
-                      <tr key={row.exam_paper_id}>
-                        <td className="px-5 py-3 text-slate-900">
-                          {row.subject ?? `Paper #${row.exam_paper_id}`}
-                        </td>
-                        <td className="px-5 py-3 text-slate-600">
-                          {row.class_room ?? "-"}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.entered)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {row.average}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {row.average_percentage}%
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.passed)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.failed)}
-                        </td>
-                      </tr>
+                      <Table.Row key={row.exam_paper_id} id={row.exam_paper_id}>
+                        <Table.Cell className="text-foreground">{row.subject ?? `Paper #${row.exam_paper_id}`}</Table.Cell>
+                        <Table.Cell className="text-muted">{row.class_room ?? "-"}</Table.Cell>
+                        <Table.Cell className="text-right text-muted">{formatNumber(row.entered)}</Table.Cell>
+                        <Table.Cell className="text-right text-muted">{row.average}</Table.Cell>
+                        <Table.Cell className="text-right text-muted">{row.average_percentage}%</Table.Cell>
+                        <Table.Cell className="text-right text-muted">{formatNumber(row.passed)}</Table.Cell>
+                        <Table.Cell className="text-right text-muted">{formatNumber(row.failed)}</Table.Cell>
+                      </Table.Row>
                     ))
                   )}
-                </tbody>
-              </table>
+                  </Table.Body>
+                  </Table.Content>
+                </Table.ScrollContainer>
+              </Table>
             </div>
           </Card>
         </>

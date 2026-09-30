@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useStudents, useSubjects, useTerms } from "@/lib/useLookups";
 import { useAuth } from "@/lib/auth";
@@ -155,43 +156,35 @@ function RegistrationsTable() {
           <EmptyState message="No course registrations match your filters." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Student</th>
-                  <th className="px-5 py-3 font-medium">Term</th>
-                  <th className="px-5 py-3 font-medium">Subject</th>
-                  <th className="px-5 py-3 font-medium text-right">Credits</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content aria-label="Course registrations">
+                <Table.Header>
+                  <Table.Column isRowHeader>Student</Table.Column>
+                  <Table.Column>Term</Table.Column>
+                  <Table.Column>Subject</Table.Column>
+                  <Table.Column className="text-right">Credits</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                </Table.Header>
+                <Table.Body>
                 {items.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      <Link
+                  <Table.Row key={row.id} className="hover:bg-surface-secondary" id={row.id}>
+                    <Table.Cell className="text-foreground"><Link
                         href={`/dashboard/credits/registrations/${row.id}`}
                         className="hover:underline"
                       >
                         {row.student?.full_name ?? `#${row.student_id}`}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {row.term?.name ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {row.subject?.name ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-right text-slate-600">
-                      {formatNumber(row.credit_hours)}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge value={row.status} />
-                    </td>
-                  </tr>
+                      </Link></Table.Cell>
+                    <Table.Cell className="text-muted">{row.term?.name ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{row.subject?.name ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-right text-muted">{formatNumber(row.credit_hours)}</Table.Cell>
+                    <Table.Cell><Badge value={row.status} /></Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+                </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </div>
         )}
 

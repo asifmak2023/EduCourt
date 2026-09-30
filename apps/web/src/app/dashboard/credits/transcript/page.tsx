@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useStudents } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -114,67 +115,53 @@ function TranscriptView() {
               <Card key={term.term.id} className="p-6">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <h2 className="text-sm font-semibold text-slate-900">
+                    <h2 className="text-sm font-semibold text-foreground">
                       {term.term.name}
                     </h2>
-                    <p className="mt-0.5 text-xs text-slate-500">
+                    <p className="mt-0.5 text-xs text-muted">
                       {term.credits_earned} of {term.credits_graded} credits
                       earned
                     </p>
                   </div>
-                  <span className="rounded-lg bg-slate-900 px-3 py-1 text-sm font-medium text-white">
+                  <span className="rounded-lg bg-accent px-3 py-1 text-sm font-medium text-accent-foreground">
                     GPA {term.gpa === null ? "-" : formatNumber(term.gpa)}
                   </span>
                 </div>
 
                 {term.subjects.length === 0 ? (
-                  <p className="mt-4 text-sm text-slate-500">
+                  <p className="mt-4 text-sm text-muted">
                     No graded subjects this term.
                   </p>
                 ) : (
                   <div className="mt-4 overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                        <tr>
-                          <th className="px-3 py-2 font-medium">Subject</th>
-                          <th className="px-3 py-2 font-medium text-right">
-                            Credits
-                          </th>
-                          <th className="px-3 py-2 font-medium text-right">
-                            Percentage
-                          </th>
-                          <th className="px-3 py-2 font-medium">Grade</th>
-                          <th className="px-3 py-2 font-medium text-right">
-                            Points
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
+                    <Table variant="secondary">
+                      <Table.ScrollContainer>
+                        <Table.Content aria-label="Term subjects">
+                        <Table.Header>
+                          <Table.Column isRowHeader>Subject</Table.Column>
+                          <Table.Column className="text-right">Credits</Table.Column>
+                          <Table.Column className="text-right">Percentage</Table.Column>
+                          <Table.Column>Grade</Table.Column>
+                          <Table.Column className="text-right">Points</Table.Column>
+                        </Table.Header>
+                        <Table.Body>
                         {term.subjects.map((row) => (
-                          <tr key={row.course_registration_id}>
-                            <td className="px-3 py-2 text-slate-900">
-                              {row.subject ?? `#${row.subject_id}`}
-                            </td>
-                            <td className="px-3 py-2 text-right text-slate-600">
-                              {formatNumber(row.credit_hours)}
-                            </td>
-                            <td className="px-3 py-2 text-right text-slate-600">
-                              {row.percentage === null
+                          <Table.Row key={row.course_registration_id} id={row.course_registration_id}>
+                            <Table.Cell className="text-foreground">{row.subject ?? `#${row.subject_id}`}</Table.Cell>
+                            <Table.Cell className="text-right text-muted">{formatNumber(row.credit_hours)}</Table.Cell>
+                            <Table.Cell className="text-right text-muted">{row.percentage === null
                                 ? "-"
-                                : `${formatNumber(row.percentage)}%`}
-                            </td>
-                            <td className="px-3 py-2 text-slate-600">
-                              {row.grade ?? "-"}
-                            </td>
-                            <td className="px-3 py-2 text-right text-slate-600">
-                              {row.grade_points === null
+                                : `${formatNumber(row.percentage)}%`}</Table.Cell>
+                            <Table.Cell className="text-muted">{row.grade ?? "-"}</Table.Cell>
+                            <Table.Cell className="text-right text-muted">{row.grade_points === null
                                 ? "-"
-                                : formatNumber(row.grade_points)}
-                            </td>
-                          </tr>
+                                : formatNumber(row.grade_points)}</Table.Cell>
+                          </Table.Row>
                         ))}
-                      </tbody>
-                    </table>
+                        </Table.Body>
+                        </Table.Content>
+                      </Table.ScrollContainer>
+                    </Table>
                   </div>
                 )}
               </Card>

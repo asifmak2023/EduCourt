@@ -34,11 +34,11 @@ export default function CreditsPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {SECTIONS.map((section) => (
             <Link key={section.href} href={section.href}>
-              <Card className="h-full p-5 transition hover:border-slate-400">
-                <p className="text-sm font-semibold text-slate-900">
+              <Card className="h-full p-5 transition hover:border-accent">
+                <p className="text-sm font-semibold text-foreground">
                   {section.title}
                 </p>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-muted">
                   {section.description}
                 </p>
               </Card>

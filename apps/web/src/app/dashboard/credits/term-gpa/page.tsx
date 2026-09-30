@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useStudents, useTerms } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -134,53 +135,39 @@ function TermGpaView() {
               <EmptyState message="No courses registered for this term." />
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                    <tr>
-                      <th className="px-5 py-3 font-medium">Subject</th>
-                      <th className="px-5 py-3 font-medium text-right">
-                        Credits
-                      </th>
-                      <th className="px-5 py-3 font-medium text-right">
-                        Percentage
-                      </th>
-                      <th className="px-5 py-3 font-medium">Grade</th>
-                      <th className="px-5 py-3 font-medium text-right">Points</th>
-                      <th className="px-5 py-3 font-medium">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
+                <Table variant="secondary">
+                  <Table.ScrollContainer>
+                    <Table.Content aria-label="Subject grades">
+                    <Table.Header>
+                      <Table.Column isRowHeader>Subject</Table.Column>
+                      <Table.Column className="text-right">Credits</Table.Column>
+                      <Table.Column className="text-right">Percentage</Table.Column>
+                      <Table.Column>Grade</Table.Column>
+                      <Table.Column className="text-right">Points</Table.Column>
+                      <Table.Column>Status</Table.Column>
+                    </Table.Header>
+                    <Table.Body>
                     {result.subjects.map((row) => (
-                      <tr
+                      <Table.Row
                         key={row.course_registration_id}
-                        className="hover:bg-slate-50"
-                      >
-                        <td className="px-5 py-3 text-slate-900">
-                          {row.subject ?? `#${row.subject_id}`}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {formatNumber(row.credit_hours)}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {row.percentage === null
+                        className="hover:bg-surface-secondary"
+                       id={row.course_registration_id}>
+                        <Table.Cell className="text-foreground">{row.subject ?? `#${row.subject_id}`}</Table.Cell>
+                        <Table.Cell className="text-right text-muted">{formatNumber(row.credit_hours)}</Table.Cell>
+                        <Table.Cell className="text-right text-muted">{row.percentage === null
                             ? "-"
-                            : `${formatNumber(row.percentage)}%`}
-                        </td>
-                        <td className="px-5 py-3 text-slate-600">
-                          {row.grade ?? "-"}
-                        </td>
-                        <td className="px-5 py-3 text-right text-slate-600">
-                          {row.grade_points === null
+                            : `${formatNumber(row.percentage)}%`}</Table.Cell>
+                        <Table.Cell className="text-muted">{row.grade ?? "-"}</Table.Cell>
+                        <Table.Cell className="text-right text-muted">{row.grade_points === null
                             ? "-"
-                            : formatNumber(row.grade_points)}
-                        </td>
-                        <td className="px-5 py-3">
-                          <Badge value={row.status} />
-                        </td>
-                      </tr>
+                            : formatNumber(row.grade_points)}</Table.Cell>
+                        <Table.Cell><Badge value={row.status} /></Table.Cell>
+                      </Table.Row>
                     ))}
-                  </tbody>
-                </table>
+                    </Table.Body>
+                    </Table.Content>
+                  </Table.ScrollContainer>
+                </Table>
               </div>
             )}
           </Card>

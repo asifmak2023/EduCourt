@@ -30,7 +30,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (loading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted">
         Loading...
       </div>
     );
@@ -43,14 +43,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     .join(", ");
 
   const sidebar = (
-    <div className="flex h-full flex-col bg-slate-900 text-slate-300">
+    <div className="flex h-full flex-col bg-surface-secondary text-foreground">
       <div className="flex items-center gap-3 px-5 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-sm font-semibold text-white">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-soft text-sm font-semibold text-accent-soft-foreground">
           EC
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-white">EduCourt</p>
-          <p className="truncate text-xs text-slate-400">
+          <p className="truncate text-sm font-semibold text-foreground">EduCourt</p>
+          <p className="truncate text-xs text-muted">
             {user.institution?.name ?? "Education System"}
           </p>
         </div>
@@ -59,7 +59,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
         {sections.map((section) => (
           <div key={section.label}>
-            <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
               {section.label}
             </p>
             <ul className="space-y-0.5">
@@ -69,10 +69,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 if (!item.ready) {
                   return (
                     <li key={item.href}>
-                      <span className="flex cursor-not-allowed items-center gap-3 rounded-lg px-2 py-2 text-sm text-slate-500">
+                      <span className="flex cursor-not-allowed items-center gap-3 rounded-lg px-2 py-2 text-sm text-muted">
                         <Icon name={item.icon} className="h-4 w-4 shrink-0" />
                         <span className="flex-1 truncate">{item.label}</span>
-                        <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-medium uppercase text-slate-500">
+                        <span className="rounded bg-surface-tertiary px-1.5 py-0.5 text-[10px] font-medium uppercase text-muted">
                           Soon
                         </span>
                       </span>
@@ -87,8 +87,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       onClick={() => setMenuOpen(false)}
                       className={`flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition ${
                         isActive
-                          ? "bg-white/10 font-medium text-white"
-                          : "hover:bg-white/5 hover:text-white"
+                          ? "bg-accent-soft font-medium text-accent-soft-foreground"
+                          : "hover:bg-surface-tertiary"
                       }`}
                     >
                       <Icon name={item.icon} className="h-4 w-4 shrink-0" />
@@ -102,14 +102,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         ))}
       </nav>
 
-      <div className="border-t border-white/10 px-4 py-4">
+      <div className="border-t border-border-secondary px-4 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-white">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-soft-foreground">
             {initials(user.name)}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-white">{user.name}</p>
-            <p className="truncate text-xs capitalize text-slate-400">{roleLabel}</p>
+            <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
+            <p className="truncate text-xs capitalize text-muted">{roleLabel}</p>
           </div>
         </div>
         <button
@@ -117,7 +117,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           onClick={() => {
             void logout().then(() => router.replace("/login"));
           }}
-          className="mt-3 w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/5 hover:text-white"
+          className="mt-3 w-full rounded-lg border border-border-secondary px-3 py-1.5 text-xs font-medium text-muted transition hover:bg-surface-tertiary"
         >
           Sign out
         </button>
@@ -126,7 +126,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 lg:flex">
+    <div className="min-h-screen bg-surface-secondary lg:flex">
       <aside className="hidden w-64 shrink-0 lg:block">
         <div className="fixed inset-y-0 left-0 w-64">{sidebar}</div>
       </aside>
@@ -134,7 +134,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {menuOpen ? (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div
-            className="absolute inset-0 bg-slate-900/50"
+            className="absolute inset-0 bg-black/40"
             onClick={() => setMenuOpen(false)}
             aria-hidden="true"
           />
@@ -143,25 +143,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       ) : null}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-border-secondary bg-surface/90 backdrop-blur">
           <div className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <button
               type="button"
               onClick={() => setMenuOpen(true)}
-              className="rounded-lg border border-slate-300 p-2 text-slate-600 lg:hidden"
+              className="rounded-lg border border-border-secondary p-2 text-muted lg:hidden"
               aria-label="Open navigation"
             >
               <Icon name="list" className="h-5 w-5" />
             </button>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-slate-900">
+              <p className="truncate text-sm font-semibold text-foreground">
                 {activeItem?.label ?? "Dashboard"}
               </p>
-              <p className="truncate text-xs text-slate-500">
+              <p className="truncate text-xs text-muted">
                 {user.campus?.name ?? "All campuses"}
               </p>
             </div>
-            <span className="hidden rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 sm:inline">
+            <span className="hidden rounded-full bg-surface-tertiary px-3 py-1 text-xs font-medium text-muted sm:inline">
               {roleLabel}
             </span>
           </div>

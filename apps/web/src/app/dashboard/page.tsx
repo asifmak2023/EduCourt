@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth, type AuthUser } from "@/lib/auth";
 import { Icon } from "@/components/Icons";
@@ -136,7 +137,7 @@ export default function DashboardPage() {
         title={`${greeting()}, ${user.name.split(" ")[0]}`}
         description={`${user.campus?.name ?? "All campuses"} - ${roleSummary(user)}`}
         actions={
-          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-slate-200">
+          <span className="rounded-full bg-surface px-3 py-1 text-xs font-medium text-muted ring-1 ring-border-secondary">
             {formatDate(new Date().toISOString())}
           </span>
         }
@@ -183,11 +184,11 @@ function PlatformView({ overview }: { overview: PlatformOverview }) {
       </section>
 
       <Card>
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">Institutions</h2>
+        <div className="flex items-center justify-between border-b border-border-secondary px-5 py-4">
+          <h2 className="text-sm font-semibold text-foreground">Institutions</h2>
           <Link
             href="/dashboard/institutions"
-            className="text-xs font-medium text-slate-500 hover:text-slate-900"
+            className="text-xs font-medium text-muted hover:text-foreground"
           >
             Manage
           </Link>
@@ -196,32 +197,30 @@ function PlatformView({ overview }: { overview: PlatformOverview }) {
           <EmptyState message="No institutions have been created yet." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Institution</th>
-                  <th className="px-5 py-3 font-medium">Code</th>
-                  <th className="px-5 py-3 text-right font-medium">Campuses</th>
-                  <th className="px-5 py-3 text-right font-medium">Students</th>
-                  <th className="px-5 py-3 text-right font-medium">Staff</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content aria-label="Institutions">
+                <Table.Header>
+                  <Table.Column isRowHeader>Institution</Table.Column>
+                  <Table.Column>Code</Table.Column>
+                  <Table.Column className="text-right">Campuses</Table.Column>
+                  <Table.Column className="text-right">Students</Table.Column>
+                  <Table.Column className="text-right">Staff</Table.Column>
+                </Table.Header>
+                <Table.Body>
                 {overview.institutions.map((institution) => (
-                  <tr key={institution.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      {institution.name}
-                    </td>
-                    <td className="px-5 py-3 text-slate-500">
-                      {institution.code ?? "-"}
-                    </td>
-                    <td className="px-5 py-3 text-right">{institution.campuses}</td>
-                    <td className="px-5 py-3 text-right">{institution.students}</td>
-                    <td className="px-5 py-3 text-right">{institution.staff}</td>
-                  </tr>
+                  <Table.Row key={institution.id} className="hover:bg-surface-secondary" id={institution.id}>
+                    <Table.Cell className="text-foreground">{institution.name}</Table.Cell>
+                    <Table.Cell className="text-muted">{institution.code ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-right">{institution.campuses}</Table.Cell>
+                    <Table.Cell className="text-right">{institution.students}</Table.Cell>
+                    <Table.Cell className="text-right">{institution.staff}</Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+                </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
           </div>
         )}
       </Card>
@@ -278,7 +277,7 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
           ]}
         />
         <Card className="p-5">
-          <h2 className="text-sm font-semibold text-slate-900">Today at a glance</h2>
+          <h2 className="text-sm font-semibold text-foreground">Today at a glance</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <Row label="Active enrollments" value={formatNumber(dashboard.enrollments_active)} />
             <Row label="Open conduct cases" value={formatNumber(dashboard.conduct_open)} />
@@ -317,28 +316,28 @@ function TeacherView({
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <div className="border-b border-slate-100 px-5 py-4">
-            <h2 className="text-sm font-semibold text-slate-900">Today&apos;s schedule</h2>
+          <div className="border-b border-border-secondary px-5 py-4">
+            <h2 className="text-sm font-semibold text-foreground">Today&apos;s schedule</h2>
           </div>
           {todaySlots.length === 0 ? (
             <EmptyState message="You have no periods scheduled for today." />
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-border-secondary">
               {todaySlots.map((slot) => (
                 <li key={slot.id} className="flex items-center gap-4 px-5 py-3">
-                  <div className="w-24 text-xs font-medium text-slate-500">
+                  <div className="w-24 text-xs font-medium text-muted">
                     {slot.period?.starts_at ?? `Period ${slot.period?.id ?? ""}`}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-slate-900">
+                    <p className="truncate text-sm font-medium text-foreground">
                       {slot.subject?.name ?? "Subject"}
                     </p>
-                    <p className="truncate text-xs text-slate-500">
+                    <p className="truncate text-xs text-muted">
                       {slot.class_room?.name ?? "Class"}
                       {slot.section?.name ? ` - ${slot.section.name}` : ""}
                     </p>
                   </div>
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-muted">
                     {slot.room?.name ?? "-"}
                   </div>
                 </li>
@@ -369,13 +368,13 @@ function QuickLinks({
 }) {
   return (
     <Card className="p-5">
-      <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
       <ul className="mt-3 space-y-1">
         {links.map((link) => (
           <li key={link.href}>
             <Link
               href={link.href}
-              className="flex items-center justify-between rounded-lg px-2 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+              className="flex items-center justify-between rounded-lg px-2 py-2 text-sm text-muted transition hover:bg-surface-secondary hover:text-foreground"
             >
               {link.label}
               <Icon name="arrowUp" className="h-3.5 w-3.5 rotate-90" />
@@ -390,8 +389,8 @@ function QuickLinks({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
-      <dt className="text-slate-500">{label}</dt>
-      <dd className="font-medium text-slate-900">{value}</dd>
+      <dt className="text-muted">{label}</dt>
+      <dd className="font-medium text-foreground">{value}</dd>
     </div>
   );
 }

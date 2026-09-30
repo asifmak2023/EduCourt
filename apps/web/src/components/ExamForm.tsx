@@ -252,7 +252,7 @@ export function ExamForm({ exam }: { exam?: Exam }) {
             </Field>
           </div>
 
-          <div className="flex items-center justify-end gap-2 border-t border-slate-100 px-6 py-4">
+          <div className="flex items-center justify-end gap-2 border-t border-border-secondary px-6 py-4">
             <Link
               href={isEdit && exam ? `/dashboard/exams/records/${exam.id}` : "/dashboard/exams/records"}
               className={buttonClasses("secondary")}

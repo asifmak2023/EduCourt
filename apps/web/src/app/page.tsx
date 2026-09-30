@@ -17,7 +17,7 @@ export default function HomePage() {
 
   return (
     <main className="flex flex-1 items-center justify-center p-8">
-      <p className="text-sm text-slate-500">Loading...</p>
+      <p className="text-sm text-muted">Loading...</p>
     </main>
   );
 }

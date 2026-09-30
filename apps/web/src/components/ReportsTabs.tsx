@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { buttonClasses } from "@/components/Form";
 
 export const REPORTS_TABS = [
   { key: "overview", href: "/dashboard/reports", label: "Overview" },
@@ -36,11 +37,7 @@ export function ReportsTabs({ active }: { active: string }) {
         <Link
           key={tab.key}
           href={tab.href}
-          className={
-            tab.key === active
-              ? "rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white"
-              : "rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:border-slate-400"
-          }
+          className={buttonClasses(tab.key === active ? "primary" : "secondary")}
         >
           {tab.label}
         </Link>

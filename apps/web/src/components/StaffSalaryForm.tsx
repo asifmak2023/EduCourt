@@ -180,19 +180,19 @@ export function StaffSalaryForm({
           </Field>
         </div>
 
-        <label className="mt-4 flex items-center gap-2 text-sm text-slate-700">
+        <label className="mt-4 flex items-center gap-2 text-sm text-foreground">
           <input
             type="checkbox"
             checked={isActive}
             onChange={(event) => setIsActive(event.target.checked)}
-            className="h-4 w-4 rounded border-slate-300"
+            className="h-4 w-4 rounded border-border-secondary"
           />
           Active
         </label>
 
-        <div className="mt-6 border-t border-slate-100 pt-5">
+        <div className="mt-6 border-t border-border-secondary pt-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-900">
+            <h2 className="text-sm font-semibold text-foreground">
               Component lines
             </h2>
             <Button
@@ -205,7 +205,7 @@ export function StaffSalaryForm({
           </div>
 
           {items.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">
+            <p className="mt-3 text-sm text-muted">
               No component lines. The basic salary alone will be used.
             </p>
           ) : (

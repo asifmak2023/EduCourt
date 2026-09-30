@@ -1,5 +1,6 @@
 "use client";
 
+import { Table } from "@heroui/react";
 import { SectionCard } from "@/components/ui";
 
 export function BreakdownCard({
@@ -12,28 +13,32 @@ export function BreakdownCard({
   return (
     <SectionCard title={title}>
       {rows.length === 0 ? (
-        <p className="text-sm text-slate-500">No data for this selection.</p>
+        <p className="text-sm text-muted">No data for this selection.</p>
       ) : (
-        <table className="w-full text-left text-sm">
-          <tbody className="divide-y divide-slate-100">
-            {rows.map((row, index) => (
-              <tr key={index}>
-                {row.map((cell, cellIndex) => (
-                  <td
-                    key={cellIndex}
-                    className={
-                      cellIndex === 0
-                        ? "py-2 capitalize text-slate-900"
-                        : "py-2 text-right text-slate-600"
-                    }
-                  >
-                    {cell}
-                  </td>
+        <Table variant="secondary">
+          <Table.ScrollContainer>
+            <Table.Content aria-label={title}>
+              <Table.Body>
+                {rows.map((row, index) => (
+                  <Table.Row key={index} id={index}>
+                    {row.map((cell, cellIndex) => (
+                      <Table.Cell
+                        key={cellIndex}
+                        className={
+                          cellIndex === 0
+                            ? "capitalize text-foreground"
+                            : "text-right text-muted"
+                        }
+                      >
+                        {cell}
+                      </Table.Cell>
+                    ))}
+                  </Table.Row>
                 ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+        </Table>
       )}
     </SectionCard>
   );

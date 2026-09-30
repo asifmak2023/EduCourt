@@ -58,7 +58,7 @@ export function AdmissionFields({
   return (
     <div className="space-y-8 px-6 py-5">
       <div>
-        <h2 className="mb-4 text-sm font-semibold text-slate-900">
+        <h2 className="mb-4 text-sm font-semibold text-foreground">
           Applicant
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -138,7 +138,7 @@ export function AdmissionFields({
       </div>
 
       <div>
-        <h2 className="mb-4 text-sm font-semibold text-slate-900">
+        <h2 className="mb-4 text-sm font-semibold text-foreground">
           Requested placement
         </h2>
         {optionsLoading ? (
@@ -188,7 +188,7 @@ export function AdmissionFields({
       </div>
 
       <div>
-        <h2 className="mb-4 text-sm font-semibold text-slate-900">Guardian</h2>
+        <h2 className="mb-4 text-sm font-semibold text-foreground">Guardian</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Name" htmlFor="guardian_name">
             <TextInput
@@ -237,7 +237,7 @@ export function AdmissionFields({
       </div>
 
       <div>
-        <h2 className="mb-4 text-sm font-semibold text-slate-900">
+        <h2 className="mb-4 text-sm font-semibold text-foreground">
           Address and notes
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -58,8 +58,8 @@ export function StudentProfileFields({
   admissionHint?: boolean;
 }) {
   return (
-    <div className="border-b border-slate-100 px-6 py-5">
-      <h2 className="mb-4 text-sm font-semibold text-slate-900">
+    <div className="border-b border-border-secondary px-6 py-5">
+      <h2 className="mb-4 text-sm font-semibold text-foreground">
         Student profile
       </h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

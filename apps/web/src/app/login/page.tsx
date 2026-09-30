@@ -79,11 +79,11 @@ export default function LoginPage() {
 
   return (
     <main className="flex flex-1 items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="w-full max-w-md rounded-2xl border border-border-secondary bg-surface p-8 shadow-sm">
         <h1 className="text-2xl font-semibold tracking-tight">
           Education Information System
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted">
           {challengeToken
             ? "Enter the 6-digit code from your authenticator app."
             : "Sign in to your campus dashboard."}
@@ -94,7 +94,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="code"
-                className="block text-sm font-medium text-slate-700"
+                className="block text-sm font-medium text-foreground"
               >
                 Verification code
               </label>
@@ -106,15 +106,15 @@ export default function LoginPage() {
                 autoFocus
                 value={code}
                 onChange={(event) => setCode(event.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-center text-lg tracking-[0.3em] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
+                className="mt-1 w-full rounded-lg border border-border-secondary px-3 py-2 text-center text-lg tracking-[0.3em] outline-none focus:border-accent focus:ring-1 focus:ring-accent"
               />
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-muted">
                 You can also enter one of your recovery codes.
               </p>
             </div>
 
             {error ? (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+              <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">
                 {error}
               </p>
             ) : null}
@@ -122,7 +122,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-60"
+              className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition hover:bg-accent-hover disabled:opacity-60"
             >
               {submitting ? "Verifying..." : "Verify and sign in"}
             </button>
@@ -134,7 +134,7 @@ export default function LoginPage() {
                 setCode("");
                 setError(null);
               }}
-              className="w-full text-xs font-medium text-slate-500 hover:text-slate-900"
+              className="w-full text-xs font-medium text-muted hover:text-foreground"
             >
               Back to sign in
             </button>
@@ -145,7 +145,7 @@ export default function LoginPage() {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-slate-700"
+                  className="block text-sm font-medium text-foreground"
                 >
                   Email
                 </label>
@@ -156,14 +156,14 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
+                  className="mt-1 w-full rounded-lg border border-border-secondary px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-slate-700"
+                  className="block text-sm font-medium text-foreground"
                 >
                   Password
                 </label>
@@ -174,12 +174,12 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
+                  className="mt-1 w-full rounded-lg border border-border-secondary px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
                 />
               </div>
 
               {error ? (
-                <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">
                   {error}
                 </p>
               ) : null}
@@ -187,14 +187,14 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-60"
+                className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition hover:bg-accent-hover disabled:opacity-60"
               >
                 {submitting ? "Signing in..." : "Sign in"}
               </button>
             </form>
 
-            <div className="mt-6 border-t border-slate-100 pt-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+            <div className="mt-6 border-t border-border-secondary pt-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted">
                 Demo accounts (password: password)
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -207,7 +207,7 @@ export default function LoginPage() {
                       setPassword("password");
                       setError(null);
                     }}
-                    className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100"
+                    className="rounded-full border border-border-secondary px-3 py-1 text-xs font-medium text-muted transition hover:bg-surface-tertiary"
                   >
                     {account.label}
                   </button>

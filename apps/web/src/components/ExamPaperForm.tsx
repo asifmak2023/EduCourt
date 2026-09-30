@@ -248,7 +248,7 @@ export function ExamPaperForm({ paper }: { paper?: ExamPaper }) {
             </Field>
           </div>
 
-          <div className="flex items-center justify-end gap-2 border-t border-slate-100 px-6 py-4">
+          <div className="flex items-center justify-end gap-2 border-t border-border-secondary px-6 py-4">
             <Link
               href="/dashboard/exams/papers"
               className={buttonClasses("secondary")}

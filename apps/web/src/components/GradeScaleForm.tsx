@@ -138,7 +138,7 @@ export function GradeScaleForm({ scale }: { scale?: GradeScale }) {
             void submit();
           }}
         >
-          <div className="grid gap-4 border-b border-slate-100 px-6 py-5 sm:grid-cols-2">
+          <div className="grid gap-4 border-b border-border-secondary px-6 py-5 sm:grid-cols-2">
             <Field
               label="Name"
               htmlFor="scale_name"
@@ -183,7 +183,7 @@ export function GradeScaleForm({ scale }: { scale?: GradeScale }) {
 
           <div className="px-6 py-5">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-slate-900">Bands</h2>
+              <h2 className="text-sm font-semibold text-foreground">Bands</h2>
               <Button
                 type="button"
                 variant="secondary"
@@ -197,14 +197,14 @@ export function GradeScaleForm({ scale }: { scale?: GradeScale }) {
             </div>
 
             {errText("items") ? (
-              <p className="mb-3 text-xs text-rose-600">{errText("items")}</p>
+              <p className="mb-3 text-xs text-danger">{errText("items")}</p>
             ) : null}
 
             <div className="space-y-3">
               {items.map((item) => (
                 <div
                   key={item.key}
-                  className="grid gap-3 rounded-xl border border-slate-200 p-4 sm:grid-cols-12"
+                  className="grid gap-3 rounded-xl border border-border-secondary p-4 sm:grid-cols-12"
                 >
                   <div className="sm:col-span-2">
                     <TextInput
@@ -284,7 +284,7 @@ export function GradeScaleForm({ scale }: { scale?: GradeScale }) {
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 border-t border-slate-100 px-6 py-4">
+          <div className="flex items-center justify-end gap-2 border-t border-border-secondary px-6 py-4">
             <Link
               href="/dashboard/exams/grade-scales"
               className={buttonClasses("secondary")}

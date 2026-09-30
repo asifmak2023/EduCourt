@@ -152,7 +152,7 @@ export function ExpenseForm({ expense }: { expense?: Expense }) {
             void submit();
           }}
         >
-          <div className="grid gap-4 border-b border-slate-100 px-6 py-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 border-b border-border-secondary px-6 py-5 sm:grid-cols-2 lg:grid-cols-4">
             <Field
               label="Expense date"
               htmlFor="expense_date"
@@ -210,7 +210,7 @@ export function ExpenseForm({ expense }: { expense?: Expense }) {
 
           <div className="px-6 py-5">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-slate-900">Lines</h2>
+              <h2 className="text-sm font-semibold text-foreground">Lines</h2>
               <Button
                 type="button"
                 variant="secondary"
@@ -227,7 +227,7 @@ export function ExpenseForm({ expense }: { expense?: Expense }) {
               {lines.map((line) => (
                 <div
                   key={line.key}
-                  className="grid gap-3 rounded-xl border border-slate-200 p-4 sm:grid-cols-12"
+                  className="grid gap-3 rounded-xl border border-border-secondary p-4 sm:grid-cols-12"
                 >
                   <div className="sm:col-span-5">
                     <Select
@@ -286,17 +286,17 @@ export function ExpenseForm({ expense }: { expense?: Expense }) {
               ))}
             </div>
 
-            <div className="mt-5 flex items-center justify-end border-t border-slate-100 pt-4 text-sm">
-              <span className="text-slate-600">
+            <div className="mt-5 flex items-center justify-end border-t border-border-secondary pt-4 text-sm">
+              <span className="text-muted">
                 Total{" "}
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-foreground">
                   {formatCurrency(total)}
                 </span>
               </span>
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 border-t border-slate-100 px-6 py-4">
+          <div className="flex items-center justify-end gap-2 border-t border-border-secondary px-6 py-4">
             <Link href={cancelHref} className={buttonClasses("secondary")}>
               Cancel
             </Link>

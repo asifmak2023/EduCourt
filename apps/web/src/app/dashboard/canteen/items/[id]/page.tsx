@@ -21,7 +21,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
 import type { CanteenItem, CanteenStockEntry } from "@/lib/types";
 
 export default function CanteenItemDetailPage() {
@@ -246,7 +246,7 @@ function StockEntryPanel({ itemId }: { itemId: number }) {
             <Table.Body>
             {items.map((entry) => (
               <Table.Row key={entry.id} id={entry.id}>
-                <Table.Cell className="text-foreground">{entry.entry_date ?? "-"}</Table.Cell>
+                <Table.Cell className="text-foreground">{formatDate(entry.entry_date)}</Table.Cell>
                 <Table.Cell><Badge value={entry.type ?? "unknown"} /></Table.Cell>
                 <Table.Cell className="text-right text-foreground">{formatNumber(entry.quantity)}</Table.Cell>
                 <Table.Cell className="text-right text-muted">{formatNumber(entry.balance_after)}</Table.Cell>

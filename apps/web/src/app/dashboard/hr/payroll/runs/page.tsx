@@ -3,7 +3,7 @@
 import { useAuth } from "@/lib/auth";
 import { MasterList } from "@/components/MasterList";
 import { Badge } from "@/components/ui";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency, formatDateTime, formatNumber } from "@/lib/format";
 import type { PayrollRun } from "@/lib/types";
 
 export default function PayrollRunsPage() {
@@ -60,7 +60,7 @@ export default function PayrollRunsPage() {
           align: "right",
           render: (item) => formatCurrency(Number(item.total_net)),
         },
-        { header: "Paid", render: (item) => item.paid_at ?? "-" },
+        { header: "Paid", render: (item) => formatDateTime(item.paid_at) },
       ]}
     />
   );

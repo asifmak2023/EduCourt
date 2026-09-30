@@ -4,6 +4,7 @@ import { SportsTabs } from "@/components/SportsTabs";
 import { MasterList } from "@/components/MasterList";
 import { useSportTeams } from "@/lib/useLookups";
 import type { SportTrainingSession } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 export default function SportTrainingPage() {
   const { items: teams } = useSportTeams();
@@ -35,7 +36,7 @@ export default function SportTrainingPage() {
           { header: "Team", render: (session) => session.team?.name ?? "-" },
           {
             header: "Date",
-            render: (session) => session.session_date ?? "-",
+            render: (session) => formatDate(session.session_date),
           },
           {
             header: "Time",

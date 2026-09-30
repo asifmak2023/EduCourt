@@ -25,6 +25,7 @@ import {
 } from "@/components/ui";
 import { useStudents } from "@/lib/useLookups";
 import type { SportTeam, SportTeamMember } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 export default function SportTeamDetailPage() {
   return (
@@ -135,7 +136,7 @@ function TeamDetailView() {
                   <Table.Cell className="text-foreground">{member.student?.full_name ?? `Student #${member.student_id}`}</Table.Cell>
                   <Table.Cell className="text-muted">{member.position ?? "-"}</Table.Cell>
                   <Table.Cell className="text-muted">{member.jersey_no ?? "-"}</Table.Cell>
-                  <Table.Cell className="text-muted">{member.joined_on ?? "-"}</Table.Cell>
+                  <Table.Cell className="text-muted">{formatDate(member.joined_on)}</Table.Cell>
                   <Table.Cell><Badge value={member.status ?? "unknown"} /></Table.Cell>
                   {can("sports.edit") ? (
                     <Table.Cell className="text-right"><RemoveMemberButton

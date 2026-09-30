@@ -22,6 +22,7 @@ import {
   SuccessNotice,
 } from "@/components/ui";
 import type { StudentCertificate } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 export default function CertificateDetailPage() {
   return (
@@ -105,7 +106,7 @@ function CertificateDetailView() {
           />
           <DataItem label="Type" value={data.type} />
           <DataItem label="Serial number" value={data.serial_no ?? "-"} />
-          <DataItem label="Issued on" value={data.issued_on ?? "-"} />
+          <DataItem label="Issued on" value={formatDate(data.issued_on)} />
           <DataItem
             label="Status"
             value={<Badge value={data.status ?? "pending"} />}

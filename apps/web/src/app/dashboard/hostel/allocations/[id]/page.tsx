@@ -18,7 +18,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type { HostelAllocation } from "@/lib/types";
 
 export default function HostelAllocationDetailPage() {
@@ -76,8 +76,8 @@ function AllocationDetailView() {
           <DataItem label="Hostel" value={data.hostel?.name ?? "-"} />
           <DataItem label="Room" value={data.room?.room_no ?? "-"} />
           <DataItem label="Bed" value={data.bed_no ?? "-"} />
-          <DataItem label="Allocated on" value={data.allocated_on ?? "-"} />
-          <DataItem label="Vacated on" value={data.vacated_on ?? "-"} />
+          <DataItem label="Allocated on" value={formatDate(data.allocated_on)} />
+          <DataItem label="Vacated on" value={formatDate(data.vacated_on)} />
           <DataItem label="Monthly fee" value={formatCurrency(data.monthly_fee)} />
         </DataList>
         {data.notes ? (

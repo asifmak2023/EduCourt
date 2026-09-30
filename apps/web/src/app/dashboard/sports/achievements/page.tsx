@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui";
 import { useSports } from "@/lib/useLookups";
 import { ACHIEVEMENT_LEVEL_OPTIONS } from "@/lib/sportsOptions";
 import type { SportAchievement } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 export default function SportAchievementsPage() {
   const { items: sports } = useSports();
@@ -61,7 +62,7 @@ export default function SportAchievementsPage() {
           },
           {
             header: "Date",
-            render: (achievement) => achievement.achieved_on ?? "-",
+            render: (achievement) => formatDate(achievement.achieved_on),
           },
         ]}
       />

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useExamPapers, useUsers } from "@/lib/useLookups";
+import { formatDate } from "@/lib/format";
 import { PermissionGate } from "@/components/PermissionGate";
 import {
   Button,
@@ -93,7 +94,7 @@ function InvigilationForm() {
                 <option key={paper.id} value={paper.id}>
                   {paper.class_room?.name ?? `Class ${paper.class_room_id}`} -{" "}
                   {paper.subject?.name ?? `Subject ${paper.subject_id}`} (
-                  {paper.exam_date ?? "unscheduled"})
+                  {paper.exam_date ? formatDate(paper.exam_date) : "unscheduled"})
                 </option>
               ))}
             </Select>

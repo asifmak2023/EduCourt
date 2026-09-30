@@ -27,7 +27,7 @@ import {
   Spinner,
   StatCard,
 } from "@/components/ui";
-import { formatNumber } from "@/lib/format";
+import { formatDate, formatNumber } from "@/lib/format";
 import type { Lab, LabEquipment, LabSummary } from "@/lib/types";
 
 const CONDITIONS = [
@@ -207,7 +207,7 @@ function EquipmentSection({
                   <Table.Cell className="text-muted">{item.code ?? "-"}</Table.Cell>
                   <Table.Cell className="text-muted">{formatNumber(item.quantity)}</Table.Cell>
                   <Table.Cell><Badge value={item.condition ?? "unknown"} /></Table.Cell>
-                  <Table.Cell className="text-muted">{item.purchased_on ?? "-"}</Table.Cell>
+                  <Table.Cell className="text-muted">{formatDate(item.purchased_on)}</Table.Cell>
                   <Table.Cell className="text-right">{canEdit ? (
                       <Link
                         href={`/dashboard/labs/${labId}/equipment/${item.id}/edit`}

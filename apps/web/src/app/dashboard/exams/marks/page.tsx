@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useExamPapers, useExams } from "@/lib/useLookups";
+import { formatDate } from "@/lib/format";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Button, Checkbox, Field, Select, TextInput, buttonClasses } from "@/components/Form";
 import {
@@ -216,7 +217,7 @@ function MarksSheet() {
                 <option key={paper.id} value={paper.id}>
                   {paper.class_room?.name ?? `Class ${paper.class_room_id}`} -{" "}
                   {paper.subject?.name ?? `Subject ${paper.subject_id}`}
-                  {paper.exam_date ? ` (${paper.exam_date})` : ""}
+                  {paper.exam_date ? ` (${formatDate(paper.exam_date)})` : ""}
                 </option>
               ))}
             </Select>

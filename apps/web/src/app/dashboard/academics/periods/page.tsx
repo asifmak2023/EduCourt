@@ -3,6 +3,7 @@
 import { PermissionGate } from "@/components/PermissionGate";
 import { MasterList } from "@/components/MasterList";
 import { Badge } from "@/components/ui";
+import { formatTime } from "@/lib/format";
 import type { Period } from "@/lib/types";
 
 export default function PeriodsPage() {
@@ -34,8 +35,8 @@ export default function PeriodsPage() {
             align: "right",
             render: (period) => period.sequence,
           },
-          { header: "Starts", render: (period) => period.starts_at ?? "-" },
-          { header: "Ends", render: (period) => period.ends_at ?? "-" },
+          { header: "Starts", render: (period) => formatTime(period.starts_at) },
+          { header: "Ends", render: (period) => formatTime(period.ends_at) },
           {
             header: "Break",
             render: (period) => (period.is_break ? <Badge value="applied" /> : "-"),

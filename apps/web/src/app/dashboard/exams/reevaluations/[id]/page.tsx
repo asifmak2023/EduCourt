@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
+import { formatDateTime } from "@/lib/format";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Button, Field, Select, TextInput, buttonClasses } from "@/components/Form";
 import {
@@ -86,7 +87,7 @@ function ReevaluationDetailView() {
             label="Revised marks"
             value={data.revised_marks === null ? "-" : String(data.revised_marks)}
           />
-          <DataItem label="Reviewed at" value={data.reviewed_at ?? "-"} />
+          <DataItem label="Reviewed at" value={formatDateTime(data.reviewed_at)} />
         </DataList>
         {data.reason ? (
           <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">

@@ -16,7 +16,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type { TransportAllocation } from "@/lib/types";
 
 export default function TransportAllocationsPage() {
@@ -116,8 +116,8 @@ export default function TransportAllocationsPage() {
                     <Table.Cell className="text-muted">{allocation.route?.name ?? `#${allocation.transport_route_id}`}</Table.Cell>
                     <Table.Cell className="text-muted">{allocation.stop?.name ?? "-"}</Table.Cell>
                     <Table.Cell className="text-muted">{allocation.direction ?? "-"}</Table.Cell>
-                    <Table.Cell className="text-muted">{allocation.start_date ?? "-"}</Table.Cell>
-                    <Table.Cell className="text-muted">{allocation.end_date ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{formatDate(allocation.start_date)}</Table.Cell>
+                    <Table.Cell className="text-muted">{formatDate(allocation.end_date)}</Table.Cell>
                     <Table.Cell className="text-right text-foreground">{formatCurrency(allocation.fare)}</Table.Cell>
                     <Table.Cell><Badge value={allocation.status ?? "unknown"} /></Table.Cell>
                   </Table.Row>

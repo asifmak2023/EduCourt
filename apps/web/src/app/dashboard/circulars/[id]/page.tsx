@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Button, buttonClasses } from "@/components/Form";
 import {
@@ -104,8 +105,8 @@ function CircularDetailView() {
             label="Status"
             value={<Badge value={data.status ?? "draft"} />}
           />
-          <DataItem label="Published at" value={data.published_at ?? "-"} />
-          <DataItem label="Expires on" value={data.expires_on ?? "-"} />
+          <DataItem label="Published at" value={formatDateTime(data.published_at)} />
+          <DataItem label="Expires on" value={formatDate(data.expires_on)} />
           <DataItem label="Author" value={data.author?.name ?? "-"} />
           {data.attachment_path ? (
             <DataItem label="Attachment" value={data.attachment_path} />

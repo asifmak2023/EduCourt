@@ -12,7 +12,7 @@ import {
   Spinner,
   StatCard,
 } from "@/components/ui";
-import { formatNumber } from "@/lib/format";
+import { formatDate, formatNumber } from "@/lib/format";
 import type { StaffHeadcount, StaffJoinersLeavers } from "@/lib/types";
 
 function today() {
@@ -81,7 +81,7 @@ function ReportsView() {
               <StatCard
                 label="Employed"
                 value={formatNumber(headcount.data.total)}
-                hint={`As on ${headcount.data.as_on}`}
+                hint={`As on ${formatDate(headcount.data.as_on)}`}
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">

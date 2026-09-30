@@ -16,7 +16,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type { CanteenSale } from "@/lib/types";
 
 export default function CanteenSalesPage() {
@@ -137,7 +137,7 @@ export default function CanteenSalesPage() {
                       </Link></Table.Cell>
                     <Table.Cell className="text-muted">{sale.student?.full_name ?? sale.customer_name ?? "-"}</Table.Cell>
                     <Table.Cell className="text-muted">{sale.payment_method ?? "-"}</Table.Cell>
-                    <Table.Cell className="text-muted">{sale.sold_on ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{formatDate(sale.sold_on)}</Table.Cell>
                     <Table.Cell className="text-right text-muted">{formatCurrency(sale.subtotal)}</Table.Cell>
                     <Table.Cell className="text-right text-muted">{formatCurrency(sale.discount)}</Table.Cell>
                     <Table.Cell className="text-right text-foreground">{formatCurrency(sale.total)}</Table.Cell>

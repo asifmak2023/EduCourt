@@ -18,7 +18,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
 import type { ScholarshipAward } from "@/lib/types";
 
 export default function ScholarshipAwardDetailPage() {
@@ -79,10 +79,10 @@ function AwardDetailView() {
             }
           />
           <DataItem label="Scholarship" value={data.scholarship?.name ?? "-"} />
-          <DataItem label="Awarded on" value={data.awarded_on ?? "-"} />
+          <DataItem label="Awarded on" value={formatDate(data.awarded_on)} />
           <DataItem label="Value" value={valueLabel} />
           <DataItem label="Approved by" value={data.approved_by ?? "-"} />
-          <DataItem label="Revoked on" value={data.revoked_on ?? "-"} />
+          <DataItem label="Revoked on" value={formatDate(data.revoked_on)} />
         </DataList>
         {data.notes ? (
           <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">

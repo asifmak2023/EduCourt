@@ -26,6 +26,7 @@ import {
 import { useStudents } from "@/lib/useLookups";
 import { CLUB_MEMBERSHIP_STATUS_OPTIONS } from "@/lib/studentAffairsOptions";
 import type { ClubMembership, StudentClub } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 export default function ClubDetailPage() {
   return (
@@ -134,7 +135,7 @@ function ClubDetailView() {
                   <Table.Cell className="text-foreground">{membership.student?.full_name ??
                       `Student #${membership.student_id}`}</Table.Cell>
                   <Table.Cell className="text-muted">{membership.role ?? "-"}</Table.Cell>
-                  <Table.Cell className="text-muted">{membership.joined_on ?? "-"}</Table.Cell>
+                  <Table.Cell className="text-muted">{formatDate(membership.joined_on)}</Table.Cell>
                   <Table.Cell><Badge value={membership.status ?? "unknown"} /></Table.Cell>
                   {can("student_affairs.edit") ? (
                     <Table.Cell className="text-right"><RemoveMemberButton

@@ -5,6 +5,7 @@ import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
+import { formatDate } from "@/lib/format";
 import {
   useCampuses,
   usePermissionCatalog,
@@ -191,10 +192,10 @@ function RolesView() {
                         {assignment.campus?.name ?? "-"}
                       </Table.Cell>
                       <Table.Cell className="text-muted">
-                        {assignment.starts_at ?? "-"}
+                        {formatDate(assignment.starts_at)}
                       </Table.Cell>
                       <Table.Cell className="text-muted">
-                        {assignment.ends_at ?? "-"}
+                        {formatDate(assignment.ends_at)}
                       </Table.Cell>
                       <Table.Cell>
                         <Badge

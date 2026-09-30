@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
+import { formatDateTime } from "@/lib/format";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Button, buttonClasses } from "@/components/Form";
 import {
@@ -69,10 +70,10 @@ function OutpassDetailView() {
                 : `#${data.student_id}`
             }
           />
-          <DataItem label="From" value={data.from_datetime ?? "-"} />
-          <DataItem label="To" value={data.to_datetime ?? "-"} />
+          <DataItem label="From" value={formatDateTime(data.from_datetime)} />
+          <DataItem label="To" value={formatDateTime(data.to_datetime)} />
           <DataItem label="Reason" value={data.reason} />
-          <DataItem label="Approved at" value={data.approved_at ?? "-"} />
+          <DataItem label="Approved at" value={formatDateTime(data.approved_at)} />
         </DataList>
       </Card>
 

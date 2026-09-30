@@ -26,6 +26,7 @@ import {
   SuccessNotice,
 } from "@/components/ui";
 import type { InvigilationDuty } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 const ROLES = [
   { value: "chief", label: "Chief invigilator" },
@@ -85,7 +86,7 @@ function InvigilationDetailView() {
                 : `Paper #${data.exam_paper_id}`
             }
           />
-          <DataItem label="Exam date" value={data.paper?.exam_date ?? "-"} />
+          <DataItem label="Exam date" value={formatDate(data.paper?.exam_date)} />
           <DataItem
             label="Assigned"
             value={data.created_at ? data.created_at : "-"}

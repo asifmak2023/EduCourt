@@ -18,7 +18,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type { TransportAllocation } from "@/lib/types";
 
 export default function TransportAllocationDetailPage() {
@@ -74,8 +74,8 @@ function AllocationDetailView() {
           <DataItem label="Stop" value={data.stop?.name ?? "-"} />
           <DataItem label="Vehicle" value={data.vehicle?.name ?? "-"} />
           <DataItem label="Direction" value={data.direction ?? "-"} />
-          <DataItem label="Start date" value={data.start_date ?? "-"} />
-          <DataItem label="End date" value={data.end_date ?? "-"} />
+          <DataItem label="Start date" value={formatDate(data.start_date)} />
+          <DataItem label="End date" value={formatDate(data.end_date)} />
           <DataItem label="Fare" value={formatCurrency(data.fare)} />
         </DataList>
         {data.notes ? (

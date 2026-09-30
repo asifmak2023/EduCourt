@@ -224,7 +224,7 @@ function NotificationsView() {
                       >
                         {notification.title}
                       </Link>
-                      <p className="max-w-md truncate text-xs text-muted">
+                      <p className="max-w-xs truncate text-xs text-muted">
                         {notification.body}
                       </p>
                     </Table.Cell>

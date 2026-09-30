@@ -24,7 +24,7 @@ import {
   Spinner,
 } from "@/components/ui";
 import { useUsers } from "@/lib/useLookups";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
 import { EQUIPMENT_MOVEMENT_TYPE_OPTIONS } from "@/lib/sportsOptions";
 import type { SportEquipment, SportEquipmentMovement } from "@/lib/types";
 
@@ -294,7 +294,7 @@ function MovementHistory({ equipmentId }: { equipmentId: number }) {
             <Table.Body>
             {items.map((movement) => (
               <Table.Row key={movement.id} id={movement.id}>
-                <Table.Cell className="text-muted">{movement.movement_date ?? "-"}</Table.Cell>
+                <Table.Cell className="text-muted">{formatDate(movement.movement_date)}</Table.Cell>
                 <Table.Cell><Badge value={movement.type ?? "unknown"} /></Table.Cell>
                 <Table.Cell className="text-right text-foreground">{formatNumber(movement.quantity)}</Table.Cell>
                 <Table.Cell className="text-right text-muted">{formatNumber(movement.balance_after)}</Table.Cell>

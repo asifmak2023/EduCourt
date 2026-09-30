@@ -4,6 +4,7 @@ import { StudentAffairsTabs } from "@/components/StudentAffairsTabs";
 import { MasterList } from "@/components/MasterList";
 import { Badge } from "@/components/ui";
 import type { CouncilMember } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 export default function CouncilPage() {
   return (
@@ -38,8 +39,8 @@ export default function CouncilPage() {
           },
           { header: "Position", render: (member) => member.position },
           { header: "Term", render: (member) => member.term ?? "-" },
-          { header: "From", render: (member) => member.from_date ?? "-" },
-          { header: "To", render: (member) => member.to_date ?? "-" },
+          { header: "From", render: (member) => formatDate(member.from_date) },
+          { header: "To", render: (member) => formatDate(member.to_date) },
           {
             header: "Status",
             render: (member) => (

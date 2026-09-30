@@ -5,6 +5,7 @@ import { useLabs } from "@/lib/useLookups";
 import { MasterList } from "@/components/MasterList";
 import { Badge } from "@/components/ui";
 import type { LabBooking } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 
 export default function LabBookingsPage() {
   const { can } = useAuth();
@@ -45,7 +46,7 @@ export default function LabBookingsPage() {
           render: (item) => item.class_room?.name ?? "-",
         },
         { header: "Teacher", render: (item) => item.teacher?.name ?? "-" },
-        { header: "Date", render: (item) => item.session_date ?? "-" },
+        { header: "Date", render: (item) => formatDate(item.session_date) },
         {
           header: "Time",
           render: (item) =>

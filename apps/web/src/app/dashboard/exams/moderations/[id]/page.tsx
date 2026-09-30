@@ -19,7 +19,7 @@ import {
   Spinner,
   SuccessNotice,
 } from "@/components/ui";
-import { formatNumber } from "@/lib/format";
+import { formatDateTime, formatNumber } from "@/lib/format";
 import type { ExamModeration } from "@/lib/types";
 
 export default function ModerationDetailPage() {
@@ -76,7 +76,7 @@ function ModerationDetailView() {
           />
           <DataItem label="Type" value={typeLabel} />
           <DataItem label="Value" value={formatNumber(data.value)} />
-          <DataItem label="Applied at" value={data.applied_at ?? "-"} />
+          <DataItem label="Applied at" value={formatDateTime(data.applied_at)} />
         </DataList>
         {data.reason ? (
           <p className="mt-5 border-t border-border-secondary pt-4 text-sm text-muted">

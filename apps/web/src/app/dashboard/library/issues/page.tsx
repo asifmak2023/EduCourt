@@ -3,7 +3,7 @@
 import { useAuth } from "@/lib/auth";
 import { MasterList } from "@/components/MasterList";
 import { Badge } from "@/components/ui";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type { BookIssue } from "@/lib/types";
 
 function memberLabel(issue: BookIssue) {
@@ -39,9 +39,9 @@ export default function BookIssuesPage() {
       columns={[
         { header: "Book", render: (item) => item.book?.title ?? `#${item.book_id}` },
         { header: "Member", render: (item) => memberLabel(item) },
-        { header: "Issued", render: (item) => item.issued_on ?? "-" },
-        { header: "Due", render: (item) => item.due_on ?? "-" },
-        { header: "Returned", render: (item) => item.returned_on ?? "-" },
+        { header: "Issued", render: (item) => formatDate(item.issued_on) },
+        { header: "Due", render: (item) => formatDate(item.due_on) },
+        { header: "Returned", render: (item) => formatDate(item.returned_on) },
         {
           header: "Fine",
           align: "right",

@@ -17,7 +17,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
 import type { CanteenStockEntry } from "@/lib/types";
 
 export default function CanteenStockEntriesPage() {
@@ -135,7 +135,7 @@ export default function CanteenStockEntriesPage() {
                 <Table.Body>
                 {items.map((entry) => (
                   <Table.Row key={entry.id} className="hover:bg-surface-secondary" id={entry.id}>
-                    <Table.Cell className="text-muted">{entry.entry_date ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-muted">{formatDate(entry.entry_date)}</Table.Cell>
                     <Table.Cell><Link
                         href={`/dashboard/canteen/items/${entry.canteen_item_id}`}
                         className="text-foreground hover:underline"

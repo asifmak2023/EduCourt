@@ -199,3 +199,15 @@ html[data-glass="true"] .surface-card [data-slot="table-cell"]:hover {
     background-color: var(--surface-secondary);
   }
 }
+
+/* Hide the scrollbar on scrollable dropdown menus (scrolling still works) */
+.select__popover {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.select__popover::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}

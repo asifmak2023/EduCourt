@@ -15,7 +15,7 @@ export function AppBackground() {
   const style: React.CSSProperties = { backgroundColor: fallback };
 
   if (background.kind === "solid" && background.color) {
-    style.background = background.color;
+    style.backgroundColor = background.color;
   } else if (background.kind === "gradient" && background.colors) {
     style.backgroundImage = `linear-gradient(135deg, ${background.colors.join(", ")})`;
   } else if (background.kind === "wallpaper" && background.imageUrl) {

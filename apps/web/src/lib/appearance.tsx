@@ -100,9 +100,9 @@ function applyToDocument(
   root.dataset.animations = String(config.animations);
   root.dataset.background = config.backgroundId;
   root.dataset.glass = String(config.glass);
-  root.dataset.sidebarCategoryContrast =
+  root.dataset.glassMutedContrast =
     resolvedMode === "dark" && config.glass && config.glassTransparency >= 45
-      ? "dark"
+      ? "high"
       : "default";
   root.style.setProperty("--accent", accent.accent);
   root.style.setProperty("--accent-foreground", accent.accentForeground);

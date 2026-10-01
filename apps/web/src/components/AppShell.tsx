@@ -102,7 +102,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 type="button"
                 onClick={() => toggleSection(section.label)}
                 aria-expanded={isOpen}
-                className="sidebar-section-label flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted transition-colors hover:bg-accent-soft hover:text-accent-soft-foreground"
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted transition-colors hover:bg-accent-soft hover:text-accent-soft-foreground"
               >
                 <span className="flex-1 text-left">{section.label}</span>
                 <Icon

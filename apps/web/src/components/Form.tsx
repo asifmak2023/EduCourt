@@ -6,6 +6,7 @@ import {
   createContext,
   isValidElement,
   useContext,
+  useState,
   type ButtonHTMLAttributes,
   type ChangeEvent,
   type ComponentProps,
@@ -25,6 +26,7 @@ import {
   Spinner,
   TextArea as HeroTextArea,
 } from "@heroui/react";
+import { Icon } from "@/components/Icons";
 
 const FieldContext = createContext<{ label: string } | null>(null);
 
@@ -78,6 +80,54 @@ export function TextInput({
       {...props}
       className={className}
     />
+  );
+}
+
+export function PasswordInput({
+  className = "",
+  style,
+  value,
+  defaultValue,
+  onChange,
+  "aria-label": ariaLabel,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement>) {
+  const field = useContext(FieldContext);
+  const [show, setShow] = useState(false);
+  const [hasValue, setHasValue] = useState(
+    () => String(value ?? defaultValue ?? "").length > 0
+  );
+
+  const filled = value === undefined ? hasValue : String(value).length > 0;
+
+  return (
+    <div className="relative">
+      <TextInput
+        {...props}
+        type={show ? "text" : "password"}
+        aria-label={ariaLabel ?? field?.label ?? props.placeholder ?? props.name}
+        value={value}
+        defaultValue={defaultValue}
+        onChange={(event) => {
+          setHasValue(event.target.value.length > 0);
+          onChange?.(event);
+        }}
+        style={filled ? { ...style, paddingInlineEnd: "2.25rem" } : style}
+        className={className}
+      />
+      {filled ? (
+        <button
+          type="button"
+          onClick={() => setShow((current) => !current)}
+          aria-label={show ? "Hide password" : "Show password"}
+          aria-pressed={show}
+          tabIndex={-1}
+          className="absolute inset-y-0 end-3 flex items-center text-muted transition-colors hover:text-foreground"
+        >
+          <Icon name={show ? "eyeOff" : "eye"} className="h-4 w-4" />
+        </button>
+      ) : null}
+    </div>
   );
 }
 

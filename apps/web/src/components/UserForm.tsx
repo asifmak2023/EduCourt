@@ -9,6 +9,7 @@ import {
   buttonClasses,
   Checkbox,
   Field,
+  PasswordInput,
   TextInput,
 } from "@/components/Form";
 import { Card, ErrorNotice, PageHeader } from "@/components/ui";
@@ -149,9 +150,8 @@ export function UserForm({
               }
               error={errorFor("password")}
             >
-              <TextInput
+              <PasswordInput
                 id="user_password"
-                type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
               />

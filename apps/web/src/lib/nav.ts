@@ -32,7 +32,9 @@ export type NavIcon =
   | "palette"
   | "sun"
   | "moon"
-  | "sparkles";
+  | "sparkles"
+  | "eye"
+  | "eyeOff";
 
 export interface NavItem {
   label: string;

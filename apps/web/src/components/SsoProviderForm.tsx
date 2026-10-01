@@ -11,6 +11,7 @@ import {
   buttonClasses,
   Checkbox,
   Field,
+  PasswordInput,
   Select,
   TextArea,
   TextInput,
@@ -201,9 +202,8 @@ export function SsoProviderForm({
               }
               error={errorFor("client_secret")}
             >
-              <TextInput
+              <PasswordInput
                 id="sso_client_secret"
-                type="password"
                 value={clientSecret}
                 onChange={(event) => setClientSecret(event.target.value)}
               />

@@ -1,4 +1,5 @@
 import { StatusBar } from "expo-status-bar";
+import { BlurView } from "expo-blur";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -24,10 +25,24 @@ export default function App() {
 }
 
 function AppInner() {
-  const { colors, resolvedMode, ready, background } = useTheme();
+  const { colors, resolvedMode, ready, background, config } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const hasBackground = background.kind !== "default";
-  const headerStyle = [styles.headerBlock, hasBackground ? styles.headerScrim : null];
+  const glassEnabled = config.glass;
+  const frosted = hasBackground || glassEnabled;
+  const blurIntensity = Math.min(
+    100,
+    Math.max(1, Math.round((config.glassBlur / 24) * 100))
+  );
+  const headerStyle = [
+    styles.headerBlock,
+    frosted ? styles.headerScrim : null,
+    glassEnabled ? { backgroundColor: colors.glassSurfaceSecondary } : null,
+  ];
+  const cardStyle = [
+    styles.card,
+    glassEnabled ? { backgroundColor: colors.glassSurface } : null,
+  ];
   const [user, setUser] = useState<AuthUser | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -80,6 +95,14 @@ function AppInner() {
       {user ? (
         <ScrollView contentContainerStyle={styles.screen}>
           <View style={headerStyle}>
+            {glassEnabled ? (
+              <BlurView
+                intensity={blurIntensity}
+                tint={resolvedMode === "dark" ? "dark" : "light"}
+                blurMethod="dimezisBlurViewSdk31Plus"
+                style={StyleSheet.absoluteFill}
+              />
+            ) : null}
             <View style={styles.headerRow}>
               <Text style={styles.title}>Dashboard</Text>
               <Pressable
@@ -96,18 +119,18 @@ function AppInner() {
             </Text>
           </View>
 
-          <View style={styles.card}>
+          <View style={cardStyle}>
             <Text style={styles.cardLabel}>Signed in as</Text>
             <Text style={styles.cardValue}>{user.name}</Text>
             <Text style={styles.subtitle}>{user.email}</Text>
           </View>
 
-          <View style={styles.card}>
+          <View style={cardStyle}>
             <Text style={styles.cardLabel}>Roles</Text>
             <Text style={styles.cardValue}>{user.roles.join(", ")}</Text>
           </View>
 
-          <View style={styles.card}>
+          <View style={cardStyle}>
             <Text style={styles.cardLabel}>Accessible modules</Text>
             <Text style={styles.cardValue}>
               {Array.from(
@@ -125,6 +148,14 @@ function AppInner() {
       ) : (
         <ScrollView contentContainerStyle={styles.screen}>
           <View style={headerStyle}>
+            {glassEnabled ? (
+              <BlurView
+                intensity={blurIntensity}
+                tint={resolvedMode === "dark" ? "dark" : "light"}
+                blurMethod="dimezisBlurViewSdk31Plus"
+                style={StyleSheet.absoluteFill}
+              />
+            ) : null}
             <View style={styles.headerRow}>
               <Text style={styles.title}>Education Information System</Text>
               <Pressable
@@ -201,6 +232,7 @@ function makeStyles(colors: ThemeColors) {
       paddingHorizontal: 12,
       paddingVertical: 12,
       backgroundColor: withAlpha(colors.surface, 0.82),
+      overflow: "hidden",
     },
     headerRow: {
       flexDirection: "row",

@@ -36,6 +36,10 @@ interface ThemeContextValue {
   setBackground: (backgroundId: string) => void;
   setWallpaperDim: (value: number) => void;
   setAnimations: (animations: boolean) => void;
+  setGlass: (glass: boolean) => void;
+  setGlassBlur: (value: number) => void;
+  setGlassTransparency: (value: number) => void;
+  setBackgroundBlur: (value: number) => void;
   reset: () => void;
 }
 
@@ -93,8 +97,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const accent = findAccent(config.accentId);
   const colors = useMemo(
-    () => buildColors(resolvedMode, accent.accent, accent.accentForeground, config.vibrant),
-    [resolvedMode, accent, config.vibrant]
+    () =>
+      buildColors(
+        resolvedMode,
+        accent.accent,
+        accent.accentForeground,
+        config.vibrant,
+        config.glassTransparency
+      ),
+    [resolvedMode, accent, config.vibrant, config.glassTransparency]
   );
   const background = useMemo(
     () => resolveBackground(config.backgroundId, resolvedMode),
@@ -116,6 +127,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setBackground: (backgroundId) => update({ backgroundId }),
       setWallpaperDim: (wallpaperDim) => update({ wallpaperDim }),
       setAnimations: (animations) => update({ animations }),
+      setGlass: (glass) => update({ glass }),
+      setGlassBlur: (glassBlur) => update({ glassBlur }),
+      setGlassTransparency: (glassTransparency) => update({ glassTransparency }),
+      setBackgroundBlur: (backgroundBlur) => update({ backgroundBlur }),
       reset: () => update(DEFAULT_APPEARANCE),
     }),
     [ready, config, resolvedMode, colors, accent, background, reduceMotion, update]

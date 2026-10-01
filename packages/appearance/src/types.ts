@@ -40,6 +40,10 @@ export interface AppearanceConfig {
   backgroundId: string;
   wallpaperDim: number;
   animations: boolean;
+  glass: boolean;
+  glassBlur: number;
+  glassTransparency: number;
+  backgroundBlur: number;
 }
 
 export const APPEARANCE_STORAGE_KEY = "eis.appearance";
@@ -51,4 +55,24 @@ export const DEFAULT_APPEARANCE: AppearanceConfig = {
   backgroundId: "default",
   wallpaperDim: 0,
   animations: true,
+  glass: false,
+  glassBlur: 12,
+  glassTransparency: 45,
+  backgroundBlur: 0,
 };
+
+export const GLASS_BLUR_MAX = 24;
+export const GLASS_TRANSPARENCY_MAX = 100;
+export const BACKGROUND_BLUR_MAX = 24;
+
+export function clampNumber(
+  value: unknown,
+  min: number,
+  max: number,
+  fallback: number
+): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.min(max, Math.max(min, value));
+}

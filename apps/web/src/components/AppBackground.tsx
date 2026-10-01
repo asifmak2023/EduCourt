@@ -26,6 +26,11 @@ export function AppBackground() {
     style.backgroundAttachment = "fixed";
   }
 
+  if (config.backgroundBlur > 0) {
+    style.filter = `blur(${config.backgroundBlur}px)`;
+    style.transform = "scale(1.08)";
+  }
+
   return (
     <>
       <div

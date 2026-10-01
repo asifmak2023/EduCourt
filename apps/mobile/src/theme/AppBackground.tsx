@@ -32,13 +32,18 @@ export function AppBackground() {
 
   if (background.kind === "wallpaper" && background.imageUrl) {
     const dim = config.wallpaperDim / 100;
+    const blur = config.backgroundBlur;
 
     return (
-      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.clip]}>
         <Image
           source={{ uri: background.imageUrl }}
-          style={StyleSheet.absoluteFill}
+          style={[
+            StyleSheet.absoluteFill,
+            blur > 0 ? styles.blurredImage : null,
+          ]}
           resizeMode="cover"
+          blurRadius={blur}
         />
         {dim > 0 ? (
           <View
@@ -54,3 +59,12 @@ export function AppBackground() {
 
   return null;
 }
+
+const styles = StyleSheet.create({
+  clip: {
+    overflow: "hidden",
+  },
+  blurredImage: {
+    transform: [{ scale: 1.1 }],
+  },
+});

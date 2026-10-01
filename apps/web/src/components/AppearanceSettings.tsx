@@ -177,6 +177,58 @@ function ToggleRow({
   );
 }
 
+function SliderRow({
+  label,
+  hint,
+  value,
+  min,
+  max,
+  step,
+  suffix,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  suffix?: string;
+  disabled?: boolean;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div className={disabled ? "opacity-50" : ""}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-foreground">{label}</p>
+          {hint ? <p className="mt-0.5 text-xs text-muted">{hint}</p> : null}
+        </div>
+        <span className="text-xs text-muted">
+          {value}
+          {suffix ?? ""}
+        </span>
+      </div>
+      <Slider
+        aria-label={label}
+        minValue={min}
+        maxValue={max}
+        step={step}
+        isDisabled={disabled}
+        value={value}
+        onChange={(next) => onChange(Array.isArray(next) ? next[0] : next)}
+        className="mt-2"
+      >
+        <Slider.Track>
+          <Slider.Fill />
+          <Slider.Thumb />
+        </Slider.Track>
+      </Slider>
+    </div>
+  );
+}
+
 export function AppearanceSettings() {
   const {
     config,
@@ -187,6 +239,10 @@ export function AppearanceSettings() {
     setBackground,
     setWallpaperDim,
     setAnimations,
+    setGlass,
+    setGlassBlur,
+    setGlassTransparency,
+    setBackgroundBlur,
     reset,
   } = useAppearance();
 
@@ -363,6 +419,53 @@ export function AppearanceSettings() {
             </Slider>
           </div>
         ) : null}
+      </Section>
+
+      <Section
+        title="Surface"
+        description="Glassmorphism for cards, the top bar, and the sidebar."
+      >
+        <ToggleRow
+          label="Glass surfaces"
+          hint="Frost cards, the top bar, and the sidebar."
+          checked={config.glass}
+          onChange={setGlass}
+        />
+        <div className="mt-5 space-y-5">
+          <SliderRow
+            label="Glass blur"
+            hint="Strength of the frosted blur."
+            value={config.glassBlur}
+            min={0}
+            max={24}
+            step={2}
+            suffix="px"
+            disabled={!config.glass}
+            onChange={setGlassBlur}
+          />
+          <SliderRow
+            label="Transparency"
+            hint="How see-through the glass surfaces are."
+            value={config.glassTransparency}
+            min={0}
+            max={100}
+            step={5}
+            suffix="%"
+            disabled={!config.glass}
+            onChange={setGlassTransparency}
+          />
+          <SliderRow
+            label="Background blur"
+            hint="Blurs the wallpaper or gradient behind the dashboard."
+            value={config.backgroundBlur}
+            min={0}
+            max={24}
+            step={2}
+            suffix="px"
+            disabled={activeFamily === "default"}
+            onChange={setBackgroundBlur}
+          />
+        </div>
       </Section>
 
       <Section

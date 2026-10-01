@@ -7,7 +7,11 @@ import { ACCENTS, findAccent } from "./accents";
 import { GRADIENTS, SOLIDS, backgroundKind } from "./backgrounds";
 import {
   APPEARANCE_STORAGE_KEY,
+  BACKGROUND_BLUR_MAX,
+  clampNumber,
   DEFAULT_APPEARANCE,
+  GLASS_BLUR_MAX,
+  GLASS_TRANSPARENCY_MAX,
   type AppearanceConfig,
 } from "./types";
 import { findWallpaper } from "./wallpapers";
@@ -82,6 +86,28 @@ export function normalizeAppearance(value: unknown): AppearanceConfig {
       typeof stored.animations === "boolean"
         ? stored.animations
         : DEFAULT_APPEARANCE.animations,
+    glass:
+      typeof stored.glass === "boolean"
+        ? stored.glass
+        : DEFAULT_APPEARANCE.glass,
+    glassBlur: clampNumber(
+      stored.glassBlur,
+      0,
+      GLASS_BLUR_MAX,
+      DEFAULT_APPEARANCE.glassBlur
+    ),
+    glassTransparency: clampNumber(
+      stored.glassTransparency,
+      0,
+      GLASS_TRANSPARENCY_MAX,
+      DEFAULT_APPEARANCE.glassTransparency
+    ),
+    backgroundBlur: clampNumber(
+      stored.backgroundBlur,
+      0,
+      BACKGROUND_BLUR_MAX,
+      DEFAULT_APPEARANCE.backgroundBlur
+    ),
   };
 }
 

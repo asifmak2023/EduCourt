@@ -43,6 +43,59 @@ function familyOf(backgroundId: string): BackgroundKind {
   return "default";
 }
 
+function StepperRow({
+  styles,
+  label,
+  hint,
+  value,
+  suffix,
+  disabled,
+  onDecrease,
+  onIncrease,
+}: {
+  styles: ReturnType<typeof makeStyles>;
+  label: string;
+  hint?: string;
+  value: number;
+  suffix?: string;
+  disabled?: boolean;
+  onDecrease: () => void;
+  onIncrease: () => void;
+}) {
+  return (
+    <View style={[styles.stepperRow, disabled ? styles.disabledRow : null]}>
+      <View style={styles.toggleLabel}>
+        <Text style={styles.rowTitle}>{label}</Text>
+        {hint ? <Text style={styles.rowHint}>{hint}</Text> : null}
+      </View>
+      <View style={styles.stepper}>
+        <Pressable
+          onPress={onDecrease}
+          disabled={disabled}
+          style={styles.stepperButton}
+          accessibilityRole="button"
+          accessibilityLabel={`Decrease ${label}`}
+        >
+          <Text style={styles.stepperText}>-</Text>
+        </Pressable>
+        <Text style={styles.stepperValue}>
+          {value}
+          {suffix ?? ""}
+        </Text>
+        <Pressable
+          onPress={onIncrease}
+          disabled={disabled}
+          style={styles.stepperButton}
+          accessibilityRole="button"
+          accessibilityLabel={`Increase ${label}`}
+        >
+          <Text style={styles.stepperText}>+</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 export function AppearanceModal({
   visible,
   onClose,
@@ -278,6 +331,66 @@ export function AppearanceModal({
             </View>
           ) : null}
 
+          <Text style={styles.sectionTitle}>Surface</Text>
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleLabel}>
+              <Text style={styles.rowTitle}>Glass surfaces</Text>
+              <Text style={styles.rowHint}>
+                Frost cards, the top bar, and the sidebar.
+              </Text>
+            </View>
+            <Switch value={config.glass} onValueChange={theme.setGlass} />
+          </View>
+
+          <StepperRow
+            styles={styles}
+            label="Glass blur"
+            hint="Strength of the frosted blur."
+            value={config.glassBlur}
+            suffix="px"
+            disabled={!config.glass}
+            onDecrease={() =>
+              theme.setGlassBlur(Math.max(0, config.glassBlur - 2))
+            }
+            onIncrease={() =>
+              theme.setGlassBlur(Math.min(24, config.glassBlur + 2))
+            }
+          />
+
+          <StepperRow
+            styles={styles}
+            label="Transparency"
+            hint="How see-through the glass surfaces are."
+            value={config.glassTransparency}
+            suffix="%"
+            disabled={!config.glass}
+            onDecrease={() =>
+              theme.setGlassTransparency(
+                Math.max(0, config.glassTransparency - 5)
+              )
+            }
+            onIncrease={() =>
+              theme.setGlassTransparency(
+                Math.min(100, config.glassTransparency + 5)
+              )
+            }
+          />
+
+          <StepperRow
+            styles={styles}
+            label="Background blur"
+            hint="Blurs the wallpaper behind the dashboard."
+            value={config.backgroundBlur}
+            suffix="px"
+            disabled={familyOf(config.backgroundId) === "default"}
+            onDecrease={() =>
+              theme.setBackgroundBlur(Math.max(0, config.backgroundBlur - 2))
+            }
+            onIncrease={() =>
+              theme.setBackgroundBlur(Math.min(24, config.backgroundBlur + 2))
+            }
+          />
+
           <View style={styles.toggleRow}>
             <View style={styles.toggleLabel}>
               <Text style={styles.rowTitle}>Interface animations</Text>
@@ -439,6 +552,15 @@ function makeStyles(colors: ThemeColors) {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
+    },
+    stepperRow: {
+      marginTop: 20,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    disabledRow: {
+      opacity: 0.5,
     },
     stepper: {
       flexDirection: "row",

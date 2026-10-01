@@ -122,3 +122,45 @@ html[data-animations="false"] .surface-card:hover {
 html[data-animations="false"] * {
   scroll-behavior: auto;
 }
+
+/* Glassmorphism surfaces */
+html[data-glass="true"] .surface-card,
+html[data-glass="true"] .app-glass,
+html[data-glass="true"] .page-header {
+  background-color: color-mix(
+    in oklab,
+    var(--surface) var(--glass-alpha),
+    transparent
+  );
+  border-color: color-mix(in oklab, var(--border) 65%, transparent);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
+}
+
+html[data-glass="true"] .page-header {
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  box-shadow: var(--surface-shadow);
+}
+
+html[data-glass="true"] .app-sidebar {
+  background-color: color-mix(
+    in oklab,
+    var(--surface-secondary) var(--glass-alpha),
+    transparent
+  );
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-glass="true"] .surface-card,
+  html[data-glass="true"] .app-glass,
+  html[data-glass="true"] .page-header {
+    background-color: var(--surface);
+  }
+
+  html[data-glass="true"] .app-sidebar {
+    background-color: var(--surface-secondary);
+  }
+}

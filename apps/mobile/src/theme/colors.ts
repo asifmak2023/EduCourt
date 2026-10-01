@@ -10,6 +10,8 @@ export interface ThemeColors {
   accent: string;
   accentForeground: string;
   accentSoft: string;
+  glassSurface: string;
+  glassSurfaceSecondary: string;
 }
 
 const LIGHT = {
@@ -61,7 +63,8 @@ export function buildColors(
   mode: "light" | "dark",
   accent: string,
   accentForeground: string,
-  vibrant: boolean
+  vibrant: boolean,
+  glassTransparency = 0
 ): ThemeColors {
   const base = mode === "dark" ? DARK : LIGHT;
   const tintedSurface = vibrant
@@ -70,6 +73,7 @@ export function buildColors(
   const tintedBackground = vibrant
     ? mix(base.background, accent, mode === "dark" ? 0.08 : 0.04)
     : base.background;
+  const glassAlpha = Math.max(0.15, (100 - glassTransparency) / 100);
 
   return {
     ...base,
@@ -78,5 +82,7 @@ export function buildColors(
     accent,
     accentForeground,
     accentSoft: withAlpha(accent, mode === "dark" ? 0.26 : 0.14),
+    glassSurface: withAlpha(tintedSurface, glassAlpha),
+    glassSurfaceSecondary: withAlpha(base.surfaceSecondary, glassAlpha),
   };
 }

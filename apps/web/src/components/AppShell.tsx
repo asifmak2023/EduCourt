@@ -79,7 +79,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     .join(", ");
 
   const sidebar = (
-    <div className="flex h-full flex-col bg-surface-secondary text-foreground">
+    <div className="app-glass app-sidebar flex h-full flex-col bg-surface-secondary text-foreground">
       <div className="flex items-center gap-3 px-5 py-5">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-soft text-sm font-semibold text-accent-soft-foreground">
           EC
@@ -199,7 +199,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       ) : null}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-border-secondary bg-surface/80 backdrop-blur">
+        <header className="app-glass sticky top-0 z-30 border-b border-border-secondary bg-surface/80 backdrop-blur">
           <div className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <button
               type="button"

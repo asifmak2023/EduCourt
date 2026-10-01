@@ -92,14 +92,19 @@ function applyToDocument(
 ): void {
   const root = document.documentElement;
   const accent = findAccent(config.accentId);
+  const glassAlpha = Math.max(15, 100 - config.glassTransparency);
 
   root.dataset.theme = resolvedMode;
   root.dataset.accent = accent.id;
   root.dataset.vibrantPalette = String(config.vibrant);
   root.dataset.animations = String(config.animations);
   root.dataset.background = config.backgroundId;
+  root.dataset.glass = String(config.glass);
   root.style.setProperty("--accent", accent.accent);
   root.style.setProperty("--accent-foreground", accent.accentForeground);
+  root.style.setProperty("--glass-blur", `${config.glassBlur}px`);
+  root.style.setProperty("--glass-alpha", `${glassAlpha}%`);
+  root.style.setProperty("--bg-blur", `${config.backgroundBlur}px`);
 }
 
 interface AppearanceContextValue {
@@ -113,6 +118,10 @@ interface AppearanceContextValue {
   setBackground: (backgroundId: string) => void;
   setWallpaperDim: (value: number) => void;
   setAnimations: (animations: boolean) => void;
+  setGlass: (glass: boolean) => void;
+  setGlassBlur: (value: number) => void;
+  setGlassTransparency: (value: number) => void;
+  setBackgroundBlur: (value: number) => void;
   reset: () => void;
 }
 
@@ -149,6 +158,10 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
       setBackground: (backgroundId) => update({ backgroundId }),
       setWallpaperDim: (wallpaperDim) => update({ wallpaperDim }),
       setAnimations: (animations) => update({ animations }),
+      setGlass: (glass) => update({ glass }),
+      setGlassBlur: (glassBlur) => update({ glassBlur }),
+      setGlassTransparency: (glassTransparency) => update({ glassTransparency }),
+      setBackgroundBlur: (backgroundBlur) => update({ backgroundBlur }),
       reset: () => write(DEFAULT_APPEARANCE),
     }),
     [config, resolvedMode, update]

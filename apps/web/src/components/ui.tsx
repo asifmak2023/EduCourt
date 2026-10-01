@@ -10,11 +10,19 @@ import {
 export function Card({
   children,
   className = "",
+  hoverable = true,
 }: {
   children: ReactNode;
   className?: string;
+  hoverable?: boolean;
 }) {
-  return <HeroCard className={`gap-0 p-0 ${className}`}>{children}</HeroCard>;
+  return (
+    <HeroCard
+      className={`gap-0 p-0 ${hoverable ? "surface-card" : ""} ${className}`}
+    >
+      {children}
+    </HeroCard>
+  );
 }
 
 export function StatCard({

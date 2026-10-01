@@ -76,7 +76,15 @@ html[data-background]:not([data-background="default"]) .page-header {
 
 .surface-card:hover {
   transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
   box-shadow: var(--overlay-shadow);
+}
+
+@media (hover: none) {
+  .surface-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

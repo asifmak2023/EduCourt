@@ -5,12 +5,6 @@ import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 
-const DEMO_ACCOUNTS = [
-  { label: "Super User", email: "superadmin@demo-eis.test" },
-  { label: "Campus admin", email: "campusadmin@demo-eis.test" },
-  { label: "Teacher", email: "teacher@demo-eis.test" },
-];
-
 export default function LoginPage() {
   const { user, loading, login, verifyTwoFactor } = useAuth();
   const router = useRouter();
@@ -192,28 +186,6 @@ export default function LoginPage() {
                 {submitting ? "Signing in..." : "Sign in"}
               </button>
             </form>
-
-            <div className="mt-6 border-t border-border-secondary pt-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted">
-                Demo accounts (password: password)
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {DEMO_ACCOUNTS.map((account) => (
-                  <button
-                    key={account.email}
-                    type="button"
-                    onClick={() => {
-                      setEmail(account.email);
-                      setPassword("password");
-                      setError(null);
-                    }}
-                    className="rounded-full border border-border-secondary px-3 py-1 text-xs font-medium text-muted transition hover:bg-surface-tertiary"
-                  >
-                    {account.label}
-                  </button>
-                ))}
-              </div>
-            </div>
           </>
         )}
       </div>

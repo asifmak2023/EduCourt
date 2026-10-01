@@ -100,6 +100,10 @@ function applyToDocument(
   root.dataset.animations = String(config.animations);
   root.dataset.background = config.backgroundId;
   root.dataset.glass = String(config.glass);
+  root.dataset.sidebarCategoryContrast =
+    resolvedMode === "dark" && config.glass && config.glassTransparency >= 45
+      ? "dark"
+      : "default";
   root.style.setProperty("--accent", accent.accent);
   root.style.setProperty("--accent-foreground", accent.accentForeground);
   root.style.setProperty("--glass-blur", `${config.glassBlur}px`);

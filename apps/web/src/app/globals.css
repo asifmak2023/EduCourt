@@ -200,6 +200,12 @@ html[data-glass="true"] .surface-card [data-slot="table-cell"]:hover {
   }
 }
 
+/* Dark mode: keep sidebar section labels readable when high glass
+   transparency lets a bright background bleed through the panel. */
+html[data-sidebar-category-contrast="dark"] .sidebar-section-label:not(:hover) {
+  color: #0b1120;
+}
+
 /* Hide the scrollbar on scrollable dropdown menus (scrolling still works) */
 .select__popover {
   scrollbar-width: none;

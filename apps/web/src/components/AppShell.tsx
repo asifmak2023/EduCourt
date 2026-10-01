@@ -80,7 +80,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const sidebar = (
     <div className="app-glass app-sidebar flex h-full flex-col bg-surface-secondary text-foreground">
-      <div className="flex items-center gap-3 px-5 py-5">
+      <Link
+        href="/dashboard"
+        onClick={() => setMenuOpen(false)}
+        aria-label="Go to home"
+        className="flex items-center gap-3 px-5 py-5 transition-colors hover:bg-surface-tertiary"
+      >
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-soft text-sm font-semibold text-accent-soft-foreground">
           EC
         </div>
@@ -90,7 +95,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {user.institution?.name ?? "Education System"}
           </p>
         </div>
-      </div>
+      </Link>
 
       <nav className="flex-1 space-y-2 overflow-y-auto px-3 pb-4">
         {sections.map((section) => {

@@ -281,7 +281,7 @@ function NotificationsView() {
             </Table.Content>
           </Table.ScrollContainer>
           {meta && meta.last_page > 1 ? (
-            <Table.Footer>
+            <Table.Footer className="p-0">
               <Pagination
                 page={page}
                 lastPage={meta.last_page}

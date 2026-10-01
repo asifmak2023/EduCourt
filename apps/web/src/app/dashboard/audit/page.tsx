@@ -183,14 +183,12 @@ function AuditLogView() {
           </Table>
         )}
         {meta && meta.last_page > 1 ? (
-          <div className="border-t border-border px-5 py-4">
-            <Pagination
-              page={page}
-              lastPage={meta.last_page}
-              total={meta.total}
-              onPage={setPage}
-            />
-          </div>
+          <Pagination
+            page={page}
+            lastPage={meta.last_page}
+            total={meta.total}
+            onPage={setPage}
+          />
         ) : null}
       </Card>
     </div>

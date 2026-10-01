@@ -19,7 +19,10 @@ export function Pagination({
   }
 
   return (
-    <HeroPagination size="sm">
+    <HeroPagination
+      size="sm"
+      className="border-t border-border-secondary px-5 py-4"
+    >
       <HeroPagination.Summary>
         {formatNumber(total)} record{total === 1 ? "" : "s"}
       </HeroPagination.Summary>

@@ -133,14 +133,12 @@ function ReportView() {
         )}
 
         {overdue.meta && overdue.meta.last_page > 1 ? (
-          <div className="border-t border-border-secondary px-5 py-4">
-            <Pagination
-              page={overdue.page}
-              lastPage={overdue.meta.last_page}
-              total={overdue.meta.total}
-              onPage={overdue.setPage}
-            />
-          </div>
+          <Pagination
+            page={overdue.page}
+            lastPage={overdue.meta.last_page}
+            total={overdue.meta.total}
+            onPage={overdue.setPage}
+          />
         ) : null}
       </Card>
     </div>

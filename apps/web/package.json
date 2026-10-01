@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@eis/appearance": "workspace:*",
+    "@eis/appearance": "file:../../packages/appearance",
     "@heroui/react": "^3.2.6",
     "@heroui/styles": "^3.2.6",
     "next": "16.3.6",

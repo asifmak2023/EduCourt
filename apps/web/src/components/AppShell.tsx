@@ -97,7 +97,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </Link>
 
-      <nav className="flex-1 space-y-2 overflow-y-auto px-3 pb-4">
+      <nav
+        aria-label="Primary"
+        tabIndex={0}
+        className="app-sidebar-nav flex-1 space-y-2 overflow-y-auto px-3 pb-4 outline-none"
+      >
         {sections.map((section) => {
           const isOpen = openSection === section.label;
 

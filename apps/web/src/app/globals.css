@@ -206,6 +206,21 @@ html[data-theme="dark"][data-glass-muted-contrast="high"] {
   --muted: #e5e7eb;
 }
 
+/* Sidebar navigation: chrome-free, smooth scrolling (wheel + arrow keys
+   while the nav is focused). */
+.app-sidebar-nav {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+.app-sidebar-nav::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* Hide the scrollbar on scrollable dropdown menus (scrolling still works) */
 .select__popover {
   scrollbar-width: none;

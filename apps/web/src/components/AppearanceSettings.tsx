@@ -466,6 +466,22 @@ export function AppearanceSettings() {
             onChange={setBackgroundBlur}
           />
         </div>
+        <div className="mt-5 flex items-center justify-between gap-4 border-t border-border-secondary pt-4">
+          <p className="text-xs text-muted">
+            Recommended: glass blur 12px, transparency 15%, background blur 0px.
+          </p>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setGlass(true);
+              setGlassBlur(12);
+              setGlassTransparency(15);
+              setBackgroundBlur(0);
+            }}
+          >
+            Recommended
+          </Button>
+        </div>
       </Section>
 
       <Section

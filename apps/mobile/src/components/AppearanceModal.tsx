@@ -391,6 +391,25 @@ export function AppearanceModal({
             }
           />
 
+          <View style={styles.presetBlock}>
+            <Text style={styles.presetHint}>
+              Recommended: glass blur 12px, transparency 15%, background blur 0px.
+            </Text>
+            <Pressable
+              onPress={() => {
+                theme.setGlass(true);
+                theme.setGlassBlur(12);
+                theme.setGlassTransparency(15);
+                theme.setBackgroundBlur(0);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Recommended glass settings"
+              style={styles.presetButton}
+            >
+              <Text style={styles.presetText}>Recommended</Text>
+            </Pressable>
+          </View>
+
           <View style={styles.toggleRow}>
             <View style={styles.toggleLabel}>
               <Text style={styles.rowTitle}>Interface animations</Text>
@@ -598,6 +617,25 @@ function makeStyles(colors: ThemeColors) {
     },
     resetText: {
       fontSize: 15,
+      fontWeight: "600",
+      color: colors.accent,
+    },
+    presetBlock: {
+      marginTop: 16,
+    },
+    presetHint: {
+      fontSize: 12,
+      color: colors.muted,
+    },
+    presetButton: {
+      marginTop: 8,
+      borderRadius: 10,
+      paddingVertical: 12,
+      alignItems: "center",
+      backgroundColor: withAlpha(colors.accent, 0.14),
+    },
+    presetText: {
+      fontSize: 14,
       fontWeight: "600",
       color: colors.accent,
     },

@@ -23,15 +23,26 @@ class RbacSeeder extends Seeder
         }
 
         $roleDefinitions = config('rbac.roles');
+        $baseline = $this->expand(config('rbac.baseline', []), $modules);
 
         foreach ($roleDefinitions as $roleName => $patterns) {
             $role = Role::findOrCreate($roleName, 'web');
-            $role->syncPermissions($this->expand($patterns, $modules));
+            $permissions = array_values(array_unique(array_merge(
+                $this->expand($patterns, $modules),
+                $baseline
+            )));
+
+            $role->syncPermissions($permissions);
         }
 
         // Ensure every declared role exists even if it has no explicit patterns yet.
+        // Roles without an explicit definition still receive the baseline permissions.
         foreach (RoleName::cases() as $roleEnum) {
-            Role::findOrCreate($roleEnum->value, 'web');
+            $role = Role::findOrCreate($roleEnum->value, 'web');
+
+            if ($baseline !== [] && ! array_key_exists($roleEnum->value, $roleDefinitions)) {
+                $role->syncPermissions($baseline);
+            }
         }
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();

@@ -58,7 +58,17 @@ return [
         'it' => ['view', 'create', 'edit', 'approve', 'delete'],
         'audit' => ['view', 'export'],
         'setting' => ['view', 'edit'],
+        'appearance' => ['view', 'edit'],
         'subscription' => ['view', 'create', 'edit', 'delete'],
+    ],
+
+    /*
+    | Baseline permission patterns granted to every role, regardless of the
+    | per-role definitions below. Use this for personal preferences that every
+    | account is allowed to manage for itself.
+    */
+    'baseline' => [
+        'appearance.view',
     ],
 
     /*

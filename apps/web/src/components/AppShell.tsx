@@ -6,17 +6,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { findNavItem, sectionForPath, visibleSections } from "@/lib/nav";
 import { Icon } from "@/components/Icons";
+import { Avatar } from "@/components/Avatar";
 
 const SIDEBAR_KEY = "eis.sidebar.section";
-
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth();
@@ -169,9 +161,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="border-t border-border-secondary px-4 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-soft-foreground">
-            {initials(user.name)}
-          </div>
+          <Avatar name={user.name} photoUrl={user.photo_url} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
             <p className="truncate text-xs capitalize text-muted">{roleLabel}</p>

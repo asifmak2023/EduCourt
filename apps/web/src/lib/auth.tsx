@@ -21,6 +21,7 @@ export interface AuthUser {
   campus_id: number | null;
   institution_id: number | null;
   two_factor_enabled: boolean;
+  photo_url?: string | null;
   campus?: { id: number; name: string } | null;
   institution?: { id: number; name: string } | null;
 }

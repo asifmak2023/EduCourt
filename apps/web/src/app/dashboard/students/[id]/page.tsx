@@ -7,6 +7,7 @@ import { Table } from "@heroui/react";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
+import { Avatar } from "@/components/Avatar";
 import { ApiError, apiFetch } from "@/lib/api";
 import { Button, buttonClasses, Field, Select, TextArea, TextInput } from "@/components/Form";
 import {
@@ -66,21 +67,24 @@ function StudentDetailView() {
             >
               Back
             </Link>
-            {can("student.edit") ? (
+            {can("student.edit") || can("student.photo") ? (
               <Link
                 href={`/dashboard/students/${data.id}/edit`}
                 className={buttonClasses("secondary")}
               >
-                Edit
+                {can("student.edit") ? "Edit" : "Photo"}
               </Link>
             ) : null}
           </>
         }
       />
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge value={data.status} />
-        {data.gender ? <Badge value={data.gender} /> : null}
+      <div className="flex flex-wrap items-center gap-4">
+        <Avatar name={data.full_name} photoUrl={data.photo_url} size="lg" />
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge value={data.status} />
+          {data.gender ? <Badge value={data.gender} /> : null}
+        </div>
       </div>
 
       <SectionCard title="Profile">

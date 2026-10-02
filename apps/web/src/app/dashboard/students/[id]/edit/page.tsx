@@ -4,8 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
-import { PermissionGate } from "@/components/PermissionGate";
 import {
   Button,
   buttonClasses,
@@ -18,6 +18,7 @@ import {
   StudentProfileFields,
   type StudentProfile,
 } from "@/components/StudentProfileFields";
+import { StudentPhotoField } from "@/components/StudentPhotoField";
 import {
   ErrorNotice,
   PageHeader,
@@ -27,11 +28,19 @@ import { formatDate } from "@/lib/format";
 import type { StudentDetail } from "@/lib/types";
 
 export default function EditStudentPage() {
-  return (
-    <PermissionGate permission="student.edit">
-      <EditStudentLoader />
-    </PermissionGate>
-  );
+  const { user, can } = useAuth();
+
+  if (!user) {
+    return null;
+  }
+
+  if (!can("student.edit") && !can("student.photo")) {
+    return (
+      <ErrorNotice message="You do not have permission to view this page." />
+    );
+  }
+
+  return <EditStudentLoader />;
 }
 
 function EditStudentLoader() {
@@ -91,7 +100,12 @@ function profileFromStudent(student: StudentDetail): StudentProfile {
 
 function EditStudentForm({ student }: { student: StudentDetail }) {
   const router = useRouter();
+  const { can } = useAuth();
+  const canEdit = can("student.edit");
 
+  const [photoUrl, setPhotoUrl] = useState<string | null>(
+    student.photo_url ?? null
+  );
   const [profile, setProfile] = useState<StudentProfile>(
     profileFromStudent(student)
   );
@@ -203,12 +217,24 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
 
       {error ? <ErrorNotice message={error} /> : null}
 
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          void submit();
-        }}
-      >
+      {can("student.photo") ? (
+        <div className="rounded-2xl border border-border bg-surface">
+          <StudentPhotoField
+            studentId={student.id}
+            name={student.full_name}
+            photoUrl={photoUrl}
+            onChanged={setPhotoUrl}
+          />
+        </div>
+      ) : null}
+
+      {canEdit ? (
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
+        >
         <div className="rounded-2xl border border-border bg-surface">
           <StudentProfileFields profile={profile} set={set} errors={errText} />
 
@@ -363,6 +389,7 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
           </div>
         </div>
       </form>
+      ) : null}
     </div>
   );
 }

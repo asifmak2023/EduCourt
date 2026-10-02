@@ -55,6 +55,8 @@ export interface Student {
   date_of_birth: string | null;
   guardian_name?: string | null;
   phone?: string | null;
+  photo_path?: string | null;
+  photo_url?: string | null;
 }
 
 export interface Guardian {

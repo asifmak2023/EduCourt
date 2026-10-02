@@ -1,26 +1,14 @@
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { fetchResults } from "../lib/portal";
 import { useAsync } from "../lib/useAsync";
-import type { StudentSummary } from "../lib/api";
-import { ChildSelector } from "../components/ChildSelector";
 import { Screen } from "../components/Screen";
 import { Card, EmptyState, ErrorText, Metric, StatusPill } from "../components/ui";
 import { formatDate } from "../lib/format";
 import { useTheme } from "../theme/ThemeProvider";
 
-export function ResultsScreen({
-  students,
-  activeStudentId,
-  onSelectStudent,
-  onAppearance,
-}: {
-  students: StudentSummary[];
-  activeStudentId: number | null;
-  onSelectStudent: (id: number) => void;
-  onAppearance: () => void;
-}) {
+export function ResultsScreen({ activeStudentId }: { activeStudentId: number | null }) {
   const { colors } = useTheme();
-  const { data, loading, error } = useAsync(
+  const { data, loading, error, reload } = useAsync(
     () => fetchResults(activeStudentId),
     [activeStudentId]
   );
@@ -28,14 +16,8 @@ export function ResultsScreen({
   const cards = data?.data ?? [];
 
   return (
-    <Screen title="Results" subtitle="Exam performance" onAppearance={onAppearance}>
-      <ChildSelector
-        students={students}
-        activeId={activeStudentId}
-        onSelect={onSelectStudent}
-      />
-
-      {loading ? (
+    <Screen refreshing={loading && data !== null} onRefresh={reload}>
+      {loading && data === null ? (
         <ActivityIndicator color={colors.accent} style={styles.loader} />
       ) : error ? (
         <ErrorText message={error} />

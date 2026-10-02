@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { ApiError, apiFetch, setToken, type AuthUser } from "../lib/api";
 import { Card, ErrorText, PrimaryButton, TextField } from "../components/ui";
 import { useTheme } from "../theme/ThemeProvider";
 
 export function LoginScreen({
   onAuthenticated,
+  onAppearance,
 }: {
   onAuthenticated: (user: AuthUser) => void;
+  onAppearance: () => void;
 }) {
   const { colors } = useTheme();
   const [email, setEmail] = useState("");
@@ -39,7 +41,19 @@ export function LoginScreen({
   }
 
   return (
-    <View style={styles.wrap}>
+    <ScrollView contentContainerStyle={styles.wrap} keyboardShouldPersistTaps="handled">
+      <View style={styles.topRow}>
+        <Pressable
+          onPress={onAppearance}
+          accessibilityRole="button"
+          style={[styles.pill, { backgroundColor: colors.accentSoft }]}
+        >
+          <Text style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>
+            Appearance
+          </Text>
+        </Pressable>
+      </View>
+
       <Text style={[styles.brand, { color: colors.foreground }]}>
         Education Information System
       </Text>
@@ -67,14 +81,23 @@ export function LoginScreen({
 
         <PrimaryButton label="Sign in" onPress={() => void signIn()} loading={loading} />
       </Card>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
     paddingHorizontal: 20,
-    paddingTop: 90,
+    paddingTop: 72,
+  },
+  topRow: {
+    alignItems: "flex-end",
+    marginBottom: 18,
+  },
+  pill: {
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
   brand: {
     fontSize: 24,

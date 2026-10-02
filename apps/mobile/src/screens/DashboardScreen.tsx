@@ -8,11 +8,9 @@ import { useTheme } from "../theme/ThemeProvider";
 export function DashboardScreen({
   user,
   students,
-  onAppearance,
 }: {
   user: AuthUser;
   students: StudentSummary[];
-  onAppearance: () => void;
 }) {
   const { colors } = useTheme();
 
@@ -21,13 +19,7 @@ export function DashboardScreen({
   ).sort();
 
   return (
-    <Screen
-      title="Dashboard"
-      subtitle={`${user.institution?.name ?? "Institution"} - ${
-        user.campus?.name ?? "All campuses"
-      }`}
-      onAppearance={onAppearance}
-    >
+    <Screen>
       <Card>
         <SectionLabel>Signed in as</SectionLabel>
         <View style={styles.identity}>

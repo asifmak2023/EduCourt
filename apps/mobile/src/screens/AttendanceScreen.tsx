@@ -1,46 +1,30 @@
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { fetchAttendance } from "../lib/portal";
 import { useAsync } from "../lib/useAsync";
-import type { StudentSummary } from "../lib/api";
-import { ChildSelector } from "../components/ChildSelector";
 import { Screen } from "../components/Screen";
 import { Card, EmptyState, ErrorText, Metric, SectionLabel, StatusPill } from "../components/ui";
 import { formatDate } from "../lib/format";
 import { useTheme } from "../theme/ThemeProvider";
 
-export function AttendanceScreen({
-  students,
-  activeStudentId,
-  onSelectStudent,
-  onAppearance,
-}: {
-  students: StudentSummary[];
-  activeStudentId: number | null;
-  onSelectStudent: (id: number) => void;
-  onAppearance: () => void;
-}) {
+export function AttendanceScreen({ activeStudentId }: { activeStudentId: number | null }) {
   const { colors } = useTheme();
-  const { data, loading, error } = useAsync(
+  const { data, loading, error, reload } = useAsync(
     () => fetchAttendance(activeStudentId),
     [activeStudentId]
   );
 
   return (
-    <Screen title="Attendance" subtitle="This month" onAppearance={onAppearance}>
-      <ChildSelector
-        students={students}
-        activeId={activeStudentId}
-        onSelect={onSelectStudent}
-      />
-
-      {loading ? (
+    <Screen refreshing={loading && data !== null} onRefresh={reload}>
+      {loading && data === null ? (
         <ActivityIndicator color={colors.accent} style={styles.loader} />
       ) : error ? (
         <ErrorText message={error} />
       ) : data ? (
         <>
           <Card>
-            <SectionLabel>Summary ({data.summary.from} to {data.summary.to})</SectionLabel>
+            <SectionLabel>
+              Summary ({data.summary.from} to {data.summary.to})
+            </SectionLabel>
             <View style={styles.metrics}>
               <Metric label="Present" value={data.summary.present} tone={colors.success} />
               <Metric label="Absent" value={data.summary.absent} tone={colors.danger} />

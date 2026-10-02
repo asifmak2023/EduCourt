@@ -9,12 +9,10 @@ export function ProfileScreen({
   user,
   onUserChange,
   onSignOut,
-  onAppearance,
 }: {
   user: AuthUser;
   onUserChange: (user: AuthUser) => void;
   onSignOut: () => void;
-  onAppearance: () => void;
 }) {
   const { colors } = useTheme();
   const canManagePhoto = user.permissions.includes("user.photo");
@@ -29,7 +27,7 @@ export function ProfileScreen({
   ];
 
   return (
-    <Screen title="Profile" subtitle={user.email} onAppearance={onAppearance}>
+    <Screen>
       <ProfilePhotoCard
         endpoint={`/v1/users/${user.id}/photo`}
         name={user.name}

@@ -1,8 +1,7 @@
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { fetchTimetable } from "../lib/portal";
 import { useAsync } from "../lib/useAsync";
-import type { StudentSummary, TimetableSlot } from "../lib/api";
-import { ChildSelector } from "../components/ChildSelector";
+import type { TimetableSlot } from "../lib/api";
 import { Screen } from "../components/Screen";
 import { Card, EmptyState, ErrorText, SectionLabel } from "../components/ui";
 import { dayName, periodTime } from "../lib/format";
@@ -10,19 +9,9 @@ import { useTheme } from "../theme/ThemeProvider";
 
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 7];
 
-export function TimetableScreen({
-  students,
-  activeStudentId,
-  onSelectStudent,
-  onAppearance,
-}: {
-  students: StudentSummary[];
-  activeStudentId: number | null;
-  onSelectStudent: (id: number) => void;
-  onAppearance: () => void;
-}) {
+export function TimetableScreen({ activeStudentId }: { activeStudentId: number | null }) {
   const { colors } = useTheme();
-  const { data, loading, error } = useAsync(
+  const { data, loading, error, reload } = useAsync(
     () => fetchTimetable(activeStudentId),
     [activeStudentId]
   );
@@ -36,14 +25,8 @@ export function TimetableScreen({
   });
 
   return (
-    <Screen title="Timetable" subtitle="Published class schedule" onAppearance={onAppearance}>
-      <ChildSelector
-        students={students}
-        activeId={activeStudentId}
-        onSelect={onSelectStudent}
-      />
-
-      {loading ? (
+    <Screen refreshing={loading && data !== null} onRefresh={reload}>
+      {loading && data === null ? (
         <ActivityIndicator color={colors.accent} style={styles.loader} />
       ) : error ? (
         <ErrorText message={error} />

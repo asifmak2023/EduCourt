@@ -1,7 +1,6 @@
 import { StatusBar } from "expo-status-bar";
-import { BlurView } from "expo-blur";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View, useWindowDimensions } from "react-native";
 import {
   apiFetch,
   loadStoredToken,
@@ -10,10 +9,12 @@ import {
   type StudentSummary,
 } from "./src/lib/api";
 import { fetchChildren } from "./src/lib/portal";
+import { buildTabs, findTab, type TabKey } from "./src/lib/nav";
 import { AppearanceModal } from "./src/components/AppearanceModal";
+import { AppHeader } from "./src/components/AppHeader";
+import { Sidebar } from "./src/components/Sidebar";
 import { AppBackground } from "./src/theme/AppBackground";
 import { ThemeProvider, useTheme } from "./src/theme/ThemeProvider";
-import { withAlpha } from "./src/theme/colors";
 import { LoginScreen } from "./src/screens/LoginScreen";
 import { DashboardScreen } from "./src/screens/DashboardScreen";
 import { TimetableScreen } from "./src/screens/TimetableScreen";
@@ -22,13 +23,7 @@ import { ResultsScreen } from "./src/screens/ResultsScreen";
 import { FeesScreen } from "./src/screens/FeesScreen";
 import { ProfileScreen } from "./src/screens/ProfileScreen";
 
-type TabKey =
-  | "dashboard"
-  | "timetable"
-  | "attendance"
-  | "results"
-  | "fees"
-  | "profile";
+const WIDE_BREAKPOINT = 900;
 
 export default function App() {
   return (
@@ -39,21 +34,16 @@ export default function App() {
 }
 
 function AppInner() {
-  const { colors, resolvedMode, ready, background, config } = useTheme();
+  const { colors, resolvedMode, ready } = useTheme();
+  const { width } = useWindowDimensions();
+  const wide = width >= WIDE_BREAKPOINT;
   const [user, setUser] = useState<AuthUser | null>(null);
   const [students, setStudents] = useState<StudentSummary[]>([]);
   const [activeStudentId, setActiveStudentId] = useState<number | null>(null);
   const [tab, setTab] = useState<TabKey>("dashboard");
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [showAppearance, setShowAppearance] = useState(false);
   const [booting, setBooting] = useState(true);
-
-  const signedIn = user !== null;
-  const portal = students.length > 0;
-  const frosted = background.kind !== "default" || config.glass;
-  const blurIntensity = Math.min(
-    100,
-    Math.max(1, Math.round((config.glassBlur / 24) * 100))
-  );
 
   useEffect(() => {
     let active = true;
@@ -120,20 +110,20 @@ function AppInner() {
     setToken(null);
     setUser(null);
     setTab("dashboard");
+    setDrawerOpen(false);
   }, []);
+
+  const tabs = buildTabs(user, students.length > 0);
 
   useEffect(() => {
     if (!user) {
       return;
     }
 
-    const valid = buildTabs(user, students.length > 0).some(
-      (entry) => entry.key === tab
-    );
-
-    if (!valid) {
+    if (!tabs.some((entry) => entry.key === tab)) {
       setTab("dashboard");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, students, tab]);
 
   if (!ready || booting) {
@@ -145,7 +135,7 @@ function AppInner() {
     );
   }
 
-  const tabs = buildTabs(user, portal);
+  const activeTab = findTab(tabs, tab);
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -153,65 +143,48 @@ function AppInner() {
       <StatusBar style={resolvedMode === "dark" ? "light" : "dark"} />
 
       {user ? (
-        renderScreen({
-          tab,
-          user,
-          students,
-          activeStudentId,
-          portal,
-          onAppearance: () => setShowAppearance(true),
-          onSelectStudent: setActiveStudentId,
-          onUserChange: setUser,
-          onSignOut: () => void signOut(),
-        })
-      ) : (
-        <LoginScreen onAuthenticated={setUser} />
-      )}
+        <View style={styles.shell}>
+          <Sidebar
+            wide={wide}
+            open={drawerOpen}
+            user={user}
+            tabs={tabs}
+            activeTab={tab}
+            students={students}
+            activeStudentId={activeStudentId}
+            onClose={() => setDrawerOpen(false)}
+            onSelectTab={setTab}
+            onSelectStudent={(id) => {
+              setActiveStudentId(id);
+              setDrawerOpen(false);
+            }}
+            onAppearance={() => setShowAppearance(true)}
+            onSignOut={() => void signOut()}
+          />
 
-      {user ? (
-        <View
-          style={[
-            styles.tabBar,
-            {
-              borderColor: colors.border,
-              backgroundColor: frosted
-                ? withAlpha(colors.surface, 0.9)
-                : colors.surface,
-            },
-          ]}
-        >
-          {config.glass ? (
-            <BlurView
-              intensity={blurIntensity}
-              tint={resolvedMode === "dark" ? "dark" : "light"}
-              blurMethod="dimezisBlurViewSdk31Plus"
-              style={StyleSheet.absoluteFill}
+          <View style={styles.content}>
+            <AppHeader
+              title={activeTab.label}
+              subtitle={activeTab.subtitle}
+              onMenu={wide ? undefined : () => setDrawerOpen(true)}
             />
-          ) : null}
-          {tabs.map((entry) => {
-            const active = entry.key === tab;
-
-            return (
-              <Pressable
-                key={entry.key}
-                onPress={() => setTab(entry.key)}
-                style={styles.tabItem}
-                accessibilityRole="button"
-              >
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    { color: active ? colors.accent : colors.muted },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {entry.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+            {renderScreen({
+              tab,
+              user,
+              students,
+              activeStudentId,
+              portal: students.length > 0,
+              onUserChange: setUser,
+              onSignOut: () => void signOut(),
+            })}
+          </View>
         </View>
-      ) : null}
+      ) : (
+        <LoginScreen
+          onAuthenticated={setUser}
+          onAppearance={() => setShowAppearance(true)}
+        />
+      )}
 
       <AppearanceModal
         visible={showAppearance}
@@ -221,37 +194,12 @@ function AppInner() {
   );
 }
 
-function buildTabs(user: AuthUser | null, portal: boolean): { key: TabKey; label: string }[] {
-  const tabs: { key: TabKey; label: string }[] = [
-    { key: "dashboard", label: "Dashboard" },
-  ];
-
-  if (!user) {
-    return tabs;
-  }
-
-  if (portal) {
-    tabs.push(
-      { key: "timetable", label: "Timetable" },
-      { key: "attendance", label: "Attendance" },
-      { key: "results", label: "Results" },
-      { key: "fees", label: "Fees" }
-    );
-  }
-
-  tabs.push({ key: "profile", label: "Profile" });
-
-  return tabs;
-}
-
 function renderScreen({
   tab,
   user,
   students,
   activeStudentId,
   portal,
-  onAppearance,
-  onSelectStudent,
   onUserChange,
   onSignOut,
 }: {
@@ -260,8 +208,6 @@ function renderScreen({
   students: StudentSummary[];
   activeStudentId: number | null;
   portal: boolean;
-  onAppearance: () => void;
-  onSelectStudent: (id: number) => void;
   onUserChange: (user: AuthUser) => void;
   onSignOut: () => void;
 }) {
@@ -271,37 +217,25 @@ function renderScreen({
         user={user}
         onUserChange={onUserChange}
         onSignOut={onSignOut}
-        onAppearance={onAppearance}
       />
     );
   }
 
   if (!portal) {
-    return (
-      <DashboardScreen user={user} students={students} onAppearance={onAppearance} />
-    );
+    return <DashboardScreen user={user} students={students} />;
   }
-
-  const scoped = {
-    students,
-    activeStudentId,
-    onSelectStudent,
-    onAppearance,
-  };
 
   switch (tab) {
     case "timetable":
-      return <TimetableScreen {...scoped} />;
+      return <TimetableScreen activeStudentId={activeStudentId} />;
     case "attendance":
-      return <AttendanceScreen {...scoped} />;
+      return <AttendanceScreen activeStudentId={activeStudentId} />;
     case "results":
-      return <ResultsScreen {...scoped} />;
+      return <ResultsScreen activeStudentId={activeStudentId} />;
     case "fees":
-      return <FeesScreen {...scoped} />;
+      return <FeesScreen activeStudentId={activeStudentId} />;
     default:
-      return (
-        <DashboardScreen user={user} students={students} onAppearance={onAppearance} />
-      );
+      return <DashboardScreen user={user} students={students} />;
   }
 }
 
@@ -314,27 +248,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  tabBar: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: "row",
-    borderTopWidth: 1,
-    paddingTop: 10,
-    paddingBottom: 24,
-    paddingHorizontal: 6,
-    overflow: "hidden",
-  },
-  tabItem: {
+  shell: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 6,
-    paddingHorizontal: 2,
+    flexDirection: "row",
   },
-  tabLabel: {
-    fontSize: 12,
-    fontWeight: "600",
+  content: {
+    flex: 1,
   },
 });

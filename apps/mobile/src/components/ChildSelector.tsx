@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../theme/ThemeProvider";
 import type { StudentSummary } from "../lib/api";
 
@@ -18,14 +18,10 @@ export function ChildSelector({
   }
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.content}
-      style={{ marginTop: 14 }}
-    >
+    <View style={styles.list}>
       {students.map((student) => {
         const active = student.id === activeId;
+        const enrollment = student.enrollments?.[0];
 
         return (
           <Pressable
@@ -33,7 +29,7 @@ export function ChildSelector({
             onPress={() => onSelect(student.id)}
             accessibilityRole="button"
             style={[
-              styles.pill,
+              styles.row,
               {
                 borderColor: active ? colors.accent : colors.border,
                 backgroundColor: active ? colors.accentSoft : colors.surface,
@@ -46,25 +42,33 @@ export function ChildSelector({
                 fontWeight: "600",
                 fontSize: 13,
               }}
+              numberOfLines={1}
             >
               {student.full_name}
+            </Text>
+            <Text style={{ color: colors.muted, fontSize: 11 }} numberOfLines={1}>
+              {enrollment?.class_room?.name
+                ? `${enrollment.class_room.name}${
+                    enrollment.section?.name ? `-${enrollment.section.name}` : ""
+                  }`
+                : student.admission_no}
             </Text>
           </Pressable>
         );
       })}
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    gap: 8,
-    paddingRight: 8,
+  list: {
+    marginTop: 8,
+    gap: 6,
   },
-  pill: {
-    borderRadius: 999,
+  row: {
+    borderRadius: 10,
     borderWidth: 1,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingVertical: 8,
   },
 });

@@ -677,6 +677,7 @@ export const MODULES: ModuleConfig[] = [
           },
           { name: "roll_number", label: "Roll number", type: "text" },
           { name: "admission_no", label: "Admission no", type: "text" },
+          { name: "gender", label: "Gender", type: "select", options: GENDER },
           { name: "starts_on", label: "Starts on", type: "date" },
         ],
       },

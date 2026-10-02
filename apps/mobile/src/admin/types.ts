@@ -60,17 +60,44 @@ export interface PhotoFieldConfig extends BaseFieldConfig {
   urlKey?: string;
 }
 
-export type FieldConfig =
+export type InputFieldConfig =
   | TextFieldConfig
   | NumberFieldConfig
   | DateFieldConfig
   | TimeFieldConfig
   | SelectFieldConfig
   | CheckboxFieldConfig
-  | LookupFieldConfig
-  | PhotoFieldConfig;
+  | LookupFieldConfig;
 
-export type InputFieldConfig = Exclude<FieldConfig, PhotoFieldConfig>;
+export interface RepeaterFieldConfig extends BaseFieldConfig {
+  type: "repeater";
+  itemFields: InputFieldConfig[];
+  addLabel: string;
+  emptyItem: () => Record<string, unknown>;
+  identityKey?: string;
+  titleKey?: string;
+  createEndpoint?: string;
+  createBody?: (row: Record<string, unknown>) => Record<string, unknown> | null;
+  mapItem: (
+    row: Record<string, unknown>,
+    createdId?: number | null
+  ) => Record<string, unknown>;
+  rowFromItem?: (item: Record<string, unknown>) => Record<string, unknown>;
+}
+
+export interface GroupFieldConfig extends BaseFieldConfig {
+  type: "group";
+  toggleLabel: string;
+  fields: InputFieldConfig[];
+  wrapKey: string;
+  createOnly?: boolean;
+}
+
+export type FieldConfig =
+  | InputFieldConfig
+  | PhotoFieldConfig
+  | RepeaterFieldConfig
+  | GroupFieldConfig;
 
 export type ColumnFormat = "text" | "number" | "money" | "date" | "badge";
 
@@ -110,9 +137,23 @@ export interface ModulePermissions {
 
 export type AdminRecord = Record<string, unknown>;
 
+export interface DetailSectionContext {
+  permissions: string[];
+  campusId: number | null;
+}
+
 export interface DetailSection<T = AdminRecord> {
   title: string;
-  render: (item: T) => ReactNode;
+  render: (item: T, context: DetailSectionContext) => ReactNode;
+}
+
+export interface DocumentSectionConfig {
+  title: string;
+  path: (item: AdminRecord) => string;
+  uploadPermission?: string;
+  deletePermission?: string;
+  verifyPermission?: string;
+  withValidity?: boolean;
 }
 
 export interface ModuleConfig<T extends AdminRecord = AdminRecord> {

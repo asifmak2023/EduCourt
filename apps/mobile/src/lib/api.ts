@@ -212,3 +212,21 @@ export async function apiUpload<T>(
 
   return parse<T>(response);
 }
+
+export async function apiDownload(
+  path: string,
+  options: ApiFetchOptions = {}
+): Promise<Blob> {
+  const { campusId } = options;
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    headers: authHeaders(campusId),
+  });
+
+  if (!response.ok) {
+    throw new ApiError(response.statusText || "Download failed", response.status);
+  }
+
+  return response.blob();
+}
+

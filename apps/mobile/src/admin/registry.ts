@@ -1,5 +1,6 @@
 import type { ModuleConfig, SelectOption } from "./types";
 import { enrollmentSection, guardianSection } from "./relations";
+import { documentsSection } from "./documents";
 
 export const SECTIONS = {
   overview: "Overview",
@@ -616,6 +617,14 @@ export const MODULES: ModuleConfig[] = [
         options: ADMISSION_STATUS,
       },
     ],
+    detailSections: [
+      documentsSection({
+        title: "Documents",
+        path: (item) => `/v1/admissions/${item.id}/documents`,
+        uploadPermission: ADMISSION.create,
+        deletePermission: ADMISSION.delete,
+      }),
+    ],
     deleteMessage: "Archive this admission?",
     actions: [
       {
@@ -731,8 +740,106 @@ export const MODULES: ModuleConfig[] = [
         type: "photo",
         path: "/v1/students/{id}/photo",
       },
+      {
+        name: "guardians",
+        label: "Guardians",
+        type: "repeater",
+        addLabel: "Add guardian",
+        hint: "Link an existing guardian or add a new one by name and phone.",
+        identityKey: "guardian_id",
+        titleKey: "name",
+        emptyItem: () => ({
+          guardian_id: "",
+          name: "",
+          phone: "",
+          relationship: "",
+          is_primary: false,
+          is_emergency_contact: false,
+        }),
+        itemFields: [
+          { name: "guardian_id", label: "Existing guardian", type: "lookup", lookup: "guardians" },
+          { name: "name", label: "New guardian name", type: "text", required: true },
+          { name: "phone", label: "New guardian phone", type: "text", required: true },
+          {
+            name: "relationship",
+            label: "Relationship",
+            type: "select",
+            options: GUARDIAN_RELATION,
+            required: true,
+          },
+          { name: "is_primary", label: "Primary contact", type: "checkbox" },
+          { name: "is_emergency_contact", label: "Emergency contact", type: "checkbox" },
+        ],
+        createEndpoint: "/v1/guardians",
+        createBody: (row) => {
+          const name = String(row.name ?? "").trim();
+          const phone = String(row.phone ?? "").trim();
+          if (!name || !phone || row.guardian_id) {
+            return null;
+          }
+          return { name, phone };
+        },
+        mapItem: (row, createdId) => ({
+          guardian_id: createdId ?? row.guardian_id,
+          relationship: row.relationship || "guardian",
+          is_primary: Boolean(row.is_primary),
+          is_emergency_contact: Boolean(row.is_emergency_contact),
+        }),
+        rowFromItem: (item) => ({
+          guardian_id: item.id,
+          name: item.name ?? "",
+          phone: item.phone ?? "",
+          relationship: item.relationship ?? "guardian",
+          is_primary: Boolean(item.is_primary),
+          is_emergency_contact: Boolean(item.is_emergency_contact),
+        }),
+      },
+      {
+        name: "enrollment",
+        label: "Enrollment",
+        type: "group",
+        toggleLabel: "Enroll now",
+        hint: "Optionally enroll this student immediately.",
+        wrapKey: "enrollment",
+        createOnly: true,
+        fields: [
+          {
+            name: "academic_year_id",
+            label: "Academic year",
+            type: "lookup",
+            lookup: "academicYears",
+            required: true,
+          },
+          {
+            name: "class_room_id",
+            label: "Class",
+            type: "lookup",
+            lookup: "classRooms",
+            required: true,
+          },
+          {
+            name: "section_id",
+            label: "Section",
+            type: "lookup",
+            lookup: "sections",
+            dependsOn: "class_room_id",
+          },
+          { name: "roll_number", label: "Roll number", type: "text" },
+        ],
+      },
     ],
-    detailSections: [guardianSection(), enrollmentSection()],
+    detailSections: [
+      guardianSection(),
+      enrollmentSection(),
+      documentsSection({
+        title: "Documents",
+        path: (item) => `/v1/students/${item.id}/documents`,
+        uploadPermission: STUDENT.create,
+        deletePermission: STUDENT.delete,
+        verifyPermission: STUDENT.approve,
+        withValidity: true,
+      }),
+    ],
     deleteMessage: "Archive this student?",
     actions: [
       {

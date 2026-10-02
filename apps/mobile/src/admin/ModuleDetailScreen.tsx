@@ -15,6 +15,7 @@ import { formatDate } from "../lib/format";
 import { can } from "../lib/nav";
 import { ActionFormModal } from "./ActionFormModal";
 import { getPath } from "./display";
+import { isPlainField } from "./form";
 import { PhotoField } from "./fields/PhotoField";
 import { useResource } from "./useResource";
 import type {
@@ -70,9 +71,7 @@ export function ModuleDetailScreen({
   const canDelete = Boolean(config.permissions.delete) && can(permissions, config.permissions.delete);
   const canPhoto =
     Boolean(config.permissions.photo) && can(permissions, config.permissions.photo);
-  const textFields = config.fields.filter(
-    (field): field is Exclude<FieldConfig, PhotoFieldConfig> => field.type !== "photo"
-  );
+  const textFields = config.fields.filter(isPlainField);
   const photoFields = config.fields.filter(
     (field): field is PhotoFieldConfig => field.type === "photo"
   );
@@ -143,7 +142,9 @@ export function ModuleDetailScreen({
       {config.detailSections?.map((section) => (
         <View key={section.title} style={styles.section}>
           <SectionLabel>{section.title}</SectionLabel>
-          <View style={styles.sectionBody}>{section.render(data)}</View>
+          <View style={styles.sectionBody}>
+            {section.render(data, { permissions, campusId })}
+          </View>
         </View>
       ))}
 

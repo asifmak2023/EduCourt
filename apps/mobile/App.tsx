@@ -17,6 +17,7 @@ import {
 } from "./src/lib/nav";
 import { CampusProvider } from "./src/lib/campus";
 import { findModule } from "./src/admin/registry";
+import { findCustomScreen } from "./src/admin/screens";
 import { ModuleListScreen } from "./src/admin/ModuleListScreen";
 import { ModuleFormScreen } from "./src/admin/ModuleFormScreen";
 import { ModuleDetailScreen } from "./src/admin/ModuleDetailScreen";
@@ -155,6 +156,9 @@ function AppInner() {
 
   const activeItem = findNavItem(sections, activeKey);
   const activeModule = activeItem?.moduleKey ? findModule(activeItem.moduleKey) : null;
+  const CustomScreen = activeItem?.customScreen
+    ? findCustomScreen(activeItem.customScreen)
+    : null;
   const inModuleFlow = Boolean(activeModule && moduleRoute && moduleRoute.mode !== "list");
 
   const selectItem = (item: NavItem) => {
@@ -203,7 +207,9 @@ function AppInner() {
                 }
               />
 
-              {activeModule && moduleRoute ? (
+              {CustomScreen ? (
+                <CustomScreen />
+              ) : activeModule && moduleRoute ? (
                 <ModuleFlow
                   key={`${activeModule.key}:${moduleRoute.mode}:${moduleRoute.id ?? ""}`}
                   moduleKey={activeModule.key}

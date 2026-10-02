@@ -15,6 +15,7 @@ export interface NavItem {
   subtitle: string;
   permission?: string | null;
   moduleKey?: string;
+  customScreen?: string;
 }
 
 export interface NavSection {
@@ -84,6 +85,18 @@ export function buildNav(user: AuthUser | null, portal: boolean): NavSection[] {
       const list = groups.get(module.section) ?? [];
       list.push(item);
       groups.set(module.section, list);
+    }
+
+    if (can(permissions, "student.edit")) {
+      const list = groups.get("Admissions & Students") ?? [];
+      list.push({
+        key: "promotions",
+        label: "Promotions",
+        subtitle: "Bulk student promotion",
+        permission: "student.edit",
+        customScreen: "promotions",
+      });
+      groups.set("Admissions & Students", list);
     }
   }
 

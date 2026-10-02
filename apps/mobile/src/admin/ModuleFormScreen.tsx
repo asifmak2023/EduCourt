@@ -4,14 +4,19 @@ import { useTheme } from "../theme/ThemeProvider";
 import { Card, ErrorText, GhostButton, PrimaryButton } from "../components/ui";
 import { ApiError, apiFetch } from "../lib/api";
 import { useCampusId } from "../lib/campus";
-import { buildPayload, initialValues, mergeRecord } from "./form";
+import {
+  groupToggleKey,
+  initialValues,
+  isPlainField,
+  mergeRecord,
+  resolveFormPayload,
+  validateNestedFields,
+} from "./form";
 import { Field } from "./fields/Field";
+import { GroupField } from "./fields/GroupField";
+import { RepeaterField } from "./fields/RepeaterField";
 import { useResource } from "./useResource";
-import type {
-  AdminRecord,
-  InputFieldConfig,
-  ModuleConfig,
-} from "./types";
+import type { AdminRecord, ModuleConfig } from "./types";
 
 export function ModuleFormScreen({
   config,
@@ -38,16 +43,21 @@ export function ModuleFormScreen({
   const [saving, setSaving] = useState(false);
 
   const inputFields = useMemo(
-    () =>
-      config.fields.filter(
-        (field): field is InputFieldConfig => field.type !== "photo"
-      ),
+    () => config.fields.filter(isPlainField),
+    [config.fields]
+  );
+  const repeaterFields = useMemo(
+    () => config.fields.filter((field) => field.type === "repeater"),
+    [config.fields]
+  );
+  const groupFields = useMemo(
+    () => config.fields.filter((field) => field.type === "group"),
     [config.fields]
   );
 
   const values: Record<string, unknown> =
     edited ??
-    (data ? mergeRecord(inputFields, data) : initialValues(inputFields));
+    (data ? mergeRecord(config.fields, data) : initialValues(config.fields));
 
   const setValue = useCallback(
     (name: string, value: unknown) => {
@@ -67,6 +77,10 @@ export function ModuleFormScreen({
         nextErrors[field.name] = ["This field is required."];
       }
     }
+    Object.assign(
+      nextErrors,
+      validateNestedFields(config.fields, values, editing)
+    );
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
       setBanner("Please fix the highlighted fields.");
@@ -78,7 +92,19 @@ export function ModuleFormScreen({
     setBanner(null);
 
     try {
-      const payload = buildPayload(inputFields, values, editing);
+      const payload = await resolveFormPayload(
+        config.fields,
+        values,
+        editing,
+        async (endpoint, body) => {
+          const response = await apiFetch<{ data: { id: number } }>(endpoint, {
+            method: "POST",
+            body,
+            campusId,
+          });
+          return response.data.id;
+        }
+      );
       const response = editing
         ? await apiFetch<{ data: AdminRecord }>(`${config.endpoint}/${recordId}`, {
             method: "PUT",
@@ -101,7 +127,7 @@ export function ModuleFormScreen({
     } finally {
       setSaving(false);
     }
-  }, [inputFields, config.endpoint, values, editing, recordId, campusId, onSaved]);
+  }, [inputFields, config, values, editing, recordId, campusId, onSaved]);
 
   if (editing && loading) {
     return <ActivityIndicator color={colors.accent} style={styles.loader} />;
@@ -128,6 +154,45 @@ export function ModuleFormScreen({
         ))}
       </Card>
 
+      {repeaterFields.map((field) => (
+        <RepeaterField
+          key={field.name}
+          field={field}
+          rows={
+            Array.isArray(values[field.name])
+              ? (values[field.name] as Record<string, unknown>[])
+              : []
+          }
+          onChange={(rows) => setValue(field.name, rows)}
+          record={values}
+        />
+      ))}
+      {repeaterFields.map((field) =>
+        errors[field.name]?.[0] ? (
+          <Text key={`${field.name}-error`} style={[styles.error, { color: colors.danger }]}>
+            {errors[field.name]?.[0]}
+          </Text>
+        ) : null
+      )}
+
+      {groupFields
+        .filter((field) => !(editing && field.createOnly))
+        .map((field) => (
+          <GroupField
+            key={field.name}
+            field={field}
+            values={(values[field.name] as Record<string, unknown>) ?? {}}
+            enabled={
+              values[groupToggleKey(field.name)] === true ||
+              values[groupToggleKey(field.name)] === 1 ||
+              values[groupToggleKey(field.name)] === "1"
+            }
+            onToggle={(enabled) => setValue(groupToggleKey(field.name), enabled)}
+            onChange={(nested) => setValue(field.name, nested)}
+            record={values}
+          />
+        ))}
+
       <PrimaryButton
         label={editing ? "Save changes" : "Create"}
         onPress={() => void submit()}
@@ -153,6 +218,10 @@ const styles = StyleSheet.create({
   },
   banner: {
     marginBottom: 4,
+  },
+  error: {
+    marginTop: 8,
+    fontSize: 13,
   },
   hint: {
     marginTop: 14,

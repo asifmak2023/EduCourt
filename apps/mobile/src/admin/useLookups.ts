@@ -44,6 +44,10 @@ const LOOKUPS: Record<string, LookupDef> = {
   expenseCategories: { endpoint: "/v1/expense-categories", labelKey: "name" },
   vendors: { endpoint: "/v1/vendors", labelKey: "name" },
   budgets: { endpoint: "/v1/budgets", labelKey: "name" },
+  departments: { endpoint: "/v1/departments", labelKey: "name" },
+  designations: { endpoint: "/v1/designations", labelKey: "name" },
+  staffMembers: { endpoint: "/v1/staff", labelKey: "full_name" },
+  salaryComponents: { endpoint: "/v1/salary-components", labelKey: "name" },
 };
 
 const cache = new Map<string, SelectOption[]>();

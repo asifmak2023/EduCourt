@@ -12,12 +12,17 @@ import {
   expenseLinesSection,
   journalLinesSection,
 } from "./accountingSections";
+import {
+  payrollPayslipsSection,
+  staffSalaryItemsSection,
+} from "./peopleSections";
 
 export const SECTIONS = {
   overview: "Overview",
   admissionsStudents: "Admissions & Students",
   academics: "Academics",
   finance: "Finance",
+  people: "People",
   account: "Account",
 } as const;
 
@@ -221,6 +226,64 @@ const EXPENSE_STATUS: SelectOption[] = [
   { value: "void", label: "Void" },
 ];
 
+const EMPLOYMENT_TYPE: SelectOption[] = [
+  { value: "permanent", label: "Permanent" },
+  { value: "contract", label: "Contract" },
+  { value: "part_time", label: "Part time" },
+  { value: "visiting", label: "Visiting" },
+  { value: "intern", label: "Intern" },
+];
+
+const STAFF_STATUS: SelectOption[] = [
+  { value: "active", label: "Active" },
+  { value: "probation", label: "Probation" },
+  { value: "on_leave", label: "On leave" },
+  { value: "resigned", label: "Resigned" },
+  { value: "terminated", label: "Terminated" },
+  { value: "retired", label: "Retired" },
+];
+
+const SALARY_COMPONENT_TYPE: SelectOption[] = [
+  { value: "earning", label: "Earning" },
+  { value: "deduction", label: "Deduction" },
+];
+
+const SALARY_CALCULATION: SelectOption[] = [
+  { value: "fixed", label: "Fixed" },
+  { value: "percentage_of_basic", label: "Percentage of basic" },
+];
+
+const PAYROLL_ADJUSTMENT_TYPE: SelectOption[] = [
+  { value: "incentive", label: "Incentive" },
+  { value: "reward", label: "Reward" },
+  { value: "bonus", label: "Bonus" },
+  { value: "overtime", label: "Overtime" },
+  { value: "deduction", label: "Deduction" },
+];
+
+const PAYROLL_RUN_STATUS: SelectOption[] = [
+  { value: "draft", label: "Draft" },
+  { value: "approved", label: "Approved" },
+  { value: "paid", label: "Paid" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
+const LEAVE_TYPE: SelectOption[] = [
+  { value: "sick", label: "Sick" },
+  { value: "casual", label: "Casual" },
+  { value: "annual", label: "Annual" },
+  { value: "maternity", label: "Maternity" },
+  { value: "unpaid", label: "Unpaid" },
+  { value: "other", label: "Other" },
+];
+
+const LEAVE_STATUS: SelectOption[] = [
+  { value: "pending", label: "Pending" },
+  { value: "approved", label: "Approved" },
+  { value: "rejected", label: "Rejected" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
 const ADMISSION = {
   view: "admission.view",
   create: "admission.create",
@@ -283,6 +346,29 @@ const FINANCE = {
   edit: "finance.edit",
   delete: "finance.delete",
   approve: "finance.approve",
+};
+
+const HR = {
+  view: "hr.view",
+  create: "hr.create",
+  edit: "hr.edit",
+  delete: "hr.delete",
+  approve: "hr.approve",
+};
+
+const PAYROLL = {
+  view: "payroll.view",
+  create: "payroll.create",
+  edit: "payroll.edit",
+  delete: "payroll.delete",
+  approve: "payroll.approve",
+};
+
+const ATTENDANCE = {
+  view: "attendance.view",
+  create: "attendance.create",
+  edit: "attendance.edit",
+  approve: "attendance.approve",
 };
 
 const ACADEMIC = {
@@ -2076,6 +2162,333 @@ export const MODULES: ModuleConfig[] = [
         fields: [{ name: "memo", label: "Memo", type: "textarea" }],
         submitLabel: "Void expense",
         successMessage: "Expense voided.",
+      },
+    ],
+  },
+  {
+    key: "departments",
+    section: SECTIONS.people,
+    label: "Departments",
+    endpoint: "/v1/departments",
+    permissions: HR,
+    filters: [{ param: "is_active", label: "Status", options: BOOL_STATUS }],
+    columns: [
+      { key: "name", label: "Name" },
+      { key: "code", label: "Code" },
+      { key: "head.name", label: "Head" },
+      { key: "designations_count", label: "Designations", format: "number" },
+      { key: "staff_count", label: "Staff", format: "number" },
+      { key: "is_active", label: "Active", format: "badge" },
+    ],
+    fields: [
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "code", label: "Code", type: "text", required: true },
+      { name: "head_user_id", label: "Head", type: "lookup", lookup: "staffUsers" },
+      { name: "description", label: "Description", type: "textarea" },
+      { name: "is_active", label: "Active", type: "checkbox", defaultValue: true },
+    ],
+    deleteMessage: "Delete this department?",
+  },
+  {
+    key: "designations",
+    section: SECTIONS.people,
+    label: "Designations",
+    endpoint: "/v1/designations",
+    permissions: HR,
+    filters: [{ param: "is_active", label: "Status", options: BOOL_STATUS }],
+    columns: [
+      { key: "name", label: "Name" },
+      { key: "code", label: "Code" },
+      { key: "department.name", label: "Department" },
+      { key: "grade", label: "Grade" },
+      { key: "is_active", label: "Active", format: "badge" },
+    ],
+    fields: [
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "code", label: "Code", type: "text", required: true },
+      { name: "department_id", label: "Department", type: "lookup", lookup: "departments" },
+      { name: "grade", label: "Grade", type: "text" },
+      { name: "job_description", label: "Job description", type: "textarea" },
+      { name: "is_active", label: "Active", type: "checkbox", defaultValue: true },
+    ],
+    deleteMessage: "Delete this designation?",
+  },
+  {
+    key: "staff",
+    section: SECTIONS.people,
+    label: "Staff",
+    endpoint: "/v1/staff",
+    permissions: HR,
+    searchable: true,
+    filters: [
+      { param: "status", label: "Status", options: STAFF_STATUS },
+      { param: "employment_type", label: "Type", options: EMPLOYMENT_TYPE },
+    ],
+    columns: [
+      { key: "employee_no", label: "Employee no" },
+      { key: "full_name", label: "Name" },
+      { key: "department.name", label: "Department" },
+      { key: "designation.name", label: "Designation" },
+      { key: "employment_type_label", label: "Type" },
+      { key: "status_label", label: "Status", format: "badge" },
+    ],
+    fields: [
+      { name: "first_name", label: "First name", type: "text", required: true },
+      { name: "last_name", label: "Last name", type: "text" },
+      { name: "employee_no", label: "Employee no", type: "text" },
+      { name: "user_id", label: "Login", type: "lookup", lookup: "staffUsers" },
+      { name: "department_id", label: "Department", type: "lookup", lookup: "departments" },
+      { name: "designation_id", label: "Designation", type: "lookup", lookup: "designations" },
+      { name: "gender", label: "Gender", type: "select", options: GENDER },
+      { name: "date_of_birth", label: "Date of birth", type: "date" },
+      { name: "cnic", label: "CNIC", type: "text" },
+      { name: "phone", label: "Phone", type: "text" },
+      { name: "email", label: "Email", type: "email" },
+      { name: "address", label: "Address", type: "text" },
+      { name: "emergency_contact_name", label: "Emergency contact", type: "text" },
+      { name: "emergency_contact_phone", label: "Emergency phone", type: "text" },
+      { name: "employment_type", label: "Employment type", type: "select", options: EMPLOYMENT_TYPE },
+      { name: "status", label: "Status", type: "select", options: STAFF_STATUS },
+      { name: "joining_date", label: "Joining date", type: "date", required: true },
+      { name: "leaving_date", label: "Leaving date", type: "date" },
+      { name: "bank_name", label: "Bank name", type: "text" },
+      { name: "bank_account_no", label: "Bank account no", type: "text" },
+      { name: "tax_number", label: "Tax number", type: "text" },
+      { name: "notes", label: "Notes", type: "textarea" },
+    ],
+    detailSections: [
+      documentsSection({
+        title: "Documents",
+        path: (item) => `/v1/staff/${item.id}/documents`,
+        withValidity: true,
+        uploadPermission: "hr.create",
+        deletePermission: "hr.delete",
+        verifyPermission: "hr.approve",
+      }),
+    ],
+    deleteMessage: "Delete this staff member?",
+    actions: [
+      {
+        label: "Terminate",
+        path: (item) => `/v1/staff/${item.id}/terminate`,
+        permission: "hr.approve",
+        fields: [
+          { name: "leaving_date", label: "Leaving date", type: "date", required: true },
+          { name: "status", label: "Status", type: "select", options: STAFF_STATUS },
+          { name: "reason", label: "Reason", type: "textarea" },
+        ],
+        submitLabel: "Terminate",
+        successMessage: "Staff member terminated.",
+      },
+    ],
+  },
+  {
+    key: "salary-components",
+    section: SECTIONS.people,
+    label: "Salary components",
+    endpoint: "/v1/salary-components",
+    permissions: PAYROLL,
+    filters: [
+      { param: "type", label: "Type", options: SALARY_COMPONENT_TYPE },
+      { param: "is_active", label: "Status", options: BOOL_STATUS },
+    ],
+    columns: [
+      { key: "name", label: "Name" },
+      { key: "code", label: "Code" },
+      { key: "type_label", label: "Type" },
+      { key: "calculation", label: "Calculation" },
+      { key: "default_amount", label: "Default", format: "money", align: "right" },
+      { key: "is_taxable", label: "Taxable", format: "badge" },
+      { key: "is_active", label: "Active", format: "badge" },
+    ],
+    fields: [
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "code", label: "Code", type: "text", required: true },
+      { name: "type", label: "Type", type: "select", options: SALARY_COMPONENT_TYPE, required: true },
+      { name: "calculation", label: "Calculation", type: "select", options: SALARY_CALCULATION },
+      { name: "default_amount", label: "Default amount", type: "number", min: 0, step: 0.01 },
+      { name: "default_percentage", label: "Default percentage", type: "number", min: 0, max: 100 },
+      { name: "is_taxable", label: "Taxable", type: "checkbox" },
+      { name: "is_active", label: "Active", type: "checkbox", defaultValue: true },
+      { name: "sort_order", label: "Sort order", type: "number", min: 0 },
+    ],
+    deleteMessage: "Delete this salary component?",
+  },
+  {
+    key: "staff-salaries",
+    section: SECTIONS.people,
+    label: "Staff salaries",
+    endpoint: "/v1/staff-salaries",
+    permissions: PAYROLL,
+    filters: [{ param: "is_active", label: "Status", options: BOOL_STATUS }],
+    columns: [
+      { key: "staff_member.full_name", label: "Staff" },
+      { key: "basic_salary", label: "Basic", format: "money", align: "right" },
+      { key: "currency", label: "Currency" },
+      { key: "effective_from", label: "From", format: "date" },
+      { key: "effective_to", label: "To", format: "date" },
+      { key: "is_active", label: "Active", format: "badge" },
+    ],
+    fields: [
+      { name: "staff_member_id", label: "Staff", type: "lookup", lookup: "staffMembers", required: true, displayKey: "staff_member.full_name" },
+      { name: "basic_salary", label: "Basic salary", type: "number", required: true, min: 0, step: 0.01 },
+      { name: "currency", label: "Currency", type: "text" },
+      { name: "effective_from", label: "Effective from", type: "date", required: true },
+      { name: "effective_to", label: "Effective to", type: "date" },
+      { name: "is_active", label: "Active", type: "checkbox", defaultValue: true },
+      { name: "notes", label: "Notes", type: "textarea" },
+      {
+        name: "items",
+        label: "Components",
+        type: "repeater",
+        addLabel: "Add component",
+        emptyItem: () => ({ salary_component_id: "", amount: "", percentage: "" }),
+        itemFields: [
+          { name: "salary_component_id", label: "Component", type: "lookup", lookup: "salaryComponents", required: true },
+          { name: "amount", label: "Amount", type: "number", min: 0, step: 0.01 },
+          { name: "percentage", label: "Percentage", type: "number", min: 0, max: 100 },
+        ],
+        rowFromItem: (item) => ({
+          salary_component_id: item.salary_component_id,
+          amount: item.amount,
+          percentage: item.percentage,
+        }),
+        mapItem: (row) => ({
+          salary_component_id: row.salary_component_id ? Number(row.salary_component_id) : null,
+          amount: row.amount === "" ? undefined : Number(row.amount),
+          percentage: row.percentage === "" ? undefined : Number(row.percentage),
+        }),
+      },
+    ],
+    detailSections: [staffSalaryItemsSection],
+    deleteMessage: "Delete this salary structure?",
+  },
+  {
+    key: "payroll-adjustments",
+    section: SECTIONS.people,
+    label: "Payroll adjustments",
+    endpoint: "/v1/payroll-adjustments",
+    permissions: PAYROLL,
+    filters: [
+      { param: "type", label: "Type", options: PAYROLL_ADJUSTMENT_TYPE },
+      { param: "is_applied", label: "Applied", options: BOOL_STATUS },
+    ],
+    columns: [
+      { key: "staff_member.full_name", label: "Staff" },
+      { key: "type_label", label: "Type" },
+      { key: "amount", label: "Amount", format: "money", align: "right" },
+      { key: "period", label: "Period" },
+      { key: "reason", label: "Reason" },
+      { key: "is_applied", label: "Applied", format: "badge" },
+    ],
+    fields: [
+      { name: "staff_member_id", label: "Staff", type: "lookup", lookup: "staffMembers", required: true, displayKey: "staff_member.full_name" },
+      { name: "type", label: "Type", type: "select", options: PAYROLL_ADJUSTMENT_TYPE, required: true },
+      { name: "amount", label: "Amount", type: "number", required: true, min: 0, step: 0.01 },
+      { name: "period", label: "Period", type: "text", required: true, hint: "Format YYYY-MM, e.g. 2026-01." },
+      { name: "reason", label: "Reason", type: "text" },
+    ],
+    deleteMessage: "Delete this payroll adjustment?",
+  },
+  {
+    key: "payroll-runs",
+    section: SECTIONS.people,
+    label: "Payroll runs",
+    endpoint: "/v1/payroll-runs",
+    permissions: PAYROLL,
+    filters: [{ param: "status", label: "Status", options: PAYROLL_RUN_STATUS }],
+    columns: [
+      { key: "period", label: "Period" },
+      { key: "status_label", label: "Status", format: "badge" },
+      { key: "payslips_count", label: "Payslips", format: "number" },
+      { key: "total_gross", label: "Gross", format: "money", align: "right" },
+      { key: "total_deductions", label: "Deductions", format: "money", align: "right" },
+      { key: "total_net", label: "Net", format: "money", align: "right" },
+    ],
+    fields: [
+      { name: "period", label: "Period", type: "text", required: true, hint: "Format YYYY-MM, e.g. 2026-01." },
+      { name: "notes", label: "Notes", type: "textarea" },
+    ],
+    detailSections: [payrollPayslipsSection],
+    deleteMessage: "Delete this payroll run?",
+    actions: [
+      {
+        label: "Generate",
+        path: (item) => `/v1/payroll-runs/${item.id}/generate`,
+        permission: "payroll.edit",
+        confirm: "Generate payslips for this payroll run?",
+        submitLabel: "Generate",
+        successMessage: "Payroll generated.",
+      },
+      {
+        label: "Approve",
+        path: (item) => `/v1/payroll-runs/${item.id}/approve`,
+        permission: "payroll.approve",
+        confirm: "Approve this payroll run?",
+        submitLabel: "Approve",
+        successMessage: "Payroll approved.",
+      },
+      {
+        label: "Pay",
+        path: (item) => `/v1/payroll-runs/${item.id}/pay`,
+        permission: "payroll.approve",
+        fields: [{ name: "payment_method", label: "Payment method", type: "select", options: PAYMENT_METHOD, required: true }],
+        submitLabel: "Mark paid",
+        successMessage: "Payroll marked as paid.",
+      },
+    ],
+  },
+  {
+    key: "leave-requests",
+    section: SECTIONS.people,
+    label: "Leave requests",
+    endpoint: "/v1/leave-requests",
+    permissions: ATTENDANCE,
+    filters: [
+      { param: "status", label: "Status", options: LEAVE_STATUS },
+      { param: "leave_type", label: "Type", options: LEAVE_TYPE },
+    ],
+    columns: [
+      { key: "user.name", label: "Staff" },
+      { key: "leave_type_label", label: "Type" },
+      { key: "from_date", label: "From", format: "date" },
+      { key: "to_date", label: "To", format: "date" },
+      { key: "days", label: "Days", format: "number" },
+      { key: "status_label", label: "Status", format: "badge" },
+    ],
+    fields: [
+      { name: "user_id", label: "Staff", type: "lookup", lookup: "staffUsers" },
+      { name: "leave_type", label: "Leave type", type: "select", options: LEAVE_TYPE, required: true },
+      { name: "from_date", label: "From date", type: "date", required: true },
+      { name: "to_date", label: "To date", type: "date", required: true },
+      { name: "days", label: "Days", type: "number", min: 0.5, step: 0.5 },
+      { name: "reason", label: "Reason", type: "textarea" },
+    ],
+    deleteMessage: "Delete this leave request?",
+    actions: [
+      {
+        label: "Approve",
+        path: (item) => `/v1/leave-requests/${item.id}/approve`,
+        permission: "attendance.approve",
+        fields: [{ name: "decision_note", label: "Note", type: "textarea" }],
+        submitLabel: "Approve",
+        successMessage: "Leave request approved.",
+      },
+      {
+        label: "Reject",
+        path: (item) => `/v1/leave-requests/${item.id}/reject`,
+        permission: "attendance.approve",
+        fields: [{ name: "decision_note", label: "Note", type: "textarea" }],
+        submitLabel: "Reject",
+        successMessage: "Leave request rejected.",
+      },
+      {
+        label: "Cancel",
+        path: (item) => `/v1/leave-requests/${item.id}/cancel`,
+        permission: "attendance.edit",
+        confirm: "Cancel this leave request?",
+        submitLabel: "Cancel",
+        successMessage: "Leave request cancelled.",
       },
     ],
   },

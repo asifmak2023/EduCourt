@@ -9,7 +9,17 @@ import {
   type StudentSummary,
 } from "./src/lib/api";
 import { fetchChildren } from "./src/lib/portal";
-import { buildTabs, findTab, type TabKey } from "./src/lib/nav";
+import {
+  buildNav,
+  findNavItem,
+  isPortalKey,
+  type NavItem,
+} from "./src/lib/nav";
+import { CampusProvider } from "./src/lib/campus";
+import { findModule } from "./src/admin/registry";
+import { ModuleListScreen } from "./src/admin/ModuleListScreen";
+import { ModuleFormScreen } from "./src/admin/ModuleFormScreen";
+import { ModuleDetailScreen } from "./src/admin/ModuleDetailScreen";
 import { AppearanceModal } from "./src/components/AppearanceModal";
 import { AppHeader } from "./src/components/AppHeader";
 import { Sidebar } from "./src/components/Sidebar";
@@ -24,6 +34,11 @@ import { FeesScreen } from "./src/screens/FeesScreen";
 import { ProfileScreen } from "./src/screens/ProfileScreen";
 
 const WIDE_BREAKPOINT = 900;
+
+interface ModuleRoute {
+  mode: "list" | "detail" | "create" | "edit";
+  id?: number;
+}
 
 export default function App() {
   return (
@@ -40,7 +55,8 @@ function AppInner() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [students, setStudents] = useState<StudentSummary[]>([]);
   const [activeStudentId, setActiveStudentId] = useState<number | null>(null);
-  const [tab, setTab] = useState<TabKey>("dashboard");
+  const [activeKey, setActiveKey] = useState("dashboard");
+  const [moduleRoute, setModuleRoute] = useState<ModuleRoute | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showAppearance, setShowAppearance] = useState(false);
   const [booting, setBooting] = useState(true);
@@ -109,22 +125,24 @@ function AppInner() {
     }
     setToken(null);
     setUser(null);
-    setTab("dashboard");
+    setActiveKey("dashboard");
+    setModuleRoute(null);
     setDrawerOpen(false);
   }, []);
 
-  const tabs = buildTabs(user, students.length > 0);
+  const portal = students.length > 0;
+  const sections = buildNav(user, portal);
 
   useEffect(() => {
     if (!user) {
       return;
     }
-
-    if (!tabs.some((entry) => entry.key === tab)) {
-      setTab("dashboard");
+    if (!findNavItem(sections, activeKey)) {
+      setActiveKey("dashboard");
+      setModuleRoute(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, students, tab]);
+  }, [user, students, activeKey]);
 
   if (!ready || booting) {
     return (
@@ -135,7 +153,15 @@ function AppInner() {
     );
   }
 
-  const activeTab = findTab(tabs, tab);
+  const activeItem = findNavItem(sections, activeKey);
+  const activeModule = activeItem?.moduleKey ? findModule(activeItem.moduleKey) : null;
+  const inModuleFlow = Boolean(activeModule && moduleRoute && moduleRoute.mode !== "list");
+
+  const selectItem = (item: NavItem) => {
+    setActiveKey(item.key);
+    setModuleRoute(item.moduleKey ? { mode: "list" } : null);
+    setDrawerOpen(false);
+  };
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -143,42 +169,61 @@ function AppInner() {
       <StatusBar style={resolvedMode === "dark" ? "light" : "dark"} />
 
       {user ? (
-        <View style={styles.shell}>
-          <Sidebar
-            wide={wide}
-            open={drawerOpen}
-            user={user}
-            tabs={tabs}
-            activeTab={tab}
-            students={students}
-            activeStudentId={activeStudentId}
-            onClose={() => setDrawerOpen(false)}
-            onSelectTab={setTab}
-            onSelectStudent={(id) => {
-              setActiveStudentId(id);
-              setDrawerOpen(false);
-            }}
-            onAppearance={() => setShowAppearance(true)}
-            onSignOut={() => void signOut()}
-          />
-
-          <View style={styles.content}>
-            <AppHeader
-              title={activeTab.label}
-              subtitle={activeTab.subtitle}
-              onMenu={wide ? undefined : () => setDrawerOpen(true)}
+        <CampusProvider user={user}>
+          <View style={styles.shell}>
+            <Sidebar
+              wide={wide}
+              open={drawerOpen}
+              user={user}
+              sections={sections}
+              activeKey={activeKey}
+              students={students}
+              activeStudentId={activeStudentId}
+              onClose={() => setDrawerOpen(false)}
+              onSelectItem={selectItem}
+              onSelectStudent={(id) => {
+                setActiveStudentId(id);
+                setDrawerOpen(false);
+              }}
+              onAppearance={() => setShowAppearance(true)}
+              onSignOut={() => void signOut()}
             />
-            {renderScreen({
-              tab,
-              user,
-              students,
-              activeStudentId,
-              portal: students.length > 0,
-              onUserChange: setUser,
-              onSignOut: () => void signOut(),
-            })}
+
+            <View style={styles.content}>
+              <AppHeader
+                title={activeItem?.label ?? "Dashboard"}
+                subtitle={
+                  activeModule && moduleRoute && moduleRoute.mode !== "list"
+                    ? activeModule.label
+                    : activeItem?.subtitle
+                }
+                onMenu={wide ? undefined : () => setDrawerOpen(true)}
+                onBack={
+                  inModuleFlow ? () => setModuleRoute({ mode: "list" }) : undefined
+                }
+              />
+
+              {activeModule && moduleRoute ? (
+                <ModuleFlow
+                  key={`${activeModule.key}:${moduleRoute.mode}:${moduleRoute.id ?? ""}`}
+                  moduleKey={activeModule.key}
+                  route={moduleRoute}
+                  permissions={user.permissions}
+                  onRoute={setModuleRoute}
+                />
+              ) : (
+                renderPortalScreen({
+                  screenKey: activeKey,
+                  user,
+                  students,
+                  activeStudentId,
+                  onUserChange: setUser,
+                  onSignOut: () => void signOut(),
+                })
+              )}
+            </View>
           </View>
-        </View>
+        </CampusProvider>
       ) : (
         <LoginScreen
           onAuthenticated={setUser}
@@ -194,24 +239,83 @@ function AppInner() {
   );
 }
 
-function renderScreen({
-  tab,
+function ModuleFlow({
+  moduleKey,
+  route,
+  permissions,
+  onRoute,
+}: {
+  moduleKey: string;
+  route: ModuleRoute;
+  permissions: string[];
+  onRoute: (route: ModuleRoute) => void;
+}) {
+  const config = findModule(moduleKey);
+  if (!config) {
+    return null;
+  }
+
+  if (route.mode === "detail" && route.id) {
+    return (
+      <ModuleDetailScreen
+        config={config}
+        id={route.id}
+        permissions={permissions}
+        onEdit={() => onRoute({ mode: "edit", id: route.id })}
+        onDeleted={() => onRoute({ mode: "list" })}
+      />
+    );
+  }
+
+  if (route.mode === "create") {
+    return (
+      <ModuleFormScreen
+        config={config}
+        onSaved={() => onRoute({ mode: "list" })}
+        onCancel={() => onRoute({ mode: "list" })}
+      />
+    );
+  }
+
+  if (route.mode === "edit" && route.id) {
+    return (
+      <ModuleFormScreen
+        config={config}
+        recordId={route.id}
+        onSaved={() => onRoute({ mode: "detail", id: route.id })}
+        onCancel={() => onRoute({ mode: "detail", id: route.id })}
+      />
+    );
+  }
+
+  return (
+    <ModuleListScreen
+      config={config}
+      permissions={permissions}
+      onOpen={(id) => onRoute({ mode: "detail", id })}
+      onCreate={() => onRoute({ mode: "create" })}
+    />
+  );
+}
+
+function renderPortalScreen({
+  screenKey,
   user,
   students,
   activeStudentId,
-  portal,
   onUserChange,
   onSignOut,
 }: {
-  tab: TabKey;
+  screenKey: string;
   user: AuthUser;
   students: StudentSummary[];
   activeStudentId: number | null;
-  portal: boolean;
   onUserChange: (user: AuthUser) => void;
   onSignOut: () => void;
 }) {
-  if (tab === "profile") {
+  const portalTab = isPortalKey(screenKey) ? screenKey : "dashboard";
+
+  if (portalTab === "profile") {
     return (
       <ProfileScreen
         user={user}
@@ -221,11 +325,11 @@ function renderScreen({
     );
   }
 
-  if (!portal) {
+  if (students.length === 0) {
     return <DashboardScreen user={user} students={students} />;
   }
 
-  switch (tab) {
+  switch (portalTab) {
     case "timetable":
       return <TimetableScreen activeStudentId={activeStudentId} />;
     case "attendance":

@@ -12,7 +12,8 @@ import { ChildSelector } from "./ChildSelector";
 import { SectionLabel } from "./ui";
 import { useTheme } from "../theme/ThemeProvider";
 import { withAlpha } from "../theme/colors";
-import type { PortalTab, TabKey } from "../lib/nav";
+import { useCampus } from "../lib/campus";
+import type { NavItem, NavSection } from "../lib/nav";
 import type { AuthUser, StudentSummary } from "../lib/api";
 
 export const SIDEBAR_WIDTH = 280;
@@ -21,12 +22,12 @@ interface SidebarProps {
   wide: boolean;
   open: boolean;
   user: AuthUser;
-  tabs: PortalTab[];
-  activeTab: TabKey;
+  sections: NavSection[];
+  activeKey: string;
   students: StudentSummary[];
   activeStudentId: number | null;
   onClose: () => void;
-  onSelectTab: (tab: TabKey) => void;
+  onSelectItem: (item: NavItem) => void;
   onSelectStudent: (id: number) => void;
   onAppearance: () => void;
   onSignOut: () => void;
@@ -36,17 +37,18 @@ export function Sidebar({
   wide,
   open,
   user,
-  tabs,
-  activeTab,
+  sections,
+  activeKey,
   students,
   activeStudentId,
   onClose,
-  onSelectTab,
+  onSelectItem,
   onSelectStudent,
   onAppearance,
   onSignOut,
 }: SidebarProps) {
   const { colors, config } = useTheme();
+  const { campuses, campusId, setCampusId, canSwitch } = useCampus();
   const [translateX] = useState(
     () => new Animated.Value(wide ? 0 : -SIDEBAR_WIDTH)
   );
@@ -91,6 +93,38 @@ export function Sidebar({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {canSwitch ? (
+          <View style={styles.group}>
+            <SectionLabel>Campus</SectionLabel>
+            <View style={styles.campusRow}>
+              {campuses.map((campus) => {
+                const active = campus.id === campusId;
+                return (
+                  <Pressable
+                    key={campus.id}
+                    onPress={() => setCampusId(campus.id)}
+                    accessibilityRole="button"
+                    style={[
+                      styles.campusChip,
+                      {
+                        borderColor: active ? colors.accent : colors.border,
+                        backgroundColor: active ? colors.accentSoft : "transparent",
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={{ color: active ? colors.accent : colors.foreground, fontSize: 12 }}
+                      numberOfLines={1}
+                    >
+                      {campus.name}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        ) : null}
+
         {students.length > 1 ? (
           <View style={styles.group}>
             <SectionLabel>Student</SectionLabel>
@@ -102,46 +136,44 @@ export function Sidebar({
           </View>
         ) : null}
 
-        <View style={styles.group}>
-          <SectionLabel>Menu</SectionLabel>
-          <View style={styles.nav}>
-            {tabs.map((tab) => {
-              const active = tab.key === activeTab;
+        {sections.map((section) => (
+          <View key={section.label} style={styles.group}>
+            <SectionLabel>{section.label}</SectionLabel>
+            <View style={styles.nav}>
+              {section.items.map((item) => {
+                const active = item.key === activeKey;
 
-              return (
-                <Pressable
-                  key={tab.key}
-                  onPress={() => {
-                    onSelectTab(tab.key);
-                    onClose();
-                  }}
-                  accessibilityRole="button"
-                  style={[
-                    styles.navItem,
-                    active
-                      ? { backgroundColor: colors.accentSoft }
-                      : null,
-                  ]}
-                >
-                  <View
+                return (
+                  <Pressable
+                    key={item.key}
+                    onPress={() => onSelectItem(item)}
+                    accessibilityRole="button"
                     style={[
-                      styles.navBar,
-                      { backgroundColor: active ? colors.accent : "transparent" },
-                    ]}
-                  />
-                  <Text
-                    style={[
-                      styles.navLabel,
-                      { color: active ? colors.accent : colors.foreground },
+                      styles.navItem,
+                      active ? { backgroundColor: colors.accentSoft } : null,
                     ]}
                   >
-                    {tab.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
+                    <View
+                      style={[
+                        styles.navBar,
+                        { backgroundColor: active ? colors.accent : "transparent" },
+                      ]}
+                    />
+                    <Text
+                      style={[
+                        styles.navLabel,
+                        { color: active ? colors.accent : colors.foreground },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {item.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
-        </View>
+        ))}
       </ScrollView>
 
       <View style={[styles.footer, { borderColor: colors.border }]}>
@@ -175,9 +207,7 @@ export function Sidebar({
   };
 
   if (wide) {
-    return (
-      <View style={[styles.wide, panelStyle]}>{panel}</View>
-    );
+    return <View style={[styles.wide, panelStyle]}>{panel}</View>;
   }
 
   return (
@@ -197,11 +227,7 @@ export function Sidebar({
       </Animated.View>
 
       <Animated.View
-        style={[
-          styles.drawer,
-          panelStyle,
-          { transform: [{ translateX }] },
-        ]}
+        style={[styles.drawer, panelStyle, { transform: [{ translateX }] }]}
       >
         {panel}
       </Animated.View>
@@ -257,6 +283,19 @@ const styles = StyleSheet.create({
   group: {
     marginBottom: 20,
   },
+  campusRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 10,
+  },
+  campusChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    maxWidth: 220,
+  },
   nav: {
     marginTop: 8,
     gap: 2,
@@ -277,6 +316,7 @@ const styles = StyleSheet.create({
   navLabel: {
     fontSize: 15,
     fontWeight: "600",
+    flexShrink: 1,
   },
   footer: {
     flexDirection: "row",

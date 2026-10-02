@@ -1,6 +1,7 @@
 import type { AuthUser } from "./api";
+import { MODULES } from "../admin/registry";
 
-export type TabKey =
+export type PortalTabKey =
   | "dashboard"
   | "timetable"
   | "attendance"
@@ -8,33 +9,123 @@ export type TabKey =
   | "fees"
   | "profile";
 
-export interface PortalTab {
-  key: TabKey;
+export interface NavItem {
+  key: string;
   label: string;
   subtitle: string;
+  permission?: string | null;
+  moduleKey?: string;
 }
 
-const PORTAL_TABS: PortalTab[] = [
+export interface NavSection {
+  label: string;
+  items: NavItem[];
+}
+
+export const PORTAL_KEY_PREFIX = "mod:";
+
+const PORTAL_ROLES = new Set(["student", "parent_guardian"]);
+
+export function isStaffUser(user: AuthUser | null): boolean {
+  const roles = user?.roles ?? [];
+  return roles.some((role) => !PORTAL_ROLES.has(role));
+}
+
+export function can(permissions: string[], permission?: string | null): boolean {
+  if (!permission) {
+    return true;
+  }
+  return permissions.includes(permission);
+}
+
+const PORTAL_ITEMS: NavItem[] = [
   { key: "timetable", label: "Timetable", subtitle: "Published class schedule" },
   { key: "attendance", label: "Attendance", subtitle: "Daily records and summary" },
   { key: "results", label: "Results", subtitle: "Exam performance" },
   { key: "fees", label: "Fees", subtitle: "Vouchers and balances" },
 ];
 
-export function buildTabs(user: AuthUser | null, portal: boolean): PortalTab[] {
-  const tabs: PortalTab[] = [
-    { key: "dashboard", label: "Dashboard", subtitle: "Overview of your account" },
-  ];
+const STAFF_ORDER = [
+  "Admissions & Students",
+  "Academics",
+  "Finance",
+  "People",
+  "Operations",
+  "Administration",
+];
 
-  if (user && portal) {
-    tabs.push(...PORTAL_TABS);
+export function buildNav(user: AuthUser | null, portal: boolean): NavSection[] {
+  const permissions = user?.permissions ?? [];
+  const sections: NavSection[] = [];
+
+  sections.push({
+    label: "Overview",
+    items: [
+      { key: "dashboard", label: "Dashboard", subtitle: "Overview of your account" },
+    ],
+  });
+
+  if (portal) {
+    sections.push({ label: "My portal", items: PORTAL_ITEMS });
   }
 
-  tabs.push({ key: "profile", label: "Profile", subtitle: "Photo and personal details" });
+  const groups = new Map<string, NavItem[]>();
+  if (isStaffUser(user)) {
+    for (const module of MODULES) {
+      if (!can(permissions, module.permissions.view)) {
+        continue;
+      }
+      const item: NavItem = {
+        key: `${PORTAL_KEY_PREFIX}${module.key}`,
+        label: module.label,
+        subtitle: module.section,
+        moduleKey: module.key,
+      };
+      const list = groups.get(module.section) ?? [];
+      list.push(item);
+      groups.set(module.section, list);
+    }
+  }
 
-  return tabs;
+  for (const name of [...STAFF_ORDER, ...groups.keys()]) {
+    const items = groups.get(name);
+    if (items?.length) {
+      sections.push({ label: name, items });
+    }
+    groups.delete(name);
+  }
+  for (const [name, items] of groups) {
+    sections.push({ label: name, items });
+  }
+
+  sections.push({
+    label: "Account",
+    items: [
+      { key: "profile", label: "Profile", subtitle: "Photo and personal details" },
+    ],
+  });
+
+  return sections;
 }
 
-export function findTab(tabs: PortalTab[], key: TabKey): PortalTab {
-  return tabs.find((tab) => tab.key === key) ?? tabs[0];
+export function findNavItem(sections: NavSection[], key: string): NavItem | null {
+  for (const section of sections) {
+    for (const item of section.items) {
+      if (item.key === key) {
+        return item;
+      }
+    }
+  }
+  return null;
+}
+
+export function isPortalKey(key: string): key is PortalTabKey {
+  return (
+    key === "dashboard" ||
+    key === "timetable" ||
+    key === "attendance" ||
+    key === "results" ||
+    key === "fees" ||
+    key === "profile"
+  );
 }

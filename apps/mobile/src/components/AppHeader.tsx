@@ -7,10 +7,12 @@ export function AppHeader({
   title,
   subtitle,
   onMenu,
+  onBack,
 }: {
   title: string;
   subtitle?: string;
   onMenu?: () => void;
+  onBack?: () => void;
 }) {
   const { colors, resolvedMode, background, config } = useTheme();
   const frosted = background.kind !== "default" || config.glass;
@@ -43,7 +45,18 @@ export function AppHeader({
       ) : null}
 
       <View style={styles.row}>
-        {onMenu ? (
+        {onBack ? (
+          <Pressable
+            onPress={onBack}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            style={[styles.menuButton, { borderColor: colors.border }]}
+          >
+            <Text style={{ color: colors.foreground, fontSize: 20, fontWeight: "700", lineHeight: 22 }}>
+              {"<"}
+            </Text>
+          </Pressable>
+        ) : onMenu ? (
           <Pressable
             onPress={onMenu}
             accessibilityRole="button"

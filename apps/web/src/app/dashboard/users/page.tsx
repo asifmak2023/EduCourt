@@ -1,6 +1,7 @@
 "use client";
 
 import { MasterList } from "@/components/MasterList";
+import { Avatar } from "@/components/Avatar";
 import { Badge } from "@/components/ui";
 import { useRoleOptions } from "@/lib/useLookups";
 import { formatDateTime } from "@/lib/format";
@@ -38,7 +39,15 @@ export default function UsersPage() {
         },
       ]}
       columns={[
-        { header: "Name", render: (user) => user.name },
+        {
+          header: "Name",
+          render: (user) => (
+            <div className="flex items-center gap-3">
+              <Avatar name={user.name} photoUrl={user.photo_url} size="sm" />
+              <span>{user.name}</span>
+            </div>
+          ),
+        },
         { header: "Email", render: (user) => user.email },
         {
           header: "Roles",

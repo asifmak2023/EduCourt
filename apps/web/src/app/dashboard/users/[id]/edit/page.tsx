@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { UserForm } from "@/components/UserForm";
 import { PermissionGate } from "@/components/PermissionGate";
+import { useAuth } from "@/lib/auth";
 import { useRoleOptions } from "@/lib/useLookups";
 import { useResource } from "@/lib/useResource";
 import { ErrorNotice, Spinner } from "@/components/ui";
@@ -11,6 +12,7 @@ import type { User } from "@/lib/types";
 export default function EditUserPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id ? Number(params.id) : undefined;
+  const { can } = useAuth();
   const { data, loading, error } = useResource<User>(
     id ? `/v1/users/${id}` : null
   );
@@ -28,6 +30,8 @@ export default function EditUserPage() {
         recordId={data.id}
         roleOptions={roles}
         redirectTo={`/dashboard/users/${data.id}`}
+        photoUrl={data.photo_url ?? null}
+        canManagePhoto={can("user.photo")}
         initial={{
           name: data.name,
           email: data.email,

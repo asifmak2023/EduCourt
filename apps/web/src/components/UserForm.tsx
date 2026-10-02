@@ -13,6 +13,7 @@ import {
   TextInput,
 } from "@/components/Form";
 import { Card, ErrorNotice, PageHeader } from "@/components/ui";
+import { PhotoField } from "@/components/PhotoField";
 import type { RoleOption } from "@/lib/types";
 
 export interface UserFormInitial {
@@ -32,6 +33,8 @@ export function UserForm({
   initial,
   roleOptions,
   redirectTo,
+  photoUrl: initialPhotoUrl = null,
+  canManagePhoto = false,
 }: {
   title: string;
   description?: string;
@@ -39,11 +42,14 @@ export function UserForm({
   initial: UserFormInitial;
   roleOptions: RoleOption[];
   redirectTo: string;
+  photoUrl?: string | null;
+  canManagePhoto?: boolean;
 }) {
   const router = useRouter();
   const isEdit = recordId !== undefined;
 
   const [values, setValues] = useState<UserFormInitial>(initial);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(initialPhotoUrl);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -115,6 +121,18 @@ export function UserForm({
       />
 
       {error ? <ErrorNotice message={error} /> : null}
+
+      {isEdit && canManagePhoto && recordId !== undefined ? (
+        <div className="rounded-2xl border border-border bg-surface">
+          <PhotoField
+            endpoint={`/v1/users/${recordId}/photo`}
+            name={values.name}
+            photoUrl={photoUrl}
+            onChanged={setPhotoUrl}
+            hint="JPG, PNG or WebP, up to 5 MB. Used as this person's avatar across the portal."
+          />
+        </div>
+      ) : null}
 
       <Card>
         <form

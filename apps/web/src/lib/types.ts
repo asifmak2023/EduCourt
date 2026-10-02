@@ -555,6 +555,8 @@ export interface User {
   phone?: string | null;
   employee_code?: string | null;
   job_title?: string | null;
+  photo_path?: string | null;
+  photo_url?: string | null;
   institution_id?: number | null;
   campus_id?: number | null;
   roles?: string[];

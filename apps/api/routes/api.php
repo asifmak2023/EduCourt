@@ -132,6 +132,7 @@ use App\Http\Controllers\Api\StudentEnrollmentController;
 use App\Http\Controllers\Api\StudentEventController;
 use App\Http\Controllers\Api\StudentFineController;
 use App\Http\Controllers\Api\StudentHistoryController;
+use App\Http\Controllers\Api\StudentPhotoController;
 use App\Http\Controllers\Api\StudentWalletController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\SubstituteAssignmentController;
@@ -594,6 +595,9 @@ Route::prefix('v1')->group(function () {
             Route::delete('students/{student}', [StudentController::class, 'destroy'])->middleware('permission:student.delete');
             Route::post('students/{student}/withdraw', [StudentController::class, 'withdraw'])->middleware('permission:student.approve');
             Route::get('students/{student}/history', [StudentHistoryController::class, 'show'])->middleware('permission:student.view');
+
+            Route::post('students/{student}/photo', [StudentPhotoController::class, 'store'])->middleware('permission:student.photo');
+            Route::delete('students/{student}/photo', [StudentPhotoController::class, 'destroy'])->middleware('permission:student.photo');
 
             Route::get('students/{student}/documents', [StudentDocumentController::class, 'index'])->middleware('permission:student.view');
             Route::post('students/{student}/documents', [StudentDocumentController::class, 'store'])->middleware('permission:student.create');

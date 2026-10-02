@@ -65,7 +65,7 @@ class AuthController extends Controller
 
         activity('auth')->causedBy($user)->withProperties(['ip' => $request->ip()])->log('User logged in');
 
-        $user->load(['roles', 'permissions', 'campus', 'institution', 'scopeAssignments']);
+        $user->load(['roles', 'permissions', 'campus', 'institution', 'scopeAssignments', 'student']);
 
         return response()->json([
             'token' => $token,
@@ -93,7 +93,7 @@ class AuthController extends Controller
 
         activity('auth')->causedBy($user)->withProperties(['ip' => $request->ip(), 'two_factor' => true])->log('User logged in');
 
-        $user->load(['roles', 'permissions', 'campus', 'institution', 'scopeAssignments']);
+        $user->load(['roles', 'permissions', 'campus', 'institution', 'scopeAssignments', 'student']);
 
         return response()->json([
             'token' => $token,

@@ -29,7 +29,7 @@ return [
         'finance' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'fee' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'admission' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
-        'student' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
+        'student' => ['view', 'create', 'edit', 'photo', 'approve', 'delete', 'export'],
         'attendance' => ['view', 'create', 'edit', 'approve', 'export'],
         'scholarship' => ['view', 'create', 'edit', 'approve', 'delete'],
         'concession' => ['view', 'create', 'edit', 'approve', 'delete'],
@@ -78,6 +78,7 @@ return [
         RoleName::PlatformAdmin->value => [
             'institution.*', 'campus.*', 'user.*', 'role.*',
             'subscription.*', 'audit.*', 'setting.*', 'report.view',
+            'student.photo',
         ],
 
         RoleName::CampusAdmin->value => [
@@ -96,7 +97,7 @@ return [
         ],
 
         RoleName::Principal->value => [
-            'student.view', 'user.view', 'attendance.view', 'exam.view', 'exam.approve',
+            'student.view', 'student.photo', 'user.view', 'attendance.view', 'exam.view', 'exam.approve',
             'credit.view',
             'academic.view', 'timetable.view', 'timetable.approve', 'scholarship.view',
             'curriculum.view', 'curriculum.approve',
@@ -127,7 +128,7 @@ return [
 
         RoleName::AdmissionsOfficer->value => [
             'academic.view',
-            'admission.*', 'student.view', 'student.create', 'report.view',
+            'admission.*', 'student.view', 'student.create', 'student.photo', 'report.view',
             'scholarship.view', 'concession.view', 'fine.view', 'reminder.view',
             'front_office.*', 'circular.view',
         ],

@@ -16,7 +16,7 @@ class ProfileController extends Controller
     {
         return new UserResource(
             $request->user()->load([
-                'roles', 'permissions', 'campus', 'institution', 'scopeAssignments.campus',
+                'roles', 'permissions', 'campus', 'institution', 'scopeAssignments.campus', 'student',
             ])
         );
     }

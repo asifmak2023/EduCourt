@@ -13,9 +13,17 @@ import { apiFetch } from "../lib/api";
 import { useCampusId } from "../lib/campus";
 import { formatDate } from "../lib/format";
 import { can } from "../lib/nav";
+import { ActionFormModal } from "./ActionFormModal";
 import { getPath } from "./display";
+import { PhotoField } from "./fields/PhotoField";
 import { useResource } from "./useResource";
-import type { AdminRecord, FieldConfig, ModuleConfig } from "./types";
+import type {
+  ActionConfig,
+  AdminRecord,
+  FieldConfig,
+  ModuleConfig,
+  PhotoFieldConfig,
+} from "./types";
 
 function displayValue(field: FieldConfig, value: unknown): string {
   if (value === null || value === undefined || value === "") {
@@ -53,11 +61,21 @@ export function ModuleDetailScreen({
   const campusId = useCampusId();
   const { data, loading, error, reload } = useResource<AdminRecord>(config.endpoint, id);
   const [pending, setPending] = useState<{ message: string; run: () => Promise<void> } | null>(null);
+  const [actionForm, setActionForm] = useState<ActionConfig<AdminRecord> | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const canEdit = Boolean(config.permissions.edit) && can(permissions, config.permissions.edit);
   const canDelete = Boolean(config.permissions.delete) && can(permissions, config.permissions.delete);
+  const canPhoto =
+    Boolean(config.permissions.photo) && can(permissions, config.permissions.photo);
+  const textFields = config.fields.filter(
+    (field): field is Exclude<FieldConfig, PhotoFieldConfig> => field.type !== "photo"
+  );
+  const photoFields = config.fields.filter(
+    (field): field is PhotoFieldConfig => field.type === "photo"
+  );
 
   const runDelete = useCallback(async () => {
     setBusy(true);
@@ -92,9 +110,14 @@ export function ModuleDetailScreen({
           <ErrorText message={actionError} />
         </View>
       ) : null}
+      {notice ? (
+        <View style={styles.padded}>
+          <Text style={{ color: colors.accent, fontWeight: "600", fontSize: 14 }}>{notice}</Text>
+        </View>
+      ) : null}
 
       <Card>
-        {config.fields.map((field) => (
+        {textFields.map((field) => (
           <View key={field.name} style={styles.row}>
             <SectionLabel>{field.label}</SectionLabel>
             <Text style={[styles.value, { color: colors.foreground }]}>
@@ -106,9 +129,36 @@ export function ModuleDetailScreen({
         ))}
       </Card>
 
+      {photoFields.map((field) => (
+        <PhotoField
+          key={field.name}
+          field={field}
+          item={data}
+          canEdit={canPhoto}
+          campusId={campusId}
+          onChanged={reload}
+        />
+      ))}
+
+      {config.detailSections?.map((section) => (
+        <View key={section.title} style={styles.section}>
+          <SectionLabel>{section.title}</SectionLabel>
+          <View style={styles.sectionBody}>{section.render(data)}</View>
+        </View>
+      ))}
+
       {config.actions?.map((action) => {
         if (action.permission && !can(permissions, action.permission)) {
           return null;
+        }
+        if (action.fields?.length) {
+          return (
+            <GhostButton
+              key={action.label}
+              label={action.label}
+              onPress={() => setActionForm(action)}
+            />
+          );
         }
         return (
           <GhostButton
@@ -123,6 +173,7 @@ export function ModuleDetailScreen({
                   const body =
                     typeof action.body === "function" ? action.body(data) : action.body;
                   await apiFetch(path, { method: action.method ?? "POST", body, campusId });
+                  setNotice(action.successMessage ?? `${action.label} successful.`);
                   reload();
                 },
               })
@@ -179,6 +230,31 @@ export function ModuleDetailScreen({
           </View>
         </View>
       </Modal>
+
+      {actionForm ? (
+        <ActionFormModal
+          key={actionForm.label}
+          title={actionForm.label}
+          fields={actionForm.fields ?? []}
+          record={data}
+          submitLabel={actionForm.submitLabel}
+          onClose={() => setActionForm(null)}
+          onSubmit={async (values) => {
+            const path =
+              typeof actionForm.path === "function"
+                ? actionForm.path(data)
+                : actionForm.path;
+            await apiFetch(path, {
+              method: actionForm.method ?? "POST",
+              body: values,
+              campusId,
+            });
+            setActionForm(null);
+            setNotice(actionForm.successMessage ?? `${actionForm.label} successful.`);
+            reload();
+          }}
+        />
+      ) : null}
     </View>
   );
 }
@@ -202,6 +278,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 15,
     fontWeight: "600",
+  },
+  section: {
+    marginTop: 20,
+  },
+  sectionBody: {
+    marginTop: 8,
   },
   backdrop: {
     flex: 1,

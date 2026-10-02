@@ -1,7 +1,9 @@
 import type { ModuleConfig, SelectOption } from "./types";
+import { enrollmentSection, guardianSection } from "./relations";
 
 export const SECTIONS = {
   overview: "Overview",
+  admissionsStudents: "Admissions & Students",
   academics: "Academics",
   account: "Account",
 } as const;
@@ -30,6 +32,88 @@ const ROOM_TYPE: SelectOption[] = [
   { value: "hall", label: "Hall" },
   { value: "other", label: "Other" },
 ];
+
+const GENDER: SelectOption[] = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "other", label: "Other" },
+];
+
+const GUARDIAN_RELATION: SelectOption[] = [
+  { value: "father", label: "Father" },
+  { value: "mother", label: "Mother" },
+  { value: "guardian", label: "Guardian" },
+  { value: "other", label: "Other" },
+];
+
+const STUDENT_STATUS: SelectOption[] = [
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+  { value: "withdrawn", label: "Withdrawn" },
+  { value: "transferred", label: "Transferred" },
+  { value: "graduated", label: "Graduated" },
+];
+
+const ENROLLMENT_STATUS: SelectOption[] = [
+  { value: "active", label: "Active" },
+  { value: "promoted", label: "Promoted" },
+  { value: "repeated", label: "Repeated" },
+  { value: "withdrawn", label: "Withdrawn" },
+  { value: "transferred", label: "Transferred" },
+];
+
+const ADMISSION_STATUS: SelectOption[] = [
+  { value: "enquiry", label: "Enquiry" },
+  { value: "applied", label: "Applied" },
+  { value: "under_review", label: "Under review" },
+  { value: "approved", label: "Approved" },
+  { value: "rejected", label: "Rejected" },
+  { value: "enrolled", label: "Enrolled" },
+];
+
+const SCHOLARSHIP_TYPE: SelectOption[] = [
+  { value: "merit", label: "Merit" },
+  { value: "need_based", label: "Need based" },
+  { value: "sports", label: "Sports" },
+  { value: "sibling", label: "Sibling" },
+  { value: "staff_ward", label: "Staff ward" },
+  { value: "other", label: "Other" },
+];
+
+const DISCOUNT_TYPE: SelectOption[] = [
+  { value: "percentage", label: "Percentage" },
+  { value: "fixed", label: "Fixed amount" },
+];
+
+const AWARD_STATUS: SelectOption[] = [
+  { value: "active", label: "Active" },
+  { value: "revoked", label: "Revoked" },
+];
+
+const ADMISSION = {
+  view: "admission.view",
+  create: "admission.create",
+  edit: "admission.edit",
+  delete: "admission.delete",
+  approve: "admission.approve",
+};
+
+const STUDENT = {
+  view: "student.view",
+  create: "student.create",
+  edit: "student.edit",
+  delete: "student.delete",
+  approve: "student.approve",
+  photo: "student.photo",
+};
+
+const SCHOLARSHIP = {
+  view: "scholarship.view",
+  create: "scholarship.create",
+  edit: "scholarship.edit",
+  delete: "scholarship.delete",
+  approve: "scholarship.approve",
+};
 
 const ACADEMIC = {
   view: "academic.view",
@@ -474,6 +558,395 @@ export const MODULES: ModuleConfig[] = [
       { name: "edition", label: "Edition", type: "text" },
       { name: "price", label: "Price", type: "number", min: 0, step: 0.01 },
       { name: "is_required", label: "Required", type: "checkbox" },
+    ],
+  },
+  {
+    key: "admissions",
+    section: SECTIONS.admissionsStudents,
+    label: "Admissions",
+    endpoint: "/v1/admissions",
+    permissions: ADMISSION,
+    searchable: true,
+    filters: [{ param: "status", label: "Status", options: ADMISSION_STATUS }],
+    columns: [
+      { key: "application_no", label: "Application" },
+      { key: "full_name", label: "Applicant" },
+      { key: "class_room", label: "Class" },
+      { key: "guardian_phone", label: "Guardian phone" },
+      { key: "applied_on", label: "Applied", format: "date" },
+      { key: "status", label: "Status", format: "badge" },
+    ],
+    fields: [
+      { name: "first_name", label: "First name", type: "text", required: true },
+      { name: "last_name", label: "Last name", type: "text", required: true },
+      { name: "gender", label: "Gender", type: "select", options: GENDER },
+      { name: "date_of_birth", label: "Date of birth", type: "date" },
+      {
+        name: "class_room_id",
+        label: "Requested class",
+        type: "lookup",
+        lookup: "classRooms",
+        displayKey: "class_room",
+      },
+      {
+        name: "academic_year_id",
+        label: "Academic year",
+        type: "lookup",
+        lookup: "academicYears",
+        displayKey: "academic_year",
+      },
+      { name: "guardian_name", label: "Guardian name", type: "text" },
+      { name: "guardian_phone", label: "Guardian phone", type: "text" },
+      { name: "guardian_email", label: "Guardian email", type: "email" },
+      {
+        name: "guardian_relation",
+        label: "Guardian relation",
+        type: "select",
+        options: GUARDIAN_RELATION,
+      },
+      { name: "previous_school", label: "Previous school", type: "text" },
+      { name: "address", label: "Address", type: "textarea" },
+      { name: "city", label: "City", type: "text" },
+      { name: "applied_on", label: "Applied on", type: "date" },
+      { name: "notes", label: "Notes", type: "textarea" },
+      {
+        name: "status",
+        label: "Status",
+        type: "select",
+        options: ADMISSION_STATUS,
+      },
+    ],
+    deleteMessage: "Archive this admission?",
+    actions: [
+      {
+        label: "Submit for review",
+        path: (item) => `/v1/admissions/${item.id}/submit`,
+        permission: ADMISSION.edit,
+        confirm: "Submit this admission for review?",
+        successMessage: "Admission submitted for review.",
+      },
+      {
+        label: "Approve",
+        path: (item) => `/v1/admissions/${item.id}/approve`,
+        permission: ADMISSION.approve,
+        confirm: "Approve this admission?",
+        successMessage: "Admission approved.",
+      },
+      {
+        label: "Reject",
+        path: (item) => `/v1/admissions/${item.id}/reject`,
+        permission: ADMISSION.approve,
+        submitLabel: "Reject",
+        successMessage: "Admission rejected.",
+        fields: [
+          {
+            name: "rejection_reason",
+            label: "Rejection reason",
+            type: "textarea",
+            required: true,
+          },
+        ],
+      },
+      {
+        label: "Enroll",
+        path: (item) => `/v1/admissions/${item.id}/enroll`,
+        permission: ADMISSION.approve,
+        submitLabel: "Enroll student",
+        successMessage: "Admission enrolled.",
+        fields: [
+          {
+            name: "academic_year_id",
+            label: "Academic year",
+            type: "lookup",
+            lookup: "academicYears",
+            required: true,
+          },
+          {
+            name: "class_room_id",
+            label: "Class",
+            type: "lookup",
+            lookup: "classRooms",
+            required: true,
+          },
+          {
+            name: "section_id",
+            label: "Section",
+            type: "lookup",
+            lookup: "sections",
+            dependsOn: "class_room_id",
+          },
+          { name: "roll_number", label: "Roll number", type: "text" },
+          { name: "admission_no", label: "Admission no", type: "text" },
+          { name: "starts_on", label: "Starts on", type: "date" },
+        ],
+      },
+    ],
+  },
+  {
+    key: "students",
+    section: SECTIONS.admissionsStudents,
+    label: "Students",
+    endpoint: "/v1/students",
+    permissions: STUDENT,
+    searchable: true,
+    filters: [
+      { param: "status", label: "Status", options: STUDENT_STATUS },
+      { param: "gender", label: "Gender", options: GENDER },
+    ],
+    columns: [
+      { key: "admission_no", label: "Admission no" },
+      { key: "full_name", label: "Name" },
+      { key: "gender", label: "Gender" },
+      { key: "date_of_birth", label: "Date of birth", format: "date" },
+      { key: "status", label: "Status", format: "badge" },
+    ],
+    fields: [
+      {
+        name: "admission_no",
+        label: "Admission no",
+        type: "text",
+        hint: "Leave blank to auto-generate.",
+      },
+      { name: "first_name", label: "First name", type: "text", required: true },
+      { name: "last_name", label: "Last name", type: "text", required: true },
+      { name: "gender", label: "Gender", type: "select", options: GENDER, required: true },
+      { name: "date_of_birth", label: "Date of birth", type: "date" },
+      { name: "blood_group", label: "Blood group", type: "text" },
+      { name: "nationality", label: "Nationality", type: "text" },
+      { name: "religion", label: "Religion", type: "text" },
+      { name: "category", label: "Category", type: "text" },
+      { name: "national_id", label: "National ID", type: "text" },
+      { name: "email", label: "Email", type: "email" },
+      { name: "phone", label: "Phone", type: "text" },
+      { name: "city", label: "City", type: "text" },
+      { name: "previous_school", label: "Previous school", type: "text" },
+      { name: "admission_date", label: "Admission date", type: "date" },
+      { name: "status", label: "Status", type: "select", options: STUDENT_STATUS },
+      { name: "address", label: "Address", type: "textarea" },
+      { name: "notes", label: "Notes", type: "textarea" },
+      {
+        name: "photo_path",
+        label: "Photo",
+        type: "photo",
+        path: "/v1/students/{id}/photo",
+      },
+    ],
+    detailSections: [guardianSection(), enrollmentSection()],
+    deleteMessage: "Archive this student?",
+    actions: [
+      {
+        label: "Withdraw",
+        path: (item) => `/v1/students/${item.id}/withdraw`,
+        permission: STUDENT.approve,
+        submitLabel: "Confirm withdrawal",
+        successMessage: "Student withdrawn.",
+        fields: [
+          {
+            name: "status",
+            label: "Outcome",
+            type: "select",
+            options: [
+              { value: "withdrawn", label: "Withdrawn" },
+              { value: "transferred", label: "Transferred" },
+            ],
+          },
+          { name: "date", label: "Effective date", type: "date" },
+          { name: "notes", label: "Notes", type: "textarea" },
+        ],
+      },
+    ],
+  },
+  {
+    key: "guardians",
+    section: SECTIONS.admissionsStudents,
+    label: "Guardians",
+    endpoint: "/v1/guardians",
+    permissions: STUDENT,
+    searchable: true,
+    columns: [
+      { key: "name", label: "Name" },
+      { key: "phone", label: "Phone" },
+      { key: "email", label: "Email" },
+      { key: "occupation", label: "Occupation" },
+      { key: "national_id", label: "National ID" },
+    ],
+    fields: [
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "national_id", label: "National ID", type: "text" },
+      { name: "occupation", label: "Occupation", type: "text" },
+      { name: "email", label: "Email", type: "email" },
+      { name: "phone", label: "Phone", type: "text", required: true },
+      { name: "alternate_phone", label: "Alternate phone", type: "text" },
+      { name: "address", label: "Address", type: "textarea" },
+    ],
+    deleteMessage: "Archive this guardian?",
+  },
+  {
+    key: "student-enrollments",
+    section: SECTIONS.admissionsStudents,
+    label: "Enrollments",
+    endpoint: "/v1/student-enrollments",
+    permissions: STUDENT,
+    filters: [{ param: "status", label: "Status", options: ENROLLMENT_STATUS }],
+    columns: [
+      { key: "student.full_name", label: "Student" },
+      { key: "academic_year.name", label: "Academic year" },
+      { key: "class_room.name", label: "Class" },
+      { key: "section.name", label: "Section" },
+      { key: "roll_number", label: "Roll no" },
+      { key: "status", label: "Status", format: "badge" },
+    ],
+    fields: [
+      {
+        name: "student_id",
+        label: "Student",
+        type: "lookup",
+        lookup: "students",
+        required: true,
+        displayKey: "student.full_name",
+      },
+      {
+        name: "academic_year_id",
+        label: "Academic year",
+        type: "lookup",
+        lookup: "academicYears",
+        required: true,
+        displayKey: "academic_year.name",
+      },
+      {
+        name: "class_room_id",
+        label: "Class",
+        type: "lookup",
+        lookup: "classRooms",
+        required: true,
+        displayKey: "class_room.name",
+      },
+      {
+        name: "section_id",
+        label: "Section",
+        type: "lookup",
+        lookup: "sections",
+        dependsOn: "class_room_id",
+        displayKey: "section.name",
+      },
+      { name: "roll_number", label: "Roll number", type: "text" },
+      { name: "status", label: "Status", type: "select", options: ENROLLMENT_STATUS },
+      { name: "starts_on", label: "Starts on", type: "date" },
+      { name: "ends_on", label: "Ends on", type: "date" },
+      { name: "notes", label: "Notes", type: "textarea" },
+    ],
+    deleteMessage: "Remove this enrollment?",
+  },
+  {
+    key: "scholarships",
+    section: SECTIONS.admissionsStudents,
+    label: "Scholarships",
+    endpoint: "/v1/scholarships",
+    permissions: SCHOLARSHIP,
+    searchable: true,
+    filters: [
+      { param: "type", label: "Type", options: SCHOLARSHIP_TYPE },
+      { param: "is_active", label: "Status", options: BOOL_STATUS },
+    ],
+    columns: [
+      { key: "name", label: "Name" },
+      { key: "code", label: "Code" },
+      { key: "type_label", label: "Type" },
+      {
+        label: "Discount",
+        align: "right",
+        render: (item) => {
+          const type = String(item.discount_type ?? "");
+          const value = item.value ?? "";
+          return `${type === "percentage" ? `${value}%` : String(value)}`;
+        },
+      },
+      { key: "sponsor", label: "Sponsor" },
+      { key: "is_active", label: "Active", format: "badge" },
+    ],
+    fields: [
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "code", label: "Code", type: "text", required: true },
+      {
+        name: "type",
+        label: "Type",
+        type: "select",
+        options: SCHOLARSHIP_TYPE,
+        required: true,
+      },
+      {
+        name: "discount_type",
+        label: "Discount type",
+        type: "select",
+        options: DISCOUNT_TYPE,
+        required: true,
+      },
+      { name: "value", label: "Value", type: "number", required: true, min: 0, step: 0.01 },
+      {
+        name: "academic_year_id",
+        label: "Academic year",
+        type: "lookup",
+        lookup: "academicYears",
+        displayKey: "academic_year",
+      },
+      { name: "sponsor", label: "Sponsor", type: "text" },
+      { name: "description", label: "Description", type: "textarea" },
+      { name: "is_active", label: "Active", type: "checkbox" },
+    ],
+    deleteMessage: "Archive this scholarship?",
+  },
+  {
+    key: "scholarship-awards",
+    section: SECTIONS.admissionsStudents,
+    label: "Scholarship awards",
+    endpoint: "/v1/scholarship-awards",
+    permissions: SCHOLARSHIP,
+    filters: [{ param: "status", label: "Status", options: AWARD_STATUS }],
+    columns: [
+      { key: "student.name", label: "Student" },
+      { key: "scholarship.name", label: "Scholarship" },
+      { key: "awarded_on", label: "Awarded", format: "date" },
+      { key: "effective_value", label: "Value", align: "right" },
+      { key: "status", label: "Status", format: "badge" },
+    ],
+    fields: [
+      {
+        name: "scholarship_id",
+        label: "Scholarship",
+        type: "lookup",
+        lookup: "scholarships",
+        required: true,
+        displayKey: "scholarship.name",
+      },
+      {
+        name: "student_id",
+        label: "Student",
+        type: "lookup",
+        lookup: "students",
+        required: true,
+        displayKey: "student.name",
+      },
+      {
+        name: "academic_year_id",
+        label: "Academic year",
+        type: "lookup",
+        lookup: "academicYears",
+      },
+      { name: "awarded_on", label: "Awarded on", type: "date" },
+      { name: "value_override", label: "Value override", type: "number", min: 0, step: 0.01 },
+      { name: "status", label: "Status", type: "select", options: AWARD_STATUS },
+      { name: "notes", label: "Notes", type: "textarea" },
+    ],
+    deleteMessage: "Archive this scholarship award?",
+    actions: [
+      {
+        label: "Revoke",
+        path: (item) => `/v1/scholarship-awards/${item.id}/revoke`,
+        permission: SCHOLARSHIP.approve,
+        submitLabel: "Revoke award",
+        successMessage: "Scholarship award revoked.",
+        fields: [{ name: "notes", label: "Notes", type: "textarea" }],
+      },
     ],
   },
 ];

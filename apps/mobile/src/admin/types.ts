@@ -53,6 +53,13 @@ export interface LookupFieldConfig extends BaseFieldConfig {
   dependsOn?: string;
 }
 
+export interface PhotoFieldConfig extends BaseFieldConfig {
+  type: "photo";
+  path: string;
+  fileField?: string;
+  urlKey?: string;
+}
+
 export type FieldConfig =
   | TextFieldConfig
   | NumberFieldConfig
@@ -60,7 +67,10 @@ export type FieldConfig =
   | TimeFieldConfig
   | SelectFieldConfig
   | CheckboxFieldConfig
-  | LookupFieldConfig;
+  | LookupFieldConfig
+  | PhotoFieldConfig;
+
+export type InputFieldConfig = Exclude<FieldConfig, PhotoFieldConfig>;
 
 export type ColumnFormat = "text" | "number" | "money" | "date" | "badge";
 
@@ -85,6 +95,9 @@ export interface ActionConfig<T = AdminRecord> {
   body?: Record<string, unknown> | ((item: T) => Record<string, unknown>);
   confirm?: string;
   permission?: string;
+  fields?: InputFieldConfig[];
+  submitLabel?: string;
+  successMessage?: string;
 }
 
 export interface ModulePermissions {
@@ -92,9 +105,15 @@ export interface ModulePermissions {
   create?: string;
   edit?: string;
   delete?: string;
+  photo?: string;
 }
 
 export type AdminRecord = Record<string, unknown>;
+
+export interface DetailSection<T = AdminRecord> {
+  title: string;
+  render: (item: T) => ReactNode;
+}
 
 export interface ModuleConfig<T extends AdminRecord = AdminRecord> {
   key: string;
@@ -106,6 +125,7 @@ export interface ModuleConfig<T extends AdminRecord = AdminRecord> {
   filters?: FilterConfig[];
   columns: ColumnConfig<T>[];
   fields: FieldConfig[];
+  detailSections?: DetailSection<T>[];
   deleteMessage?: string;
   actions?: ActionConfig<T>[];
 }

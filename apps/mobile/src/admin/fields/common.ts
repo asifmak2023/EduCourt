@@ -1,7 +1,7 @@
-import type { FieldConfig } from "../types";
+import type { InputFieldConfig } from "../types";
 
 export interface FieldInputProps {
-  field: FieldConfig;
+  field: InputFieldConfig;
   value: unknown;
   onChange: (value: unknown) => void;
   error?: string;

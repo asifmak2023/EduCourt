@@ -1,70 +1,17 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../theme/ThemeProvider";
 import { Card, ErrorText, GhostButton, PrimaryButton } from "../components/ui";
 import { ApiError, apiFetch } from "../lib/api";
 import { useCampusId } from "../lib/campus";
+import { buildPayload, initialValues, mergeRecord } from "./form";
 import { Field } from "./fields/Field";
 import { useResource } from "./useResource";
-import type { AdminRecord, FieldConfig, ModuleConfig } from "./types";
-
-function initialValues(fields: FieldConfig[]): Record<string, unknown> {
-  const values: Record<string, unknown> = {};
-  for (const field of fields) {
-    values[field.name] = field.type === "checkbox" ? Boolean(field.defaultValue) : "";
-  }
-  return values;
-}
-
-function mergeRecord(
-  fields: FieldConfig[],
-  record: AdminRecord
-): Record<string, unknown> {
-  const values = initialValues(fields);
-  for (const field of fields) {
-    if (record[field.name] !== undefined) {
-      values[field.name] = record[field.name];
-    }
-  }
-  return values;
-}
-
-function buildPayload(
-  fields: FieldConfig[],
-  values: Record<string, unknown>,
-  editing: boolean
-): Record<string, unknown> {
-  const payload: Record<string, unknown> = {};
-
-  for (const field of fields) {
-    if (editing && field.readOnlyOnEdit) {
-      continue;
-    }
-
-    const value = values[field.name];
-
-    if (field.type === "checkbox") {
-      payload[field.name] = Boolean(value);
-      continue;
-    }
-
-    if (field.type === "number") {
-      if (value === "" || value === null || value === undefined) {
-        continue;
-      }
-      payload[field.name] = Number(value);
-      continue;
-    }
-
-    if (value === "" || value === null || value === undefined) {
-      continue;
-    }
-
-    payload[field.name] = typeof value === "string" ? value.trim() : value;
-  }
-
-  return payload;
-}
+import type {
+  AdminRecord,
+  InputFieldConfig,
+  ModuleConfig,
+} from "./types";
 
 export function ModuleFormScreen({
   config,
@@ -90,8 +37,17 @@ export function ModuleFormScreen({
   const [banner, setBanner] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const inputFields = useMemo(
+    () =>
+      config.fields.filter(
+        (field): field is InputFieldConfig => field.type !== "photo"
+      ),
+    [config.fields]
+  );
+
   const values: Record<string, unknown> =
-    edited ?? (data ? mergeRecord(config.fields, data) : initialValues(config.fields));
+    edited ??
+    (data ? mergeRecord(inputFields, data) : initialValues(inputFields));
 
   const setValue = useCallback(
     (name: string, value: unknown) => {
@@ -102,7 +58,7 @@ export function ModuleFormScreen({
 
   const submit = useCallback(async () => {
     const nextErrors: Record<string, string[]> = {};
-    for (const field of config.fields) {
+    for (const field of inputFields) {
       if (!field.required) {
         continue;
       }
@@ -122,7 +78,7 @@ export function ModuleFormScreen({
     setBanner(null);
 
     try {
-      const payload = buildPayload(config.fields, values, editing);
+      const payload = buildPayload(inputFields, values, editing);
       const response = editing
         ? await apiFetch<{ data: AdminRecord }>(`${config.endpoint}/${recordId}`, {
             method: "PUT",
@@ -145,7 +101,7 @@ export function ModuleFormScreen({
     } finally {
       setSaving(false);
     }
-  }, [config, values, editing, recordId, campusId, onSaved]);
+  }, [inputFields, config.endpoint, values, editing, recordId, campusId, onSaved]);
 
   if (editing && loading) {
     return <ActivityIndicator color={colors.accent} style={styles.loader} />;
@@ -160,7 +116,7 @@ export function ModuleFormScreen({
       ) : null}
 
       <Card>
-        {config.fields.map((field) => (
+        {inputFields.map((field) => (
           <Field
             key={field.name}
             field={field}

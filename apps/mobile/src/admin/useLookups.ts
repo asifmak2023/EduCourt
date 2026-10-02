@@ -22,6 +22,9 @@ const LOOKUPS: Record<string, LookupDef> = {
   },
   subjects: { endpoint: "/v1/subjects", labelKey: "name" },
   staffUsers: { endpoint: "/v1/users", labelKey: "name" },
+  students: { endpoint: "/v1/students", labelKey: "full_name" },
+  guardians: { endpoint: "/v1/guardians", labelKey: "name" },
+  scholarships: { endpoint: "/v1/scholarships", labelKey: "name" },
 };
 
 const cache = new Map<string, SelectOption[]>();

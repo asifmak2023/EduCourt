@@ -96,6 +96,7 @@ use App\Http\Controllers\Api\PayrollAdjustmentController;
 use App\Http\Controllers\Api\PayrollRunController;
 use App\Http\Controllers\Api\PeriodController;
 use App\Http\Controllers\Api\PlatformReportController;
+use App\Http\Controllers\Api\PortalController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\PtmBookingController;
 use App\Http\Controllers\Api\PtmEventController;
@@ -182,6 +183,18 @@ Route::prefix('v1')->group(function () {
         Route::get('auth/me', [ProfileController::class, 'show']);
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::post('auth/sso/{provider}/logout', [SsoAuthController::class, 'logout']);
+
+        Route::prefix('me')->group(function () {
+            Route::get('children', [PortalController::class, 'children']);
+            Route::get('timetable', [PortalController::class, 'timetable'])
+                ->middleware('permission:timetable.view');
+            Route::get('attendance', [PortalController::class, 'attendance'])
+                ->middleware('permission:attendance.view');
+            Route::get('results', [PortalController::class, 'results'])
+                ->middleware('permission:exam.view');
+            Route::get('fees', [PortalController::class, 'fees'])
+                ->middleware('permission:fee.view');
+        });
 
         Route::get('sso-providers', [SsoProviderController::class, 'index'])->middleware('permission:setting.view');
         Route::post('sso-providers', [SsoProviderController::class, 'store'])->middleware('permission:setting.edit');

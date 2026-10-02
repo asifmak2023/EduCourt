@@ -230,21 +230,13 @@ function buildTabs(user: AuthUser | null, portal: boolean): { key: TabKey; label
     return tabs;
   }
 
-  const has = (permission: string) => user.permissions.includes(permission);
-
   if (portal) {
-    if (has("timetable.view")) {
-      tabs.push({ key: "timetable", label: "Timetable" });
-    }
-    if (has("attendance.view")) {
-      tabs.push({ key: "attendance", label: "Attendance" });
-    }
-    if (has("exam.view")) {
-      tabs.push({ key: "results", label: "Results" });
-    }
-    if (has("fee.view")) {
-      tabs.push({ key: "fees", label: "Fees" });
-    }
+    tabs.push(
+      { key: "timetable", label: "Timetable" },
+      { key: "attendance", label: "Attendance" },
+      { key: "results", label: "Results" },
+      { key: "fees", label: "Fees" }
+    );
   }
 
   tabs.push({ key: "profile", label: "Profile" });

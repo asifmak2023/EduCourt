@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "@eis/i18n";
 import { useTheme } from "../theme/ThemeProvider";
 import type { AdminRecord, DetailSection } from "./types";
 
@@ -32,10 +33,11 @@ function asEnrollments(item: AdminRecord): Enrollment[] {
 
 export function GuardianList({ item }: { item: AdminRecord }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const guardians = asGuardians(item);
 
   if (guardians.length === 0) {
-    return <Text style={[styles.empty, { color: colors.muted }]}>No guardians linked.</Text>;
+    return <Text style={[styles.empty, { color: colors.muted }]}>{t("admin.relations.noGuardians")}</Text>;
   }
 
   return (
@@ -45,8 +47,8 @@ export function GuardianList({ item }: { item: AdminRecord }) {
           .filter(Boolean)
           .join(" · ");
         const flags = [
-          guardian.is_primary ? "Primary" : null,
-          guardian.is_emergency_contact ? "Emergency" : null,
+          guardian.is_primary ? t("admin.relations.primary") : null,
+          guardian.is_emergency_contact ? t("admin.relations.emergency") : null,
         ]
           .filter(Boolean)
           .join(" · ");
@@ -74,10 +76,11 @@ export function GuardianList({ item }: { item: AdminRecord }) {
 
 export function EnrollmentList({ item }: { item: AdminRecord }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const enrollments = asEnrollments(item);
 
   if (enrollments.length === 0) {
-    return <Text style={[styles.empty, { color: colors.muted }]}>No enrollments recorded.</Text>;
+    return <Text style={[styles.empty, { color: colors.muted }]}>{t("admin.relations.noEnrollments")}</Text>;
   }
 
   return (
@@ -92,7 +95,7 @@ export function EnrollmentList({ item }: { item: AdminRecord }) {
         const detail = [
           enrollment.academic_year?.name,
           enrollment.status,
-          enrollment.roll_number ? `Roll ${enrollment.roll_number}` : null,
+          enrollment.roll_number ? t("admin.relations.roll", { number: enrollment.roll_number }) : null,
         ]
           .filter(Boolean)
           .join(" · ");
@@ -103,7 +106,7 @@ export function EnrollmentList({ item }: { item: AdminRecord }) {
             style={[styles.row, { borderColor: colors.border, backgroundColor: colors.surface }]}
           >
             <Text style={{ color: colors.foreground, fontWeight: "600" }}>
-              {placement || "Unassigned"}
+              {placement || t("common.unassigned")}
             </Text>
             {detail ? (
               <Text style={{ color: colors.muted, fontSize: 13 }}>{detail}</Text>

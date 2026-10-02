@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useTranslation, type MessageKey, type TranslateFn } from "@eis/i18n";
 import {
   ActivityIndicator,
   Modal,
@@ -12,6 +13,7 @@ import { Card, ErrorText, GhostButton, PrimaryButton, SectionLabel } from "../co
 import { apiFetch } from "../lib/api";
 import { useCampusId } from "../lib/campus";
 import { formatDate } from "../lib/format";
+import { useTr } from "../lib/i18n";
 import { can } from "../lib/nav";
 import { ActionFormModal } from "./ActionFormModal";
 import { getPath } from "./display";
@@ -26,15 +28,23 @@ import type {
   PhotoFieldConfig,
 } from "./types";
 
-function displayValue(field: FieldConfig, value: unknown): string {
+function displayValue(
+  field: FieldConfig,
+  value: unknown,
+  t: TranslateFn<MessageKey>,
+  tr: (value: string | undefined | null) => string
+): string {
   if (value === null || value === undefined || value === "") {
     return "-";
   }
   if (field.type === "checkbox") {
-    return value ? "Yes" : "No";
+    return value ? t("common.yes") : t("common.no");
   }
   if (field.type === "select") {
-    return field.options.find((option) => String(option.value) === String(value))?.label ?? String(value);
+    const option = field.options.find(
+      (option) => String(option.value) === String(value)
+    );
+    return option ? tr(option.label) : String(value);
   }
   if (field.type === "date") {
     return formatDate(String(value));
@@ -59,6 +69,8 @@ export function ModuleDetailScreen({
   onDeleted: () => void;
 }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  const tr = useTr();
   const campusId = useCampusId();
   const { data, loading, error, reload } = useResource<AdminRecord>(config.endpoint, id);
   const [pending, setPending] = useState<{ message: string; run: () => Promise<void> } | null>(null);
@@ -83,11 +95,11 @@ export function ModuleDetailScreen({
       await apiFetch(`${config.endpoint}/${id}`, { method: "DELETE", campusId });
       onDeleted();
     } catch {
-      setActionError("Unable to delete this record.");
+      setActionError(t("admin.detail.deleteFailed"));
     } finally {
       setBusy(false);
     }
-  }, [config.endpoint, id, campusId, onDeleted]);
+  }, [config.endpoint, id, campusId, onDeleted, t]);
 
   if (loading) {
     return <ActivityIndicator color={colors.accent} style={styles.loader} />;
@@ -96,8 +108,8 @@ export function ModuleDetailScreen({
   if (error || !data) {
     return (
       <View style={styles.padded}>
-        <ErrorText message={error ?? "Record not found."} />
-        <GhostButton label="Retry" onPress={reload} />
+        <ErrorText message={error ?? t("admin.detail.notFound")} />
+        <GhostButton label={t("common.retry")} onPress={reload} />
       </View>
     );
   }
@@ -118,11 +130,11 @@ export function ModuleDetailScreen({
       <Card>
         {textFields.map((field) => (
           <View key={field.name} style={styles.row}>
-            <SectionLabel>{field.label}</SectionLabel>
+            <SectionLabel>{tr(field.label)}</SectionLabel>
             <Text style={[styles.value, { color: colors.foreground }]}>
               {field.displayKey
                 ? String(getPath(data, field.displayKey) ?? "-")
-                : displayValue(field, getPath(data, field.name))}
+                : displayValue(field, getPath(data, field.name), t, tr)}
             </Text>
           </View>
         ))}
@@ -141,7 +153,7 @@ export function ModuleDetailScreen({
 
       {config.detailSections?.map((section) => (
         <View key={section.title} style={styles.section}>
-          <SectionLabel>{section.title}</SectionLabel>
+          <SectionLabel>{tr(section.title)}</SectionLabel>
           <View style={styles.sectionBody}>
             {section.render(data, { permissions, campusId })}
           </View>
@@ -156,7 +168,7 @@ export function ModuleDetailScreen({
           return (
             <GhostButton
               key={action.label}
-              label={action.label}
+              label={tr(action.label)}
               onPress={() => setActionForm(action)}
             />
           );
@@ -164,17 +176,23 @@ export function ModuleDetailScreen({
         return (
           <GhostButton
             key={action.label}
-            label={action.label}
+            label={tr(action.label)}
             onPress={() =>
               setPending({
-                message: action.confirm ?? `Run "${action.label}"?`,
+                message: action.confirm
+                  ? tr(action.confirm)
+                  : t("admin.detail.confirmAction", { label: tr(action.label) }),
                 run: async () => {
                   const path =
                     typeof action.path === "function" ? action.path(data) : action.path;
                   const body =
                     typeof action.body === "function" ? action.body(data) : action.body;
                   await apiFetch(path, { method: action.method ?? "POST", body, campusId });
-                  setNotice(action.successMessage ?? `${action.label} successful.`);
+                  setNotice(
+                    action.successMessage
+                      ? tr(action.successMessage)
+                      : t("admin.detail.actionSuccess", { label: tr(action.label) })
+                  );
                   reload();
                 },
               })
@@ -184,15 +202,17 @@ export function ModuleDetailScreen({
       })}
 
       {canEdit ? (
-        <PrimaryButton label="Edit" onPress={onEdit} />
+        <PrimaryButton label={t("common.edit")} onPress={onEdit} />
       ) : null}
       {canDelete ? (
         <GhostButton
-          label="Delete"
+          label={t("common.delete")}
           tone="danger"
           onPress={() =>
             setPending({
-              message: config.deleteMessage ?? "Delete this record? This cannot be undone.",
+              message: config.deleteMessage
+                ? tr(config.deleteMessage)
+                : t("admin.detail.confirmDelete"),
               run: runDelete,
             })
           }
@@ -208,7 +228,7 @@ export function ModuleDetailScreen({
                 onPress={() => setPending(null)}
                 style={[styles.dialogButton, { borderColor: colors.border }]}
               >
-                <Text style={{ color: colors.foreground, fontWeight: "600" }}>Cancel</Text>
+                <Text style={{ color: colors.foreground, fontWeight: "600" }}>{t("common.cancel")}</Text>
               </Pressable>
               <Pressable
                 disabled={busy}
@@ -224,7 +244,7 @@ export function ModuleDetailScreen({
                 {busy ? (
                   <ActivityIndicator color={colors.accentForeground} />
                 ) : (
-                  <Text style={{ color: colors.accentForeground, fontWeight: "600" }}>Confirm</Text>
+                  <Text style={{ color: colors.accentForeground, fontWeight: "600" }}>{t("common.confirm")}</Text>
                 )}
               </Pressable>
             </View>
@@ -251,7 +271,11 @@ export function ModuleDetailScreen({
               campusId,
             });
             setActionForm(null);
-            setNotice(actionForm.successMessage ?? `${actionForm.label} successful.`);
+            setNotice(
+              actionForm.successMessage
+                ? tr(actionForm.successMessage)
+                : t("admin.detail.actionSuccess", { label: tr(actionForm.label) })
+            );
             reload();
           }}
         />

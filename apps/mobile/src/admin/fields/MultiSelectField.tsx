@@ -4,6 +4,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useTr } from "../../lib/i18n";
 import { useTheme } from "../../theme/ThemeProvider";
 import type { SelectOption } from "../types";
 
@@ -23,6 +24,7 @@ export function MultiSelectField({
   required?: boolean;
 }) {
   const { colors } = useTheme();
+  const tr = useTr();
   const selected = Array.isArray(value) ? value.map(String) : [];
 
   const toggle = (optionValue: string) => {
@@ -35,7 +37,7 @@ export function MultiSelectField({
   return (
     <View style={styles.field}>
       <Text style={[styles.label, { color: colors.muted }]}>
-        {label}
+        {tr(label)}
         {required ? " *" : ""}
       </Text>
       <View style={styles.row}>
@@ -56,7 +58,7 @@ export function MultiSelectField({
               ]}
             >
               <Text style={{ color: active ? colors.accent : colors.muted, fontSize: 14 }}>
-                {option.label}
+                {tr(option.label)}
               </Text>
             </Pressable>
           );

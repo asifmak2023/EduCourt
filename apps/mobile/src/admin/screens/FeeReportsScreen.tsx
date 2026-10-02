@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useTranslation, type MessageKey } from "@eis/i18n";
 import {
   ActivityIndicator,
   Pressable,
@@ -46,14 +47,15 @@ interface ClassRow {
   collection_rate: number;
 }
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: "defaulters", label: "Defaulters" },
-  { key: "collection", label: "Collection" },
-  { key: "class", label: "Class summary" },
+const TABS: { key: Tab; label: MessageKey }[] = [
+  { key: "defaulters", label: "admin.feeReports.tabDefaulters" },
+  { key: "collection", label: "admin.feeReports.tabCollection" },
+  { key: "class", label: "admin.feeReports.tabClass" },
 ];
 
 export function FeeReportsScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const campusId = useCampusId();
 
   const [tab, setTab] = useState<Tab>("defaulters");
@@ -65,7 +67,7 @@ export function FeeReportsScreen() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [summary, setSummary] = useState<{ label: string; value: string }[]>([]);
+  const [summary, setSummary] = useState<{ label: MessageKey; value: string }[]>([]);
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -84,9 +86,9 @@ export function FeeReportsScreen() {
           data: DefaulterRow[];
         }>(`/v1/fee-reports/defaulters?${params.toString()}`, { campusId });
         setSummary([
-          { label: "Students", value: String(response.summary.students) },
-          { label: "Vouchers", value: String(response.summary.vouchers) },
-          { label: "Outstanding", value: formatMoney(response.summary.outstanding) },
+          { label: "admin.feeReports.students", value: String(response.summary.students) },
+          { label: "admin.feeReports.vouchers", value: String(response.summary.vouchers) },
+          { label: "fees.outstanding", value: formatMoney(response.summary.outstanding) },
         ]);
         setRows(response.data as unknown as Record<string, unknown>[]);
       } else if (tab === "collection") {
@@ -99,8 +101,8 @@ export function FeeReportsScreen() {
           by_method: CollectionMethod[];
         }>(`/v1/fee-reports/collection?${params.toString()}`, { campusId });
         setSummary([
-          { label: "Payments", value: String(response.count) },
-          { label: "Collected", value: formatMoney(response.total) },
+          { label: "admin.feeReports.payments", value: String(response.count) },
+          { label: "admin.feeReports.collected", value: formatMoney(response.total) },
         ]);
         setRows(response.by_method as unknown as Record<string, unknown>[]);
       } else {
@@ -112,20 +114,20 @@ export function FeeReportsScreen() {
           data: ClassRow[];
         }>(`/v1/fee-reports/classes/summary?${params.toString()}`, { campusId });
         setSummary([
-          { label: "Classes", value: String(response.summary.classes) },
-          { label: "Billed", value: formatMoney(response.summary.billed) },
-          { label: "Collected", value: formatMoney(response.summary.collected) },
-          { label: "Outstanding", value: formatMoney(response.summary.outstanding) },
+          { label: "admin.feeReports.classes", value: String(response.summary.classes) },
+          { label: "fees.billed", value: formatMoney(response.summary.billed) },
+          { label: "admin.feeReports.collected", value: formatMoney(response.summary.collected) },
+          { label: "fees.outstanding", value: formatMoney(response.summary.outstanding) },
         ]);
         setRows(response.data as unknown as Record<string, unknown>[]);
       }
       setLoaded(true);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "Unable to load the report.");
+      setError(caught instanceof ApiError ? caught.message : t("admin.report.loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [tab, academicYearId, classRoomId, overdueOnly, from, to, campusId]);
+  }, [tab, academicYearId, classRoomId, overdueOnly, from, to, campusId, t]);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -151,7 +153,7 @@ export function FeeReportsScreen() {
               ]}
             >
               <Text style={{ color: active ? colors.accent : colors.muted, fontSize: 13, fontWeight: "600" }}>
-                {item.label}
+                {t(item.label)}
               </Text>
             </Pressable>
           );
@@ -203,11 +205,11 @@ export function FeeReportsScreen() {
                 <Text style={{ color: colors.accentForeground, fontSize: 12, fontWeight: "700" }}>x</Text>
               ) : null}
             </View>
-            <Text style={{ color: colors.foreground, fontSize: 14 }}>Overdue only</Text>
+            <Text style={{ color: colors.foreground, fontSize: 14 }}>{t("admin.feeReports.overdueOnly")}</Text>
           </Pressable>
         ) : null}
 
-        <PrimaryButton label="Run report" onPress={() => void load()} loading={loading} />
+        <PrimaryButton label={t("admin.report.run")} onPress={() => void load()} loading={loading} />
       </Card>
 
       {summary.length > 0 ? (
@@ -218,7 +220,7 @@ export function FeeReportsScreen() {
               style={[styles.metric, { borderColor: colors.border, backgroundColor: colors.surface }]}
             >
               <Text style={{ color: colors.muted, fontSize: 11, textTransform: "uppercase" }}>
-                {item.label}
+                {t(item.label)}
               </Text>
               <Text style={{ color: colors.foreground, fontSize: 16, fontWeight: "700" }}>
                 {item.value}
@@ -232,13 +234,13 @@ export function FeeReportsScreen() {
 
       {loaded ? (
         <View style={styles.results}>
-          <SectionLabel>{`${rows.length} row${rows.length === 1 ? "" : "s"}`}</SectionLabel>
-          {rows.length === 0 ? <EmptyState message="No data for this report." /> : null}
+          <SectionLabel>{t("admin.report.rows", { count: rows.length })}</SectionLabel>
+          {rows.length === 0 ? <EmptyState message={t("admin.report.empty")} /> : null}
           {tab === "defaulters"
             ? (rows as unknown as DefaulterRow[]).map((row) => (
                 <Card key={`${row.student_id}-${row.class ?? ""}`}>
                   <Text style={{ color: colors.foreground, fontWeight: "600", fontSize: 14 }}>
-                    {row.student ?? `Student #${row.student_id}`}
+                    {row.student ?? t("admin.feeReports.studentHash", { id: row.student_id })}
                   </Text>
                   <Text style={{ color: colors.muted, fontSize: 12, marginTop: 2 }}>
                     {[row.admission_no, row.class, row.section].filter(Boolean).join(" · ")}
@@ -248,7 +250,7 @@ export function FeeReportsScreen() {
                       {formatMoney(row.outstanding)}
                     </Text>
                     <Text style={{ color: colors.muted, fontSize: 12 }}>
-                      {row.vouchers} voucher(s) · {row.max_days_overdue} day(s) overdue
+                      {t("admin.feeReports.overdueSummary", { vouchers: row.vouchers, days: row.max_days_overdue })}
                     </Text>
                   </View>
                 </Card>
@@ -266,7 +268,7 @@ export function FeeReportsScreen() {
                     </Text>
                   </View>
                   <Text style={{ color: colors.muted, fontSize: 12, marginTop: 4 }}>
-                    {row.count} payment(s)
+                    {t("admin.feeReports.paymentCount", { count: row.count })}
                   </Text>
                 </Card>
               ))
@@ -276,7 +278,7 @@ export function FeeReportsScreen() {
                 <Card key={String(row.class_room_id ?? row.class)}>
                   <View style={styles.resultMeta}>
                     <Text style={{ color: colors.foreground, fontWeight: "600", fontSize: 14 }}>
-                      {row.class ?? "Unassigned"}
+                      {row.class ?? t("common.unassigned")}
                     </Text>
                     <StatusPill
                       value={row.collection_rate >= 100 ? "paid" : row.collection_rate > 0 ? "partial" : "unpaid"}
@@ -284,10 +286,13 @@ export function FeeReportsScreen() {
                     />
                   </View>
                   <Text style={{ color: colors.muted, fontSize: 12, marginTop: 4 }}>
-                    {row.students} student(s) · billed {formatMoney(row.billed)}
+                    {t("admin.feeReports.classSummary", { students: row.students, billed: formatMoney(row.billed) })}
                   </Text>
                   <Text style={{ color: colors.foreground, fontSize: 13, marginTop: 4, fontWeight: "600" }}>
-                    Collected {formatMoney(row.collected)} · Outstanding {formatMoney(row.outstanding)}
+                    {t("admin.feeReports.collectedOutstanding", {
+                      collected: formatMoney(row.collected),
+                      outstanding: formatMoney(row.outstanding),
+                    })}
                   </Text>
                 </Card>
               ))

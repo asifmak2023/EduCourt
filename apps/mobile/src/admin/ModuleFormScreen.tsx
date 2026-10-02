@@ -1,9 +1,11 @@
 import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "@eis/i18n";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../theme/ThemeProvider";
 import { Card, ErrorText, GhostButton, PrimaryButton } from "../components/ui";
 import { ApiError, apiFetch } from "../lib/api";
 import { useCampusId } from "../lib/campus";
+import { useTr } from "../lib/i18n";
 import {
   groupToggleKey,
   initialValues,
@@ -30,6 +32,8 @@ export function ModuleFormScreen({
   onCancel: () => void;
 }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  const tr = useTr();
   const campusId = useCampusId();
   const editing = recordId !== null && recordId !== undefined;
   const { data, loading } = useResource<AdminRecord>(
@@ -74,16 +78,16 @@ export function ModuleFormScreen({
       }
       const value = values[field.name];
       if (value === "" || value === null || value === undefined) {
-        nextErrors[field.name] = ["This field is required."];
+        nextErrors[field.name] = [t("errors.required")];
       }
     }
     Object.assign(
       nextErrors,
-      validateNestedFields(config.fields, values, editing)
+      validateNestedFields(config.fields, values, editing, { t, tr })
     );
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
-      setBanner("Please fix the highlighted fields.");
+      setBanner(t("admin.form.fixErrors"));
       return;
     }
 
@@ -122,12 +126,12 @@ export function ModuleFormScreen({
         setErrors(caught.errors ?? {});
         setBanner(caught.message);
       } else {
-        setBanner("Unable to save. Please try again.");
+        setBanner(t("admin.form.saveFailed"));
       }
     } finally {
       setSaving(false);
     }
-  }, [inputFields, config, values, editing, recordId, campusId, onSaved]);
+  }, [inputFields, config, values, editing, recordId, campusId, onSaved, t, tr]);
 
   if (editing && loading) {
     return <ActivityIndicator color={colors.accent} style={styles.loader} />;
@@ -194,14 +198,14 @@ export function ModuleFormScreen({
         ))}
 
       <PrimaryButton
-        label={editing ? "Save changes" : "Create"}
+        label={editing ? t("admin.form.saveChanges") : t("common.create")}
         onPress={() => void submit()}
         loading={saving}
       />
-      <GhostButton label="Cancel" onPress={onCancel} />
+      <GhostButton label={t("common.cancel")} onPress={onCancel} />
 
       <Text style={[styles.hint, { color: colors.muted }]}>
-        Fields marked * are required.
+        {t("admin.form.requiredHint")}
       </Text>
     </View>
   );

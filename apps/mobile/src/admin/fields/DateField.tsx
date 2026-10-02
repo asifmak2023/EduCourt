@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "@eis/i18n";
 import {
   FlatList,
   Modal,
@@ -7,6 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useTr } from "../../lib/i18n";
 import { useTheme } from "../../theme/ThemeProvider";
 import { formatDate } from "../../lib/format";
 import { toText } from "./common";
@@ -46,6 +48,8 @@ export function DateField({
   required?: boolean;
 }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  const tr = useTr();
   const [open, setOpen] = useState(false);
   const [cursor, setCursor] = useState(() => parseIsoDate(value));
   const [hour, setHour] = useState(() => {
@@ -85,7 +89,7 @@ export function DateField({
   return (
     <View style={styles.field}>
       <Text style={[styles.label, { color: colors.muted }]}>
-        {label}
+        {tr(label)}
         {required ? " *" : ""}
       </Text>
 
@@ -169,7 +173,7 @@ export function DateField({
               <>
                 <View style={styles.timeRow}>
                   <View style={styles.timeColumn}>
-                    <Text style={[styles.timeHeader, { color: colors.muted }]}>Hour</Text>
+                    <Text style={[styles.timeHeader, { color: colors.muted }]}>{t("admin.field.hour")}</Text>
                     <FlatList
                       data={Array.from({ length: 24 }, (_, index) => index)}
                       keyExtractor={(item) => `h-${item}`}
@@ -191,7 +195,7 @@ export function DateField({
                   </View>
 
                   <View style={styles.timeColumn}>
-                    <Text style={[styles.timeHeader, { color: colors.muted }]}>Minute</Text>
+                    <Text style={[styles.timeHeader, { color: colors.muted }]}>{t("admin.field.minute")}</Text>
                     <FlatList
                       data={Array.from({ length: 12 }, (_, index) => index * 5)}
                       keyExtractor={(item) => `m-${item}`}
@@ -221,7 +225,7 @@ export function DateField({
                   style={[styles.doneButton, { backgroundColor: colors.accent }]}
                 >
                   <Text style={{ color: colors.accentForeground, fontWeight: "600" }}>
-                    Done
+                    {t("common.done")}
                   </Text>
                 </Pressable>
               </>

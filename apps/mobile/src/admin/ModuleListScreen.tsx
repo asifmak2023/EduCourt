@@ -10,9 +10,11 @@ import {
   View,
 } from "react-native";
 import { useState } from "react";
+import { useTranslation } from "@eis/i18n";
 import { useTheme } from "../theme/ThemeProvider";
 import { Card, EmptyState, ErrorText } from "../components/ui";
 import { formatDate, formatMoney } from "../lib/format";
+import { useTr } from "../lib/i18n";
 import { can } from "../lib/nav";
 import { apiFetch } from "../lib/api";
 import { useCampusId } from "../lib/campus";
@@ -49,6 +51,8 @@ export function ModuleListScreen({
   onCreate: () => void;
 }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  const tr = useTr();
   const campusId = useCampusId();
   const list = useList<AdminRecord>({
     endpoint: config.endpoint,
@@ -73,7 +77,7 @@ export function ModuleListScreen({
       body: { ...(body ?? {}), ...values },
       campusId,
     });
-    setNotice(action.successMessage ?? "Done.");
+    setNotice(action.successMessage ? tr(action.successMessage) : t("common.done"));
     setActiveAction(null);
     list.reload();
   };
@@ -84,7 +88,7 @@ export function ModuleListScreen({
         <TextInput
           value={list.search}
           onChangeText={list.setSearch}
-          placeholder="Search"
+          placeholder={t("common.search")}
           placeholderTextColor={colors.muted}
           autoCorrect={false}
           style={[
@@ -121,7 +125,7 @@ export function ModuleListScreen({
                       ]}
                     >
                       <Text style={{ color: isActive ? colors.accent : colors.muted, fontSize: 13 }}>
-                        {option.label}
+                        {tr(option.label)}
                       </Text>
                     </Pressable>
                   );
@@ -136,7 +140,7 @@ export function ModuleListScreen({
               style={[styles.chip, { borderColor: colors.accent, backgroundColor: colors.accent }]}
             >
               <Text style={{ color: colors.accentForeground, fontSize: 13, fontWeight: "600" }}>
-                + New
+                {t("admin.list.new")}
               </Text>
             </Pressable>
           ) : null}
@@ -154,7 +158,7 @@ export function ModuleListScreen({
               ]}
             >
               <Text style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>
-                {action.label}
+                {tr(action.label)}
               </Text>
             </Pressable>
           ))}
@@ -188,7 +192,7 @@ export function ModuleListScreen({
           }
           onEndReachedThreshold={0.4}
           onEndReached={list.loadMore}
-          ListEmptyComponent={<EmptyState message="No records found." />}
+          ListEmptyComponent={<EmptyState message={t("admin.list.empty")} />}
           ListFooterComponent={
             list.loadingMore ? <ActivityIndicator color={colors.accent} style={styles.footer} /> : null
           }
@@ -210,7 +214,7 @@ export function ModuleListScreen({
 
                   {rest.map((column) => (
                     <View key={column.label} style={styles.metaRow}>
-                      <Text style={[styles.metaLabel, { color: colors.muted }]}>{column.label}</Text>
+                      <Text style={[styles.metaLabel, { color: colors.muted }]}>{tr(column.label)}</Text>
                       {column.render ? (
                         column.render(item)
                       ) : (
@@ -229,7 +233,7 @@ export function ModuleListScreen({
 
       {meta ? (
         <Text style={[styles.count, { color: colors.muted }]}>
-          {meta.total} record{meta.total === 1 ? "" : "s"}
+          {t("admin.list.count", { count: meta.total })}
         </Text>
       ) : null}
 

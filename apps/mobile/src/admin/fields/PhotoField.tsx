@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "@eis/i18n";
 import {
   ActivityIndicator,
   Image,
@@ -9,6 +10,7 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { SectionLabel } from "../../components/ui";
+import { useTr } from "../../lib/i18n";
 import { useTheme } from "../../theme/ThemeProvider";
 import { ApiError, apiFetch, apiUpload } from "../../lib/api";
 import { getPath } from "../display";
@@ -28,6 +30,8 @@ export function PhotoField({
   onChanged: () => void;
 }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  const tr = useTr();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +45,7 @@ export function PhotoField({
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        setError("Photo library permission is required.");
+        setError(t("admin.photo.permission"));
         return;
       }
 
@@ -73,7 +77,7 @@ export function PhotoField({
       onChanged();
     } catch (caught) {
       setError(
-        caught instanceof ApiError ? caught.message : "Unable to upload photo."
+        caught instanceof ApiError ? caught.message : t("admin.photo.uploadFailed")
       );
     } finally {
       setBusy(false);
@@ -88,7 +92,7 @@ export function PhotoField({
       onChanged();
     } catch (caught) {
       setError(
-        caught instanceof ApiError ? caught.message : "Unable to remove photo."
+        caught instanceof ApiError ? caught.message : t("admin.photo.removeFailed")
       );
     } finally {
       setBusy(false);
@@ -97,7 +101,7 @@ export function PhotoField({
 
   return (
     <View style={styles.container}>
-      <SectionLabel>{field.label}</SectionLabel>
+      <SectionLabel>{tr(field.label)}</SectionLabel>
       <View style={styles.row}>
         {url ? (
           <Image source={{ uri: url }} style={[styles.image, { borderColor: colors.border }]} />
@@ -109,7 +113,7 @@ export function PhotoField({
               { borderColor: colors.border, backgroundColor: colors.surface },
             ]}
           >
-            <Text style={{ color: colors.muted, fontSize: 12 }}>No photo</Text>
+            <Text style={{ color: colors.muted, fontSize: 12 }}>{t("admin.photo.none")}</Text>
           </View>
         )}
 
@@ -125,7 +129,7 @@ export function PhotoField({
                   style={[styles.button, { borderColor: colors.accent }]}
                 >
                   <Text style={{ color: colors.accent, fontWeight: "600", fontSize: 13 }}>
-                    Change photo
+                    {t("admin.photo.change")}
                   </Text>
                 </Pressable>
                 {url ? (
@@ -135,7 +139,7 @@ export function PhotoField({
                     style={[styles.button, { borderColor: colors.danger }]}
                   >
                     <Text style={{ color: colors.danger, fontWeight: "600", fontSize: 13 }}>
-                      Remove
+                      {t("common.remove")}
                     </Text>
                   </Pressable>
                 ) : null}

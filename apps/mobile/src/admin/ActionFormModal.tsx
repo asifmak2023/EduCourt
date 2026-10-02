@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "@eis/i18n";
 import {
   ActivityIndicator,
   Modal,
@@ -9,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { Card, ErrorText, GhostButton, PrimaryButton } from "../components/ui";
+import { useTr } from "../lib/i18n";
 import { useTheme } from "../theme/ThemeProvider";
 import { ApiError } from "../lib/api";
 import { buildPayload, initialValues } from "./form";
@@ -31,6 +33,8 @@ export function ActionFormModal({
   onSubmit: (values: Record<string, unknown>) => Promise<void>;
 }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  const tr = useTr();
   const [values, setValues] = useState<Record<string, unknown>>(() =>
     initialValues(fields)
   );
@@ -46,12 +50,12 @@ export function ActionFormModal({
       }
       const value = values[field.name];
       if (value === "" || value === null || value === undefined) {
-        nextErrors[field.name] = ["This field is required."];
+        nextErrors[field.name] = [t("errors.required")];
       }
     }
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
-      setBanner("Please fix the highlighted fields.");
+      setBanner(t("admin.form.fixErrors"));
       return;
     }
 
@@ -65,7 +69,7 @@ export function ActionFormModal({
         setErrors(caught.errors ?? {});
         setBanner(caught.message);
       } else {
-        setBanner("Unable to complete this action.");
+        setBanner(t("admin.action.failed"));
       }
       setSaving(false);
     }
@@ -76,7 +80,7 @@ export function ActionFormModal({
       <View style={styles.backdrop}>
         <View style={[styles.dialog, { backgroundColor: colors.surface }]}>
           <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.foreground }]}>{title}</Text>
+            <Text style={[styles.title, { color: colors.foreground }]}>{tr(title)}</Text>
             <Pressable onPress={onClose} accessibilityRole="button" hitSlop={10}>
               <Text style={{ color: colors.muted, fontSize: 18, fontWeight: "700" }}>x</Text>
             </Pressable>
@@ -102,11 +106,11 @@ export function ActionFormModal({
             <ActivityIndicator color={colors.accent} style={styles.saving} />
           ) : (
             <PrimaryButton
-              label={submitLabel ?? title}
+              label={submitLabel ? tr(submitLabel) : tr(title)}
               onPress={() => void submit()}
             />
           )}
-          <GhostButton label="Cancel" onPress={onClose} />
+          <GhostButton label={t("common.cancel")} onPress={onClose} />
         </View>
       </View>
     </Modal>

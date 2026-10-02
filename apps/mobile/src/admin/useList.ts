@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "@eis/i18n";
 import { ApiError, apiFetch } from "../lib/api";
 import { useCampusId } from "../lib/campus";
 import { buildQuery } from "./query";
@@ -42,6 +43,7 @@ export function useList<T extends AdminRecord>(
   options: UseListOptions
 ): UseListResult<T> {
   const { endpoint, perPage = 25, enabled = true } = options;
+  const { t } = useTranslation();
   const campusId = useCampusId();
 
   const [search, setSearch] = useState("");
@@ -117,7 +119,7 @@ export function useList<T extends AdminRecord>(
             message:
               caught instanceof ApiError
                 ? caught.message
-                : "Unable to load records.",
+                : t("admin.errors.loadRecords"),
           });
         }
       })
@@ -140,6 +142,7 @@ export function useList<T extends AdminRecord>(
     nonce,
     enabled,
     perPage,
+    t,
   ]);
 
   const loading = enabled && page === 1 && loaded.key !== requestKey;

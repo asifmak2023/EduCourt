@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import { Card, EmptyState } from "../components/ui";
+import { useTr } from "../lib/i18n";
 import { useTheme } from "../theme/ThemeProvider";
 import { formatMoney } from "../lib/format";
 import type { AdminRecord, ColumnConfig, DetailSection } from "./types";
@@ -34,10 +35,11 @@ function RecordList({
   columns: ColumnSpec[];
 }) {
   const { colors } = useTheme();
+  const tr = useTr();
   const rows = Array.isArray(item[rowsKey]) ? (item[rowsKey] as AdminRecord[]) : [];
 
   if (rows.length === 0) {
-    return <EmptyState message={emptyMessage} />;
+    return <EmptyState message={tr(emptyMessage)} />;
   }
 
   return (
@@ -47,7 +49,7 @@ function RecordList({
           <View style={styles.row}>
             {columns.map((column) => (
               <Text key={column.label} style={{ color: colors.muted, fontSize: 13 }}>
-                {column.label}:{" "}
+                {tr(column.label)}:{" "}
                 <Text style={{ color: colors.foreground, fontWeight: "600" }}>
                   {renderValue(row, column)}
                 </Text>

@@ -1,3 +1,4 @@
+import type { MessageKey, TranslateFn } from "@eis/i18n";
 import type {
   AdminRecord,
   FieldConfig,
@@ -5,6 +6,11 @@ import type {
   InputFieldConfig,
   RepeaterFieldConfig,
 } from "./types";
+
+type FieldTranslators = {
+  t: TranslateFn<MessageKey>;
+  tr: (value: string | undefined | null) => string;
+};
 
 export function groupToggleKey(name: string): string {
   return `${name}__enabled`;
@@ -156,7 +162,8 @@ export function isPlainField(field: FieldConfig): field is InputFieldConfig {
 export function validateNestedFields(
   fields: FieldConfig[],
   values: Record<string, unknown>,
-  editing: boolean
+  editing: boolean,
+  translate?: FieldTranslators
 ): Record<string, string[]> {
   const errors: Record<string, string[]> = {};
 
@@ -178,7 +185,12 @@ export function validateNestedFields(
         );
         if (missing) {
           errors[field.name] = [
-            `${field.label} ${index + 1} is missing a required field.`,
+            translate
+              ? translate.t("admin.form.repeaterMissing", {
+                  label: translate.tr(field.label),
+                  index: index + 1,
+                })
+              : `${field.label} ${index + 1} is missing a required field.`,
           ];
         }
       });
@@ -195,7 +207,11 @@ export function validateNestedFields(
       const nested = (values[field.name] as Record<string, unknown>) ?? {};
       for (const nestedField of field.fields) {
         if (nestedField.required && isBlank(nested[nestedField.name])) {
-          errors[field.wrapKey] = ["Please complete the highlighted section."];
+          errors[field.wrapKey] = [
+            translate
+              ? translate.t("admin.form.groupIncomplete")
+              : "Please complete the highlighted section.",
+          ];
         }
       }
     }

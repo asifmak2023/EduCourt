@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useTranslation } from "@eis/i18n";
 import {
   ActivityIndicator,
   Linking,
@@ -95,6 +96,7 @@ function DocumentUploadModal({
   onUploaded: () => void;
 }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [type, setType] = useState("");
   const [title, setTitle] = useState("");
   const [issuedOn, setIssuedOn] = useState("");
@@ -123,21 +125,21 @@ function DocumentUploadModal({
       }
       setAsset(result.assets[0]);
     } catch {
-      setBanner("Unable to open the file picker.");
+      setBanner(t("admin.documents.pickerFailed"));
     }
   };
 
   const submit = async () => {
     const nextErrors: Record<string, string[]> = {};
     if (!type) {
-      nextErrors.type = ["Select a document type."];
+      nextErrors.type = [t("admin.documents.selectType")];
     }
     if (!asset) {
-      nextErrors.file = ["Choose a file to upload."];
+      nextErrors.file = [t("admin.documents.chooseFile")];
     }
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
-      setBanner("Please fix the highlighted fields.");
+      setBanner(t("admin.form.fixErrors"));
       return;
     }
 
@@ -169,7 +171,7 @@ function DocumentUploadModal({
         setErrors(caught.errors ?? {});
         setBanner(caught.message);
       } else {
-        setBanner("Unable to upload the document.");
+        setBanner(t("admin.documents.uploadFailed"));
       }
       setSaving(false);
     }
@@ -180,7 +182,7 @@ function DocumentUploadModal({
       <View style={styles.backdrop}>
         <View style={[styles.dialog, { backgroundColor: colors.surface }]}>
           <View style={styles.dialogHeader}>
-            <Text style={[styles.dialogTitle, { color: colors.foreground }]}>Upload document</Text>
+            <Text style={[styles.dialogTitle, { color: colors.foreground }]}>{t("admin.documents.uploadTitle")}</Text>
             <Pressable onPress={onClose} hitSlop={10} accessibilityRole="button">
               <Text style={{ color: colors.muted, fontSize: 18, fontWeight: "700" }}>x</Text>
             </Pressable>
@@ -197,11 +199,11 @@ function DocumentUploadModal({
               required
             />
             <View style={styles.field}>
-              <Text style={[styles.label, { color: colors.muted }]}>Title</Text>
+              <Text style={[styles.label, { color: colors.muted }]}>{t("admin.documents.title")}</Text>
               <TextInput
                 value={title}
                 onChangeText={setTitle}
-                placeholder="Optional"
+                placeholder={t("common.optional")}
                 placeholderTextColor={colors.muted}
                 autoCorrect={false}
                 style={[
@@ -216,12 +218,12 @@ function DocumentUploadModal({
                 <DateField label="Issued on" mode="date" value={issuedOn} onChange={(value) => setIssuedOn(String(value ?? ""))} />
                 <DateField label="Expires on" mode="date" value={expiresOn} onChange={(value) => setExpiresOn(String(value ?? ""))} />
                 <View style={styles.field}>
-                  <Text style={[styles.label, { color: colors.muted }]}>Notes</Text>
+                  <Text style={[styles.label, { color: colors.muted }]}>{t("admin.documents.notes")}</Text>
                   <TextInput
                     value={notes}
                     onChangeText={setNotes}
                     multiline
-                    placeholder="Optional"
+                    placeholder={t("common.optional")}
                     placeholderTextColor={colors.muted}
                     style={[
                       styles.input,
@@ -239,7 +241,7 @@ function DocumentUploadModal({
               style={[styles.fileButton, { borderColor: asset ? colors.accent : colors.border }]}
             >
               <Text style={{ color: asset ? colors.accent : colors.muted, fontSize: 14 }}>
-                {asset ? asset.name : "Choose file"}
+                {asset ? asset.name : t("admin.documents.chooseFileButton")}
               </Text>
             </Pressable>
             {errors.file?.[0] ? (
@@ -250,9 +252,9 @@ function DocumentUploadModal({
           {saving ? (
             <ActivityIndicator color={colors.accent} style={styles.saving} />
           ) : (
-            <PrimaryButton label="Upload" onPress={() => void submit()} />
+            <PrimaryButton label={t("admin.documents.uploadAction")} onPress={() => void submit()} />
           )}
-          <GhostButton label="Cancel" onPress={onClose} />
+          <GhostButton label={t("common.cancel")} onPress={onClose} />
         </View>
       </View>
     </Modal>
@@ -271,6 +273,7 @@ function DocumentsList({
   campusId: number | null;
 }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const basePath = config.path(item);
   const loader = useCallback(
     () =>
@@ -311,7 +314,7 @@ function DocumentsList({
       anchor.remove();
       URL.revokeObjectURL(url);
     } catch {
-      setError("Unable to download the document.");
+      setError(t("admin.documents.downloadFailed"));
     }
   };
 
@@ -320,10 +323,10 @@ function DocumentsList({
     setError(null);
     try {
       await apiFetch(`${basePath}/${doc.id}/verify`, { method: "POST", campusId });
-      setNotice("Document verified.");
+      setNotice(t("admin.documents.verifiedNotice"));
       reload();
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "Unable to verify the document.");
+      setError(caught instanceof ApiError ? caught.message : t("admin.documents.verifyFailed"));
     } finally {
       setBusyId(null);
     }
@@ -334,10 +337,10 @@ function DocumentsList({
     setError(null);
     try {
       await apiFetch(`${basePath}/${doc.id}`, { method: "DELETE", campusId });
-      setNotice("Document removed.");
+      setNotice(t("admin.documents.removed"));
       reload();
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "Unable to remove the document.");
+      setError(caught instanceof ApiError ? caught.message : t("admin.documents.removeFailed"));
     } finally {
       setBusyId(null);
     }
@@ -346,7 +349,7 @@ function DocumentsList({
   return (
     <View>
       {error ?? loadError ? (
-        <ErrorText message={error ?? loadError ?? "Unable to load documents."} />
+        <ErrorText message={error ?? loadError ?? t("admin.documents.loadFailed")} />
       ) : null}
       {notice ? (
         <Text style={{ color: colors.accent, fontWeight: "600", fontSize: 13, marginBottom: 6 }}>
@@ -357,7 +360,7 @@ function DocumentsList({
       {loading ? (
         <ActivityIndicator color={colors.accent} style={{ padding: 12 }} />
       ) : docs.length === 0 ? (
-        <Text style={[styles.empty, { color: colors.muted }]}>No documents uploaded.</Text>
+        <Text style={[styles.empty, { color: colors.muted }]}>{t("admin.documents.empty")}</Text>
       ) : (
         <View style={styles.list}>
           {docs.map((doc) => (
@@ -367,10 +370,10 @@ function DocumentsList({
             >
               <View style={styles.docInfo}>
                 <Text style={{ color: colors.foreground, fontWeight: "600", fontSize: 14 }}>
-                  {doc.title ?? doc.original_name ?? `Document #${doc.id}`}
+                  {doc.title ?? doc.original_name ?? t("admin.documents.hash", { id: doc.id })}
                 </Text>
                 <Text style={{ color: colors.muted, fontSize: 12 }}>
-                  {[doc.type_label, formatSize(doc.size), doc.is_verified ? "Verified" : null]
+                  {[doc.type_label, formatSize(doc.size), doc.is_verified ? t("admin.documents.verified") : null]
                     .filter(Boolean)
                     .join(" · ")}
                 </Text>
@@ -378,11 +381,11 @@ function DocumentsList({
 
               <View style={styles.docActions}>
                 <Pressable onPress={() => void download(doc)} accessibilityRole="button" hitSlop={6}>
-                  <Text style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>Download</Text>
+                  <Text style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>{t("admin.documents.download")}</Text>
                 </Pressable>
                 {canVerify && !doc.is_verified ? (
                   <Pressable onPress={() => void verify(doc)} accessibilityRole="button" hitSlop={6}>
-                    <Text style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>Verify</Text>
+                    <Text style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>{t("admin.documents.verify")}</Text>
                   </Pressable>
                 ) : null}
                 {canDelete ? (
@@ -390,7 +393,7 @@ function DocumentsList({
                     <ActivityIndicator color={colors.danger} />
                   ) : (
                     <Pressable onPress={() => void remove(doc)} accessibilityRole="button" hitSlop={6}>
-                      <Text style={{ color: colors.danger, fontSize: 13, fontWeight: "600" }}>Delete</Text>
+                      <Text style={{ color: colors.danger, fontSize: 13, fontWeight: "600" }}>{t("common.delete")}</Text>
                     </Pressable>
                   )
                 ) : null}
@@ -410,7 +413,7 @@ function DocumentsList({
           style={[styles.uploadButton, { borderColor: colors.accent }]}
         >
           <Text style={{ color: colors.accent, fontWeight: "600", fontSize: 14 }}>
-            Upload document
+            {t("admin.documents.uploadTitle")}
           </Text>
         </Pressable>
       ) : null}
@@ -423,7 +426,7 @@ function DocumentsList({
           onClose={() => setUploadOpen(false)}
           onUploaded={() => {
             setUploadOpen(false);
-            setNotice("Document uploaded.");
+            setNotice(t("admin.documents.uploaded"));
             reload();
           }}
         />

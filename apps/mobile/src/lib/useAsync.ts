@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "@eis/i18n";
 import { ApiError } from "./api";
 
 export function useAsync<T>(
@@ -15,6 +16,7 @@ export function useAsync<T>(
   const [error, setError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
   const loaderRef = useRef(loader);
+  const { t } = useTranslation();
 
   useEffect(() => {
     loaderRef.current = loader;
@@ -40,7 +42,7 @@ export function useAsync<T>(
       })
       .catch((caught) => {
         if (active) {
-          setError(caught instanceof ApiError ? caught.message : "Something went wrong.");
+          setError(caught instanceof ApiError ? caught.message : t("errors.generic"));
         }
       })
       .finally(() => {

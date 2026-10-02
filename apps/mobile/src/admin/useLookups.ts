@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "@eis/i18n";
 import { apiFetch } from "../lib/api";
 import { useCampusId } from "../lib/campus";
 import { buildQuery } from "./query";
@@ -60,6 +61,7 @@ export function useLookup(
   name: string,
   depends?: string | number | null
 ): { options: SelectOption[]; loading: boolean; error: string | null } {
+  const { t } = useTranslation();
   const campusId = useCampusId();
   const def = LOOKUPS[name];
   const depParam = def?.depParam;
@@ -123,14 +125,14 @@ export function useLookup(
       .catch(() => {
         if (active) {
           setFetched({ key, options: [] });
-          setErrorState({ key, message: "Unable to load options." });
+          setErrorState({ key, message: t("admin.errors.loadOptions") });
         }
       });
 
     return () => {
       active = false;
     };
-  }, [name, key, campusId, ready, def, depParam, hasDep, depends]);
+  }, [name, key, campusId, ready, def, depParam, hasDep, depends, t]);
 
   return { options, loading: pending, error };
 }

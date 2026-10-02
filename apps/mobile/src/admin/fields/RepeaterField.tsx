@@ -4,6 +4,8 @@ import {
   Text,
   View,
 } from "react-native";
+import { useTranslation } from "@eis/i18n";
+import { useTr } from "../../lib/i18n";
 import { useTheme } from "../../theme/ThemeProvider";
 import { SectionLabel } from "../../components/ui";
 import { Field } from "./Field";
@@ -21,6 +23,8 @@ export function RepeaterField({
   record: Record<string, unknown>;
 }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  const tr = useTr();
   const items = Array.isArray(rows) ? rows : [];
 
   const updateRow = (index: number, name: string, value: unknown) => {
@@ -40,9 +44,9 @@ export function RepeaterField({
 
   return (
     <View style={styles.container}>
-      <SectionLabel>{field.label}</SectionLabel>
+      <SectionLabel>{tr(field.label)}</SectionLabel>
       {field.hint ? (
-        <Text style={[styles.hint, { color: colors.muted }]}>{field.hint}</Text>
+        <Text style={[styles.hint, { color: colors.muted }]}>{tr(field.hint)}</Text>
       ) : null}
 
       {items.map((row, index) => (
@@ -54,10 +58,10 @@ export function RepeaterField({
             <Text style={{ color: colors.foreground, fontWeight: "600", fontSize: 13 }}>
               {field.titleKey && row[field.titleKey]
                 ? String(row[field.titleKey])
-                : `${field.label} ${index + 1}`}
+                : t("admin.repeater.item", { label: tr(field.label), index: index + 1 })}
             </Text>
             <Pressable onPress={() => removeRow(index)} accessibilityRole="button" hitSlop={8}>
-              <Text style={{ color: colors.danger, fontSize: 13, fontWeight: "600" }}>Remove</Text>
+              <Text style={{ color: colors.danger, fontSize: 13, fontWeight: "600" }}>{t("common.remove")}</Text>
             </Pressable>
           </View>
 
@@ -79,7 +83,7 @@ export function RepeaterField({
         style={[styles.add, { borderColor: colors.accent }]}
       >
         <Text style={{ color: colors.accent, fontWeight: "600", fontSize: 14 }}>
-          {field.addLabel}
+          {tr(field.addLabel)}
         </Text>
       </Pressable>
     </View>

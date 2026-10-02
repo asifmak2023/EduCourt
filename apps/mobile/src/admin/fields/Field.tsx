@@ -5,6 +5,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useTr } from "../../lib/i18n";
 import { useTheme } from "../../theme/ThemeProvider";
 import { DateField } from "./DateField";
 import { LookupField } from "./LookupField";
@@ -15,6 +16,7 @@ import { isTruthy, toNumberOrEmpty, toText, type FieldInputProps } from "./commo
 export function Field(props: FieldInputProps) {
   const { field } = props;
   const { colors } = useTheme();
+  const tr = useTr();
 
   if (field.type === "select") {
     return (
@@ -92,7 +94,7 @@ export function Field(props: FieldInputProps) {
               <Text style={{ color: colors.accentForeground, fontSize: 12, fontWeight: "700" }}>x</Text>
             ) : null}
           </View>
-          <Text style={{ color: colors.foreground, fontSize: 15 }}>{field.label}</Text>
+          <Text style={{ color: colors.foreground, fontSize: 15 }}>{tr(field.label)}</Text>
         </Pressable>
         {props.error ? (
           <Text style={[styles.error, { color: colors.danger }]}>{props.error}</Text>
@@ -112,13 +114,13 @@ export function Field(props: FieldInputProps) {
   return (
     <View style={styles.field}>
       <Text style={[styles.label, { color: colors.muted }]}>
-        {field.label}
+        {tr(field.label)}
         {field.required ? " *" : ""}
       </Text>
       <TextInput
         value={toText(props.value)}
         onChangeText={(text) => props.onChange(field.type === "number" ? toNumberOrEmpty(text) : text)}
-        placeholder={field.type === "number" ? (field.placeholder ?? "0") : field.placeholder}
+        placeholder={field.placeholder ? tr(field.placeholder) : field.type === "number" ? "0" : undefined}
         placeholderTextColor={colors.muted}
         keyboardType={keyboardType}
         multiline={multiline}
@@ -135,7 +137,7 @@ export function Field(props: FieldInputProps) {
         ]}
       />
       {field.hint ? (
-        <Text style={[styles.hint, { color: colors.muted }]}>{field.hint}</Text>
+        <Text style={[styles.hint, { color: colors.muted }]}>{tr(field.hint)}</Text>
       ) : null}
       {props.error ? (
         <Text style={[styles.error, { color: colors.danger }]}>{props.error}</Text>

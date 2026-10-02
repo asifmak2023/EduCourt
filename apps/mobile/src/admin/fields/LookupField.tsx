@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "@eis/i18n";
 import {
   ActivityIndicator,
   FlatList,
@@ -9,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useTr } from "../../lib/i18n";
 import { useTheme } from "../../theme/ThemeProvider";
 import { lookupDependsOn, useLookup } from "../useLookups";
 import { toText } from "./common";
@@ -31,6 +33,8 @@ export function LookupField({
   dependsValue?: unknown;
 }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  const tr = useTr();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -51,7 +55,7 @@ export function LookupField({
   return (
     <View style={styles.field}>
       <Text style={[styles.label, { color: colors.muted }]}>
-        {label}
+        {tr(label)}
         {required ? " *" : ""}
       </Text>
 
@@ -72,24 +76,24 @@ export function LookupField({
         ]}
       >
         <Text style={{ color: selected || toText(value) ? colors.foreground : colors.muted, fontSize: 15 }}>
-          {selected ? selected.label : toText(value) ? `#${toText(value)}` : "Select"}
+          {selected ? tr(selected.label) : toText(value) ? `#${toText(value)}` : t("admin.field.select")}
         </Text>
       </Pressable>
 
       {blocked ? (
-        <Text style={[styles.hint, { color: colors.muted }]}>Select the parent record first.</Text>
+        <Text style={[styles.hint, { color: colors.muted }]}>{t("admin.field.selectParent")}</Text>
       ) : null}
       {error ? <Text style={[styles.error, { color: colors.danger }]}>{error}</Text> : null}
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
           <Pressable style={[styles.sheet, { backgroundColor: colors.surface }]} onPress={() => undefined}>
-            <Text style={[styles.sheetTitle, { color: colors.foreground }]}>{label}</Text>
+            <Text style={[styles.sheetTitle, { color: colors.foreground }]}>{tr(label)}</Text>
 
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="Search"
+              placeholder={t("common.search")}
               placeholderTextColor={colors.muted}
               autoCorrect={false}
               style={[
@@ -109,7 +113,7 @@ export function LookupField({
                 style={{ maxHeight: 340 }}
                 keyboardShouldPersistTaps="handled"
                 ListEmptyComponent={
-                  <Text style={{ color: colors.muted, padding: 12 }}>No matches.</Text>
+                  <Text style={{ color: colors.muted, padding: 12 }}>{t("admin.field.noMatches")}</Text>
                 }
                 renderItem={({ item }) => {
                   const active = String(item.value) === toText(value);
@@ -122,7 +126,7 @@ export function LookupField({
                       style={[styles.option, active ? { backgroundColor: colors.accentSoft } : null]}
                     >
                       <Text style={{ color: active ? colors.accent : colors.foreground, fontSize: 15 }}>
-                        {item.label}
+                        {tr(item.label)}
                       </Text>
                     </Pressable>
                   );
@@ -138,7 +142,7 @@ export function LookupField({
                 }}
                 style={styles.clear}
               >
-                <Text style={{ color: colors.muted, fontSize: 14 }}>Clear selection</Text>
+                <Text style={{ color: colors.muted, fontSize: 14 }}>{t("admin.field.clearSelection")}</Text>
               </Pressable>
             ) : null}
           </Pressable>

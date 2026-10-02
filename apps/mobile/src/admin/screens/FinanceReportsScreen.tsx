@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useTranslation, type MessageKey } from "@eis/i18n";
 import {
   ActivityIndicator,
   Pressable,
@@ -17,14 +18,15 @@ import { LookupField } from "../fields/LookupField";
 
 type Tab = "trialBalance" | "budgetVsActual" | "expense";
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: "trialBalance", label: "Trial balance" },
-  { key: "budgetVsActual", label: "Budget vs actual" },
-  { key: "expense", label: "Expense summary" },
+const TABS: { key: Tab; label: MessageKey }[] = [
+  { key: "trialBalance", label: "admin.financeReports.tabTrialBalance" },
+  { key: "budgetVsActual", label: "admin.financeReports.tabBudgetVsActual" },
+  { key: "expense", label: "admin.financeReports.tabExpense" },
 ];
 
 export function FinanceReportsScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const campusId = useCampusId();
 
   const [tab, setTab] = useState<Tab>("trialBalance");
@@ -35,7 +37,7 @@ export function FinanceReportsScreen() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [summary, setSummary] = useState<{ label: string; value: string }[]>([]);
+  const [summary, setSummary] = useState<{ label: MessageKey; value: string }[]>([]);
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -54,13 +56,13 @@ export function FinanceReportsScreen() {
           totals: { total_debit: string; total_credit: string };
         }>(`/v1/finance/reports/trial-balance?${params.toString()}`, { campusId });
         setSummary([
-          { label: "Debit", value: formatMoney(response.totals.total_debit) },
-          { label: "Credit", value: formatMoney(response.totals.total_credit) },
+          { label: "admin.financeReports.debit", value: formatMoney(response.totals.total_debit) },
+          { label: "admin.financeReports.credit", value: formatMoney(response.totals.total_credit) },
         ]);
         setRows(response.data);
       } else if (tab === "budgetVsActual") {
         if (!budgetId) {
-          setError("Select a budget.");
+          setError(t("admin.financeReports.selectBudget"));
           setLoading(false);
           return;
         }
@@ -69,9 +71,9 @@ export function FinanceReportsScreen() {
           totals: { budget: string; actual: string; variance: string };
         }>(`/v1/finance/reports/budget-vs-actual?budget_id=${budgetId}`, { campusId });
         setSummary([
-          { label: "Budget", value: formatMoney(response.totals.budget) },
-          { label: "Actual", value: formatMoney(response.totals.actual) },
-          { label: "Variance", value: formatMoney(response.totals.variance) },
+          { label: "admin.financeReports.budget", value: formatMoney(response.totals.budget) },
+          { label: "admin.financeReports.actual", value: formatMoney(response.totals.actual) },
+          { label: "admin.financeReports.variance", value: formatMoney(response.totals.variance) },
         ]);
         setRows(response.data);
       } else {
@@ -83,18 +85,18 @@ export function FinanceReportsScreen() {
           totals: { expenses: number; amount: string };
         }>(`/v1/finance/reports/expenses?${params.toString()}`, { campusId });
         setSummary([
-          { label: "Expenses", value: String(response.totals.expenses) },
-          { label: "Amount", value: formatMoney(response.totals.amount) },
+          { label: "admin.financeReports.expenses", value: String(response.totals.expenses) },
+          { label: "admin.financeReports.amount", value: formatMoney(response.totals.amount) },
         ]);
         setRows(response.by_category);
       }
       setLoaded(true);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "Unable to load the report.");
+      setError(caught instanceof ApiError ? caught.message : t("admin.report.loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [tab, fiscalYearId, budgetId, from, to, campusId]);
+  }, [tab, fiscalYearId, budgetId, from, to, campusId, t]);
 
   const money = (value: unknown) => formatMoney(value as string | number);
 
@@ -122,7 +124,7 @@ export function FinanceReportsScreen() {
               ]}
             >
               <Text style={{ color: active ? colors.accent : colors.muted, fontSize: 13, fontWeight: "600" }}>
-                {item.label}
+                {t(item.label)}
               </Text>
             </Pressable>
           );
@@ -148,7 +150,7 @@ export function FinanceReportsScreen() {
             <DateField label="To" mode="date" value={to} onChange={setTo} />
           </>
         ) : null}
-        <PrimaryButton label="Run report" onPress={() => void load()} loading={loading} />
+        <PrimaryButton label={t("admin.report.run")} onPress={() => void load()} loading={loading} />
       </Card>
 
       {summary.length > 0 ? (
@@ -159,7 +161,7 @@ export function FinanceReportsScreen() {
               style={[styles.metric, { borderColor: colors.border, backgroundColor: colors.surface }]}
             >
               <Text style={{ color: colors.muted, fontSize: 11, textTransform: "uppercase" }}>
-                {item.label}
+                {t(item.label)}
               </Text>
               <Text style={{ color: colors.foreground, fontSize: 16, fontWeight: "700" }}>
                 {item.value}
@@ -173,8 +175,8 @@ export function FinanceReportsScreen() {
 
       {loaded ? (
         <View style={styles.results}>
-          <SectionLabel>{`${rows.length} row${rows.length === 1 ? "" : "s"}`}</SectionLabel>
-          {rows.length === 0 ? <EmptyState message="No data for this report." /> : null}
+          <SectionLabel>{t("admin.report.rows", { count: rows.length })}</SectionLabel>
+          {rows.length === 0 ? <EmptyState message={t("admin.report.empty")} /> : null}
           {tab === "trialBalance"
             ? rows.map((row, index) => (
                 <Card key={String(row.chart_of_account_id ?? index)}>
@@ -187,8 +189,11 @@ export function FinanceReportsScreen() {
                     </Text>
                   </View>
                   <Text style={{ color: colors.muted, fontSize: 12, marginTop: 4 }}>
-                    {String(row.account_type ?? "")} · debit {money(row.total_debit)} · credit{" "}
-                    {money(row.total_credit)}
+                    {String(row.account_type ?? "")} ·{" "}
+                    {t("admin.financeReports.debitCredit", {
+                      debit: money(row.total_debit),
+                      credit: money(row.total_credit),
+                    })}
                   </Text>
                 </Card>
               ))
@@ -203,7 +208,11 @@ export function FinanceReportsScreen() {
                     <StatusPill value={row.favorable ? "paid" : "unpaid"} label={String(row.utilization ?? "-")} />
                   </View>
                   <Text style={{ color: colors.muted, fontSize: 12, marginTop: 4 }}>
-                    Budget {money(row.budget)} · Actual {money(row.actual)} · Variance {money(row.variance)}
+                    {t("admin.financeReports.budgetActualVariance", {
+                      budget: money(row.budget),
+                      actual: money(row.actual),
+                      variance: money(row.variance),
+                    })}
                   </Text>
                 </Card>
               ))
@@ -220,7 +229,7 @@ export function FinanceReportsScreen() {
                     </Text>
                   </View>
                   <Text style={{ color: colors.muted, fontSize: 12, marginTop: 4 }}>
-                    {String(row.expenses ?? 0)} expense(s)
+                    {t("admin.financeReports.expenseCount", { count: String(row.expenses ?? 0) })}
                   </Text>
                 </Card>
               ))

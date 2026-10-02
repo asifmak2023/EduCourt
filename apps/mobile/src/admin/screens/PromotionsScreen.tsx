@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useTranslation } from "@eis/i18n";
 import {
   Pressable,
   ScrollView,
@@ -21,6 +22,7 @@ interface Candidate {
 
 export function PromotionsScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const campusId = useCampusId();
 
   const [fromYear, setFromYear] = useState<unknown>("");
@@ -55,11 +57,11 @@ export function PromotionsScreen() {
       setCandidates(response.data);
       setLoaded(true);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "Unable to load students.");
+      setError(caught instanceof ApiError ? caught.message : t("admin.promotions.loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [canLoad, fromYear, fromClass, campusId]);
+  }, [canLoad, fromYear, fromClass, campusId, t]);
 
   const toggleRepeat = (id: number) => {
     setRepeatIds((previous) =>
@@ -69,7 +71,7 @@ export function PromotionsScreen() {
 
   const promote = async () => {
     if (!toYear || !toClass) {
-      setError("Select the target academic year and class.");
+      setError(t("admin.promotions.selectTarget"));
       return;
     }
     setPromoting(true);
@@ -90,12 +92,12 @@ export function PromotionsScreen() {
         "/v1/students/promote",
         { method: "POST", body: payload, campusId }
       );
-      setMessage(response.message ?? `Promoted ${response.promoted} student(s).`);
+      setMessage(response.message ?? t("admin.promotions.promoted", { count: response.promoted }));
       setLoaded(false);
       setCandidates([]);
       setRepeatIds([]);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "Unable to promote students.");
+      setError(caught instanceof ApiError ? caught.message : t("admin.promotions.promoteFailed"));
     } finally {
       setPromoting(false);
     }
@@ -111,7 +113,7 @@ export function PromotionsScreen() {
       ) : null}
 
       <Card>
-        <SectionLabel>From</SectionLabel>
+        <SectionLabel>{t("admin.promotions.from")}</SectionLabel>
         <LookupField
           label="Academic year"
           lookup="academicYears"
@@ -127,7 +129,7 @@ export function PromotionsScreen() {
           required
         />
         <PrimaryButton
-          label="Load students"
+          label={t("admin.promotions.load")}
           onPress={() => void loadStudents()}
           loading={loading}
         />
@@ -135,9 +137,9 @@ export function PromotionsScreen() {
 
       {loaded ? (
         <View style={styles.candidates}>
-          <SectionLabel>Candidates ({candidates.length})</SectionLabel>
+          <SectionLabel>{t("admin.promotions.candidates", { count: candidates.length })}</SectionLabel>
           {candidates.length === 0 ? (
-            <EmptyState message="No students found for this selection." />
+            <EmptyState message={t("admin.promotions.empty")} />
           ) : (
             candidates.map((candidate) => {
               const repeat = repeatIds.includes(candidate.id);
@@ -151,7 +153,7 @@ export function PromotionsScreen() {
                 >
                   <View>
                     <Text style={{ color: colors.foreground, fontWeight: "600", fontSize: 14 }}>
-                      {candidate.full_name ?? `Student #${candidate.id}`}
+                      {candidate.full_name ?? t("admin.promotions.studentHash", { id: candidate.id })}
                     </Text>
                     <Text style={{ color: colors.muted, fontSize: 12 }}>
                       {[candidate.admission_no, candidate.status].filter(Boolean).join(" · ")}
@@ -178,7 +180,7 @@ export function PromotionsScreen() {
       ) : null}
 
       <Card>
-        <SectionLabel>To</SectionLabel>
+        <SectionLabel>{t("admin.promotions.to")}</SectionLabel>
         <LookupField
           label="Academic year"
           lookup="academicYears"
@@ -203,12 +205,12 @@ export function PromotionsScreen() {
       </Card>
 
       <PrimaryButton
-        label="Promote"
+        label={t("admin.promotions.promote")}
         onPress={() => void promote()}
         loading={promoting}
       />
       <GhostButton
-        label="Reset"
+        label={t("common.reset")}
         onPress={() => {
           setCandidates([]);
           setRepeatIds([]);
@@ -219,7 +221,7 @@ export function PromotionsScreen() {
       />
 
       <Text style={[styles.hint, { color: colors.muted }]}>
-        Checked students repeat the same class; the rest move to the target class.
+        {t("admin.promotions.hint")}
       </Text>
     </ScrollView>
   );

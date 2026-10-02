@@ -3,7 +3,10 @@ import path from "node:path";
 
 export const PLURAL_CATEGORIES = ["zero", "one", "two", "few", "many", "other"];
 
-const KEY_PATTERN = /^[A-Za-z][A-Za-z0-9]*(\.[A-Za-z0-9]+)*$/;
+// Semantic keys start lowercase (e.g. `common.save`, `navigation.section.overview`).
+// Any key that does not match is treated as an English source-text key used by
+// config-driven content (gettext-style).
+const KEY_PATTERN = /^[a-z][A-Za-z0-9]*(\.[A-Za-z0-9]+)*$/;
 const PLACEHOLDER_PATTERN = /\{\{\s*(\w+)\s*\}\}/g;
 
 export function localesDir(root) {
@@ -104,8 +107,26 @@ export function validate(english, catalogs) {
     const missing = [];
     for (const key of Object.keys(messages)) {
       if (key === "$meta") continue;
+      if (typeof messages[key] !== "string") {
+        errors.push(`${code}: value for "${key}" must be a string`);
+        continue;
+      }
       if (!englishKeys.includes(key)) {
-        errors.push(`${code}: unknown key "${key}"`);
+        if (KEY_PATTERN.test(key)) {
+          // Looks like a semantic key but is not defined in en.ts -> typo.
+          errors.push(`${code}: unknown key "${key}"`);
+          continue;
+        }
+        // Source-text key (config-driven label, gettext-style). The English
+        // source string is the key; validate placeholders against it.
+        const expected = extractPlaceholders(key);
+        const actual = extractPlaceholders(messages[key]);
+        if (!sameSet(expected, actual)) {
+          errors.push(
+            `${code}: placeholder mismatch for source text "${key}" ` +
+              `(expected {${[...expected].join(", ")}}, got {${[...actual].join(", ")}})`
+          );
+        }
         continue;
       }
       const expected = extractPlaceholders(english[key]);

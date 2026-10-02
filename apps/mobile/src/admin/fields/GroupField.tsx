@@ -4,6 +4,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useTr } from "../../lib/i18n";
 import { useTheme } from "../../theme/ThemeProvider";
 import { Field } from "./Field";
 import type { GroupFieldConfig } from "../types";
@@ -24,6 +25,7 @@ export function GroupField({
   record: Record<string, unknown>;
 }) {
   const { colors } = useTheme();
+  const tr = useTr();
   const nested = values ?? {};
 
   const update = (name: string, value: unknown) => {
@@ -52,12 +54,12 @@ export function GroupField({
           ) : null}
         </View>
         <Text style={{ color: colors.foreground, fontSize: 15, fontWeight: "600" }}>
-          {field.toggleLabel}
+          {tr(field.toggleLabel)}
         </Text>
       </Pressable>
 
       {field.hint ? (
-        <Text style={[styles.hint, { color: colors.muted }]}>{field.hint}</Text>
+        <Text style={[styles.hint, { color: colors.muted }]}>{tr(field.hint)}</Text>
       ) : null}
 
       {enabled ? (

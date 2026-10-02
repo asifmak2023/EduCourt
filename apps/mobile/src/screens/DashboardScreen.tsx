@@ -1,3 +1,4 @@
+import { useTranslation } from "@eis/i18n";
 import { StyleSheet, Text, View } from "react-native";
 import type { AuthUser, StudentSummary } from "../lib/api";
 import { Screen } from "../components/Screen";
@@ -13,6 +14,7 @@ export function DashboardScreen({
   students: StudentSummary[];
 }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const modules = Array.from(
     new Set(user.permissions.map((permission) => permission.split(".")[0]))
@@ -21,7 +23,7 @@ export function DashboardScreen({
   return (
     <Screen>
       <Card>
-        <SectionLabel>Signed in as</SectionLabel>
+        <SectionLabel>{t("dashboard.signedInAs")}</SectionLabel>
         <View style={styles.identity}>
           <Avatar name={user.name} photoUrl={user.photo_url} />
           <View style={{ flex: 1 }}>
@@ -33,7 +35,9 @@ export function DashboardScreen({
 
       {students.length > 0 ? (
         <Card>
-          <SectionLabel>{students.length > 1 ? "Your children" : "Student"}</SectionLabel>
+          <SectionLabel>
+            {students.length > 1 ? t("dashboard.yourChildren") : t("dashboard.student")}
+          </SectionLabel>
           {students.map((student) => {
             const enrollment = student.enrollments?.[0];
 
@@ -57,27 +61,32 @@ export function DashboardScreen({
       ) : null}
 
       <Card>
-        <SectionLabel>Roles</SectionLabel>
+        <SectionLabel>{t("dashboard.roles")}</SectionLabel>
         <Text style={[styles.value, { color: colors.foreground }]}>
           {user.roles.join(", ") || "-"}
         </Text>
       </Card>
 
       <Card>
-        <SectionLabel>Accessible modules</SectionLabel>
+        <SectionLabel>{t("dashboard.accessibleModules")}</SectionLabel>
         {modules.length > 0 ? (
           <Text style={[styles.modules, { color: colors.foreground }]}>
             {modules.join(", ")}
           </Text>
         ) : (
-          <EmptyState message="No modules assigned." />
+          <EmptyState message={t("dashboard.noModules")} />
         )}
       </Card>
 
       <View style={styles.metricsRow}>
-        <Metric label="Roles" value={user.roles.length} />
-        <Metric label="Modules" value={modules.length} />
-        <Metric label={students.length > 1 ? "Children" : "Student records"} value={students.length} />
+        <Metric label={t("dashboard.roles")} value={user.roles.length} />
+        <Metric label={t("dashboard.modules")} value={modules.length} />
+        <Metric
+          label={
+            students.length > 1 ? t("dashboard.children") : t("dashboard.studentRecords")
+          }
+          value={students.length}
+        />
       </View>
     </Screen>
   );

@@ -1,18 +1,15 @@
+import {
+  formatDate as formatDateI18n,
+  formatNumber,
+  getActiveLocale,
+} from "@eis/i18n";
+
 export function formatDate(value?: string | null): string {
   if (!value) {
     return "-";
   }
 
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return date.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  return formatDateI18n(value);
 }
 
 export function formatMoney(value?: string | number | null): string {
@@ -25,7 +22,7 @@ export function formatMoney(value?: string | number | null): string {
     return String(value);
   }
 
-  return amount.toLocaleString(undefined, {
+  return formatNumber(amount, getActiveLocale(), {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -42,7 +39,13 @@ const DAYS: Record<number, string> = {
 };
 
 export function dayName(day: number): string {
-  return DAYS[day] ?? `Day ${day}`;
+  try {
+    return new Date(2024, 0, day).toLocaleDateString(getActiveLocale(), {
+      weekday: "long",
+    });
+  } catch {
+    return DAYS[day] ?? `Day ${day}`;
+  }
 }
 
 export function periodTime(

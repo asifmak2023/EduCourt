@@ -1,3 +1,4 @@
+import { useTranslation } from "@eis/i18n";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { fetchAttendance } from "../lib/portal";
 import { useAsync } from "../lib/useAsync";
@@ -8,6 +9,7 @@ import { useTheme } from "../theme/ThemeProvider";
 
 export function AttendanceScreen({ activeStudentId }: { activeStudentId: number | null }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { data, loading, error, reload } = useAsync(
     () => fetchAttendance(activeStudentId),
     [activeStudentId]
@@ -23,20 +25,31 @@ export function AttendanceScreen({ activeStudentId }: { activeStudentId: number 
         <>
           <Card>
             <SectionLabel>
-              Summary ({data.summary.from} to {data.summary.to})
+              {t("attendance.summary", {
+                from: data.summary.from,
+                to: data.summary.to,
+              })}
             </SectionLabel>
             <View style={styles.metrics}>
-              <Metric label="Present" value={data.summary.present} tone={colors.success} />
-              <Metric label="Absent" value={data.summary.absent} tone={colors.danger} />
-              <Metric label="Late" value={data.summary.late} />
-              <Metric label="Leave" value={data.summary.leave} />
+              <Metric
+                label={t("attendance.present")}
+                value={data.summary.present}
+                tone={colors.success}
+              />
+              <Metric
+                label={t("attendance.absent")}
+                value={data.summary.absent}
+                tone={colors.danger}
+              />
+              <Metric label={t("attendance.late")} value={data.summary.late} />
+              <Metric label={t("attendance.leave")} value={data.summary.leave} />
             </View>
           </Card>
 
           <Card>
-            <SectionLabel>Recent records</SectionLabel>
+            <SectionLabel>{t("attendance.recentRecords")}</SectionLabel>
             {data.data.length === 0 ? (
-              <EmptyState message="No attendance recorded in this period." />
+              <EmptyState message={t("attendance.empty")} />
             ) : (
               data.data.map((record) => (
                 <View key={record.id} style={styles.record}>

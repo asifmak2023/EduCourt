@@ -1,4 +1,5 @@
 import { BlurView } from "expo-blur";
+import { useTranslation } from "@eis/i18n";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../theme/ThemeProvider";
 import { withAlpha } from "../theme/colors";
@@ -14,6 +15,7 @@ export function AppHeader({
   onMenu?: () => void;
   onBack?: () => void;
 }) {
+  const { t } = useTranslation();
   const { colors, resolvedMode, background, config } = useTheme();
   const frosted = background.kind !== "default" || config.glass;
   const blurIntensity = Math.min(
@@ -49,7 +51,7 @@ export function AppHeader({
           <Pressable
             onPress={onBack}
             accessibilityRole="button"
-            accessibilityLabel="Back"
+            accessibilityLabel={t("common.back")}
             style={[styles.menuButton, { borderColor: colors.border }]}
           >
             <Text style={{ color: colors.foreground, fontSize: 20, fontWeight: "700", lineHeight: 22 }}>
@@ -60,7 +62,7 @@ export function AppHeader({
           <Pressable
             onPress={onMenu}
             accessibilityRole="button"
-            accessibilityLabel="Open navigation"
+            accessibilityLabel={t("navigation.open")}
             style={[styles.menuButton, { borderColor: colors.border }]}
           >
             <View style={styles.menuLines}>

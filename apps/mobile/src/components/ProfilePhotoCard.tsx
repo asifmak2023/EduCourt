@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "@eis/i18n";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { ApiError, apiFetch, apiUpload } from "../lib/api";
@@ -22,6 +23,7 @@ export function ProfilePhotoCard({
   hint?: string;
 }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,7 +32,7 @@ export function ProfilePhotoCard({
 
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      setError("Photo library access is required to choose a picture.");
+      setError(t("profile.photoPermission"));
       return;
     }
 
@@ -62,7 +64,7 @@ export function ProfilePhotoCard({
       );
       onChanged(response.data.photo_url ?? null);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "Unable to upload the photo.");
+      setError(caught instanceof ApiError ? caught.message : t("profile.uploadFailed"));
     } finally {
       setBusy(false);
     }
@@ -76,7 +78,7 @@ export function ProfilePhotoCard({
       await apiFetch(endpoint, { method: "DELETE" });
       onChanged(null);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "Unable to remove the photo.");
+      setError(caught instanceof ApiError ? caught.message : t("profile.removeFailed"));
     } finally {
       setBusy(false);
     }
@@ -84,7 +86,7 @@ export function ProfilePhotoCard({
 
   return (
     <Card>
-      <SectionLabel>Profile photo</SectionLabel>
+      <SectionLabel>{t("profile.photoTitle")}</SectionLabel>
 
       <View style={styles.row}>
         <Avatar name={name} photoUrl={photoUrl} size="lg" />
@@ -92,27 +94,35 @@ export function ProfilePhotoCard({
         {canManage ? (
           <View style={styles.actions}>
             <PrimaryButton
-              label={photoUrl ? "Replace photo" : "Upload photo"}
+              label={photoUrl ? t("profile.replacePhoto") : t("profile.uploadPhoto")}
               onPress={() => void pickAndUpload()}
               loading={busy}
             />
             {photoUrl ? (
               <GhostButton
-                label="Remove"
+                label={t("common.remove")}
                 tone="danger"
                 disabled={busy}
                 onPress={() => {
-                  Alert.alert("Remove photo", "Remove your profile photo?", [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Remove", style: "destructive", onPress: () => void remove() },
-                  ]);
+                  Alert.alert(
+                    t("profile.removePhotoTitle"),
+                    t("profile.removePhotoMessage"),
+                    [
+                      { text: t("common.cancel"), style: "cancel" },
+                      {
+                        text: t("common.remove"),
+                        style: "destructive",
+                        onPress: () => void remove(),
+                      },
+                    ]
+                  );
                 }}
               />
             ) : null}
           </View>
         ) : (
           <Text style={{ color: colors.muted, flex: 1, fontSize: 13 }}>
-            {hint ?? "Contact an administrator to change your photo."}
+            {hint ?? t("profile.contactAdmin")}
           </Text>
         )}
       </View>

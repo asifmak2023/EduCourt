@@ -1,3 +1,4 @@
+import { useTranslation } from "@eis/i18n";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { fetchResults } from "../lib/portal";
 import { useAsync } from "../lib/useAsync";
@@ -8,6 +9,7 @@ import { useTheme } from "../theme/ThemeProvider";
 
 export function ResultsScreen({ activeStudentId }: { activeStudentId: number | null }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { data, loading, error, reload } = useAsync(
     () => fetchResults(activeStudentId),
     [activeStudentId]
@@ -23,7 +25,7 @@ export function ResultsScreen({ activeStudentId }: { activeStudentId: number | n
         <ErrorText message={error} />
       ) : cards.length === 0 ? (
         <Card>
-          <EmptyState message="No exam results available yet." />
+          <EmptyState message={t("results.empty")} />
         </Card>
       ) : (
         cards.map((card) => (
@@ -31,7 +33,7 @@ export function ResultsScreen({ activeStudentId }: { activeStudentId: number | n
             <View style={styles.header}>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.exam, { color: colors.foreground }]}>
-                  {card.exam?.name ?? `Exam #${card.exam_id}`}
+                  {card.exam?.name ?? t("results.examHash", { id: card.exam_id })}
                 </Text>
                 {card.exam?.starts_on ? (
                   <Text style={{ color: colors.muted, fontSize: 12 }}>
@@ -44,10 +46,16 @@ export function ResultsScreen({ activeStudentId }: { activeStudentId: number | n
             </View>
 
             <View style={styles.metrics}>
-              <Metric label="Obtained" value={`${card.total_obtained} / ${card.total_max}`} />
-              <Metric label="Percentage" value={`${card.percentage}%`} />
               <Metric
-                label="Failed"
+                label={t("results.obtained")}
+                value={`${card.total_obtained} / ${card.total_max}`}
+              />
+              <Metric
+                label={t("results.percentage")}
+                value={`${card.percentage}%`}
+              />
+              <Metric
+                label={t("results.failed")}
                 value={card.failed_subjects}
                 tone={card.failed_subjects > 0 ? colors.danger : undefined}
               />
@@ -56,7 +64,7 @@ export function ResultsScreen({ activeStudentId }: { activeStudentId: number | n
             {card.subjects.map((subject) => (
               <View key={subject.exam_paper_id} style={styles.subjectRow}>
                 <Text style={[styles.subjectName, { color: colors.foreground }]}>
-                  {subject.subject ?? "Subject"}
+                  {subject.subject ?? t("results.subject")}
                 </Text>
                 <Text
                   style={{
@@ -66,7 +74,7 @@ export function ResultsScreen({ activeStudentId }: { activeStudentId: number | n
                   }}
                 >
                   {subject.is_absent || subject.marks_obtained === null
-                    ? "Absent"
+                    ? t("results.absent")
                     : `${subject.marks_obtained} / ${subject.max_marks}`}
                 </Text>
               </View>

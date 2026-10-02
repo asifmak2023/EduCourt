@@ -1,3 +1,4 @@
+import type { MessageKey } from "@eis/i18n";
 import type { AuthUser } from "./api";
 import { MODULES } from "../admin/registry";
 
@@ -40,10 +41,26 @@ export function can(permissions: string[], permission?: string | null): boolean 
 }
 
 const PORTAL_ITEMS: NavItem[] = [
-  { key: "timetable", label: "Timetable", subtitle: "Published class schedule" },
-  { key: "attendance", label: "Attendance", subtitle: "Daily records and summary" },
-  { key: "results", label: "Results", subtitle: "Exam performance" },
-  { key: "fees", label: "Fees", subtitle: "Vouchers and balances" },
+  {
+    key: "timetable",
+    label: "navigation.timetable",
+    subtitle: "navigation.subtitle.timetable",
+  },
+  {
+    key: "attendance",
+    label: "navigation.attendance",
+    subtitle: "navigation.subtitle.attendance",
+  },
+  {
+    key: "results",
+    label: "navigation.results",
+    subtitle: "navigation.subtitle.results",
+  },
+  {
+    key: "fees",
+    label: "navigation.fees",
+    subtitle: "navigation.subtitle.fees",
+  },
 ];
 
 const STAFF_ORDER = [
@@ -55,19 +72,36 @@ const STAFF_ORDER = [
   "Administration",
 ];
 
+const SECTION_KEYS: Record<string, MessageKey> = {
+  "Admissions & Students": "navigation.section.admissions",
+  Academics: "navigation.section.academics",
+  Finance: "navigation.section.finance",
+  People: "navigation.section.people",
+  Operations: "navigation.section.operations",
+  Administration: "navigation.section.administration",
+};
+
+function sectionLabel(name: string): string {
+  return SECTION_KEYS[name] ?? name;
+}
+
 export function buildNav(user: AuthUser | null, portal: boolean): NavSection[] {
   const permissions = user?.permissions ?? [];
   const sections: NavSection[] = [];
 
   sections.push({
-    label: "Overview",
+    label: "navigation.section.overview",
     items: [
-      { key: "dashboard", label: "Dashboard", subtitle: "Overview of your account" },
+      {
+        key: "dashboard",
+        label: "navigation.dashboard",
+        subtitle: "navigation.subtitle.dashboard",
+      },
     ],
   });
 
   if (portal) {
-    sections.push({ label: "My portal", items: PORTAL_ITEMS });
+    sections.push({ label: "navigation.section.myPortal", items: PORTAL_ITEMS });
   }
 
   const groups = new Map<string, NavItem[]>();
@@ -91,8 +125,8 @@ export function buildNav(user: AuthUser | null, portal: boolean): NavSection[] {
       const list = groups.get("Admissions & Students") ?? [];
       list.push({
         key: "promotions",
-        label: "Promotions",
-        subtitle: "Bulk student promotion",
+        label: "navigation.promotions",
+        subtitle: "navigation.subtitle.promotions",
         permission: "student.edit",
         customScreen: "promotions",
       });
@@ -103,8 +137,8 @@ export function buildNav(user: AuthUser | null, portal: boolean): NavSection[] {
       const list = groups.get("Finance") ?? [];
       list.push({
         key: "fee-reports",
-        label: "Fee reports",
-        subtitle: "Defaulters, collection and class summaries",
+        label: "navigation.feeReports",
+        subtitle: "navigation.subtitle.feeReports",
         permission: "fee.view",
         customScreen: "feeReports",
       });
@@ -115,8 +149,8 @@ export function buildNav(user: AuthUser | null, portal: boolean): NavSection[] {
       const list = groups.get("Finance") ?? [];
       list.push({
         key: "finance-reports",
-        label: "Finance reports",
-        subtitle: "Trial balance, budgets and expense summaries",
+        label: "navigation.financeReports",
+        subtitle: "navigation.subtitle.financeReports",
         permission: "finance.view",
         customScreen: "financeReports",
       });
@@ -127,18 +161,22 @@ export function buildNav(user: AuthUser | null, portal: boolean): NavSection[] {
   for (const name of [...STAFF_ORDER, ...groups.keys()]) {
     const items = groups.get(name);
     if (items?.length) {
-      sections.push({ label: name, items });
+      sections.push({ label: sectionLabel(name), items });
     }
     groups.delete(name);
   }
   for (const [name, items] of groups) {
-    sections.push({ label: name, items });
+    sections.push({ label: sectionLabel(name), items });
   }
 
   sections.push({
-    label: "Account",
+    label: "navigation.section.account",
     items: [
-      { key: "profile", label: "Profile", subtitle: "Photo and personal details" },
+      {
+        key: "profile",
+        label: "navigation.profile",
+        subtitle: "navigation.subtitle.profile",
+      },
     ],
   });
 

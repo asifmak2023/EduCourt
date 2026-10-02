@@ -1,3 +1,4 @@
+import { useTranslation } from "@eis/i18n";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { fetchTimetable } from "../lib/portal";
 import { useAsync } from "../lib/useAsync";
@@ -11,6 +12,7 @@ const DAY_ORDER = [1, 2, 3, 4, 5, 6, 7];
 
 export function TimetableScreen({ activeStudentId }: { activeStudentId: number | null }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { data, loading, error, reload } = useAsync(
     () => fetchTimetable(activeStudentId),
     [activeStudentId]
@@ -32,7 +34,7 @@ export function TimetableScreen({ activeStudentId }: { activeStudentId: number |
         <ErrorText message={error} />
       ) : slots.length === 0 ? (
         <Card>
-          <EmptyState message="No published timetable for this student yet." />
+          <EmptyState message={t("timetable.empty")} />
         </Card>
       ) : (
         DAY_ORDER.filter((day) => byDay.has(day)).map((day) => (
@@ -42,7 +44,7 @@ export function TimetableScreen({ activeStudentId }: { activeStudentId: number |
               <View key={slot.id} style={styles.slot}>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.subject, { color: colors.foreground }]}>
-                    {slot.subject?.name ?? "Free period"}
+                    {slot.subject?.name ?? t("timetable.freePeriod")}
                   </Text>
                   <Text style={{ color: colors.muted, fontSize: 12 }}>
                     {[

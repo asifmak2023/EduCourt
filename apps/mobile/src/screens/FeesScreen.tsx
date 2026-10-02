@@ -1,3 +1,4 @@
+import { useTranslation } from "@eis/i18n";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { fetchFees } from "../lib/portal";
 import { useAsync } from "../lib/useAsync";
@@ -8,6 +9,7 @@ import { useTheme } from "../theme/ThemeProvider";
 
 export function FeesScreen({ activeStudentId }: { activeStudentId: number | null }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { data, loading, error, reload } = useAsync(
     () => fetchFees(activeStudentId),
     [activeStudentId]
@@ -24,16 +26,19 @@ export function FeesScreen({ activeStudentId }: { activeStudentId: number | null
       ) : data ? (
         <>
           <Card>
-            <SectionLabel>Summary</SectionLabel>
+            <SectionLabel>{t("fees.summary")}</SectionLabel>
             <View style={styles.metrics}>
-              <Metric label="Billed" value={formatMoney(data.totals.billed)} />
               <Metric
-                label="Paid"
+                label={t("fees.billed")}
+                value={formatMoney(data.totals.billed)}
+              />
+              <Metric
+                label={t("fees.paid")}
                 value={formatMoney(data.totals.paid)}
                 tone={colors.success}
               />
               <Metric
-                label="Outstanding"
+                label={t("fees.outstanding")}
                 value={formatMoney(data.totals.outstanding)}
                 tone={Number(data.totals.outstanding) > 0 ? colors.danger : colors.success}
               />
@@ -41,9 +46,9 @@ export function FeesScreen({ activeStudentId }: { activeStudentId: number | null
           </Card>
 
           <Card>
-            <SectionLabel>Vouchers</SectionLabel>
+            <SectionLabel>{t("fees.vouchers")}</SectionLabel>
             {vouchers.length === 0 ? (
-              <EmptyState message="No fee vouchers issued yet." />
+              <EmptyState message={t("fees.empty")} />
             ) : (
               vouchers.map((voucher) => (
                 <View key={voucher.id} style={styles.voucher}>
@@ -52,12 +57,16 @@ export function FeesScreen({ activeStudentId }: { activeStudentId: number | null
                       {voucher.voucher_no}
                     </Text>
                     <Text style={{ color: colors.muted, fontSize: 12 }}>
-                      Due {formatDate(voucher.due_date)} · Amount{" "}
-                      {formatMoney(voucher.amount)}
+                      {t("fees.dueAmount", {
+                        date: formatDate(voucher.due_date),
+                        amount: formatMoney(voucher.amount),
+                      })}
                     </Text>
                     <Text style={{ color: colors.muted, fontSize: 12 }}>
-                      Paid {formatMoney(voucher.paid_amount)} · Balance{" "}
-                      {formatMoney(voucher.balance)}
+                      {t("fees.paidBalance", {
+                        paid: formatMoney(voucher.paid_amount),
+                        balance: formatMoney(voucher.balance),
+                      })}
                     </Text>
                   </View>
                   <StatusPill value={voucher.status} />

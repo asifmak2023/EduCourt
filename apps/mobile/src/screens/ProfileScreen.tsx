@@ -1,3 +1,4 @@
+import { useTranslation } from "@eis/i18n";
 import { StyleSheet, Text, View } from "react-native";
 import type { AuthUser } from "../lib/api";
 import { Screen } from "../components/Screen";
@@ -15,15 +16,16 @@ export function ProfileScreen({
   onSignOut: () => void;
 }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const canManagePhoto = user.permissions.includes("user.photo");
 
   const rows: { label: string; value: string }[] = [
-    { label: "Email", value: user.email },
-    { label: "Phone", value: user.phone ?? "-" },
-    { label: "Employee code", value: user.employee_code ?? "-" },
-    { label: "Job title", value: user.job_title ?? "-" },
-    { label: "Campus", value: user.campus?.name ?? "-" },
-    { label: "Institution", value: user.institution?.name ?? "-" },
+    { label: t("profile.email"), value: user.email },
+    { label: t("profile.phone"), value: user.phone ?? "-" },
+    { label: t("profile.employeeCode"), value: user.employee_code ?? "-" },
+    { label: t("profile.jobTitle"), value: user.job_title ?? "-" },
+    { label: t("profile.campus"), value: user.campus?.name ?? "-" },
+    { label: t("profile.institution"), value: user.institution?.name ?? "-" },
   ];
 
   return (
@@ -34,11 +36,11 @@ export function ProfileScreen({
         photoUrl={user.photo_url ?? null}
         canManage={canManagePhoto}
         onChanged={(photoUrl) => onUserChange({ ...user, photo_url: photoUrl })}
-        hint="JPG, PNG or WebP, up to 5 MB. Used as your avatar across the portal."
+        hint={t("profile.photoHint")}
       />
 
       <Card>
-        <SectionLabel>Account</SectionLabel>
+        <SectionLabel>{t("profile.account")}</SectionLabel>
         {rows.map((row) => (
           <View key={row.label} style={styles.row}>
             <Text style={{ color: colors.muted, fontSize: 13 }}>{row.label}</Text>
@@ -50,14 +52,14 @@ export function ProfileScreen({
       </Card>
 
       <Card>
-        <SectionLabel>Roles</SectionLabel>
+        <SectionLabel>{t("profile.roles")}</SectionLabel>
         <Text style={[styles.rowValue, { color: colors.foreground }]}>
           {user.roles.join(", ") || "-"}
         </Text>
       </Card>
 
       <View style={{ marginTop: 8 }}>
-        <GhostButton label="Sign out" tone="danger" onPress={onSignOut} />
+        <GhostButton label={t("common.signOut")} tone="danger" onPress={onSignOut} />
       </View>
     </Screen>
   );

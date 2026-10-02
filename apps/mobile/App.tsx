@@ -1,4 +1,5 @@
 import { StatusBar } from "expo-status-bar";
+import { useTranslation } from "@eis/i18n";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View, useWindowDimensions } from "react-native";
 import {
@@ -16,7 +17,7 @@ import {
   type NavItem,
 } from "./src/lib/nav";
 import { CampusProvider } from "./src/lib/campus";
-import { AppI18nProvider } from "./src/lib/i18n";
+import { AppI18nProvider, useTr } from "./src/lib/i18n";
 import { findModule } from "./src/admin/registry";
 import { findCustomScreen } from "./src/admin/screens";
 import { ModuleListScreen } from "./src/admin/ModuleListScreen";
@@ -54,6 +55,8 @@ export default function App() {
 
 function AppInner() {
   const { colors, resolvedMode, ready } = useTheme();
+  const { t } = useTranslation();
+  const tr = useTr();
   const { width } = useWindowDimensions();
   const wide = width >= WIDE_BREAKPOINT;
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -198,11 +201,11 @@ function AppInner() {
 
             <View style={styles.content}>
               <AppHeader
-                title={activeItem?.label ?? "Dashboard"}
+                title={activeItem ? tr(activeItem.label) : t("navigation.dashboard")}
                 subtitle={
                   activeModule && moduleRoute && moduleRoute.mode !== "list"
-                    ? activeModule.label
-                    : activeItem?.subtitle
+                    ? tr(activeModule.label)
+                    : tr(activeItem?.subtitle)
                 }
                 onMenu={wide ? undefined : () => setDrawerOpen(true)}
                 onBack={

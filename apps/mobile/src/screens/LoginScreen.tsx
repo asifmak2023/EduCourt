@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "@eis/i18n";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { ApiError, apiFetch, setToken, type AuthUser } from "../lib/api";
 import { Card, ErrorText, PrimaryButton, TextField } from "../components/ui";
@@ -12,6 +13,7 @@ export function LoginScreen({
   onAppearance: () => void;
 }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +21,7 @@ export function LoginScreen({
 
   async function signIn() {
     if (!email.trim() || !password) {
-      setError("Enter your email and password.");
+      setError(t("auth.missingCredentials"));
       return;
     }
 
@@ -34,7 +36,7 @@ export function LoginScreen({
       setToken(response.token);
       onAuthenticated(response.user);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "Unable to sign in.");
+      setError(caught instanceof ApiError ? caught.message : t("auth.failed"));
     } finally {
       setLoading(false);
     }
@@ -49,37 +51,41 @@ export function LoginScreen({
           style={[styles.pill, { backgroundColor: colors.accentSoft }]}
         >
           <Text style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>
-            Appearance
+            {t("appearance.title")}
           </Text>
         </Pressable>
       </View>
 
       <Text style={[styles.brand, { color: colors.foreground }]}>
-        Education Information System
+        {t("auth.brand")}
       </Text>
       <Text style={[styles.tagline, { color: colors.muted }]}>
-        Sign in to your campus dashboard.
+        {t("auth.tagline")}
       </Text>
 
       <Card>
         <TextField
-          label="Email"
+          label={t("auth.email")}
           value={email}
           onChangeText={setEmail}
-          placeholder="you@example.com"
+          placeholder={t("auth.emailPlaceholder")}
           keyboardType="email-address"
         />
         <TextField
-          label="Password"
+          label={t("auth.password")}
           value={password}
           onChangeText={setPassword}
-          placeholder="Your password"
+          placeholder={t("auth.passwordPlaceholder")}
           secureTextEntry
         />
 
         {error ? <ErrorText message={error} /> : null}
 
-        <PrimaryButton label="Sign in" onPress={() => void signIn()} loading={loading} />
+        <PrimaryButton
+          label={t("auth.signIn")}
+          onPress={() => void signIn()}
+          loading={loading}
+        />
       </Card>
     </ScrollView>
   );

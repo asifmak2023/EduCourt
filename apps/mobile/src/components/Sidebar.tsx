@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "@eis/i18n";
 import {
   Animated,
   Pressable,
@@ -13,6 +14,7 @@ import { SectionLabel } from "./ui";
 import { useTheme } from "../theme/ThemeProvider";
 import { withAlpha } from "../theme/colors";
 import { useCampus } from "../lib/campus";
+import { useTr } from "../lib/i18n";
 import type { NavItem, NavSection } from "../lib/nav";
 import type { AuthUser, StudentSummary } from "../lib/api";
 
@@ -48,6 +50,8 @@ export function Sidebar({
   onSignOut,
 }: SidebarProps) {
   const { colors, config } = useTheme();
+  const { t } = useTranslation();
+  const tr = useTr();
   const { campuses, campusId, setCampusId, canSwitch } = useCampus();
   const [translateX] = useState(
     () => new Animated.Value(wide ? 0 : -SIDEBAR_WIDTH)
@@ -95,7 +99,7 @@ export function Sidebar({
       >
         {canSwitch ? (
           <View style={styles.group}>
-            <SectionLabel>Campus</SectionLabel>
+            <SectionLabel>{t("navigation.campus")}</SectionLabel>
             <View style={styles.campusRow}>
               {campuses.map((campus) => {
                 const active = campus.id === campusId;
@@ -127,7 +131,7 @@ export function Sidebar({
 
         {students.length > 1 ? (
           <View style={styles.group}>
-            <SectionLabel>Student</SectionLabel>
+            <SectionLabel>{t("navigation.student")}</SectionLabel>
             <ChildSelector
               students={students}
               activeId={activeStudentId}
@@ -138,7 +142,7 @@ export function Sidebar({
 
         {sections.map((section) => (
           <View key={section.label} style={styles.group}>
-            <SectionLabel>{section.label}</SectionLabel>
+            <SectionLabel>{tr(section.label)}</SectionLabel>
             <View style={styles.nav}>
               {section.items.map((item) => {
                 const active = item.key === activeKey;
@@ -166,7 +170,7 @@ export function Sidebar({
                       ]}
                       numberOfLines={1}
                     >
-                      {item.label}
+                      {tr(item.label)}
                     </Text>
                   </Pressable>
                 );
@@ -185,7 +189,9 @@ export function Sidebar({
           accessibilityRole="button"
           style={[styles.footerButton, { borderColor: colors.border }]}
         >
-          <Text style={{ color: colors.foreground, fontWeight: "600" }}>Appearance</Text>
+          <Text style={{ color: colors.foreground, fontWeight: "600" }}>
+            {t("appearance.title")}
+          </Text>
         </Pressable>
         <Pressable
           onPress={() => {
@@ -195,7 +201,9 @@ export function Sidebar({
           accessibilityRole="button"
           style={[styles.footerButton, { borderColor: colors.border }]}
         >
-          <Text style={{ color: colors.danger, fontWeight: "600" }}>Sign out</Text>
+          <Text style={{ color: colors.danger, fontWeight: "600" }}>
+            {t("common.signOut")}
+          </Text>
         </Pressable>
       </View>
     </View>

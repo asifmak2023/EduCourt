@@ -24,7 +24,13 @@ return [
         explode(',', (string) env('FRONTEND_URL', 'http://localhost:3000'))
     ))),
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env(
+            'FRONTEND_URL_PATTERNS',
+            '#^https://[a-z0-9-]+\.monkeycode-ai\.live$#'
+        ))
+    ))),
 
     'allowed_headers' => [
         'Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'X-Campus-Id',

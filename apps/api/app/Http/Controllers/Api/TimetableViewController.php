@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TimetableSlotResource;
+use App\Models\AcademicYear;
 use App\Models\ClassRoom;
 use App\Models\TimetableSlot;
 use App\Models\User;
@@ -46,8 +47,16 @@ class TimetableViewController extends Controller
 
     private function scoped(Request $request): Builder
     {
+        $academicYearId = $request->integer('academic_year_id');
+
+        if ($academicYearId === 0) {
+            $academicYearId = (int) AcademicYear::query()
+                ->where('is_current', true)
+                ->value('id');
+        }
+
         return TimetableSlot::query()
-            ->when($request->filled('academic_year_id'), fn (Builder $q) => $q->where('academic_year_id', $request->integer('academic_year_id')))
+            ->when($academicYearId > 0, fn (Builder $q) => $q->where('academic_year_id', $academicYearId))
             ->when($request->filled('term_id'), fn (Builder $q) => $q->where('term_id', $request->integer('term_id')))
             ->orderBy('day_of_week')
             ->orderBy('period_id');
@@ -79,7 +88,7 @@ class TimetableViewController extends Controller
     {
         return $request->validate([
             'academic_year_id' => [
-                'required', 'integer',
+                'nullable', 'integer',
                 Rule::exists('academic_years', 'id'),
             ],
             'term_id' => ['nullable', 'integer', Rule::exists('terms', 'id')],

@@ -20,9 +20,10 @@ import {
   formatNumber,
   humanize,
 } from "@/lib/format";
+import { visibleSections } from "@/lib/nav";
 import type { CampusDashboard, PlatformOverview, TimetableSlot } from "@/lib/types";
 
-type Mode = "platform" | "campus" | "teacher";
+type Mode = "platform" | "campus" | "teacher" | "general";
 
 function modeFor(user: AuthUser): Mode {
   if (user.roles.includes("platform_admin")) {
@@ -33,7 +34,11 @@ function modeFor(user: AuthUser): Mode {
     return "campus";
   }
 
-  return "teacher";
+  if (user.permissions.includes("timetable.view")) {
+    return "teacher";
+  }
+
+  return "general";
 }
 
 function todayIsoWeekday(): number {
@@ -96,7 +101,7 @@ export default function DashboardPage() {
           if (active) {
             setCampus(response.data);
           }
-        } else {
+        } else if (resolved === "teacher") {
           const response = await apiFetch<{ data: TimetableSlot[] }>(
             "/v1/timetable/me"
           );
@@ -158,6 +163,8 @@ export default function DashboardPage() {
       {!loading && mode === "teacher" ? (
         <TeacherView slots={slots} twoFactorEnabled={user.two_factor_enabled} />
       ) : null}
+
+      {!loading && mode === "general" ? <GeneralView user={user} /> : null}
     </div>
   );
 }
@@ -287,6 +294,31 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
         </Card>
       </section>
     </div>
+  );
+}
+
+function GeneralView({ user }: { user: AuthUser }) {
+  const sections = visibleSections(user.permissions).filter(
+    (section) => section.label !== "Overview"
+  );
+
+  if (sections.length === 0) {
+    return <EmptyState message="There is nothing assigned to your account yet." />;
+  }
+
+  return (
+    <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {sections.map((section) => (
+        <QuickLinks
+          key={section.label}
+          title={section.label}
+          links={section.items.map((item) => ({
+            href: item.href,
+            label: item.label,
+          }))}
+        />
+      ))}
+    </section>
   );
 }
 

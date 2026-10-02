@@ -3,21 +3,21 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\StudentResource;
-use App\Models\Student;
+use App\Http\Resources\UserResource;
+use App\Models\User;
 use App\Services\Files\FileScanner;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
-class StudentPhotoController extends Controller
+class UserPhotoController extends Controller
 {
     private const DISK = 'public';
 
     public function __construct(private readonly FileScanner $scanner) {}
 
-    public function store(Request $request, Student $student): StudentResource
+    public function store(Request $request, User $user): UserResource
     {
         $request->validate([
             'photo' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png,webp'],
@@ -27,33 +27,35 @@ class StudentPhotoController extends Controller
 
         $this->assertClean($file->getRealPath());
 
-        $this->deleteExisting($student);
+        $this->deleteExisting($user);
 
-        $path = $file->store("student-photos/{$student->id}", self::DISK);
+        $path = $file->store("user-photos/{$user->id}", self::DISK);
 
-        $student->update(['photo_path' => $path]);
+        $user->update(['photo_path' => $path]);
 
-        $student->user?->update(['photo_path' => $path]);
+        $user->student?->update(['photo_path' => $path]);
 
-        return new StudentResource($student->refresh());
+        return new UserResource($user->refresh()->load([
+            'roles', 'campus', 'institution', 'scopeAssignments', 'student',
+        ]));
     }
 
-    public function destroy(Student $student): JsonResponse
+    public function destroy(User $user): JsonResponse
     {
-        $this->deleteExisting($student);
+        $this->deleteExisting($user);
 
-        $student->update(['photo_path' => null]);
+        $user->update(['photo_path' => null]);
 
-        $student->user?->update(['photo_path' => null]);
+        $user->student?->update(['photo_path' => null]);
 
-        return response()->json(['message' => 'Student photo removed.']);
+        return response()->json(['message' => 'User photo removed.']);
     }
 
-    private function deleteExisting(Student $student): void
+    private function deleteExisting(User $user): void
     {
         $paths = array_filter([
-            $student->photo_path,
-            $student->user?->photo_path,
+            $user->photo_path,
+            $user->student?->photo_path,
         ]);
 
         foreach (array_unique($paths) as $path) {

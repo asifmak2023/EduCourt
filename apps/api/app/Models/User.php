@@ -31,6 +31,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'phone',
         'employee_code',
         'job_title',
+        'photo_path',
         'is_active',
         'two_factor_secret',
         'two_factor_recovery_codes',

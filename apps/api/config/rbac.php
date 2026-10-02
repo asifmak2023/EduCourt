@@ -24,7 +24,7 @@ return [
         'academic' => ['view', 'create', 'edit', 'delete'],
         'curriculum' => ['view', 'create', 'edit', 'delete', 'approve'],
         'timetable' => ['view', 'create', 'edit', 'approve', 'delete'],
-        'user' => ['view', 'create', 'edit', 'approve', 'delete'],
+        'user' => ['view', 'create', 'edit', 'approve', 'delete', 'photo'],
         'role' => ['view', 'create', 'edit', 'delete'],
         'finance' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'fee' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
@@ -186,7 +186,7 @@ return [
 
         RoleName::ItAdministrator->value => [
             'academic.view',
-            'it.*', 'user.view', 'user.create', 'user.edit', 'audit.view', 'setting.view',
+            'it.*', 'user.view', 'user.create', 'user.edit', 'user.photo', 'audit.view', 'setting.view',
         ],
 
         RoleName::Librarian->value => [

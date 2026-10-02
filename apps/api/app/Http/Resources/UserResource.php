@@ -26,11 +26,20 @@ class UserResource extends JsonResource
             'institution' => InstitutionResource::make($this->whenLoaded('institution')),
             'scope_assignments' => ScopeAssignmentResource::collection($this->whenLoaded('scopeAssignments')),
             'two_factor_enabled' => $this->hasTwoFactorEnabled(),
-            'photo_url' => $this->whenLoaded('student', fn () => $this->student?->photo_path
-                ? Storage::disk('public')->url($this->student->photo_path)
-                : null),
+            'photo_url' => $this->photoUrl(),
             'last_login_at' => $this->last_login_at,
             'created_at' => $this->created_at,
         ];
+    }
+
+    private function photoUrl(): ?string
+    {
+        $path = $this->photo_path;
+
+        if (! $path && $this->relationLoaded('student')) {
+            $path = $this->student?->photo_path;
+        }
+
+        return $path ? Storage::disk('public')->url($path) : null;
     }
 }

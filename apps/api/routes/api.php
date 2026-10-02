@@ -150,6 +150,7 @@ use App\Http\Controllers\Api\TransportReportController;
 use App\Http\Controllers\Api\TransportRouteController;
 use App\Http\Controllers\Api\TwoFactorController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\UserPhotoController;
 use App\Http\Controllers\Api\VehicleController;
 use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\Api\VisitorLogController;
@@ -245,6 +246,10 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:user.edit');
         Route::delete('users/{user}', [UserController::class, 'destroy'])
             ->middleware('permission:user.delete');
+        Route::post('users/{user}/photo', [UserPhotoController::class, 'store'])
+            ->middleware('permission:user.photo');
+        Route::delete('users/{user}/photo', [UserPhotoController::class, 'destroy'])
+            ->middleware('permission:user.photo');
 
         Route::get('scope-assignments', [ScopeAssignmentController::class, 'index'])
             ->middleware('permission:role.view');

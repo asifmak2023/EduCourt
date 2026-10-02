@@ -23,7 +23,7 @@ class UserController extends Controller
         $search = $request->string('search')->toString();
 
         $users = User::query()
-            ->with(['roles', 'campus', 'institution'])
+            ->with(['roles', 'campus', 'institution', 'student'])
             ->when($search !== '', fn ($query) => $query
                 ->where(fn ($q) => $q
                     ->where('name', 'like', "%{$search}%")
@@ -80,7 +80,7 @@ class UserController extends Controller
     public function show(User $user): UserResource
     {
         return new UserResource($user->load([
-            'roles', 'campus', 'institution', 'scopeAssignments.campus',
+            'roles', 'campus', 'institution', 'scopeAssignments.campus', 'student',
         ]));
     }
 
@@ -122,7 +122,7 @@ class UserController extends Controller
             ->log('User updated');
 
         return new UserResource($user->load([
-            'roles', 'campus', 'institution', 'scopeAssignments.campus',
+            'roles', 'campus', 'institution', 'scopeAssignments.campus', 'student',
         ]));
     }
 

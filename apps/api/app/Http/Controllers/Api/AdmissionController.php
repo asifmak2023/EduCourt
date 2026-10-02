@@ -165,6 +165,7 @@ class AdmissionController extends Controller
             ],
             'section_id' => ['nullable', 'integer'],
             'roll_number' => ['nullable', 'string', 'max:32'],
+            'gender' => ['nullable', Rule::in(['male', 'female', 'other'])],
             'admission_no' => [
                 'nullable', 'string', 'max:32',
                 Rule::unique('students', 'admission_no')->where('campus_id', $admission->campus_id),

@@ -143,6 +143,30 @@ class AdmissionTest extends TestCase
         ])->assertStatus(422)->assertJsonValidationErrors('status');
     }
 
+    public function test_enrolling_an_admission_without_gender_requires_gender(): void
+    {
+        $admission = $this->createAdmission(['gender' => null]);
+
+        $this->as($this->admin)->postJson("/api/v1/admissions/{$admission->id}/approve")->assertOk();
+
+        $this->as($this->admin)->postJson("/api/v1/admissions/{$admission->id}/enroll", [
+            'academic_year_id' => $this->year->id,
+            'class_room_id' => $this->class->id,
+        ])->assertStatus(422)->assertJsonValidationErrors('gender');
+
+        $this->as($this->admin)->postJson("/api/v1/admissions/{$admission->id}/enroll", [
+            'academic_year_id' => $this->year->id,
+            'class_room_id' => $this->class->id,
+            'gender' => Gender::Female->value,
+        ])->assertStatus(201)->assertJsonPath('data.status', AdmissionStatus::Enrolled->value);
+
+        $this->assertDatabaseHas('students', [
+            'campus_id' => $this->campus->id,
+            'first_name' => 'Hassan',
+            'gender' => Gender::Female->value,
+        ]);
+    }
+
     public function test_enrolled_admission_cannot_be_rejected_or_edited(): void
     {
         $admission = $this->enrolledAdmission();

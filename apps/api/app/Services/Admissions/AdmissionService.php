@@ -35,6 +35,14 @@ class AdmissionService
 
         $sectionId = $attributes['section_id'] ?? null;
 
+        $gender = $attributes['gender'] ?? $admission->gender;
+
+        if ($gender === null) {
+            throw ValidationException::withMessages([
+                'gender' => ['The gender field is required to enroll this admission.'],
+            ]);
+        }
+
         if ($sectionId !== null) {
             $belongs = Section::query()
                 ->whereKey($sectionId)
@@ -48,14 +56,14 @@ class AdmissionService
             }
         }
 
-        return DB::transaction(function () use ($admission, $user, $attributes, $sectionId) {
+        return DB::transaction(function () use ($admission, $user, $attributes, $sectionId, $gender) {
             $student = Student::create([
                 'institution_id' => $admission->institution_id,
                 'campus_id' => $admission->campus_id,
                 'admission_no' => $attributes['admission_no'] ?? $this->nextAdmissionNo($admission->campus_id),
                 'first_name' => $admission->first_name,
                 'last_name' => $admission->last_name,
-                'gender' => $admission->gender,
+                'gender' => $gender,
                 'date_of_birth' => $admission->date_of_birth,
                 'email' => $admission->guardian_email,
                 'phone' => $admission->guardian_phone,

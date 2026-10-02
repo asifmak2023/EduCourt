@@ -686,8 +686,8 @@ Route::prefix('v1')->group(function () {
             Route::post('notifications/{notification}/send', [NotificationController::class, 'send'])->middleware('permission:notification.send');
             Route::post('notifications/{notification}/cancel', [NotificationController::class, 'cancel'])->middleware('permission:notification.send');
 
-            $hr = function (string $uri, string $controller, string $param): void {
-                Route::get($uri, [$controller, 'index'])->middleware('permission:hr.view');
+            $hr = function (string $uri, string $controller, string $param, string $indexPermission = 'hr.view'): void {
+                Route::get($uri, [$controller, 'index'])->middleware('permission:'.$indexPermission);
                 Route::post($uri, [$controller, 'store'])->middleware('permission:hr.create');
                 Route::get("{$uri}/{".$param.'}', [$controller, 'show'])->middleware('permission:hr.view');
                 Route::put("{$uri}/{".$param.'}', [$controller, 'update'])->middleware('permission:hr.edit');
@@ -696,7 +696,7 @@ Route::prefix('v1')->group(function () {
 
             $hr('departments', DepartmentController::class, 'department');
             $hr('designations', DesignationController::class, 'designation');
-            $hr('staff', StaffMemberController::class, 'staffMember');
+            $hr('staff', StaffMemberController::class, 'staffMember', 'hr.view|payroll.view');
 
             Route::post('staff/{staffMember}/terminate', [StaffMemberController::class, 'terminate'])->middleware('permission:hr.approve');
 

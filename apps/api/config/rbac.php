@@ -86,7 +86,7 @@ return [
         ],
 
         RoleName::Principal->value => [
-            'student.view', 'attendance.view', 'exam.view', 'exam.approve',
+            'student.view', 'user.view', 'attendance.view', 'exam.view', 'exam.approve',
             'credit.view',
             'academic.view', 'timetable.view', 'timetable.approve', 'scholarship.view',
             'curriculum.view', 'curriculum.approve',
@@ -101,13 +101,13 @@ return [
         ],
 
         RoleName::FinanceHead->value => [
-            'academic.view',
+            'academic.view', 'student.view',
             'finance.*', 'fee.*', 'payroll.*', 'report.*', 'audit.view',
             'scholarship.*', 'concession.*', 'fine.*', 'reminder.*',
         ],
 
         RoleName::Accountant->value => [
-            'academic.view',
+            'academic.view', 'student.view',
             'finance.view', 'finance.create', 'finance.edit', 'finance.export',
             'fee.view', 'fee.create', 'fee.edit', 'fee.export',
             'report.view', 'scholarship.view', 'concession.view',
@@ -123,13 +123,13 @@ return [
         ],
 
         RoleName::HrOfficer->value => [
-            'academic.view',
+            'academic.view', 'student.view', 'user.view',
             'hr.*', 'payroll.view', 'payroll.create', 'payroll.edit',
             'report.view', 'audit.view',
         ],
 
         RoleName::AcademicCoordinator->value => [
-            'student.view', 'attendance.view', 'exam.view', 'exam.marks', 'report.view',
+            'student.view', 'user.view', 'attendance.view', 'exam.view', 'exam.marks', 'report.view',
             'academic.view', 'academic.create', 'academic.edit',
             'curriculum.view', 'curriculum.create', 'curriculum.edit', 'curriculum.approve',
             'timetable.*',
@@ -139,7 +139,7 @@ return [
         ],
 
         RoleName::Teacher->value => [
-            'student.view', 'attendance.view', 'attendance.create', 'attendance.edit',
+            'student.view', 'user.view', 'attendance.view', 'attendance.create', 'attendance.edit',
             'exam.view', 'exam.create', 'exam.edit', 'exam.marks',
             'academic.view', 'timetable.view',
             'curriculum.view', 'curriculum.create', 'curriculum.edit',
@@ -149,27 +149,27 @@ return [
         ],
 
         RoleName::ExamController->value => [
-            'academic.view',
+            'academic.view', 'user.view',
             'exam.*', 'credit.*', 'student.view', 'report.view',
         ],
 
         RoleName::StudentAffairsOfficer->value => [
-            'academic.view',
+            'academic.view', 'user.view',
             'student_affairs.*', 'sports.view', 'complaint.view', 'report.view', 'conduct.*',
         ],
 
         RoleName::Counsellor->value => [
-            'academic.view',
+            'academic.view', 'user.view',
             'counselling.*', 'student.view', 'student_affairs.view', 'report.view',
         ],
 
         RoleName::CanteenManager->value => [
-            'academic.view',
+            'academic.view', 'student.view',
             'canteen.*', 'inventory.view', 'inventory.edit', 'report.view',
         ],
 
         RoleName::SportsDirector->value => [
-            'academic.view',
+            'academic.view', 'user.view',
             'sports.*', 'student.view', 'inventory.view', 'report.view',
         ],
 
@@ -179,17 +179,17 @@ return [
         ],
 
         RoleName::Librarian->value => [
-            'academic.view',
+            'academic.view', 'student.view', 'user.view',
             'library.*', 'inventory.view',
         ],
 
         RoleName::StoreIncharge->value => [
-            'academic.view',
+            'academic.view', 'user.view',
             'inventory.*', 'lab.view',
         ],
 
         RoleName::TransportHostelIncharge->value => [
-            'academic.view',
+            'academic.view', 'student.view',
             'transport.*', 'hostel.*', 'report.view',
         ],
 

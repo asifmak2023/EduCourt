@@ -1,20 +1,34 @@
 import { StatusBar } from "expo-status-bar";
 import { BlurView } from "expo-blur";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { ApiError, apiFetch, setToken, type AuthUser } from "./src/lib/api";
+  apiFetch,
+  loadStoredToken,
+  setToken,
+  type AuthUser,
+  type StudentSummary,
+} from "./src/lib/api";
+import { fetchChildren } from "./src/lib/portal";
 import { AppearanceModal } from "./src/components/AppearanceModal";
 import { AppBackground } from "./src/theme/AppBackground";
 import { ThemeProvider, useTheme } from "./src/theme/ThemeProvider";
-import { withAlpha, type ThemeColors } from "./src/theme/colors";
+import { withAlpha } from "./src/theme/colors";
+import { LoginScreen } from "./src/screens/LoginScreen";
+import { DashboardScreen } from "./src/screens/DashboardScreen";
+import { TimetableScreen } from "./src/screens/TimetableScreen";
+import { AttendanceScreen } from "./src/screens/AttendanceScreen";
+import { ResultsScreen } from "./src/screens/ResultsScreen";
+import { FeesScreen } from "./src/screens/FeesScreen";
+import { ProfileScreen } from "./src/screens/ProfileScreen";
+
+type TabKey =
+  | "dashboard"
+  | "timetable"
+  | "attendance"
+  | "results"
+  | "fees"
+  | "profile";
 
 export default function App() {
   return (
@@ -26,49 +40,78 @@ export default function App() {
 
 function AppInner() {
   const { colors, resolvedMode, ready, background, config } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const hasBackground = background.kind !== "default";
-  const glassEnabled = config.glass;
-  const frosted = hasBackground || glassEnabled;
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [students, setStudents] = useState<StudentSummary[]>([]);
+  const [activeStudentId, setActiveStudentId] = useState<number | null>(null);
+  const [tab, setTab] = useState<TabKey>("dashboard");
+  const [showAppearance, setShowAppearance] = useState(false);
+  const [booting, setBooting] = useState(true);
+
+  const signedIn = user !== null;
+  const portal = students.length > 0;
+  const frosted = background.kind !== "default" || config.glass;
   const blurIntensity = Math.min(
     100,
     Math.max(1, Math.round((config.glassBlur / 24) * 100))
   );
-  const headerStyle = [
-    styles.headerBlock,
-    frosted ? styles.headerScrim : null,
-    glassEnabled ? { backgroundColor: colors.glassSurfaceSecondary } : null,
-  ];
-  const cardStyle = [
-    styles.card,
-    glassEnabled ? { backgroundColor: colors.glassSurface } : null,
-  ];
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [showAppearance, setShowAppearance] = useState(false);
 
-  async function signIn() {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    let active = true;
 
-    try {
-      const response = await apiFetch<{ token: string; user: AuthUser }>(
-        "/v1/auth/login",
-        { method: "POST", body: { email, password } }
-      );
-      setToken(response.token);
-      setUser(response.user);
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "Unable to sign in.");
-    } finally {
-      setLoading(false);
+    (async () => {
+      const token = await loadStoredToken();
+
+      if (!token) {
+        if (active) {
+          setBooting(false);
+        }
+        return;
+      }
+
+      try {
+        const response = await apiFetch<{ data: AuthUser }>("/v1/auth/me");
+        if (active) {
+          setUser(response.data);
+        }
+      } catch {
+        setToken(null);
+      } finally {
+        if (active) {
+          setBooting(false);
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setStudents([]);
+      setActiveStudentId(null);
+      return;
     }
-  }
 
-  async function signOut() {
+    let active = true;
+
+    fetchChildren()
+      .then((list) => {
+        if (!active) {
+          return;
+        }
+        setStudents(list);
+        setActiveStudentId((previous) => previous ?? list[0]?.id ?? null);
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  const signOut = useCallback(async () => {
     try {
       await apiFetch("/v1/auth/logout", { method: "POST" });
     } catch {
@@ -76,128 +119,99 @@ function AppInner() {
     }
     setToken(null);
     setUser(null);
-  }
+    setTab("dashboard");
+  }, []);
 
-  if (!ready) {
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    const valid = buildTabs(user, students.length > 0).some(
+      (entry) => entry.key === tab
+    );
+
+    if (!valid) {
+      setTab("dashboard");
+    }
+  }, [user, students, tab]);
+
+  if (!ready || booting) {
     return (
-      <View style={styles.loading}>
+      <View style={[styles.loading, { backgroundColor: colors.background }]}>
         <StatusBar style={resolvedMode === "dark" ? "light" : "dark"} />
         <ActivityIndicator color={colors.accent} />
       </View>
     );
   }
 
+  const tabs = buildTabs(user, portal);
+
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       <AppBackground />
       <StatusBar style={resolvedMode === "dark" ? "light" : "dark"} />
 
       {user ? (
-        <ScrollView contentContainerStyle={styles.screen}>
-          <View style={headerStyle}>
-            {glassEnabled ? (
-              <BlurView
-                intensity={blurIntensity}
-                tint={resolvedMode === "dark" ? "dark" : "light"}
-                blurMethod="dimezisBlurViewSdk31Plus"
-                style={StyleSheet.absoluteFill}
-              />
-            ) : null}
-            <View style={styles.headerRow}>
-              <Text style={styles.title}>Dashboard</Text>
-              <Pressable
-                style={styles.pill}
-                onPress={() => setShowAppearance(true)}
-                accessibilityRole="button"
-              >
-                <Text style={styles.pillText}>Appearance</Text>
-              </Pressable>
-            </View>
-            <Text style={styles.subtitle}>
-              {user.institution?.name ?? "Institution"} -{" "}
-              {user.campus?.name ?? "All campuses"}
-            </Text>
-          </View>
-
-          <View style={cardStyle}>
-            <Text style={styles.cardLabel}>Signed in as</Text>
-            <Text style={styles.cardValue}>{user.name}</Text>
-            <Text style={styles.subtitle}>{user.email}</Text>
-          </View>
-
-          <View style={cardStyle}>
-            <Text style={styles.cardLabel}>Roles</Text>
-            <Text style={styles.cardValue}>{user.roles.join(", ")}</Text>
-          </View>
-
-          <View style={cardStyle}>
-            <Text style={styles.cardLabel}>Accessible modules</Text>
-            <Text style={styles.cardValue}>
-              {Array.from(
-                new Set(user.permissions.map((permission) => permission.split(".")[0]))
-              )
-                .sort()
-                .join(", ")}
-            </Text>
-          </View>
-
-          <Pressable style={styles.buttonGhost} onPress={signOut}>
-            <Text style={styles.buttonGhostText}>Sign out</Text>
-          </Pressable>
-        </ScrollView>
+        renderScreen({
+          tab,
+          user,
+          students,
+          activeStudentId,
+          portal,
+          onAppearance: () => setShowAppearance(true),
+          onSelectStudent: setActiveStudentId,
+          onUserChange: setUser,
+          onSignOut: () => void signOut(),
+        })
       ) : (
-        <ScrollView contentContainerStyle={styles.screen}>
-          <View style={headerStyle}>
-            {glassEnabled ? (
-              <BlurView
-                intensity={blurIntensity}
-                tint={resolvedMode === "dark" ? "dark" : "light"}
-                blurMethod="dimezisBlurViewSdk31Plus"
-                style={StyleSheet.absoluteFill}
-              />
-            ) : null}
-            <View style={styles.headerRow}>
-              <Text style={styles.title}>Education Information System</Text>
+        <LoginScreen onAuthenticated={setUser} />
+      )}
+
+      {user ? (
+        <View
+          style={[
+            styles.tabBar,
+            {
+              borderColor: colors.border,
+              backgroundColor: frosted
+                ? withAlpha(colors.surface, 0.9)
+                : colors.surface,
+            },
+          ]}
+        >
+          {config.glass ? (
+            <BlurView
+              intensity={blurIntensity}
+              tint={resolvedMode === "dark" ? "dark" : "light"}
+              blurMethod="dimezisBlurViewSdk31Plus"
+              style={StyleSheet.absoluteFill}
+            />
+          ) : null}
+          {tabs.map((entry) => {
+            const active = entry.key === tab;
+
+            return (
               <Pressable
-                style={styles.pill}
-                onPress={() => setShowAppearance(true)}
+                key={entry.key}
+                onPress={() => setTab(entry.key)}
+                style={styles.tabItem}
                 accessibilityRole="button"
               >
-                <Text style={styles.pillText}>Appearance</Text>
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    { color: active ? colors.accent : colors.muted },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {entry.label}
+                </Text>
               </Pressable>
-            </View>
-            <Text style={styles.subtitle}>Sign in to your campus dashboard.</Text>
-          </View>
-
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor={colors.muted}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor={colors.muted}
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-
-          <Pressable style={styles.button} onPress={signIn} disabled={loading}>
-            {loading ? (
-              <ActivityIndicator color={colors.accentForeground} />
-            ) : (
-              <Text style={styles.buttonText}>Sign in</Text>
-            )}
-          </Pressable>
-        </ScrollView>
-      )}
+            );
+          })}
+        </View>
+      ) : null}
 
       <AppearanceModal
         visible={showAppearance}
@@ -207,121 +221,128 @@ function AppInner() {
   );
 }
 
-function makeStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    root: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    loading: {
-      flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: colors.background,
-    },
-    screen: {
-      flexGrow: 1,
-      padding: 24,
-      paddingTop: 72,
-    },
-    headerBlock: {
-      marginBottom: 4,
-    },
-    headerScrim: {
-      borderRadius: 12,
-      paddingHorizontal: 12,
-      paddingVertical: 12,
-      backgroundColor: withAlpha(colors.surface, 0.82),
-      overflow: "hidden",
-    },
-    headerRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: 12,
-    },
-    title: {
-      flexShrink: 1,
-      fontSize: 22,
-      fontWeight: "700",
-      color: colors.foreground,
-    },
-    subtitle: {
-      marginTop: 4,
-      fontSize: 14,
-      color: colors.muted,
-    },
-    pill: {
-      borderRadius: 999,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      backgroundColor: colors.accentSoft,
-    },
-    pillText: {
-      fontSize: 13,
-      fontWeight: "600",
-      color: colors.accent,
-    },
-    input: {
-      marginTop: 16,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 10,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      backgroundColor: colors.surface,
-      color: colors.foreground,
-      fontSize: 15,
-    },
-    button: {
-      marginTop: 20,
-      borderRadius: 10,
-      paddingVertical: 14,
-      alignItems: "center",
-      backgroundColor: colors.accent,
-    },
-    buttonText: {
-      color: colors.accentForeground,
-      fontSize: 15,
-      fontWeight: "600",
-    },
-    buttonGhost: {
-      marginTop: 24,
-      borderRadius: 10,
-      paddingVertical: 12,
-      alignItems: "center",
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    buttonGhostText: {
-      color: colors.foreground,
-      fontSize: 15,
-      fontWeight: "600",
-    },
-    error: {
-      marginTop: 12,
-      color: colors.danger,
-      fontSize: 14,
-    },
-    card: {
-      marginTop: 16,
-      borderRadius: 14,
-      padding: 16,
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    cardLabel: {
-      fontSize: 12,
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-      color: colors.muted,
-    },
-    cardValue: {
-      marginTop: 6,
-      fontSize: 16,
-      fontWeight: "600",
-      color: colors.foreground,
-    },
-  });
+function buildTabs(user: AuthUser | null, portal: boolean): { key: TabKey; label: string }[] {
+  const tabs: { key: TabKey; label: string }[] = [
+    { key: "dashboard", label: "Dashboard" },
+  ];
+
+  if (!user) {
+    return tabs;
+  }
+
+  const has = (permission: string) => user.permissions.includes(permission);
+
+  if (portal) {
+    if (has("timetable.view")) {
+      tabs.push({ key: "timetable", label: "Timetable" });
+    }
+    if (has("attendance.view")) {
+      tabs.push({ key: "attendance", label: "Attendance" });
+    }
+    if (has("exam.view")) {
+      tabs.push({ key: "results", label: "Results" });
+    }
+    if (has("fee.view")) {
+      tabs.push({ key: "fees", label: "Fees" });
+    }
+  }
+
+  tabs.push({ key: "profile", label: "Profile" });
+
+  return tabs;
 }
+
+function renderScreen({
+  tab,
+  user,
+  students,
+  activeStudentId,
+  portal,
+  onAppearance,
+  onSelectStudent,
+  onUserChange,
+  onSignOut,
+}: {
+  tab: TabKey;
+  user: AuthUser;
+  students: StudentSummary[];
+  activeStudentId: number | null;
+  portal: boolean;
+  onAppearance: () => void;
+  onSelectStudent: (id: number) => void;
+  onUserChange: (user: AuthUser) => void;
+  onSignOut: () => void;
+}) {
+  if (tab === "profile") {
+    return (
+      <ProfileScreen
+        user={user}
+        onUserChange={onUserChange}
+        onSignOut={onSignOut}
+        onAppearance={onAppearance}
+      />
+    );
+  }
+
+  if (!portal) {
+    return (
+      <DashboardScreen user={user} students={students} onAppearance={onAppearance} />
+    );
+  }
+
+  const scoped = {
+    students,
+    activeStudentId,
+    onSelectStudent,
+    onAppearance,
+  };
+
+  switch (tab) {
+    case "timetable":
+      return <TimetableScreen {...scoped} />;
+    case "attendance":
+      return <AttendanceScreen {...scoped} />;
+    case "results":
+      return <ResultsScreen {...scoped} />;
+    case "fees":
+      return <FeesScreen {...scoped} />;
+    default:
+      return (
+        <DashboardScreen user={user} students={students} onAppearance={onAppearance} />
+      );
+  }
+}
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  loading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tabBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: "row",
+    borderTopWidth: 1,
+    paddingTop: 10,
+    paddingBottom: 24,
+    paddingHorizontal: 6,
+    overflow: "hidden",
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 6,
+    paddingHorizontal: 2,
+  },
+  tabLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+});

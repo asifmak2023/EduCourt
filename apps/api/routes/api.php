@@ -186,14 +186,10 @@ Route::prefix('v1')->group(function () {
 
         Route::prefix('me')->group(function () {
             Route::get('children', [PortalController::class, 'children']);
-            Route::get('timetable', [PortalController::class, 'timetable'])
-                ->middleware('permission:timetable.view');
-            Route::get('attendance', [PortalController::class, 'attendance'])
-                ->middleware('permission:attendance.view');
-            Route::get('results', [PortalController::class, 'results'])
-                ->middleware('permission:exam.view');
-            Route::get('fees', [PortalController::class, 'fees'])
-                ->middleware('permission:fee.view');
+            Route::get('timetable', [PortalController::class, 'timetable']);
+            Route::get('attendance', [PortalController::class, 'attendance']);
+            Route::get('results', [PortalController::class, 'results']);
+            Route::get('fees', [PortalController::class, 'fees']);
         });
 
         Route::get('sso-providers', [SsoProviderController::class, 'index'])->middleware('permission:setting.view');

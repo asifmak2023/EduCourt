@@ -237,6 +237,35 @@ class PortalTest extends TestCase
             ->assertJsonCount(1, 'data');
     }
 
+    public function test_a_student_can_read_their_own_fees(): void
+    {
+        $plan = FeePlan::query()->firstOrFail();
+
+        FeeVoucher::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'student_id' => $this->ali->id,
+            'academic_year_id' => $this->year->id,
+            'fee_plan_id' => $plan->id,
+            'sequence' => 1,
+            'voucher_no' => 'V-ALI-1',
+            'due_date' => '2026-05-01',
+            'gross_amount' => 8000,
+            'amount' => 8000,
+            'paid_amount' => 8000,
+            'status' => 'paid',
+        ]);
+
+        $this->as($this->aliUser)
+            ->getJson('/api/v1/me/fees')
+            ->assertOk()
+            ->assertJsonPath('student.id', $this->ali->id)
+            ->assertJsonPath('totals.billed', '8000.00')
+            ->assertJsonPath('totals.outstanding', '0.00')
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.voucher_no', 'V-ALI-1');
+    }
+
     public function test_a_parent_cannot_read_another_students_data(): void
     {
         $this->as($this->parentUser)

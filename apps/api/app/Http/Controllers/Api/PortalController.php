@@ -27,6 +27,11 @@ use Illuminate\Support\Facades\Storage;
  * Self-service endpoints for the signed-in student or parent. Every request is
  * resolved against the student records linked to the acting user so a portal
  * account can only ever read its own (or its children's) data.
+ *
+ * These routes are deliberately not gated by the staff module permissions
+ * (timetable.view, fee.view, ...): a portal account is authorized by its linked
+ * student record alone, so a student can see their own fees without being
+ * granted campus-wide fee access.
  */
 class PortalController extends Controller
 {

@@ -25,6 +25,20 @@ const LOOKUPS: Record<string, LookupDef> = {
   students: { endpoint: "/v1/students", labelKey: "full_name" },
   guardians: { endpoint: "/v1/guardians", labelKey: "name" },
   scholarships: { endpoint: "/v1/scholarships", labelKey: "name" },
+  feeHeads: { endpoint: "/v1/fee-heads", labelKey: "name" },
+  feePlans: { endpoint: "/v1/fee-plans", labelKey: "name" },
+  feeVouchers: {
+    endpoint: "/v1/fee-vouchers",
+    labelKey: "voucher_no",
+    depParam: "student_id",
+  },
+  feePayments: {
+    endpoint: "/v1/fee-payments",
+    labelKey: "receipt_no",
+    depParam: "student_id",
+  },
+  concessionPolicies: { endpoint: "/v1/concession-policies", labelKey: "name" },
+  fineRules: { endpoint: "/v1/fine-rules", labelKey: "name" },
 };
 
 const cache = new Map<string, SelectOption[]>();

@@ -1,11 +1,18 @@
 import type { ModuleConfig, SelectOption } from "./types";
 import { enrollmentSection, guardianSection } from "./relations";
 import { documentsSection } from "./documents";
+import {
+  feePlanInstallmentsSection,
+  feePlanItemsSection,
+  voucherLinesSection,
+  voucherPaymentsSection,
+} from "./feeSections";
 
 export const SECTIONS = {
   overview: "Overview",
   admissionsStudents: "Admissions & Students",
   academics: "Academics",
+  finance: "Finance",
   account: "Account",
 } as const;
 
@@ -91,6 +98,84 @@ const AWARD_STATUS: SelectOption[] = [
   { value: "revoked", label: "Revoked" },
 ];
 
+const LATE_FEE_TYPE: SelectOption[] = [
+  { value: "none", label: "None" },
+  { value: "flat", label: "Flat amount" },
+  { value: "percent", label: "Percentage" },
+];
+
+const VOUCHER_STATUS: SelectOption[] = [
+  { value: "unpaid", label: "Unpaid" },
+  { value: "partial", label: "Partial" },
+  { value: "paid", label: "Paid" },
+  { value: "void", label: "Void" },
+];
+
+const PAYMENT_METHOD: SelectOption[] = [
+  { value: "cash", label: "Cash" },
+  { value: "bank_transfer", label: "Bank transfer" },
+  { value: "cheque", label: "Cheque" },
+  { value: "online", label: "Online" },
+  { value: "card", label: "Card" },
+  { value: "other", label: "Other" },
+];
+
+const PAYMENT_STATUS: SelectOption[] = [
+  { value: "draft", label: "Draft" },
+  { value: "posted", label: "Posted" },
+  { value: "void", label: "Void" },
+];
+
+const REFUND_STATUS: SelectOption[] = [
+  { value: "pending", label: "Pending" },
+  { value: "approved", label: "Approved" },
+  { value: "rejected", label: "Rejected" },
+  { value: "revoked", label: "Revoked" },
+];
+
+const FINE_CATEGORY: SelectOption[] = [
+  { value: "library", label: "Library" },
+  { value: "lab", label: "Lab" },
+  { value: "discipline", label: "Discipline" },
+  { value: "late_payment", label: "Late payment" },
+  { value: "other", label: "Other" },
+];
+
+const FINE_STATUS: SelectOption[] = [
+  { value: "pending", label: "Pending" },
+  { value: "applied", label: "Applied" },
+  { value: "waived", label: "Waived" },
+  { value: "revoked", label: "Revoked" },
+];
+
+const REMINDER_CHANNEL: SelectOption[] = [
+  { value: "email", label: "Email" },
+  { value: "sms", label: "SMS" },
+  { value: "in_app", label: "In-app" },
+];
+
+const REMINDER_STATUS: SelectOption[] = [
+  { value: "pending", label: "Pending" },
+  { value: "sent", label: "Sent" },
+  { value: "failed", label: "Failed" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
+const CONCESSION_TYPE: SelectOption[] = [
+  { value: "sibling", label: "Sibling" },
+  { value: "staff_ward", label: "Staff ward" },
+  { value: "need_based", label: "Need based" },
+  { value: "category", label: "Category" },
+  { value: "other", label: "Other" },
+];
+
+const CONCESSION_STATUS: SelectOption[] = [
+  { value: "pending", label: "Pending" },
+  { value: "approved", label: "Approved" },
+  { value: "rejected", label: "Rejected" },
+  { value: "revoked", label: "Revoked" },
+];
+
 const ADMISSION = {
   view: "admission.view",
   create: "admission.create",
@@ -114,6 +199,37 @@ const SCHOLARSHIP = {
   edit: "scholarship.edit",
   delete: "scholarship.delete",
   approve: "scholarship.approve",
+};
+
+const FEE = {
+  view: "fee.view",
+  create: "fee.create",
+  edit: "fee.edit",
+  delete: "fee.delete",
+  approve: "fee.approve",
+};
+
+const FINE = {
+  view: "fine.view",
+  create: "fine.create",
+  edit: "fine.edit",
+  delete: "fine.delete",
+  approve: "fine.approve",
+};
+
+const REMINDER = {
+  view: "reminder.view",
+  create: "reminder.create",
+  send: "reminder.send",
+  delete: "reminder.delete",
+};
+
+const CONCESSION = {
+  view: "concession.view",
+  create: "concession.create",
+  edit: "concession.edit",
+  delete: "concession.delete",
+  approve: "concession.approve",
 };
 
 const ACADEMIC = {
@@ -1054,6 +1170,579 @@ export const MODULES: ModuleConfig[] = [
         submitLabel: "Revoke award",
         successMessage: "Scholarship award revoked.",
         fields: [{ name: "notes", label: "Notes", type: "textarea" }],
+      },
+    ],
+  },
+  {
+    key: "fee-heads",
+    section: SECTIONS.finance,
+    label: "Fee heads",
+    endpoint: "/v1/fee-heads",
+    permissions: FEE,
+    searchable: true,
+    filters: [{ param: "is_active", label: "Status", options: BOOL_STATUS }],
+    columns: [
+      { key: "name", label: "Name" },
+      { key: "code", label: "Code" },
+      { key: "sort_order", label: "Sort", format: "number" },
+      { key: "is_active", label: "Active", format: "badge" },
+    ],
+    fields: [
+      { name: "code", label: "Code", type: "text", required: true },
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "description", label: "Description", type: "textarea" },
+      { name: "income_account_id", label: "Income account ID", type: "number", min: 0 },
+      { name: "sort_order", label: "Sort order", type: "number", min: 0 },
+      { name: "is_active", label: "Active", type: "checkbox" },
+    ],
+    deleteMessage: "Delete this fee head?",
+  },
+  {
+    key: "fee-plans",
+    section: SECTIONS.finance,
+    label: "Fee plans",
+    endpoint: "/v1/fee-plans",
+    permissions: FEE,
+    filters: [{ param: "is_active", label: "Status", options: BOOL_STATUS }],
+    columns: [
+      { key: "name", label: "Name" },
+      { key: "academic_year.name", label: "Year" },
+      { key: "class_room.name", label: "Class" },
+      { key: "totals.grand", label: "Grand total", format: "money", align: "right" },
+      { key: "is_active", label: "Active", format: "badge" },
+    ],
+    fields: [
+      {
+        name: "academic_year_id",
+        label: "Academic year",
+        type: "lookup",
+        lookup: "academicYears",
+        required: true,
+        displayKey: "academic_year.name",
+      },
+      {
+        name: "class_room_id",
+        label: "Class",
+        type: "lookup",
+        lookup: "classRooms",
+        required: true,
+        displayKey: "class_room.name",
+      },
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "description", label: "Description", type: "textarea" },
+      { name: "is_active", label: "Active", type: "checkbox" },
+      { name: "late_fee_type", label: "Late fee type", type: "select", options: LATE_FEE_TYPE },
+      { name: "late_fee_amount", label: "Late fee amount", type: "number", min: 0, step: 0.01 },
+      { name: "late_fee_grace_days", label: "Grace days", type: "number", min: 0 },
+      {
+        name: "items",
+        label: "Fee items",
+        type: "repeater",
+        addLabel: "Add fee item",
+        emptyItem: () => ({
+          fee_head_id: "",
+          amount: "",
+          is_optional: false,
+          sort_order: "",
+        }),
+        itemFields: [
+          { name: "fee_head_id", label: "Fee head", type: "lookup", lookup: "feeHeads", required: true },
+          { name: "amount", label: "Amount", type: "number", required: true, min: 0, step: 0.01 },
+          { name: "is_optional", label: "Optional", type: "checkbox" },
+          { name: "sort_order", label: "Sort order", type: "number", min: 0 },
+        ],
+        rowFromItem: (item) => ({
+          fee_head_id: item.fee_head_id,
+          amount: item.amount,
+          is_optional: item.is_optional,
+          sort_order: item.sort_order,
+        }),
+        mapItem: (row) => ({
+          fee_head_id: row.fee_head_id ? Number(row.fee_head_id) : null,
+          amount: Number(row.amount),
+          is_optional: Boolean(row.is_optional),
+          sort_order: row.sort_order === "" ? undefined : Number(row.sort_order),
+        }),
+      },
+      {
+        name: "installments",
+        label: "Installments",
+        type: "repeater",
+        addLabel: "Add installment",
+        emptyItem: () => ({ label: "", due_date: "", percentage: "" }),
+        itemFields: [
+          { name: "label", label: "Label", type: "text", required: true },
+          { name: "due_date", label: "Due date", type: "date", required: true },
+          { name: "percentage", label: "Percentage", type: "number", required: true, min: 0, max: 100, step: 0.01 },
+        ],
+        rowFromItem: (item) => ({
+          label: item.label,
+          due_date: item.due_date,
+          percentage: item.percentage,
+        }),
+        mapItem: (row) => ({
+          label: row.label,
+          due_date: row.due_date,
+          percentage: Number(row.percentage),
+        }),
+      },
+    ],
+    detailSections: [feePlanItemsSection, feePlanInstallmentsSection],
+    deleteMessage: "Delete this fee plan?",
+  },
+  {
+    key: "fee-vouchers",
+    section: SECTIONS.finance,
+    label: "Fee vouchers",
+    endpoint: "/v1/fee-vouchers",
+    permissions: { view: "fee.view" },
+    searchable: true,
+    filters: [{ param: "status", label: "Status", options: VOUCHER_STATUS }],
+    headerActions: [
+      {
+        label: "Generate",
+        path: "/v1/fee-vouchers/generate",
+        permission: "fee.create",
+        submitLabel: "Generate",
+        successMessage: "Vouchers generated.",
+        fields: [
+          { name: "academic_year_id", label: "Academic year", type: "lookup", lookup: "academicYears", required: true },
+          { name: "class_room_id", label: "Class", type: "lookup", lookup: "classRooms", required: true },
+          { name: "fee_plan_id", label: "Fee plan", type: "lookup", lookup: "feePlans", required: true },
+          { name: "apply_scholarships", label: "Apply scholarships", type: "checkbox" },
+          { name: "apply_concessions", label: "Apply concessions", type: "checkbox" },
+        ],
+      },
+      {
+        label: "Generate prorated",
+        path: "/v1/fee-vouchers/generate-prorated",
+        permission: "fee.create",
+        submitLabel: "Generate",
+        successMessage: "Prorated voucher generated.",
+        fields: [
+          { name: "academic_year_id", label: "Academic year", type: "lookup", lookup: "academicYears", required: true },
+          { name: "class_room_id", label: "Class", type: "lookup", lookup: "classRooms", required: true },
+          { name: "fee_plan_id", label: "Fee plan", type: "lookup", lookup: "feePlans", required: true },
+          { name: "student_id", label: "Student", type: "lookup", lookup: "students", required: true },
+          { name: "join_date", label: "Join date", type: "date", required: true },
+          { name: "apply_scholarships", label: "Apply scholarships", type: "checkbox" },
+          { name: "apply_concessions", label: "Apply concessions", type: "checkbox" },
+        ],
+      },
+    ],
+    columns: [
+      { key: "voucher_no", label: "Voucher" },
+      { key: "student.full_name", label: "Student" },
+      { key: "due_date", label: "Due", format: "date" },
+      { key: "amount", label: "Amount", format: "money", align: "right" },
+      { key: "balance", label: "Balance", format: "money", align: "right" },
+      { key: "status", label: "Status", format: "badge" },
+    ],
+    fields: [
+      { name: "voucher_no", label: "Voucher no", type: "text", readOnly: true },
+      { name: "student_id", label: "Student", type: "lookup", lookup: "students", readOnly: true, displayKey: "student.full_name" },
+      { name: "due_date", label: "Due date", type: "date", readOnly: true },
+      { name: "amount", label: "Amount", type: "number", readOnly: true },
+      { name: "paid_amount", label: "Paid", type: "number", readOnly: true },
+      { name: "balance", label: "Balance", type: "number", readOnly: true },
+      { name: "status", label: "Status", type: "select", options: VOUCHER_STATUS, readOnly: true },
+    ],
+    detailSections: [voucherLinesSection, voucherPaymentsSection],
+    actions: [
+      {
+        label: "Void",
+        path: (item) => `/v1/fee-vouchers/${item.id}/void`,
+        permission: "fee.approve",
+        fields: [{ name: "memo", label: "Memo", type: "textarea" }],
+        submitLabel: "Void voucher",
+        successMessage: "Voucher voided.",
+      },
+      {
+        label: "Apply late fee",
+        path: (item) => `/v1/fee-vouchers/${item.id}/late-fee`,
+        permission: "fee.approve",
+        confirm: "Apply the late fee to this voucher?",
+        submitLabel: "Apply late fee",
+        successMessage: "Late fee applied.",
+      },
+    ],
+  },
+  {
+    key: "fee-payments",
+    section: SECTIONS.finance,
+    label: "Fee payments",
+    endpoint: "/v1/fee-payments",
+    permissions: FEE,
+    searchable: true,
+    filters: [
+      { param: "method", label: "Method", options: PAYMENT_METHOD },
+      { param: "status", label: "Status", options: PAYMENT_STATUS },
+    ],
+    columns: [
+      { key: "receipt_no", label: "Receipt" },
+      { key: "student.full_name", label: "Student" },
+      { key: "payment_date", label: "Date", format: "date" },
+      { key: "amount", label: "Amount", format: "money", align: "right" },
+      { key: "status", label: "Status", format: "badge" },
+    ],
+    fields: [
+      { name: "student_id", label: "Student", type: "lookup", lookup: "students", required: true, displayKey: "student.full_name" },
+      {
+        name: "fee_voucher_id",
+        label: "Voucher",
+        type: "lookup",
+        lookup: "feeVouchers",
+        required: true,
+        dependsOn: "student_id",
+        displayKey: "voucher.voucher_no",
+      },
+      { name: "payment_date", label: "Payment date", type: "date", required: true },
+      { name: "amount", label: "Amount", type: "number", required: true, min: 0, step: 0.01 },
+      { name: "method", label: "Method", type: "select", options: PAYMENT_METHOD, required: true },
+      { name: "reference", label: "Reference", type: "text" },
+      { name: "notes", label: "Notes", type: "textarea" },
+    ],
+    actions: [
+      {
+        label: "Void",
+        path: (item) => `/v1/fee-payments/${item.id}/void`,
+        permission: "fee.approve",
+        fields: [{ name: "memo", label: "Memo", type: "textarea" }],
+        submitLabel: "Void payment",
+        successMessage: "Payment voided.",
+      },
+      {
+        label: "Apply",
+        path: (item) => `/v1/fee-payments/${item.id}/apply`,
+        permission: "fee.edit",
+        confirm: "Apply this payment to the voucher?",
+        submitLabel: "Apply payment",
+        successMessage: "Payment applied.",
+      },
+    ],
+  },
+  {
+    key: "fee-refunds",
+    section: SECTIONS.finance,
+    label: "Fee refunds",
+    endpoint: "/v1/fee-refunds",
+    permissions: FEE,
+    filters: [{ param: "approval_status", label: "Status", options: REFUND_STATUS }],
+    columns: [
+      { key: "student.name", label: "Student" },
+      { key: "refund_date", label: "Date", format: "date" },
+      { key: "amount", label: "Amount", format: "money", align: "right" },
+      { key: "approval_status", label: "Status", format: "badge" },
+    ],
+    fields: [
+      { name: "student_id", label: "Student", type: "lookup", lookup: "students", required: true, displayKey: "student.name" },
+      {
+        name: "fee_payment_id",
+        label: "Payment",
+        type: "lookup",
+        lookup: "feePayments",
+        required: true,
+        dependsOn: "student_id",
+        displayKey: "payment.receipt_no",
+      },
+      { name: "refund_date", label: "Refund date", type: "date", required: true },
+      { name: "amount", label: "Amount", type: "number", required: true, min: 0, step: 0.01 },
+      { name: "method", label: "Method", type: "select", options: PAYMENT_METHOD, required: true },
+      { name: "reason", label: "Reason", type: "text" },
+    ],
+    actions: [
+      {
+        label: "Approve",
+        path: (item) => `/v1/fee-refunds/${item.id}/approve`,
+        permission: "fee.approve",
+        fields: [{ name: "decision_note", label: "Decision note", type: "textarea" }],
+        submitLabel: "Approve refund",
+        successMessage: "Refund approved.",
+      },
+      {
+        label: "Reject",
+        path: (item) => `/v1/fee-refunds/${item.id}/reject`,
+        permission: "fee.approve",
+        confirm: "Reject this refund?",
+        fields: [{ name: "decision_note", label: "Decision note", type: "textarea" }],
+        submitLabel: "Reject refund",
+        successMessage: "Refund rejected.",
+      },
+      {
+        label: "Revoke",
+        path: (item) => `/v1/fee-refunds/${item.id}/revoke`,
+        permission: "fee.approve",
+        confirm: "Revoke this refund?",
+        fields: [{ name: "decision_note", label: "Decision note", type: "textarea" }],
+        submitLabel: "Revoke refund",
+        successMessage: "Refund revoked.",
+      },
+    ],
+  },
+  {
+    key: "fine-rules",
+    section: SECTIONS.finance,
+    label: "Fine rules",
+    endpoint: "/v1/fine-rules",
+    permissions: FINE,
+    searchable: true,
+    filters: [
+      { param: "category", label: "Category", options: FINE_CATEGORY },
+      { param: "is_active", label: "Status", options: BOOL_STATUS },
+    ],
+    columns: [
+      { key: "name", label: "Name" },
+      { key: "code", label: "Code" },
+      { key: "category_label", label: "Category" },
+      { key: "amount", label: "Amount", format: "money", align: "right" },
+      { key: "is_active", label: "Active", format: "badge" },
+    ],
+    fields: [
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "code", label: "Code", type: "text", required: true },
+      { name: "category", label: "Category", type: "select", options: FINE_CATEGORY, required: true },
+      { name: "amount", label: "Amount", type: "number", required: true, min: 0, step: 0.01 },
+      { name: "fee_head_id", label: "Fee head", type: "lookup", lookup: "feeHeads" },
+      { name: "description", label: "Description", type: "textarea" },
+      { name: "is_active", label: "Active", type: "checkbox" },
+    ],
+    deleteMessage: "Delete this fine rule?",
+  },
+  {
+    key: "student-fines",
+    section: SECTIONS.finance,
+    label: "Student fines",
+    endpoint: "/v1/fines",
+    permissions: { view: "fine.view", create: "fine.create" },
+    filters: [{ param: "status", label: "Status", options: FINE_STATUS }],
+    columns: [
+      { key: "student.name", label: "Student" },
+      { key: "rule.name", label: "Rule" },
+      { key: "amount", label: "Amount", format: "money", align: "right" },
+      { key: "issued_on", label: "Issued", format: "date" },
+      { key: "status", label: "Status", format: "badge" },
+    ],
+    fields: [
+      { name: "student_id", label: "Student", type: "lookup", lookup: "students", required: true, displayKey: "student.name" },
+      { name: "fine_rule_id", label: "Fine rule", type: "lookup", lookup: "fineRules", displayKey: "rule.name" },
+      { name: "academic_year_id", label: "Academic year", type: "lookup", lookup: "academicYears" },
+      {
+        name: "fee_voucher_id",
+        label: "Voucher",
+        type: "lookup",
+        lookup: "feeVouchers",
+        dependsOn: "student_id",
+        displayKey: "voucher_no",
+      },
+      { name: "amount", label: "Amount", type: "number", min: 0, step: 0.01 },
+      { name: "reason", label: "Reason", type: "text" },
+      { name: "issued_on", label: "Issued on", type: "date", required: true },
+    ],
+    actions: [
+      {
+        label: "Apply",
+        path: (item) => `/v1/fines/${item.id}/apply`,
+        permission: "fine.approve",
+        confirm: "Apply this fine to the student's voucher?",
+        submitLabel: "Apply fine",
+        successMessage: "Fine applied.",
+      },
+      {
+        label: "Waive",
+        path: (item) => `/v1/fines/${item.id}/waive`,
+        permission: "fine.approve",
+        fields: [{ name: "waived_reason", label: "Waived reason", type: "textarea" }],
+        submitLabel: "Waive fine",
+        successMessage: "Fine waived.",
+      },
+      {
+        label: "Revoke",
+        path: (item) => `/v1/fines/${item.id}/revoke`,
+        permission: "fine.approve",
+        confirm: "Revoke this fine?",
+        fields: [{ name: "reason", label: "Reason", type: "textarea" }],
+        submitLabel: "Revoke fine",
+        successMessage: "Fine revoked.",
+      },
+    ],
+  },
+  {
+    key: "fee-reminders",
+    section: SECTIONS.finance,
+    label: "Fee reminders",
+    endpoint: "/v1/fee-reminders",
+    permissions: REMINDER,
+    filters: [
+      { param: "status", label: "Status", options: REMINDER_STATUS },
+      { param: "channel", label: "Channel", options: REMINDER_CHANNEL },
+    ],
+    headerActions: [
+      {
+        label: "Run reminders",
+        path: "/v1/fee-reminders",
+        permission: "reminder.create",
+        submitLabel: "Create reminders",
+        successMessage: "Reminders generated.",
+        fields: [
+          { name: "academic_year_id", label: "Academic year", type: "lookup", lookup: "academicYears" },
+          { name: "class_room_id", label: "Class", type: "lookup", lookup: "classRooms" },
+          { name: "channel", label: "Channel", type: "select", options: REMINDER_CHANNEL },
+          { name: "overdue_only", label: "Overdue only", type: "checkbox" },
+          { name: "min_days_overdue", label: "Min days overdue", type: "number", min: 0 },
+          { name: "min_balance", label: "Min balance", type: "number", min: 0, step: 0.01 },
+          { name: "as_of", label: "As of", type: "date" },
+          { name: "force", label: "Force", type: "checkbox" },
+        ],
+      },
+      {
+        label: "Send pending",
+        path: "/v1/fee-reminders/send",
+        permission: "reminder.send",
+        submitLabel: "Send reminders",
+        successMessage: "Reminders sent.",
+        fields: [{ name: "academic_year_id", label: "Academic year", type: "lookup", lookup: "academicYears" }],
+      },
+    ],
+    columns: [
+      { key: "student", label: "Student" },
+      { key: "guardian", label: "Guardian" },
+      { key: "channel_label", label: "Channel" },
+      { key: "outstanding", label: "Outstanding", format: "money", align: "right" },
+      { key: "days_overdue", label: "Days", format: "number" },
+      { key: "status_label", label: "Status", format: "badge" },
+    ],
+    fields: [
+      { name: "student_id", label: "Student", type: "lookup", lookup: "students", readOnly: true, displayKey: "student" },
+      { name: "channel", label: "Channel", type: "select", options: REMINDER_CHANNEL, readOnly: true },
+      { name: "outstanding", label: "Outstanding", type: "number", readOnly: true },
+      { name: "days_overdue", label: "Days overdue", type: "number", readOnly: true },
+      { name: "status", label: "Status", type: "select", options: REMINDER_STATUS, readOnly: true },
+    ],
+    actions: [
+      {
+        label: "Send",
+        path: (item) => `/v1/fee-reminders/${item.id}/send`,
+        permission: "reminder.send",
+        confirm: "Send this reminder?",
+        submitLabel: "Send",
+        successMessage: "Reminder sent.",
+      },
+      {
+        label: "Cancel",
+        path: (item) => `/v1/fee-reminders/${item.id}/cancel`,
+        permission: "reminder.send",
+        confirm: "Cancel this reminder?",
+        submitLabel: "Cancel reminder",
+        successMessage: "Reminder cancelled.",
+      },
+    ],
+  },
+  {
+    key: "concession-policies",
+    section: SECTIONS.finance,
+    label: "Concession policies",
+    endpoint: "/v1/concession-policies",
+    permissions: CONCESSION,
+    searchable: true,
+    filters: [
+      { param: "type", label: "Type", options: CONCESSION_TYPE },
+      { param: "is_active", label: "Status", options: BOOL_STATUS },
+    ],
+    columns: [
+      { key: "name", label: "Name" },
+      { key: "code", label: "Code" },
+      { key: "type_label", label: "Type" },
+      {
+        label: "Discount",
+        align: "right",
+        render: (item) =>
+          `${item.discount_type === "percentage" ? `${item.value}%` : String(item.value ?? "")}`,
+      },
+      { key: "is_active", label: "Active", format: "badge" },
+    ],
+    fields: [
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "code", label: "Code", type: "text", required: true },
+      { name: "type", label: "Type", type: "select", options: CONCESSION_TYPE, required: true },
+      { name: "discount_type", label: "Discount type", type: "select", options: DISCOUNT_TYPE, required: true },
+      { name: "value", label: "Value", type: "number", required: true, min: 0, step: 0.01 },
+      { name: "max_amount", label: "Max amount", type: "number", min: 0, step: 0.01 },
+      { name: "priority", label: "Priority", type: "number", min: 0 },
+      { name: "academic_year_id", label: "Academic year", type: "lookup", lookup: "academicYears", displayKey: "academic_year" },
+      { name: "class_room_id", label: "Class", type: "lookup", lookup: "classRooms", displayKey: "class_room" },
+      { name: "description", label: "Description", type: "textarea" },
+      { name: "is_stackable", label: "Stackable", type: "checkbox" },
+      { name: "requires_approval", label: "Requires approval", type: "checkbox" },
+      { name: "is_active", label: "Active", type: "checkbox" },
+      {
+        name: "criteria",
+        label: "Eligibility criteria",
+        type: "group",
+        toggleLabel: "Limit eligibility",
+        wrapKey: "criteria",
+        fields: [
+          {
+            name: "gender",
+            label: "Gender",
+            type: "multiselect",
+            options: [
+              { value: "male", label: "Male" },
+              { value: "female", label: "Female" },
+              { value: "other", label: "Other" },
+            ],
+          },
+          { name: "min_siblings", label: "Min siblings", type: "number", min: 1 },
+        ],
+      },
+    ],
+    deleteMessage: "Delete this concession policy?",
+  },
+  {
+    key: "concessions",
+    section: SECTIONS.finance,
+    label: "Concessions",
+    endpoint: "/v1/concessions",
+    permissions: CONCESSION,
+    filters: [{ param: "status", label: "Status", options: CONCESSION_STATUS }],
+    columns: [
+      { key: "student.name", label: "Student" },
+      { key: "policy.name", label: "Policy" },
+      { key: "amount", label: "Amount", format: "money", align: "right" },
+      { key: "status", label: "Status", format: "badge" },
+    ],
+    fields: [
+      { name: "student_id", label: "Student", type: "lookup", lookup: "students", required: true, displayKey: "student.name" },
+      { name: "academic_year_id", label: "Academic year", type: "lookup", lookup: "academicYears", required: true, displayKey: "academic_year" },
+      { name: "concession_policy_id", label: "Policy", type: "lookup", lookup: "concessionPolicies", displayKey: "policy.name" },
+      { name: "discount_type", label: "Discount type", type: "select", options: DISCOUNT_TYPE },
+      { name: "value", label: "Value", type: "number", min: 0, step: 0.01 },
+      { name: "amount", label: "Amount", type: "number", min: 0, step: 0.01 },
+      { name: "note", label: "Note", type: "textarea" },
+    ],
+    actions: [
+      {
+        label: "Approve",
+        path: (item) => `/v1/concessions/${item.id}/approve`,
+        permission: "concession.approve",
+        confirm: "Approve this concession?",
+        submitLabel: "Approve",
+        successMessage: "Concession approved.",
+      },
+      {
+        label: "Reject",
+        path: (item) => `/v1/concessions/${item.id}/reject`,
+        permission: "concession.approve",
+        confirm: "Reject this concession?",
+        submitLabel: "Reject",
+        successMessage: "Concession rejected.",
+      },
+      {
+        label: "Revoke",
+        path: (item) => `/v1/concessions/${item.id}/revoke`,
+        permission: "concession.approve",
+        confirm: "Revoke this concession?",
+        submitLabel: "Revoke",
+        successMessage: "Concession revoked.",
       },
     ],
   },

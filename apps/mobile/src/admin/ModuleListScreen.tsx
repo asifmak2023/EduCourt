@@ -9,13 +9,17 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useState } from "react";
 import { useTheme } from "../theme/ThemeProvider";
 import { Card, EmptyState, ErrorText } from "../components/ui";
 import { formatDate, formatMoney } from "../lib/format";
 import { can } from "../lib/nav";
+import { apiFetch } from "../lib/api";
+import { useCampusId } from "../lib/campus";
 import { getPath } from "./display";
 import { useList, type ListMeta } from "./useList";
-import type { AdminRecord, ColumnConfig, ModuleConfig } from "./types";
+import { ActionFormModal } from "./ActionFormModal";
+import type { AdminRecord, ActionConfig, ColumnConfig, ModuleConfig } from "./types";
 
 function formatColumn(value: unknown, format?: ColumnConfig["format"]): string {
   if (value === null || value === undefined || value === "") {
@@ -45,15 +49,34 @@ export function ModuleListScreen({
   onCreate: () => void;
 }) {
   const { colors } = useTheme();
+  const campusId = useCampusId();
   const list = useList<AdminRecord>({
     endpoint: config.endpoint,
     initialFilters: Object.fromEntries(
       (config.filters ?? []).map((filter) => [filter.param, null])
     ),
   });
+  const [activeAction, setActiveAction] = useState<ActionConfig<AdminRecord> | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const meta: ListMeta | null = list.meta;
   const canCreate = Boolean(config.permissions.create) && can(permissions, config.permissions.create);
+  const headerActions = (config.headerActions ?? []).filter((action) =>
+    can(permissions, action.permission)
+  );
+
+  const runHeaderAction = async (action: ActionConfig<AdminRecord>, values: Record<string, unknown>) => {
+    const path = typeof action.path === "function" ? action.path({}) : action.path;
+    const body = typeof action.body === "function" ? action.body({}) : action.body;
+    await apiFetch<{ message?: string; data?: unknown }>(path, {
+      method: action.method ?? "POST",
+      body: { ...(body ?? {}), ...values },
+      campusId,
+    });
+    setNotice(action.successMessage ?? "Done.");
+    setActiveAction(null);
+    list.reload();
+  };
 
   return (
     <View style={styles.container}>
@@ -71,7 +94,7 @@ export function ModuleListScreen({
         />
       ) : null}
 
-      {(config.filters?.length || canCreate) ? (
+      {(config.filters?.length || canCreate || headerActions.length) ? (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -117,7 +140,29 @@ export function ModuleListScreen({
               </Text>
             </Pressable>
           ) : null}
+
+          {headerActions.map((action) => (
+            <Pressable
+              key={action.label}
+              onPress={() => {
+                setNotice(null);
+                setActiveAction(action);
+              }}
+              style={[
+                styles.chip,
+                { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+              ]}
+            >
+              <Text style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>
+                {action.label}
+              </Text>
+            </Pressable>
+          ))}
         </ScrollView>
+      ) : null}
+
+      {notice ? (
+        <Text style={[styles.notice, { color: colors.accent }]}>{notice}</Text>
       ) : null}
 
       {list.error ? (
@@ -187,6 +232,17 @@ export function ModuleListScreen({
           {meta.total} record{meta.total === 1 ? "" : "s"}
         </Text>
       ) : null}
+
+      {activeAction ? (
+        <ActionFormModal
+          title={activeAction.label}
+          fields={activeAction.fields ?? []}
+          record={{}}
+          submitLabel={activeAction.submitLabel}
+          onClose={() => setActiveAction(null)}
+          onSubmit={(values) => runHeaderAction(activeAction, values)}
+        />
+      ) : null}
     </View>
   );
 }
@@ -223,6 +279,12 @@ const styles = StyleSheet.create({
   },
   padded: {
     paddingHorizontal: 20,
+  },
+  notice: {
+    paddingHorizontal: 20,
+    paddingBottom: 4,
+    fontSize: 13,
+    fontWeight: "600",
   },
   loader: {
     marginTop: 40,

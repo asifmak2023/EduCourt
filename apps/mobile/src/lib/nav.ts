@@ -98,6 +98,18 @@ export function buildNav(user: AuthUser | null, portal: boolean): NavSection[] {
       });
       groups.set("Admissions & Students", list);
     }
+
+    if (can(permissions, "fee.view")) {
+      const list = groups.get("Finance") ?? [];
+      list.push({
+        key: "fee-reports",
+        label: "Fee reports",
+        subtitle: "Defaulters, collection and class summaries",
+        permission: "fee.view",
+        customScreen: "feeReports",
+      });
+      groups.set("Finance", list);
+    }
   }
 
   for (const name of [...STAFF_ORDER, ...groups.keys()]) {

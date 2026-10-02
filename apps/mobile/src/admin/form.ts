@@ -22,6 +22,10 @@ export function initialValues(
       values[field.name] = [];
       continue;
     }
+    if (field.type === "multiselect") {
+      values[field.name] = [];
+      continue;
+    }
     if (field.type === "group") {
       values[field.name] = initialValues(field.fields);
       values[groupToggleKey(field.name)] = false;
@@ -131,6 +135,9 @@ export function groupIsEnabled(
 }
 
 function isBlank(value: unknown): boolean {
+  if (Array.isArray(value)) {
+    return value.length === 0;
+  }
   return value === "" || value === null || value === undefined;
 }
 

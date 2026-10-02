@@ -8,6 +8,7 @@ import {
 import { useTheme } from "../../theme/ThemeProvider";
 import { DateField } from "./DateField";
 import { LookupField } from "./LookupField";
+import { MultiSelectField } from "./MultiSelectField";
 import { SelectField } from "./SelectField";
 import { isTruthy, toNumberOrEmpty, toText, type FieldInputProps } from "./common";
 
@@ -51,6 +52,19 @@ export function Field(props: FieldInputProps) {
         error={props.error}
         required={field.required}
         dependsValue={field.dependsOn ? props.record[field.dependsOn] : undefined}
+      />
+    );
+  }
+
+  if (field.type === "multiselect") {
+    return (
+      <MultiSelectField
+        label={field.label}
+        options={field.options}
+        value={props.value}
+        onChange={props.onChange}
+        error={props.error}
+        required={field.required}
       />
     );
   }

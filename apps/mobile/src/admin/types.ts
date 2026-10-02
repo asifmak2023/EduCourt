@@ -53,6 +53,11 @@ export interface LookupFieldConfig extends BaseFieldConfig {
   dependsOn?: string;
 }
 
+export interface MultiSelectFieldConfig extends BaseFieldConfig {
+  type: "multiselect";
+  options: SelectOption[];
+}
+
 export interface PhotoFieldConfig extends BaseFieldConfig {
   type: "photo";
   path: string;
@@ -67,7 +72,8 @@ export type InputFieldConfig =
   | TimeFieldConfig
   | SelectFieldConfig
   | CheckboxFieldConfig
-  | LookupFieldConfig;
+  | LookupFieldConfig
+  | MultiSelectFieldConfig;
 
 export interface RepeaterFieldConfig extends BaseFieldConfig {
   type: "repeater";
@@ -164,6 +170,7 @@ export interface ModuleConfig<T extends AdminRecord = AdminRecord> {
   permissions: ModulePermissions;
   searchable?: boolean;
   filters?: FilterConfig[];
+  headerActions?: ActionConfig<T>[];
   columns: ColumnConfig<T>[];
   fields: FieldConfig[];
   detailSections?: DetailSection<T>[];

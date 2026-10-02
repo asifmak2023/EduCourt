@@ -110,6 +110,18 @@ export function buildNav(user: AuthUser | null, portal: boolean): NavSection[] {
       });
       groups.set("Finance", list);
     }
+
+    if (can(permissions, "finance.view")) {
+      const list = groups.get("Finance") ?? [];
+      list.push({
+        key: "finance-reports",
+        label: "Finance reports",
+        subtitle: "Trial balance, budgets and expense summaries",
+        permission: "finance.view",
+        customScreen: "financeReports",
+      });
+      groups.set("Finance", list);
+    }
   }
 
   for (const name of [...STAFF_ORDER, ...groups.keys()]) {

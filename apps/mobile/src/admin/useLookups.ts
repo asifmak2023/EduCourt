@@ -39,6 +39,11 @@ const LOOKUPS: Record<string, LookupDef> = {
   },
   concessionPolicies: { endpoint: "/v1/concession-policies", labelKey: "name" },
   fineRules: { endpoint: "/v1/fine-rules", labelKey: "name" },
+  fiscalYears: { endpoint: "/v1/fiscal-years", labelKey: "name" },
+  chartOfAccounts: { endpoint: "/v1/chart-of-accounts", labelKey: "name" },
+  expenseCategories: { endpoint: "/v1/expense-categories", labelKey: "name" },
+  vendors: { endpoint: "/v1/vendors", labelKey: "name" },
+  budgets: { endpoint: "/v1/budgets", labelKey: "name" },
 };
 
 const cache = new Map<string, SelectOption[]>();

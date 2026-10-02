@@ -7,6 +7,11 @@ import {
   voucherLinesSection,
   voucherPaymentsSection,
 } from "./feeSections";
+import {
+  budgetLinesSection,
+  expenseLinesSection,
+  journalLinesSection,
+} from "./accountingSections";
 
 export const SECTIONS = {
   overview: "Overview",
@@ -176,6 +181,46 @@ const CONCESSION_STATUS: SelectOption[] = [
   { value: "revoked", label: "Revoked" },
 ];
 
+const ACCOUNT_TYPE: SelectOption[] = [
+  { value: "asset", label: "Asset" },
+  { value: "liability", label: "Liability" },
+  { value: "equity", label: "Equity" },
+  { value: "income", label: "Income" },
+  { value: "expense", label: "Expense" },
+];
+
+const NORMAL_BALANCE: SelectOption[] = [
+  { value: "debit", label: "Debit" },
+  { value: "credit", label: "Credit" },
+];
+
+const JOURNAL_STATUS: SelectOption[] = [
+  { value: "draft", label: "Draft" },
+  { value: "posted", label: "Posted" },
+  { value: "reversed", label: "Reversed" },
+];
+
+const BUDGET_STATUS: SelectOption[] = [
+  { value: "draft", label: "Draft" },
+  { value: "approved", label: "Approved" },
+  { value: "closed", label: "Closed" },
+];
+
+const BUDGET_PERIOD_TYPE: SelectOption[] = [
+  { value: "annual", label: "Annual" },
+  { value: "semi_annual", label: "Semi-annual" },
+  { value: "quarterly", label: "Quarterly" },
+  { value: "monthly", label: "Monthly" },
+];
+
+const EXPENSE_STATUS: SelectOption[] = [
+  { value: "draft", label: "Draft" },
+  { value: "approved", label: "Approved" },
+  { value: "partial", label: "Partial" },
+  { value: "paid", label: "Paid" },
+  { value: "void", label: "Void" },
+];
+
 const ADMISSION = {
   view: "admission.view",
   create: "admission.create",
@@ -230,6 +275,14 @@ const CONCESSION = {
   edit: "concession.edit",
   delete: "concession.delete",
   approve: "concession.approve",
+};
+
+const FINANCE = {
+  view: "finance.view",
+  create: "finance.create",
+  edit: "finance.edit",
+  delete: "finance.delete",
+  approve: "finance.approve",
 };
 
 const ACADEMIC = {
@@ -1743,6 +1796,286 @@ export const MODULES: ModuleConfig[] = [
         confirm: "Revoke this concession?",
         submitLabel: "Revoke",
         successMessage: "Concession revoked.",
+      },
+    ],
+  },
+  {
+    key: "chart-of-accounts",
+    section: SECTIONS.finance,
+    label: "Chart of accounts",
+    endpoint: "/v1/chart-of-accounts",
+    permissions: FINANCE,
+    searchable: true,
+    filters: [
+      { param: "account_type", label: "Type", options: ACCOUNT_TYPE },
+      { param: "is_active", label: "Status", options: BOOL_STATUS },
+    ],
+    columns: [
+      { key: "code", label: "Code" },
+      { key: "name", label: "Name" },
+      { key: "account_type", label: "Type" },
+      { key: "normal_balance", label: "Balance" },
+      { key: "is_active", label: "Active", format: "badge" },
+    ],
+    fields: [
+      { name: "code", label: "Code", type: "text", required: true },
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "account_type", label: "Account type", type: "select", options: ACCOUNT_TYPE, required: true },
+      { name: "normal_balance", label: "Normal balance", type: "select", options: NORMAL_BALANCE },
+      { name: "parent_id", label: "Parent account", type: "lookup", lookup: "chartOfAccounts" },
+      { name: "is_group", label: "Group account", type: "checkbox" },
+      { name: "is_active", label: "Active", type: "checkbox", defaultValue: true },
+      { name: "description", label: "Description", type: "textarea" },
+    ],
+    deleteMessage: "Delete this account?",
+  },
+  {
+    key: "expense-categories",
+    section: SECTIONS.finance,
+    label: "Expense categories",
+    endpoint: "/v1/expense-categories",
+    permissions: FINANCE,
+    searchable: true,
+    filters: [{ param: "is_active", label: "Status", options: BOOL_STATUS }],
+    columns: [
+      { key: "code", label: "Code" },
+      { key: "name", label: "Name" },
+      { key: "expense_account.name", label: "Account" },
+      { key: "sort_order", label: "Sort", format: "number" },
+      { key: "is_active", label: "Active", format: "badge" },
+    ],
+    fields: [
+      { name: "code", label: "Code", type: "text", required: true },
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "description", label: "Description", type: "textarea" },
+      { name: "expense_account_id", label: "Expense account", type: "lookup", lookup: "chartOfAccounts" },
+      { name: "sort_order", label: "Sort order", type: "number", min: 0 },
+      { name: "is_active", label: "Active", type: "checkbox", defaultValue: true },
+    ],
+    deleteMessage: "Delete this expense category?",
+  },
+  {
+    key: "vendors",
+    section: SECTIONS.finance,
+    label: "Vendors",
+    endpoint: "/v1/vendors",
+    permissions: FINANCE,
+    searchable: true,
+    filters: [{ param: "is_active", label: "Status", options: BOOL_STATUS }],
+    columns: [
+      { key: "code", label: "Code" },
+      { key: "name", label: "Name" },
+      { key: "contact_name", label: "Contact" },
+      { key: "phone", label: "Phone" },
+      { key: "is_active", label: "Active", format: "badge" },
+    ],
+    fields: [
+      { name: "code", label: "Code", type: "text", required: true },
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "contact_name", label: "Contact name", type: "text" },
+      { name: "phone", label: "Phone", type: "text" },
+      { name: "email", label: "Email", type: "email" },
+      { name: "tax_number", label: "Tax number", type: "text" },
+      { name: "address", label: "Address", type: "text" },
+      { name: "notes", label: "Notes", type: "textarea" },
+      { name: "payable_account_id", label: "Payable account", type: "lookup", lookup: "chartOfAccounts" },
+      { name: "is_active", label: "Active", type: "checkbox", defaultValue: true },
+    ],
+    deleteMessage: "Delete this vendor?",
+  },
+  {
+    key: "budgets",
+    section: SECTIONS.finance,
+    label: "Budgets",
+    endpoint: "/v1/budgets",
+    permissions: FINANCE,
+    searchable: true,
+    filters: [{ param: "status", label: "Status", options: BUDGET_STATUS }],
+    columns: [
+      { key: "name", label: "Name" },
+      { key: "fiscal_year.name", label: "Fiscal year" },
+      { key: "period_type", label: "Period" },
+      { key: "starts_on", label: "Starts", format: "date" },
+      { key: "ends_on", label: "Ends", format: "date" },
+      { key: "total_budget", label: "Budget", format: "money", align: "right" },
+      { key: "status", label: "Status", format: "badge" },
+    ],
+    fields: [
+      { name: "fiscal_year_id", label: "Fiscal year", type: "lookup", lookup: "fiscalYears", required: true, displayKey: "fiscal_year.name" },
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "period_type", label: "Period type", type: "select", options: BUDGET_PERIOD_TYPE, required: true },
+      { name: "starts_on", label: "Starts on", type: "date", required: true },
+      { name: "ends_on", label: "Ends on", type: "date", required: true },
+      { name: "notes", label: "Notes", type: "textarea" },
+      {
+        name: "lines",
+        label: "Budget lines",
+        type: "repeater",
+        addLabel: "Add budget line",
+        emptyItem: () => ({ chart_of_account_id: "", amount: "", notes: "" }),
+        itemFields: [
+          { name: "chart_of_account_id", label: "Account", type: "lookup", lookup: "chartOfAccounts", required: true },
+          { name: "amount", label: "Amount", type: "number", required: true, min: 0, step: 0.01 },
+          { name: "notes", label: "Notes", type: "text" },
+        ],
+        rowFromItem: (item) => ({
+          chart_of_account_id: item.chart_of_account_id,
+          amount: item.amount,
+          notes: item.notes,
+        }),
+        mapItem: (row) => ({
+          chart_of_account_id: row.chart_of_account_id ? Number(row.chart_of_account_id) : null,
+          amount: Number(row.amount),
+          notes: row.notes,
+        }),
+      },
+    ],
+    detailSections: [budgetLinesSection],
+    deleteMessage: "Delete this budget?",
+    actions: [
+      {
+        label: "Approve",
+        path: (item) => `/v1/budgets/${item.id}/approve`,
+        permission: "finance.approve",
+        confirm: "Approve this budget?",
+        submitLabel: "Approve",
+        successMessage: "Budget approved.",
+      },
+    ],
+  },
+  {
+    key: "journal-entries",
+    section: SECTIONS.finance,
+    label: "Journal",
+    endpoint: "/v1/journal-entries",
+    permissions: FINANCE,
+    searchable: true,
+    filters: [{ param: "status", label: "Status", options: JOURNAL_STATUS }],
+    columns: [
+      { key: "reference", label: "Reference" },
+      { key: "entry_date", label: "Date", format: "date" },
+      { key: "total_debit", label: "Debit", format: "money", align: "right" },
+      { key: "total_credit", label: "Credit", format: "money", align: "right" },
+      { key: "status", label: "Status", format: "badge" },
+    ],
+    fields: [
+      { name: "fiscal_year_id", label: "Fiscal year", type: "lookup", lookup: "fiscalYears", required: true, displayKey: "fiscal_year.name" },
+      { name: "reference", label: "Reference", type: "text", required: true },
+      { name: "entry_date", label: "Entry date", type: "date", required: true },
+      { name: "memo", label: "Memo", type: "textarea" },
+      {
+        name: "lines",
+        label: "Journal lines",
+        type: "repeater",
+        addLabel: "Add journal line",
+        hint: "Enter at least two lines; total debits must equal total credits.",
+        emptyItem: () => ({ chart_of_account_id: "", description: "", debit: "", credit: "" }),
+        itemFields: [
+          { name: "chart_of_account_id", label: "Account", type: "lookup", lookup: "chartOfAccounts", required: true },
+          { name: "description", label: "Description", type: "text" },
+          { name: "debit", label: "Debit", type: "number", min: 0, step: 0.01 },
+          { name: "credit", label: "Credit", type: "number", min: 0, step: 0.01 },
+        ],
+        rowFromItem: (item) => ({
+          chart_of_account_id: item.chart_of_account_id,
+          description: item.description,
+          debit: item.debit,
+          credit: item.credit,
+        }),
+        mapItem: (row) => ({
+          chart_of_account_id: row.chart_of_account_id ? Number(row.chart_of_account_id) : null,
+          description: row.description,
+          debit: row.debit === "" ? undefined : Number(row.debit),
+          credit: row.credit === "" ? undefined : Number(row.credit),
+        }),
+      },
+    ],
+    detailSections: [journalLinesSection],
+    deleteMessage: "Delete this journal entry?",
+    actions: [
+      {
+        label: "Post",
+        path: (item) => `/v1/journal-entries/${item.id}/post`,
+        permission: "finance.approve",
+        confirm: "Post this journal entry?",
+        submitLabel: "Post entry",
+        successMessage: "Journal entry posted.",
+      },
+      {
+        label: "Reverse",
+        path: (item) => `/v1/journal-entries/${item.id}/reverse`,
+        permission: "finance.approve",
+        fields: [{ name: "memo", label: "Memo", type: "textarea" }],
+        submitLabel: "Reverse entry",
+        successMessage: "Journal entry reversed.",
+      },
+    ],
+  },
+  {
+    key: "expenses",
+    section: SECTIONS.finance,
+    label: "Expenses",
+    endpoint: "/v1/expenses",
+    permissions: FINANCE,
+    searchable: true,
+    filters: [{ param: "status", label: "Status", options: EXPENSE_STATUS }],
+    columns: [
+      { key: "reference", label: "Reference" },
+      { key: "vendor.name", label: "Vendor" },
+      { key: "expense_date", label: "Date", format: "date" },
+      { key: "total", label: "Total", format: "money", align: "right" },
+      { key: "paid_amount", label: "Paid", format: "money", align: "right" },
+      { key: "status_label", label: "Status", format: "badge" },
+    ],
+    fields: [
+      { name: "vendor_id", label: "Vendor", type: "lookup", lookup: "vendors", displayKey: "vendor.name" },
+      { name: "fiscal_year_id", label: "Fiscal year", type: "lookup", lookup: "fiscalYears", displayKey: "fiscal_year.name" },
+      { name: "expense_date", label: "Expense date", type: "date", required: true },
+      { name: "reference", label: "Reference", type: "text" },
+      { name: "payee_name", label: "Payee name", type: "text" },
+      { name: "bill_no", label: "Bill no", type: "text" },
+      { name: "memo", label: "Memo", type: "textarea" },
+      {
+        name: "lines",
+        label: "Expense lines",
+        type: "repeater",
+        addLabel: "Add expense line",
+        emptyItem: () => ({ expense_category_id: "", amount: "", description: "" }),
+        itemFields: [
+          { name: "expense_category_id", label: "Category", type: "lookup", lookup: "expenseCategories", required: true },
+          { name: "amount", label: "Amount", type: "number", required: true, min: 0, step: 0.01 },
+          { name: "description", label: "Description", type: "text" },
+        ],
+        rowFromItem: (item) => ({
+          expense_category_id: item.expense_category_id,
+          amount: item.amount,
+          description: item.description,
+        }),
+        mapItem: (row) => ({
+          expense_category_id: row.expense_category_id ? Number(row.expense_category_id) : null,
+          amount: Number(row.amount),
+          description: row.description,
+        }),
+      },
+    ],
+    detailSections: [expenseLinesSection],
+    deleteMessage: "Delete this expense?",
+    actions: [
+      {
+        label: "Approve",
+        path: (item) => `/v1/expenses/${item.id}/approve`,
+        permission: "finance.approve",
+        confirm: "Approve this expense?",
+        submitLabel: "Approve",
+        successMessage: "Expense approved.",
+      },
+      {
+        label: "Void",
+        path: (item) => `/v1/expenses/${item.id}/void`,
+        permission: "finance.approve",
+        fields: [{ name: "memo", label: "Memo", type: "textarea" }],
+        submitLabel: "Void expense",
+        successMessage: "Expense voided.",
       },
     ],
   },

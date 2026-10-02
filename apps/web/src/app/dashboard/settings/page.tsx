@@ -3,17 +3,40 @@
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
-import { PermissionGate } from "@/components/PermissionGate";
+import { AppearanceSettings } from "@/components/AppearanceSettings";
 import { SettingsTabs } from "@/components/SettingsTabs";
 import { buttonClasses } from "@/components/Form";
-import { Card, PageHeader, StatCard } from "@/components/ui";
+import { Card, ErrorNotice, PageHeader, StatCard } from "@/components/ui";
 import type { SsoProvider } from "@/lib/types";
 
 export default function SettingsPage() {
+  const { user, can } = useAuth();
+
+  if (!user) {
+    return null;
+  }
+
+  if (!can("setting.view")) {
+    if (can("appearance.view")) {
+      return <AppearanceSettingsPanel />;
+    }
+
+    return <ErrorNotice message="You do not have permission to view this page." />;
+  }
+
+  return <SettingsHome />;
+}
+
+function AppearanceSettingsPanel() {
   return (
-    <PermissionGate permission="setting.view">
-      <SettingsHome />
-    </PermissionGate>
+    <div className="space-y-6">
+      <PageHeader
+        title="Appearance"
+        description="Personalize color mode, accent color and background. Preferences are stored in this browser."
+      />
+      <SettingsTabs active="appearance" />
+      <AppearanceSettings />
+    </div>
   );
 }
 

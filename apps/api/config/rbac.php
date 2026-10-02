@@ -101,11 +101,13 @@ return [
         ],
 
         RoleName::FinanceHead->value => [
+            'academic.view',
             'finance.*', 'fee.*', 'payroll.*', 'report.*', 'audit.view',
             'scholarship.*', 'concession.*', 'fine.*', 'reminder.*',
         ],
 
         RoleName::Accountant->value => [
+            'academic.view',
             'finance.view', 'finance.create', 'finance.edit', 'finance.export',
             'fee.view', 'fee.create', 'fee.edit', 'fee.export',
             'report.view', 'scholarship.view', 'concession.view',
@@ -114,12 +116,14 @@ return [
         ],
 
         RoleName::AdmissionsOfficer->value => [
+            'academic.view',
             'admission.*', 'student.view', 'student.create', 'report.view',
             'scholarship.view', 'concession.view', 'fine.view', 'reminder.view',
             'front_office.*', 'circular.view',
         ],
 
         RoleName::HrOfficer->value => [
+            'academic.view',
             'hr.*', 'payroll.view', 'payroll.create', 'payroll.edit',
             'report.view', 'audit.view',
         ],
@@ -145,38 +149,47 @@ return [
         ],
 
         RoleName::ExamController->value => [
+            'academic.view',
             'exam.*', 'credit.*', 'student.view', 'report.view',
         ],
 
         RoleName::StudentAffairsOfficer->value => [
+            'academic.view',
             'student_affairs.*', 'sports.view', 'complaint.view', 'report.view', 'conduct.*',
         ],
 
         RoleName::Counsellor->value => [
+            'academic.view',
             'counselling.*', 'student.view', 'student_affairs.view', 'report.view',
         ],
 
         RoleName::CanteenManager->value => [
+            'academic.view',
             'canteen.*', 'inventory.view', 'inventory.edit', 'report.view',
         ],
 
         RoleName::SportsDirector->value => [
+            'academic.view',
             'sports.*', 'student.view', 'inventory.view', 'report.view',
         ],
 
         RoleName::ItAdministrator->value => [
+            'academic.view',
             'it.*', 'user.view', 'user.create', 'user.edit', 'audit.view', 'setting.view',
         ],
 
         RoleName::Librarian->value => [
+            'academic.view',
             'library.*', 'inventory.view',
         ],
 
         RoleName::StoreIncharge->value => [
+            'academic.view',
             'inventory.*', 'lab.view',
         ],
 
         RoleName::TransportHostelIncharge->value => [
+            'academic.view',
             'transport.*', 'hostel.*', 'report.view',
         ],
 

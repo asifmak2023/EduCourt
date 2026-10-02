@@ -16,6 +16,7 @@ import {
   type NavItem,
 } from "./src/lib/nav";
 import { CampusProvider } from "./src/lib/campus";
+import { AppI18nProvider } from "./src/lib/i18n";
 import { findModule } from "./src/admin/registry";
 import { findCustomScreen } from "./src/admin/screens";
 import { ModuleListScreen } from "./src/admin/ModuleListScreen";
@@ -43,9 +44,11 @@ interface ModuleRoute {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AppInner />
-    </ThemeProvider>
+    <AppI18nProvider>
+      <ThemeProvider>
+        <AppInner />
+      </ThemeProvider>
+    </AppI18nProvider>
   );
 }
 

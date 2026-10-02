@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@eis/appearance": "file:../../packages/appearance",
+    "@eis/i18n": "file:../../packages/i18n",
     "@heroui/react": "^3.2.6",
     "@heroui/styles": "^3.2.6",
     "next": "16.3.6",

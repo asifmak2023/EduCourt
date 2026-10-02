@@ -18,21 +18,22 @@ import {
   type BackgroundKind,
   type ColorMode,
 } from "@eis/appearance";
+import { useTranslation } from "@eis/i18n";
 import { useTheme } from "../theme/ThemeProvider";
 import { withAlpha, type ThemeColors } from "../theme/colors";
 
-const MODES: { value: ColorMode; label: string }[] = [
-  { value: "system", label: "System" },
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-];
+const MODES = [
+  { value: "system", key: "appearance.mode.system" },
+  { value: "light", key: "appearance.mode.light" },
+  { value: "dark", key: "appearance.mode.dark" },
+] as const satisfies readonly { value: ColorMode; key: string }[];
 
-const FAMILIES: { value: BackgroundKind; label: string }[] = [
-  { value: "default", label: "Default" },
-  { value: "solid", label: "Solid" },
-  { value: "gradient", label: "Gradient" },
-  { value: "wallpaper", label: "Wallpaper" },
-];
+const FAMILIES = [
+  { value: "default", key: "appearance.family.default" },
+  { value: "solid", key: "appearance.family.solid" },
+  { value: "gradient", key: "appearance.family.gradient" },
+  { value: "wallpaper", key: "appearance.family.wallpaper" },
+] as const satisfies readonly { value: BackgroundKind; key: string }[];
 
 function familyOf(backgroundId: string): BackgroundKind {
   if (SOLIDS.some((solid) => solid.id === backgroundId)) return "solid";
@@ -62,6 +63,8 @@ function StepperRow({
   onDecrease: () => void;
   onIncrease: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <View style={[styles.stepperRow, disabled ? styles.disabledRow : null]}>
       <View style={styles.toggleLabel}>
@@ -74,7 +77,7 @@ function StepperRow({
           disabled={disabled}
           style={styles.stepperButton}
           accessibilityRole="button"
-          accessibilityLabel={`Decrease ${label}`}
+          accessibilityLabel={t("appearance.decreaseLabel", { label })}
         >
           <Text style={styles.stepperText}>-</Text>
         </Pressable>
@@ -87,7 +90,7 @@ function StepperRow({
           disabled={disabled}
           style={styles.stepperButton}
           accessibilityRole="button"
-          accessibilityLabel={`Increase ${label}`}
+          accessibilityLabel={t("appearance.increaseLabel", { label })}
         >
           <Text style={styles.stepperText}>+</Text>
         </Pressable>
@@ -104,6 +107,7 @@ export function AppearanceModal({
   onClose: () => void;
 }) {
   const theme = useTheme();
+  const { t, locale, setLocale, locales } = useTranslation();
   const { colors, config, resolvedMode } = theme;
   const styles = makeStyles(colors);
   const [family, setFamily] = useState<BackgroundKind>(familyOf(config.backgroundId));
@@ -118,14 +122,40 @@ export function AppearanceModal({
     >
       <View style={styles.sheet}>
         <View style={styles.sheetHeader}>
-          <Text style={styles.sheetTitle}>Appearance</Text>
+          <Text style={styles.sheetTitle}>{t("appearance.title")}</Text>
           <Pressable onPress={onClose} accessibilityRole="button" hitSlop={8}>
-            <Text style={styles.sheetClose}>Done</Text>
+            <Text style={styles.sheetClose}>{t("common.done")}</Text>
           </Pressable>
         </View>
 
         <ScrollView contentContainerStyle={styles.sheetBody}>
-          <Text style={styles.sectionTitle}>Color mode</Text>
+          <Text style={styles.sectionTitle}>{t("appearance.language")}</Text>
+          <Text style={styles.rowHint}>{t("appearance.languageHint")}</Text>
+          <View style={styles.row}>
+            {locales.map((entry) => {
+              const selected = locale === entry.code;
+              return (
+                <Pressable
+                  key={entry.code}
+                  onPress={() => setLocale(entry.code)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected }}
+                  style={[styles.langChip, selected ? styles.segmentActive : null]}
+                >
+                  <Text
+                    style={[
+                      styles.langChipText,
+                      selected ? styles.segmentTextActive : null,
+                    ]}
+                  >
+                    {entry.nativeName}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Text style={styles.sectionTitle}>{t("appearance.colorMode")}</Text>
           <View style={styles.segmented}>
             {MODES.map((mode) => {
               const selected = config.mode === mode.value;
@@ -143,14 +173,14 @@ export function AppearanceModal({
                       selected ? styles.segmentTextActive : null,
                     ]}
                   >
-                    {mode.label}
+                    {t(mode.key)}
                   </Text>
                 </Pressable>
               );
             })}
           </View>
 
-          <Text style={styles.sectionTitle}>Accent color</Text>
+          <Text style={styles.sectionTitle}>{t("appearance.accentColor")}</Text>
           <View style={styles.row}>
             {ACCENTS.map((accent) => {
               const selected = config.accentId === accent.id;
@@ -172,15 +202,15 @@ export function AppearanceModal({
 
           <View style={styles.toggleRow}>
             <View style={styles.toggleLabel}>
-              <Text style={styles.rowTitle}>Vibrant palette</Text>
+              <Text style={styles.rowTitle}>{t("appearance.vibrantPalette")}</Text>
               <Text style={styles.rowHint}>
-                Tint surfaces with the accent color.
+                {t("appearance.vibrantPaletteHint")}
               </Text>
             </View>
             <Switch value={config.vibrant} onValueChange={theme.setVibrant} />
           </View>
 
-          <Text style={styles.sectionTitle}>Background</Text>
+          <Text style={styles.sectionTitle}>{t("appearance.background")}</Text>
           <View style={styles.segmented}>
             {FAMILIES.map((item) => {
               const selected = family === item.value;
@@ -198,7 +228,7 @@ export function AppearanceModal({
                       selected ? styles.segmentTextActive : null,
                     ]}
                   >
-                    {item.label}
+                    {t(item.key)}
                   </Text>
                 </Pressable>
               );
@@ -216,7 +246,7 @@ export function AppearanceModal({
               ]}
             >
               <Text style={styles.defaultOptionText}>
-                Default surface background
+                {t("appearance.defaultSurface")}
               </Text>
             </Pressable>
           ) : null}
@@ -304,7 +334,7 @@ export function AppearanceModal({
 
           {family === "wallpaper" ? (
             <View style={styles.dimRow}>
-              <Text style={styles.rowTitle}>Dimming</Text>
+              <Text style={styles.rowTitle}>{t("appearance.dimming")}</Text>
               <View style={styles.stepper}>
                 <Pressable
                   onPress={() =>
@@ -312,7 +342,7 @@ export function AppearanceModal({
                   }
                   style={styles.stepperButton}
                   accessibilityRole="button"
-                  accessibilityLabel="Decrease dimming"
+                  accessibilityLabel={t("appearance.decreaseDimming")}
                 >
                   <Text style={styles.stepperText}>-</Text>
                 </Pressable>
@@ -323,7 +353,7 @@ export function AppearanceModal({
                   }
                   style={styles.stepperButton}
                   accessibilityRole="button"
-                  accessibilityLabel="Increase dimming"
+                  accessibilityLabel={t("appearance.increaseDimming")}
                 >
                   <Text style={styles.stepperText}>+</Text>
                 </Pressable>
@@ -331,12 +361,12 @@ export function AppearanceModal({
             </View>
           ) : null}
 
-          <Text style={styles.sectionTitle}>Surface</Text>
+          <Text style={styles.sectionTitle}>{t("appearance.surface")}</Text>
           <View style={styles.toggleRow}>
             <View style={styles.toggleLabel}>
-              <Text style={styles.rowTitle}>Glass surfaces</Text>
+              <Text style={styles.rowTitle}>{t("appearance.glassSurfaces")}</Text>
               <Text style={styles.rowHint}>
-                Frost cards, the top bar, and the sidebar.
+                {t("appearance.glassSurfacesHint")}
               </Text>
             </View>
             <Switch value={config.glass} onValueChange={theme.setGlass} />
@@ -344,8 +374,8 @@ export function AppearanceModal({
 
           <StepperRow
             styles={styles}
-            label="Glass blur"
-            hint="Strength of the frosted blur."
+            label={t("appearance.glassBlur")}
+            hint={t("appearance.glassBlurHint")}
             value={config.glassBlur}
             suffix="px"
             disabled={!config.glass}
@@ -359,8 +389,8 @@ export function AppearanceModal({
 
           <StepperRow
             styles={styles}
-            label="Transparency"
-            hint="How see-through the glass surfaces are."
+            label={t("appearance.transparency")}
+            hint={t("appearance.transparencyHint")}
             value={config.glassTransparency}
             suffix="%"
             disabled={!config.glass}
@@ -378,8 +408,8 @@ export function AppearanceModal({
 
           <StepperRow
             styles={styles}
-            label="Background blur"
-            hint="Blurs the wallpaper behind the dashboard."
+            label={t("appearance.backgroundBlur")}
+            hint={t("appearance.backgroundBlurHint")}
             value={config.backgroundBlur}
             suffix="px"
             disabled={familyOf(config.backgroundId) === "default"}
@@ -393,7 +423,7 @@ export function AppearanceModal({
 
           <View style={styles.presetBlock}>
             <Text style={styles.presetHint}>
-              Recommended: glass blur 12px, transparency 15%, background blur 0px.
+              {t("appearance.presetHint")}
             </Text>
             <Pressable
               onPress={() => {
@@ -403,18 +433,18 @@ export function AppearanceModal({
                 theme.setBackgroundBlur(0);
               }}
               accessibilityRole="button"
-              accessibilityLabel="Recommended glass settings"
+              accessibilityLabel={t("appearance.recommendedA11y")}
               style={styles.presetButton}
             >
-              <Text style={styles.presetText}>Recommended</Text>
+              <Text style={styles.presetText}>{t("appearance.recommended")}</Text>
             </Pressable>
           </View>
 
           <View style={styles.toggleRow}>
             <View style={styles.toggleLabel}>
-              <Text style={styles.rowTitle}>Interface animations</Text>
+              <Text style={styles.rowTitle}>{t("appearance.interfaceAnimations")}</Text>
               <Text style={styles.rowHint}>
-                Disabled when reduced motion is on.
+                {t("appearance.interfaceAnimationsHint")}
               </Text>
             </View>
             <Switch value={config.animations} onValueChange={theme.setAnimations} />
@@ -425,7 +455,7 @@ export function AppearanceModal({
             accessibilityRole="button"
             style={styles.resetButton}
           >
-            <Text style={styles.resetText}>Reset to defaults</Text>
+            <Text style={styles.resetText}>{t("appearance.reset")}</Text>
           </Pressable>
         </ScrollView>
       </View>
@@ -507,6 +537,17 @@ function makeStyles(colors: ThemeColors) {
     },
     accentSwatchActive: {
       borderColor: colors.foreground,
+    },
+    langChip: {
+      borderRadius: 999,
+      paddingHorizontal: 16,
+      paddingVertical: 9,
+      backgroundColor: colors.surfaceSecondary,
+    },
+    langChipText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.muted,
     },
     toggleRow: {
       marginTop: 20,

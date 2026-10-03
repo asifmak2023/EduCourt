@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Exo_2, Noto_Nastaliq_Urdu } from "next/font/google";
+import { Geist, Geist_Mono, Exo_2, Noto_Naskh_Arabic } from "next/font/google";
 import { ACCENTS } from "@eis/appearance";
 import { AuthProvider } from "@/lib/auth";
 import { AppearanceProvider } from "@/lib/appearance";
@@ -23,10 +23,9 @@ const exo2 = Exo_2({
   weight: ["400", "600", "700"],
 });
 
-const urdu = Noto_Nastaliq_Urdu({
+const urdu = Noto_Naskh_Arabic({
   variable: "--font-urdu",
   subsets: ["arabic"],
-  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {

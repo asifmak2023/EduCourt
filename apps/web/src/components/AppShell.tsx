@@ -83,7 +83,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     .join(", ");
 
   const sidebar = (
-    <div className="app-glass app-sidebar flex h-full flex-col bg-surface-secondary text-foreground">
+    <div
+      dir="ltr"
+      className="app-glass app-sidebar flex h-full flex-col bg-surface-secondary text-foreground"
+    >
       <Link
         href="/dashboard"
         onClick={() => setMenuOpen(false)}

@@ -15,22 +15,10 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-/* Urdu: use the Nastaliq typeface for the whole UI. Nastaliq needs extra
-   vertical room, so line-height is increased. Latin glyphs (e.g. numbers,
+/* Urdu: use a legible Naskh typeface for the whole UI. Latin glyphs (numbers,
    the EduCourt wordmark) fall through to the next font in the stack. */
 html[lang="ur"] {
   --font-sans: var(--font-urdu), var(--font-geist-sans), system-ui, sans-serif;
-}
-
-html[lang="ur"] body {
-  line-height: 1.9;
-}
-
-/* Form controls inherit line-height, so the tall Urdu leading would stretch
-   them (e.g. the header language switcher) and push the whole layout down.
-   Keep controls at the same line box as English. */
-html[lang="ur"] :is(button, select, input, textarea) {
-  line-height: 1.5;
 }
 
 html[data-background]:not([data-background="default"]) body {

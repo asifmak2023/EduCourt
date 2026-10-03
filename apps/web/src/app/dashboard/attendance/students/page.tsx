@@ -180,7 +180,7 @@ function RecordsTable() {
                           {record.student?.name ?? `#${record.student_id}`}
                         </Link>
                         {record.student?.admission_no ? (
-                          <span className="ml-2 font-mono text-xs text-muted">
+                          <span className="ms-2 font-mono text-xs text-muted">
                             {record.student.admission_no}
                           </span>
                         ) : null}

@@ -124,7 +124,7 @@ function Swatch({
       aria-label={label}
       title={label}
       onClick={onSelect}
-      className={`group relative flex flex-col overflow-hidden rounded-lg border text-left transition ${
+      className={`group relative flex flex-col overflow-hidden rounded-lg border text-start transition ${
         selected
           ? "border-accent ring-2 ring-accent"
           : "border-border hover:border-accent"
@@ -143,7 +143,7 @@ function Swatch({
         </span>
       ) : null}
       {selected ? (
-        <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-accent-foreground">
+        <span className="absolute end-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-accent-foreground">
           <Icon name="check" className="h-3.5 w-3.5" />
         </span>
       ) : null}
@@ -331,7 +331,7 @@ export function AppearanceSettings() {
               type="button"
               aria-pressed={config.backgroundId === "default"}
               onClick={() => setBackground("default")}
-              className={`w-full rounded-lg border px-4 py-3 text-left text-sm transition ${
+              className={`w-full rounded-lg border px-4 py-3 text-start text-sm transition ${
                 config.backgroundId === "default"
                   ? "border-accent ring-2 ring-accent"
                   : "border-border hover:border-accent"

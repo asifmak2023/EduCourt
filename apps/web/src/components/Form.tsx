@@ -58,7 +58,7 @@ export function Field({
           className="mb-1 block text-sm font-medium text-foreground"
         >
           {tr(label)}
-          {required ? <span className="ml-0.5 text-danger">*</span> : null}
+          {required ? <span className="ms-0.5 text-danger">*</span> : null}
         </label>
         {children}
         {hint && !error ? (

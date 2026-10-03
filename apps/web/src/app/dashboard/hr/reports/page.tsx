@@ -215,7 +215,7 @@ function MovementTable({
             <li key={row.id} className="flex justify-between gap-3">
               <span className="text-foreground">
                 {row.name}
-                <span className="ml-1 text-xs text-muted">
+                <span className="ms-1 text-xs text-muted">
                   {row.employee_no}
                 </span>
               </span>

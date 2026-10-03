@@ -109,7 +109,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 aria-expanded={isOpen}
                 className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted transition-colors hover:bg-accent-soft hover:text-accent-soft-foreground"
               >
-                <span className="flex-1 text-left">{tr(section.label)}</span>
+                <span className="flex-1 text-start">{tr(section.label)}</span>
                 <Icon
                   name="chevronDown"
                   className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${
@@ -187,7 +187,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen lg:flex">
       <aside className="hidden w-64 shrink-0 lg:block">
-        <div className="fixed inset-y-0 left-0 w-64">{sidebar}</div>
+        <div className="fixed inset-y-0 start-0 w-64">{sidebar}</div>
       </aside>
 
       {menuOpen ? (
@@ -197,7 +197,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onClick={() => setMenuOpen(false)}
             aria-hidden="true"
           />
-          <div className="absolute inset-y-0 left-0 w-64">{sidebar}</div>
+          <div className="absolute inset-y-0 start-0 w-64">{sidebar}</div>
         </div>
       ) : null}
 

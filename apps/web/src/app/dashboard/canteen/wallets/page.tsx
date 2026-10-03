@@ -101,7 +101,7 @@ export default function CanteenWalletsPage() {
                         {wallet.student?.full_name ?? `Student #${wallet.student_id}`}
                       </Link>
                       {wallet.student?.admission_no ? (
-                        <span className="ml-2 text-xs text-muted">
+                        <span className="ms-2 text-xs text-muted">
                           {wallet.student.admission_no}
                         </span>
                       ) : null}</Table.Cell>

@@ -124,7 +124,7 @@ function YearsTable() {
                           {year.name}
                         </Link>
                         {year.is_current ? (
-                          <span className="ml-2 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent-soft-foreground">
+                          <span className="ms-2 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent-soft-foreground">
                             Current
                           </span>
                         ) : null}

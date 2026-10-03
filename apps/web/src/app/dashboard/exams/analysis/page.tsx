@@ -233,7 +233,7 @@ function ClassAnalysis() {
                         <span className="font-medium text-foreground">
                           {grade}
                         </span>
-                        <span className="ml-2 text-muted">{count}</span>
+                        <span className="ms-2 text-muted">{count}</span>
                       </div>
                     )
                   )}

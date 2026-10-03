@@ -83,11 +83,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         aria-label={t("navigation.home")}
         className="flex items-center gap-3 px-5 py-5 transition-colors hover:bg-surface-tertiary"
       >
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-soft text-sm font-semibold text-accent-soft-foreground">
-          EC
-        </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-foreground">EduCourt</p>
+          <p className="truncate font-logo text-2xl font-bold tracking-tight text-foreground">
+            EduCourt
+          </p>
           <p className="truncate text-xs text-muted">
             {user.institution?.name ?? t("navigation.educationSystem")}
           </p>

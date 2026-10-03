@@ -13,3 +13,6 @@ apps/web/.env
 apps/web/.env.local
 apps/mobile/.env
 apps/mobile/.env.local
+
+# Local-only static design/preview pages (not part of the live app)
+static-preview/

@@ -213,8 +213,8 @@ html[data-theme="dark"][data-glass-muted-contrast="high"] {
   --muted: #e5e7eb;
 }
 
-/* Sidebar wordmark: a soft accent halo behind the EduCourt logo. */
-.brand-glow {
+/* Sidebar wordmark: a soft accent halo behind the EduCourt logo (LTR only). */
+html[dir="ltr"] .brand-glow {
   text-shadow:
     0 0 9px color-mix(in oklab, var(--accent) 45%, transparent),
     0 0 20px color-mix(in oklab, var(--accent) 25%, transparent);

@@ -130,8 +130,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       if (!item.ready) {
                         return (
                           <li key={item.href}>
-                            <span className="flex cursor-not-allowed items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm text-muted">
-                              <Icon name={item.icon} className="h-4 w-4 shrink-0" />
+                            <span className="flex cursor-not-allowed items-center gap-3 rounded-lg px-2.5 py-2.5 text-[15px] text-muted">
+                              <Icon name={item.icon} className="h-[18px] w-[18px] shrink-0" />
                               <span className="flex-1 truncate">{tr(item.label)}</span>
                               <span className="rounded bg-surface-tertiary px-1.5 py-0.5 text-[10px] font-medium uppercase text-muted">
                                 {t("navigation.soon")}
@@ -146,7 +146,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                           <Link
                             href={item.href}
                             onClick={() => setMenuOpen(false)}
-                            className={`flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm transition-colors duration-150 ${
+                            className={`flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-[15px] transition-colors duration-150 ${
                               isActive
                                 ? "bg-accent-soft font-semibold text-accent-soft-foreground"
                                 : "font-medium text-foreground/80 hover:bg-accent-soft hover:text-accent-soft-foreground"
@@ -179,7 +179,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           onClick={() => {
             void logout().then(() => router.replace("/login"));
           }}
-          className="mt-3 w-full rounded-lg border border-border-secondary px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:bg-surface-tertiary"
+          className="mt-3 w-full rounded-lg border border-border-secondary px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-surface-tertiary"
         >
           {t("common.signOut")}
         </button>

@@ -26,6 +26,13 @@ html[lang="ur"] body {
   line-height: 1.9;
 }
 
+/* Form controls inherit line-height, so the tall Urdu leading would stretch
+   them (e.g. the header language switcher) and push the whole layout down.
+   Keep controls at the same line box as English. */
+html[lang="ur"] :is(button, select, input, textarea) {
+  line-height: 1.5;
+}
+
 html[data-background]:not([data-background="default"]) body {
   background-color: transparent;
 }

@@ -19,9 +19,9 @@ import {
   formatCurrency,
   formatDate,
   formatNumber,
-  humanize,
 } from "@/lib/format";
 import { visibleSections } from "@/lib/nav";
+import { roleSummary } from "@/lib/roles";
 import { useTr } from "@/lib/i18n";
 import type { CampusDashboard, PlatformOverview, TimetableSlot } from "@/lib/types";
 
@@ -66,7 +66,6 @@ function greetingKey(): MessageKey {
 export default function DashboardPage() {
   const { user } = useAuth();
   const { t } = useTranslation();
-  const tr = useTr();
   const [campus, setCampus] = useState<CampusDashboard | null>(null);
   const [platform, setPlatform] = useState<PlatformOverview | null>(null);
   const [slots, setSlots] = useState<TimetableSlot[]>([]);
@@ -143,10 +142,10 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`${t(greetingKey())}, ${user.name.split(" ")[0]}`}
-        description={`${user.campus?.name ?? t("dashboard.allCampuses")} - ${roleSummary(user, tr)}`}
+        title={`${t(greetingKey())}، \u2068${user.name.split(" ")[0]}\u2069`}
+        description={`${user.campus?.name ?? t("dashboard.allCampuses")} - ${roleSummary(user.roles, t)}`}
         actions={
-          <span className="rounded-full bg-surface px-3 py-1 text-xs font-medium text-muted ring-1 ring-border-secondary">
+          <span dir="ltr" className="rounded-full bg-surface px-3 py-1 text-xs font-medium text-muted ring-1 ring-border-secondary">
             {formatDate(new Date().toISOString())}
           </span>
         }
@@ -171,13 +170,6 @@ export default function DashboardPage() {
       {!loading && mode === "general" ? <GeneralView user={user} /> : null}
     </div>
   );
-}
-
-function roleSummary(user: AuthUser, tr: (value: string) => string): string {
-  return user.roles
-    .slice(0, 2)
-    .map((role) => tr(humanize(role)))
-    .join(" / ");
 }
 
 function PlatformView({ overview }: { overview: PlatformOverview }) {

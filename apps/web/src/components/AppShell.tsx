@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useTranslation, type MessageKey } from "@eis/i18n";
+import { useTranslation } from "@eis/i18n";
 import { useAuth } from "@/lib/auth";
 import { useTr } from "@/lib/i18n";
+import { roleLabel as roleText } from "@/lib/roles";
 import { findNavItem, sectionForPath, visibleSections } from "@/lib/nav";
 import { Icon } from "@/components/Icons";
 import { Avatar } from "@/components/Avatar";
@@ -15,7 +16,7 @@ const SIDEBAR_KEY = "eis.sidebar.section";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth();
-  const { t } = useTranslation();
+  const { t, isRTL } = useTranslation();
   const tr = useTr();
   const pathname = usePathname();
   const router = useRouter();
@@ -71,22 +72,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const sections = visibleSections(user.permissions);
   const activeItem = findNavItem(pathname);
-  const roleLabel = user.roles
-    .map((role) => {
-      const camel = role.replace(/_([a-z])/g, (_, char: string) =>
-        char.toUpperCase()
-      );
-      const key = `role.${camel}` as MessageKey;
-      const label = t(key);
-      return label === key ? role.replace(/_/g, " ") : label;
-    })
+  const roleLabelString = user.roles
+    .map((role) => roleText(role, t))
     .join(", ");
 
   const sidebar = (
-    <div
-      dir="ltr"
-      className="app-glass app-sidebar flex h-full flex-col bg-surface-secondary text-foreground"
-    >
+    <div className="app-glass app-sidebar flex h-full flex-col bg-surface-secondary text-foreground">
       <Link
         href="/dashboard"
         onClick={() => setMenuOpen(false)}
@@ -123,7 +114,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Icon
                   name="chevronDown"
                   className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${
-                    isOpen ? "rotate-0" : "-rotate-90"
+                    isOpen ? "rotate-0" : isRTL ? "rotate-90" : "-rotate-90"
                   }`}
                 />
               </button>
@@ -178,7 +169,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Avatar name={user.name} photoUrl={user.photo_url} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
-            <p className="truncate text-xs capitalize text-muted">{roleLabel}</p>
+            <p className="truncate text-xs capitalize text-muted">{roleLabelString}</p>
           </div>
         </div>
         <button
@@ -196,7 +187,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block">
+      <aside className="fixed inset-y-0 start-0 z-30 hidden w-64 lg:block">
         {sidebar}
       </aside>
 
@@ -207,11 +198,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onClick={() => setMenuOpen(false)}
             aria-hidden="true"
           />
-          <div className="absolute inset-y-0 left-0 w-64">{sidebar}</div>
+          <div className="absolute inset-y-0 start-0 w-64">{sidebar}</div>
         </div>
       ) : null}
 
-      <div className="flex min-h-screen min-w-0 flex-col lg:pl-64">
+      <div className="flex min-h-screen min-w-0 flex-col lg:ps-64">
         <header className="app-glass sticky top-0 z-30 border-b border-border-secondary bg-surface/80 backdrop-blur">
           <div className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <button
@@ -231,7 +222,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </p>
             </div>
             <span className="hidden rounded-full bg-surface-tertiary px-3 py-1 text-xs font-medium text-muted sm:inline">
-              {roleLabel}
+              {roleLabelString}
             </span>
             <LanguageSwitcher />
           </div>

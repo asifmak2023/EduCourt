@@ -6,6 +6,13 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
+const LRI = "\u2066";
+const PDI = "\u2069";
+
+function isolateLtr(value: string): string {
+  return `${LRI}${value}${PDI}`;
+}
+
 export function formatNumber(value: number | string | null | undefined): string {
   const numeric = typeof value === "string" ? Number(value) : value;
 
@@ -23,7 +30,7 @@ export function formatCurrency(value: number | string | null | undefined): strin
     return currencyFormatter.format(0);
   }
 
-  return currencyFormatter.format(numeric);
+  return isolateLtr(currencyFormatter.format(numeric));
 }
 
 export function formatDate(value: string | null | undefined): string {
@@ -37,11 +44,13 @@ export function formatDate(value: string | null | undefined): string {
     return value;
   }
 
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return isolateLtr(
+    date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
+  );
 }
 
 export function formatDateTime(value: string | null | undefined): string {
@@ -55,13 +64,15 @@ export function formatDateTime(value: string | null | undefined): string {
     return value;
   }
 
-  return date.toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return isolateLtr(
+    date.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  );
 }
 
 export function formatTime(value: string | null | undefined): string {

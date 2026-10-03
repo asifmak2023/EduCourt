@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Exo_2 } from "next/font/google";
+import { Geist, Geist_Mono, Exo_2, Noto_Nastaliq_Urdu } from "next/font/google";
 import { ACCENTS } from "@eis/appearance";
 import { AuthProvider } from "@/lib/auth";
 import { AppearanceProvider } from "@/lib/appearance";
@@ -23,6 +23,12 @@ const exo2 = Exo_2({
   weight: ["400", "600", "700"],
 });
 
+const urdu = Noto_Nastaliq_Urdu({
+  variable: "--font-urdu",
+  subsets: ["arabic"],
+  weight: ["400", "700"],
+});
+
 export const metadata: Metadata = {
   title: "Education Information System",
   description:
@@ -41,7 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${exo2.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${exo2.variable} ${urdu.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useTranslation } from "@eis/i18n";
+import { useTranslation, type MessageKey } from "@eis/i18n";
 import { useAuth } from "@/lib/auth";
 import { useTr } from "@/lib/i18n";
 import { findNavItem, sectionForPath, visibleSections } from "@/lib/nav";
@@ -72,7 +72,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const sections = visibleSections(user.permissions);
   const activeItem = findNavItem(pathname);
   const roleLabel = user.roles
-    .map((role) => role.replace(/_/g, " "))
+    .map((role) => {
+      const camel = role.replace(/_([a-z])/g, (_, char: string) =>
+        char.toUpperCase()
+      );
+      const key = `role.${camel}` as MessageKey;
+      const label = t(key);
+      return label === key ? role.replace(/_/g, " ") : label;
+    })
     .join(", ");
 
   const sidebar = (
@@ -185,9 +192,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen lg:flex">
-      <aside className="hidden w-64 shrink-0 lg:block">
-        <div className="fixed inset-y-0 start-0 w-64">{sidebar}</div>
+    <div className="min-h-screen">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block">
+        {sidebar}
       </aside>
 
       {menuOpen ? (
@@ -197,11 +204,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onClick={() => setMenuOpen(false)}
             aria-hidden="true"
           />
-          <div className="absolute inset-y-0 start-0 w-64">{sidebar}</div>
+          <div className="absolute inset-y-0 left-0 w-64">{sidebar}</div>
         </div>
       ) : null}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-screen min-w-0 flex-col lg:pl-64">
         <header className="app-glass sticky top-0 z-30 border-b border-border-secondary bg-surface/80 backdrop-blur">
           <div className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <button

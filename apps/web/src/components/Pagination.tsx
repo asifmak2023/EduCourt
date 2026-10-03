@@ -1,7 +1,7 @@
 "use client";
 
 import { Pagination as HeroPagination } from "@heroui/react";
-import { formatNumber } from "@/lib/format";
+import { useTranslation } from "@eis/i18n";
 
 export function Pagination({
   page,
@@ -14,6 +14,8 @@ export function Pagination({
   total: number;
   onPage: (page: number) => void;
 }) {
+  const { t } = useTranslation();
+
   if (total === 0) {
     return null;
   }
@@ -24,7 +26,7 @@ export function Pagination({
       className="border-t border-border-secondary px-5 py-4"
     >
       <HeroPagination.Summary>
-        {formatNumber(total)} record{total === 1 ? "" : "s"}
+        {t("admin.list.count", { count: total })}
       </HeroPagination.Summary>
       <HeroPagination.Content>
         <HeroPagination.Item>
@@ -33,12 +35,12 @@ export function Pagination({
             onPress={() => onPage(page - 1)}
           >
             <HeroPagination.PreviousIcon />
-            Previous
+            {t("common.previous")}
           </HeroPagination.Previous>
         </HeroPagination.Item>
         <HeroPagination.Item>
           <span className="px-2 text-xs text-muted">
-            Page {page} of {lastPage}
+            {t("common.pageOf", { page, lastPage })}
           </span>
         </HeroPagination.Item>
         <HeroPagination.Item>
@@ -46,7 +48,7 @@ export function Pagination({
             isDisabled={page >= lastPage}
             onPress={() => onPage(page + 1)}
           >
-            Next
+            {t("common.next")}
             <HeroPagination.NextIcon />
           </HeroPagination.Next>
         </HeroPagination.Item>

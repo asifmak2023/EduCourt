@@ -1,5 +1,5 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getLocales } from "expo-localization";
+"use client";
+
 import {
   I18nProvider,
   MESSAGES,
@@ -10,19 +10,34 @@ import {
 import { useCallback, type ReactNode } from "react";
 
 const storage: StorageAdapter = {
-  get: (key) => AsyncStorage.getItem(key),
-  set: (key, value) => AsyncStorage.setItem(key, value),
+  get(key) {
+    if (typeof window === "undefined") {
+      return null;
+    }
+    return window.localStorage.getItem(key);
+  },
+  set(key, value) {
+    if (typeof window === "undefined") {
+      return;
+    }
+    window.localStorage.setItem(key, value);
+  },
 };
 
 function detect(): string[] {
-  try {
-    return getLocales().map((entry) => entry.languageTag || entry.languageCode || "");
-  } catch {
+  if (typeof navigator === "undefined") {
     return [];
   }
+
+  const languages =
+    navigator.languages && navigator.languages.length
+      ? navigator.languages
+      : [navigator.language];
+
+  return languages.filter(Boolean);
 }
 
-export function AppI18nProvider({ children }: { children: ReactNode }) {
+export function WebI18nProvider({ children }: { children: ReactNode }) {
   return (
     <I18nProvider storage={storage} detect={detect}>
       {children}
@@ -31,12 +46,8 @@ export function AppI18nProvider({ children }: { children: ReactNode }) {
 }
 
 /**
- * Translate a value that may be:
- *  - a semantic message key (hand-written UI), or
- *  - an English source string used by config-driven content (registry labels),
- *    which translators override by adding the English text as a key in their
- *    language file (gettext-style), or
- *  - untranslated text, which is returned unchanged.
+ * Translate a value that may be a semantic message key, an English source-text
+ * key used by config-driven content, or untranslated text (returned as-is).
  */
 export function useTr(): (value: string | undefined | null) => string {
   const { t, locale } = useTranslation();
@@ -54,4 +65,3 @@ export function useTr(): (value: string | undefined | null) => string {
     [t, locale]
   );
 }
-

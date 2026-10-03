@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@eis/i18n";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Icon } from "@/components/Icons";
 
 export default function LoginPage() {
   const { user, loading, login, verifyTwoFactor } = useAuth();
+  const { t } = useTranslation();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -42,7 +44,7 @@ export default function LoginPage() {
       setError(
         err instanceof ApiError
           ? err.message
-          : "Unable to sign in. Please try again."
+          : t("auth.failed")
       );
     } finally {
       setSubmitting(false);
@@ -66,7 +68,7 @@ export default function LoginPage() {
       setError(
         err instanceof ApiError
           ? err.message
-          : "Unable to verify the code. Please try again."
+          : t("auth.verifyFailed")
       );
     } finally {
       setSubmitting(false);
@@ -77,12 +79,12 @@ export default function LoginPage() {
     <main className="flex flex-1 items-center justify-center p-6">
       <div className="w-full max-w-md rounded-2xl border border-border-secondary bg-surface p-8 shadow-sm">
         <h1 className="text-2xl font-semibold tracking-tight">
-          Education Information System
+          {t("auth.brand")}
         </h1>
         <p className="mt-1 text-sm text-muted">
           {challengeToken
-            ? "Enter the 6-digit code from your authenticator app."
-            : "Sign in to your campus dashboard."}
+            ? t("auth.twoFactorPrompt")
+            : t("auth.tagline")}
         </p>
 
         {challengeToken ? (
@@ -92,7 +94,7 @@ export default function LoginPage() {
                 htmlFor="code"
                 className="block text-sm font-medium text-foreground"
               >
-                Verification code
+                {t("auth.verificationCode")}
               </label>
               <input
                 id="code"
@@ -105,7 +107,7 @@ export default function LoginPage() {
                 className="mt-1 w-full rounded-lg border border-border-secondary px-3 py-2 text-center text-lg tracking-[0.3em] outline-none focus:border-accent focus:ring-1 focus:ring-accent"
               />
               <p className="mt-1 text-xs text-muted">
-                You can also enter one of your recovery codes.
+                {t("auth.recoveryHint")}
               </p>
             </div>
 
@@ -120,7 +122,7 @@ export default function LoginPage() {
               disabled={submitting}
               className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition hover:bg-accent-hover disabled:opacity-60"
             >
-              {submitting ? "Verifying..." : "Verify and sign in"}
+              {submitting ? t("auth.verifying") : t("auth.verify")}
             </button>
 
             <button
@@ -132,7 +134,7 @@ export default function LoginPage() {
               }}
               className="w-full text-xs font-medium text-muted hover:text-foreground"
             >
-              Back to sign in
+              {t("auth.backToSignIn")}
             </button>
           </form>
         ) : (
@@ -143,13 +145,14 @@ export default function LoginPage() {
                   htmlFor="email"
                   className="block text-sm font-medium text-foreground"
                 >
-                  Email
+                  {t("auth.email")}
                 </label>
                 <input
                   id="email"
                   type="email"
                   autoComplete="username"
                   required
+                  placeholder={t("auth.emailPlaceholder")}
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   className="mt-1 w-full rounded-lg border border-border-secondary px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
@@ -161,7 +164,7 @@ export default function LoginPage() {
                   htmlFor="password"
                   className="block text-sm font-medium text-foreground"
                 >
-                  Password
+                  {t("auth.password")}
                 </label>
                 <div className="relative mt-1">
                   <input
@@ -169,6 +172,7 @@ export default function LoginPage() {
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     required
+                    placeholder={t("auth.passwordPlaceholder")}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     className="w-full rounded-lg border border-border-secondary px-3 py-2 pe-10 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
@@ -177,7 +181,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword((current) => !current)}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                       aria-pressed={showPassword}
                       className="absolute inset-y-0 end-3 flex items-center text-muted transition-colors hover:text-foreground"
                     >
@@ -201,7 +205,7 @@ export default function LoginPage() {
                 disabled={submitting}
                 className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition hover:bg-accent-hover disabled:opacity-60"
               >
-                {submitting ? "Signing in..." : "Sign in"}
+                {submitting ? t("auth.signingIn") : t("auth.signIn")}
               </button>
             </form>
           </>

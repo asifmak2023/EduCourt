@@ -2,6 +2,7 @@
 
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { Slider, Switch } from "@heroui/react";
+import { useTranslation, type MessageKey } from "@eis/i18n";
 import {
   ACCENTS,
   GRADIENTS,
@@ -15,17 +16,17 @@ import { Button } from "@/components/Form";
 import { Icon } from "@/components/Icons";
 import { Card } from "@/components/ui";
 
-const MODES: { value: ColorMode; label: string }[] = [
-  { value: "system", label: "System" },
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
+const MODES: { value: ColorMode; label: MessageKey }[] = [
+  { value: "system", label: "appearance.mode.system" },
+  { value: "light", label: "appearance.mode.light" },
+  { value: "dark", label: "appearance.mode.dark" },
 ];
 
-const FAMILIES: { value: BackgroundKind; label: string }[] = [
-  { value: "default", label: "Default" },
-  { value: "solid", label: "Solid" },
-  { value: "gradient", label: "Gradient" },
-  { value: "wallpaper", label: "Wallpaper" },
+const FAMILIES: { value: BackgroundKind; label: MessageKey }[] = [
+  { value: "default", label: "appearance.family.default" },
+  { value: "solid", label: "appearance.family.solid" },
+  { value: "gradient", label: "appearance.family.gradient" },
+  { value: "wallpaper", label: "appearance.family.wallpaper" },
 ];
 
 function familyOf(backgroundId: string): BackgroundKind {
@@ -66,10 +67,12 @@ function Segmented<T extends string>({
   onChange,
 }: {
   label: string;
-  options: { value: T; label: string }[];
+  options: { value: T; label: MessageKey }[];
   value: T;
   onChange: (value: T) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div
       role="radiogroup"
@@ -91,7 +94,7 @@ function Segmented<T extends string>({
                 : "text-muted hover:text-foreground"
             }`}
           >
-            {option.label}
+            {t(option.label)}
           </button>
         );
       })}
@@ -245,6 +248,7 @@ export function AppearanceSettings() {
     setBackgroundBlur,
     reset,
   } = useAppearance();
+  const { t } = useTranslation();
 
   const activeFamily = familyOf(config.backgroundId);
   const [family, setFamily] = useState<BackgroundKind>(activeFamily);
@@ -257,11 +261,11 @@ export function AppearanceSettings() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Section
-        title="Color mode"
-        description="Choose a fixed theme or follow your operating system."
+        title={t("appearance.colorMode")}
+        description={t("appearance.colorModeHint")}
       >
         <Segmented
-          label="Color mode"
+          label={t("appearance.colorMode")}
           options={MODES}
           value={config.mode}
           onChange={setMode}
@@ -269,8 +273,8 @@ export function AppearanceSettings() {
       </Section>
 
       <Section
-        title="Accent color"
-        description="Used for buttons, links, highlights and focus rings."
+        title={t("appearance.accentColor")}
+        description={t("appearance.accentColorHint")}
       >
         <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
           {ACCENTS.map((accent) => (
@@ -302,8 +306,8 @@ export function AppearanceSettings() {
         </div>
         <div className="mt-4">
           <ToggleRow
-            label="Vibrant palette"
-            hint="Use richer accent-tinted surfaces throughout the app."
+            label={t("appearance.vibrantPalette")}
+            hint={t("appearance.vibrantPaletteHint")}
             checked={config.vibrant}
             onChange={setVibrant}
           />
@@ -311,11 +315,11 @@ export function AppearanceSettings() {
       </Section>
 
       <Section
-        title="Background"
-        description="Applies behind cards and content. Cards stay readable."
+        title={t("appearance.background")}
+        description={t("appearance.backgroundHint")}
       >
         <Segmented
-          label="Background family"
+          label={t("appearance.backgroundFamily")}
           options={FAMILIES}
           value={family}
           onChange={selectFamily}
@@ -333,7 +337,7 @@ export function AppearanceSettings() {
                   : "border-border hover:border-accent"
               }`}
             >
-              Default surface background
+              {t("appearance.defaultSurface")}
             </button>
           ) : null}
 
@@ -395,14 +399,14 @@ export function AppearanceSettings() {
           <div className="mt-5">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-foreground">
-                Wallpaper dimming
+                {t("appearance.dimming")}
               </p>
               <span className="text-xs text-muted">
                 {config.wallpaperDim}%
               </span>
             </div>
             <Slider
-              aria-label="Wallpaper dimming"
+              aria-label={t("appearance.dimming")}
               minValue={0}
               maxValue={80}
               step={5}
@@ -422,19 +426,19 @@ export function AppearanceSettings() {
       </Section>
 
       <Section
-        title="Surface"
-        description="Glassmorphism for cards, the top bar, and the sidebar."
+        title={t("appearance.surface")}
+        description={t("appearance.surfaceHint")}
       >
         <ToggleRow
-          label="Glass surfaces"
-          hint="Frost cards, the top bar, and the sidebar."
+          label={t("appearance.glassSurfaces")}
+          hint={t("appearance.glassSurfacesHint")}
           checked={config.glass}
           onChange={setGlass}
         />
         <div className="mt-5 space-y-5">
           <SliderRow
-            label="Glass blur"
-            hint="Strength of the frosted blur."
+            label={t("appearance.glassBlur")}
+            hint={t("appearance.glassBlurHint")}
             value={config.glassBlur}
             min={0}
             max={24}
@@ -444,8 +448,8 @@ export function AppearanceSettings() {
             onChange={setGlassBlur}
           />
           <SliderRow
-            label="Transparency"
-            hint="How see-through the glass surfaces are."
+            label={t("appearance.transparency")}
+            hint={t("appearance.transparencyHint")}
             value={config.glassTransparency}
             min={0}
             max={100}
@@ -455,8 +459,8 @@ export function AppearanceSettings() {
             onChange={setGlassTransparency}
           />
           <SliderRow
-            label="Background blur"
-            hint="Blurs the wallpaper or gradient behind the dashboard."
+            label={t("appearance.backgroundBlur")}
+            hint={t("appearance.backgroundBlurHint")}
             value={config.backgroundBlur}
             min={0}
             max={24}
@@ -468,7 +472,7 @@ export function AppearanceSettings() {
         </div>
         <div className="mt-5 flex items-center justify-between gap-4 border-t border-border-secondary pt-4">
           <p className="text-xs text-muted">
-            Recommended: glass blur 12px, transparency 15%, background blur 0px.
+            {t("appearance.presetHint")}
           </p>
           <Button
             variant="secondary"
@@ -479,24 +483,24 @@ export function AppearanceSettings() {
               setBackgroundBlur(0);
             }}
           >
-            Recommended
+            {t("appearance.recommended")}
           </Button>
         </div>
       </Section>
 
       <Section
-        title="Motion"
-        description="Subtle transitions for page and dialog entry."
+        title={t("appearance.motion")}
+        description={t("appearance.motionHint")}
       >
         <ToggleRow
-          label="Interface animations"
-          hint="Disabled when your system requests reduced motion."
+          label={t("appearance.interfaceAnimations")}
+          hint={t("appearance.interfaceAnimationsHint")}
           checked={config.animations}
           onChange={setAnimations}
         />
         <div className="mt-5 flex justify-end">
           <Button variant="secondary" onClick={reset}>
-            Reset to defaults
+            {t("appearance.reset")}
           </Button>
         </div>
       </Section>

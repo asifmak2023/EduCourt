@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ACCENTS } from "@eis/appearance";
 import { AuthProvider } from "@/lib/auth";
 import { AppearanceProvider } from "@/lib/appearance";
+import { WebI18nProvider } from "@/lib/i18n";
 import { AppBackground } from "@/components/AppBackground";
 import "./globals.css";
 
@@ -41,10 +42,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
       <body className="min-h-full flex flex-col text-foreground">
-        <AppearanceProvider>
-          <AppBackground />
-          <AuthProvider>{children}</AuthProvider>
-        </AppearanceProvider>
+        <WebI18nProvider>
+          <AppearanceProvider>
+            <AppBackground />
+            <AuthProvider>{children}</AuthProvider>
+          </AppearanceProvider>
+        </WebI18nProvider>
       </body>
     </html>
   );

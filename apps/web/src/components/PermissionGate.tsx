@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@eis/i18n";
 import { useAuth } from "@/lib/auth";
 import { ErrorNotice } from "@/components/ui";
 
@@ -11,15 +12,14 @@ export function PermissionGate({
   children: React.ReactNode;
 }) {
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   if (!user) {
     return null;
   }
 
   if (!user.permissions.includes(permission)) {
-    return (
-      <ErrorNotice message="You do not have permission to view this page." />
-    );
+    return <ErrorNotice message={t("errors.forbidden")} />;
   }
 
   return <>{children}</>;

@@ -3,15 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslation } from "@eis/i18n";
 import { useAuth } from "@/lib/auth";
+import { useTr } from "@/lib/i18n";
 import { findNavItem, sectionForPath, visibleSections } from "@/lib/nav";
 import { Icon } from "@/components/Icons";
 import { Avatar } from "@/components/Avatar";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const SIDEBAR_KEY = "eis.sidebar.section";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth();
+  const { t } = useTranslation();
+  const tr = useTr();
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -59,7 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted">
-        Loading...
+        {t("app.loading")}
       </div>
     );
   }
@@ -75,7 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Link
         href="/dashboard"
         onClick={() => setMenuOpen(false)}
-        aria-label="Go to home"
+        aria-label={t("navigation.home")}
         className="flex items-center gap-3 px-5 py-5 transition-colors hover:bg-surface-tertiary"
       >
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-soft text-sm font-semibold text-accent-soft-foreground">
@@ -84,13 +89,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-foreground">EduCourt</p>
           <p className="truncate text-xs text-muted">
-            {user.institution?.name ?? "Education System"}
+            {user.institution?.name ?? t("navigation.educationSystem")}
           </p>
         </div>
       </Link>
 
       <nav
-        aria-label="Primary"
+        aria-label={t("navigation.primary")}
         tabIndex={0}
         className="app-sidebar-nav flex-1 space-y-2 overflow-y-auto px-3 pb-4 outline-none"
       >
@@ -105,7 +110,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 aria-expanded={isOpen}
                 className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted transition-colors hover:bg-accent-soft hover:text-accent-soft-foreground"
               >
-                <span className="flex-1 text-left">{section.label}</span>
+                <span className="flex-1 text-left">{tr(section.label)}</span>
                 <Icon
                   name="chevronDown"
                   className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${
@@ -125,9 +130,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                           <li key={item.href}>
                             <span className="flex cursor-not-allowed items-center gap-3 rounded-lg px-2 py-2 text-sm text-muted">
                               <Icon name={item.icon} className="h-4 w-4 shrink-0" />
-                              <span className="flex-1 truncate">{item.label}</span>
+                              <span className="flex-1 truncate">{tr(item.label)}</span>
                               <span className="rounded bg-surface-tertiary px-1.5 py-0.5 text-[10px] font-medium uppercase text-muted">
-                                Soon
+                                {t("navigation.soon")}
                               </span>
                             </span>
                           </li>
@@ -146,7 +151,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                             }`}
                           >
                             <Icon name={item.icon} className="h-4 w-4 shrink-0" />
-                            <span className="flex-1 truncate">{item.label}</span>
+                            <span className="flex-1 truncate">{tr(item.label)}</span>
                           </Link>
                         </li>
                       );
@@ -174,7 +179,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           }}
           className="mt-3 w-full rounded-lg border border-border-secondary px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:bg-surface-tertiary"
         >
-          Sign out
+          {t("common.signOut")}
         </button>
       </div>
     </div>
@@ -204,21 +209,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               type="button"
               onClick={() => setMenuOpen(true)}
               className="rounded-lg border border-border-secondary p-2 text-muted transition-colors hover:bg-surface-tertiary lg:hidden"
-              aria-label="Open navigation"
+              aria-label={t("navigation.open")}
             >
               <Icon name="list" className="h-5 w-5" />
             </button>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-foreground">
-                {activeItem?.label ?? "Dashboard"}
+                {activeItem ? tr(activeItem.label) : t("navigation.dashboard")}
               </p>
               <p className="truncate text-xs text-muted">
-                {user.campus?.name ?? "All campuses"}
+                {user.campus?.name ?? t("navigation.allCampuses")}
               </p>
             </div>
             <span className="hidden rounded-full bg-surface-tertiary px-3 py-1 text-xs font-medium text-muted sm:inline">
               {roleLabel}
             </span>
+            <LanguageSwitcher />
           </div>
         </header>
 

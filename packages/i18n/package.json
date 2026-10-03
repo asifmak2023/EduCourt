@@ -14,6 +14,9 @@
   "peerDependencies": {
     "react": ">=18"
   },
+  "devDependencies": {
+    "@types/react": "19.2.18"
+  },
   "scripts": {
     "gen": "node scripts/build-locales.mjs",
     "check": "node scripts/check.mjs"

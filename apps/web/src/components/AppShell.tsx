@@ -82,10 +82,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         href="/dashboard"
         onClick={() => setMenuOpen(false)}
         aria-label={t("navigation.home")}
-        className="flex items-center gap-3 px-5 py-5 transition-colors hover:bg-surface-tertiary"
+        className={`flex items-center gap-3 px-5 py-5 transition-colors hover:bg-surface-tertiary ${
+          isRTL ? "" : "justify-center text-center"
+        }`}
       >
         <div className="min-w-0">
-          <p className="truncate font-logo text-2xl font-bold tracking-tight text-foreground">
+          <p className="brand-glow truncate font-logo text-2xl font-bold tracking-tight text-foreground">
             EduCourt
           </p>
           <p className="truncate text-xs text-muted">
@@ -97,7 +99,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <nav
         aria-label={t("navigation.primary")}
         tabIndex={0}
-        className="app-sidebar-nav flex-1 space-y-2 overflow-y-auto px-3 pb-4 outline-none"
+        className="app-sidebar-nav flex-1 space-y-3 overflow-y-auto px-3 pb-4 outline-none"
       >
         {sections.map((section) => {
           const isOpen = openSection === section.label;
@@ -108,7 +110,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 type="button"
                 onClick={() => toggleSection(section.label)}
                 aria-expanded={isOpen}
-                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted transition-colors hover:bg-accent-soft hover:text-accent-soft-foreground"
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold uppercase tracking-wide text-muted transition-colors hover:bg-accent-soft hover:text-accent-soft-foreground"
               >
                 <span className="flex-1 text-start">{tr(section.label)}</span>
                 <Icon
@@ -121,14 +123,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
               <div className="collapse-grid" data-open={isOpen}>
                 <div className="overflow-hidden">
-                  <ul className="space-y-0.5 pt-1">
+                  <ul className="space-y-1 pt-1">
                     {section.items.map((item) => {
                       const isActive = pathname === item.href;
 
                       if (!item.ready) {
                         return (
                           <li key={item.href}>
-                            <span className="flex cursor-not-allowed items-center gap-3 rounded-lg px-2 py-2 text-sm text-muted">
+                            <span className="flex cursor-not-allowed items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm text-muted">
                               <Icon name={item.icon} className="h-4 w-4 shrink-0" />
                               <span className="flex-1 truncate">{tr(item.label)}</span>
                               <span className="rounded bg-surface-tertiary px-1.5 py-0.5 text-[10px] font-medium uppercase text-muted">
@@ -144,13 +146,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                           <Link
                             href={item.href}
                             onClick={() => setMenuOpen(false)}
-                            className={`flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors duration-150 ${
+                            className={`flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm transition-colors duration-150 ${
                               isActive
-                                ? "bg-accent-soft font-medium text-accent-soft-foreground"
-                                : "hover:bg-accent-soft hover:text-accent-soft-foreground"
+                                ? "bg-accent-soft font-semibold text-accent-soft-foreground"
+                                : "font-medium text-foreground/80 hover:bg-accent-soft hover:text-accent-soft-foreground"
                             }`}
                           >
-                            <Icon name={item.icon} className="h-4 w-4 shrink-0" />
+                            <Icon name={item.icon} className="h-[18px] w-[18px] shrink-0" />
                             <span className="flex-1 truncate">{tr(item.label)}</span>
                           </Link>
                         </li>

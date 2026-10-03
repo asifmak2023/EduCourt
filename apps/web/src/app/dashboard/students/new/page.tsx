@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@eis/i18n";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAcademicOptions } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -65,6 +66,7 @@ export default function NewStudentPage() {
 
 function NewStudentForm() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { options, loading: optionsLoading } = useAcademicOptions();
 
   const [profile, setProfile] = useState<StudentProfile>(emptyStudentProfile());
@@ -156,7 +158,7 @@ function NewStudentForm() {
           setFieldErrors(err.errors);
         }
       } else {
-        setError("Unable to create student.");
+        setError("students.createError");
       }
     } finally {
       setBusy(false);
@@ -170,14 +172,14 @@ function NewStudentForm() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="New student"
-        description="Register a student, guardians and an optional first enrollment."
+        title="students.new"
+        description="students.newDescription"
         actions={
           <Link
             href="/dashboard/students"
             className={buttonClasses("secondary")}
           >
-            Cancel
+            {t("common.cancel")}
           </Link>
         }
       />
@@ -201,7 +203,7 @@ function NewStudentForm() {
           <div className="border-b border-border px-6 py-5">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground">
-                Guardians
+                {t("students.guardians")}
               </h2>
               <Button
                 type="button"
@@ -214,7 +216,7 @@ function NewStudentForm() {
                   setNextKey((value) => value + 1);
                 }}
               >
-                Add guardian
+                {t("students.addGuardian")}
               </Button>
             </div>
 
@@ -224,7 +226,7 @@ function NewStudentForm() {
                   key={row.key}
                   className="grid gap-4 rounded-xl border border-border p-4 sm:grid-cols-2 lg:grid-cols-4"
                 >
-                  <Field label="Name" htmlFor={`gname-${row.key}`} required>
+                  <Field label="common.name" htmlFor={`gname-${row.key}`} required>
                     <TextInput
                       id={`gname-${row.key}`}
                       value={row.name}
@@ -233,7 +235,7 @@ function NewStudentForm() {
                       }
                     />
                   </Field>
-                  <Field label="Phone" htmlFor={`gphone-${row.key}`} required>
+                  <Field label="common.phone" htmlFor={`gphone-${row.key}`} required>
                     <TextInput
                       id={`gphone-${row.key}`}
                       value={row.phone}
@@ -242,7 +244,7 @@ function NewStudentForm() {
                       }
                     />
                   </Field>
-                  <Field label="Relationship" htmlFor={`grel-${row.key}`}>
+                  <Field label="common.relationship" htmlFor={`grel-${row.key}`}>
                     <Select
                       id={`grel-${row.key}`}
                       value={row.relationship}
@@ -252,15 +254,15 @@ function NewStudentForm() {
                         })
                       }
                     >
-                      <option value="father">Father</option>
-                      <option value="mother">Mother</option>
-                      <option value="guardian">Guardian</option>
-                      <option value="other">Other</option>
+                      <option value="father">{t("relationship.father")}</option>
+                      <option value="mother">{t("relationship.mother")}</option>
+                      <option value="guardian">{t("relationship.guardian")}</option>
+                      <option value="other">{t("relationship.otherOption")}</option>
                     </Select>
                   </Field>
                   <div className="flex items-end gap-4 lg:col-span-1">
                     <Checkbox
-                      label="Primary"
+                      label="common.primary"
                       checked={row.is_primary}
                       onChange={(event) =>
                         updateGuardian(row.key, {
@@ -269,7 +271,7 @@ function NewStudentForm() {
                       }
                     />
                     <Checkbox
-                      label="Emergency"
+                      label="common.emergency"
                       checked={row.is_emergency_contact}
                       onChange={(event) =>
                         updateGuardian(row.key, {
@@ -289,7 +291,7 @@ function NewStudentForm() {
                           )
                         }
                       >
-                        Remove guardian
+                        {t("students.removeGuardian")}
                       </Button>
                     </div>
                   ) : null}
@@ -302,14 +304,14 @@ function NewStudentForm() {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-foreground">
-                  Enrollment
+                  {t("students.enrollment.title")}
                 </h2>
                 <p className="mt-0.5 text-xs text-muted">
-                  Optional first class placement.
+                  {t("students.enrollment.desc")}
                 </p>
               </div>
               <Checkbox
-                label="Enroll now"
+                label="students.enrollment.enrollNow"
                 checked={enroll}
                 onChange={(event) => setEnroll(event.target.checked)}
               />
@@ -321,7 +323,7 @@ function NewStudentForm() {
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <Field
-                    label="Academic year"
+                    label="common.academicYear"
                     htmlFor="academic_year_id"
                     required
                     error={errText("enrollment.academic_year_id")}
@@ -333,7 +335,7 @@ function NewStudentForm() {
                         setAcademicYearId(event.target.value)
                       }
                     >
-                      <option value="">Select year</option>
+                      <option value="">{t("common.selectYear")}</option>
                       {options.academic_years.map((year) => (
                         <option key={year.id} value={year.id}>
                           {year.name}
@@ -342,7 +344,7 @@ function NewStudentForm() {
                     </Select>
                   </Field>
                   <Field
-                    label="Class"
+                    label="common.class"
                     htmlFor="class_room_id"
                     required
                     error={errText("enrollment.class_room_id")}
@@ -355,7 +357,7 @@ function NewStudentForm() {
                         setSectionId("");
                       }}
                     >
-                      <option value="">Select class</option>
+                      <option value="">{t("common.selectClass")}</option>
                       {options.class_rooms.map((classRoom) => (
                         <option key={classRoom.id} value={classRoom.id}>
                           {classRoom.name}
@@ -363,14 +365,14 @@ function NewStudentForm() {
                       ))}
                     </Select>
                   </Field>
-                  <Field label="Section" htmlFor="section_id">
+                  <Field label="common.section" htmlFor="section_id">
                     <Select
                       id="section_id"
                       value={sectionId}
                       disabled={classRoomId === ""}
                       onChange={(event) => setSectionId(event.target.value)}
                     >
-                      <option value="">No section</option>
+                      <option value="">{t("common.noSection")}</option>
                       {sections.map((section) => (
                         <option key={section.id} value={section.id}>
                           {section.name}
@@ -378,7 +380,7 @@ function NewStudentForm() {
                       ))}
                     </Select>
                   </Field>
-                  <Field label="Roll number" htmlFor="roll_number">
+                  <Field label="common.rollNumber" htmlFor="roll_number">
                     <TextInput
                       id="roll_number"
                       value={rollNumber}
@@ -395,10 +397,10 @@ function NewStudentForm() {
               href="/dashboard/students"
               className={buttonClasses("secondary")}
             >
-              Cancel
+              {t("common.cancel")}
             </Link>
             <Button type="submit" loading={busy}>
-              Create student
+              {t("students.create")}
             </Button>
           </div>
         </form>

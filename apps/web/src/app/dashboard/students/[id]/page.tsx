@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Table } from "@heroui/react";
+import { useTranslation } from "@eis/i18n";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -37,6 +38,7 @@ function StudentDetailView() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
   const { can } = useAuth();
+  const { t } = useTranslation();
 
   const { data, loading, error, reload } = useResource<StudentDetail>(
     id ? `/v1/students/${id}` : null
@@ -51,28 +53,28 @@ function StudentDetailView() {
   }
 
   if (!data) {
-    return <EmptyState message="Student not found." />;
+    return <EmptyState message="students.notFound" />;
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={data.full_name}
-        description={`Admission no ${data.admission_no}`}
+        description={t("students.admissionNoWith", { no: data.admission_no })}
         actions={
           <>
             <Link
               href="/dashboard/students"
               className={buttonClasses("secondary")}
             >
-              Back
+              {t("common.back")}
             </Link>
             {can("student.edit") || can("student.photo") ? (
               <Link
                 href={`/dashboard/students/${data.id}/edit`}
                 className={buttonClasses("secondary")}
               >
-                {can("student.edit") ? "Edit" : "Photo"}
+                {can("student.edit") ? t("common.edit") : t("students.photo")}
               </Link>
             ) : null}
           </>
@@ -87,34 +89,34 @@ function StudentDetailView() {
         </div>
       </div>
 
-      <SectionCard title="Profile">
+      <SectionCard title="students.profileSection">
         <DataList>
-          <DataItem label="Date of birth" value={formatDate(data.date_of_birth)} />
-          <DataItem label="Gender" value={humanize(data.gender)} />
-          <DataItem label="National ID" value={data.national_id} />
-          <DataItem label="Blood group" value={data.blood_group} />
-          <DataItem label="Nationality" value={data.nationality} />
-          <DataItem label="Religion" value={data.religion} />
-          <DataItem label="Category" value={data.category} />
-          <DataItem label="Email" value={data.email} />
-          <DataItem label="Phone" value={data.phone} />
-          <DataItem label="City" value={data.city} />
-          <DataItem label="Previous school" value={data.previous_school} />
+          <DataItem label="students.field.dateOfBirth" value={formatDate(data.date_of_birth)} />
+          <DataItem label="common.gender" value={humanize(data.gender)} />
+          <DataItem label="students.field.nationalId" value={data.national_id} />
+          <DataItem label="students.field.bloodGroup" value={data.blood_group} />
+          <DataItem label="students.field.nationality" value={data.nationality} />
+          <DataItem label="students.field.religion" value={data.religion} />
+          <DataItem label="students.field.category" value={data.category} />
+          <DataItem label="common.email" value={data.email} />
+          <DataItem label="common.phone" value={data.phone} />
+          <DataItem label="common.city" value={data.city} />
+          <DataItem label="students.field.previousSchool" value={data.previous_school} />
           <DataItem
-            label="Admission date"
+            label="students.field.admissionDate"
             value={formatDate(data.admission_date)}
           />
-          <DataItem label="Address" value={data.address} />
-          <DataItem label="Notes" value={data.notes} />
+          <DataItem label="common.address" value={data.address} />
+          <DataItem label="common.notes" value={data.notes} />
         </DataList>
       </SectionCard>
 
       <SectionCard
-        title="Guardians"
-        description="Contacts linked to this student."
+        title="students.guardians"
+        description="students.guardiansDesc"
       >
         {data.guardians.length === 0 ? (
-          <EmptyState message="No guardians linked yet." />
+          <EmptyState message="students.noGuardians" />
         ) : (
           <ul className="divide-y divide-border">
             {data.guardians.map((guardian) => (
@@ -129,16 +131,16 @@ function StudentDetailView() {
                   <p className="text-xs text-muted">
                     {[guardian.phone, guardian.email]
                       .filter(Boolean)
-                      .join(" · ") || "No contact details"}
+                      .join(" · ") || t("students.noContactDetails")}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   {guardian.relationship ? (
                     <Badge value={guardian.relationship} />
                   ) : null}
-                  {guardian.is_primary ? <Badge value="primary" /> : null}
+                  {guardian.is_primary ? <Badge value={t("common.primary")} /> : null}
                   {guardian.is_emergency_contact ? (
-                    <Badge value="emergency" />
+                    <Badge value={t("common.emergency")} />
                   ) : null}
                 </div>
               </li>
@@ -148,23 +150,23 @@ function StudentDetailView() {
       </SectionCard>
 
       <SectionCard
-        title="Enrollments"
-        description="Class placement history."
+        title="students.enrollments"
+        description="students.enrollmentsDesc"
       >
         {data.enrollments.length === 0 ? (
-          <EmptyState message="No enrollments recorded." />
+          <EmptyState message="students.noEnrollments" />
         ) : (
           <Table variant="secondary">
             <Table.ScrollContainer>
-              <Table.Content aria-label="Enrollments" className="min-w-[880px]">
+              <Table.Content aria-label={t("students.enrollments")} className="min-w-[880px]">
                 <Table.Header>
-                  <Table.Column isRowHeader>Academic year</Table.Column>
-                  <Table.Column>Class</Table.Column>
-                  <Table.Column>Section</Table.Column>
-                  <Table.Column>Roll no</Table.Column>
-                  <Table.Column>Status</Table.Column>
-                  <Table.Column>Starts</Table.Column>
-                  <Table.Column>Ends</Table.Column>
+                  <Table.Column isRowHeader>{t("common.academicYear")}</Table.Column>
+                  <Table.Column>{t("common.class")}</Table.Column>
+                  <Table.Column>{t("common.section")}</Table.Column>
+                  <Table.Column>{t("common.rollNo")}</Table.Column>
+                  <Table.Column>{t("common.status")}</Table.Column>
+                  <Table.Column>{t("common.starts")}</Table.Column>
+                  <Table.Column>{t("common.ends")}</Table.Column>
                 </Table.Header>
                 <Table.Body>
                   {data.enrollments.map((enrollment) => (
@@ -220,6 +222,7 @@ function WithdrawPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const { t } = useTranslation();
 
   const submit = async () => {
     setBusy(true);
@@ -241,7 +244,7 @@ function WithdrawPanel({
       onDone();
     } catch (err: unknown) {
       setError(
-        err instanceof ApiError ? err.message : "Unable to withdraw student."
+        err instanceof ApiError ? err.message : "students.withdraw.error"
       );
     } finally {
       setBusy(false);
@@ -253,10 +256,10 @@ function WithdrawPanel({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold text-foreground">
-            Withdraw or transfer
+            {t("students.withdraw.title")}
           </h2>
           <p className="mt-0.5 text-xs text-muted">
-            Closes all active enrollments for this student.
+            {t("students.withdraw.desc")}
           </p>
         </div>
         <Button
@@ -264,29 +267,29 @@ function WithdrawPanel({
           type="button"
           onClick={() => setOpen((value) => !value)}
         >
-          {open ? "Cancel" : "Start"}
+          {open ? t("common.cancel") : t("students.withdraw.start")}
         </Button>
       </div>
 
       {done ? (
         <div className="mt-4">
-          <SuccessNotice message="Student record updated." />
+          <SuccessNotice message="students.withdraw.updated" />
         </div>
       ) : null}
 
       {open ? (
         <div className="mt-5 grid gap-4 sm:grid-cols-3">
-          <Field label="Outcome" htmlFor="withdraw-status">
+          <Field label="common.outcome" htmlFor="withdraw-status">
             <Select
               id="withdraw-status"
               value={status}
               onChange={(event) => setStatus(event.target.value)}
             >
-              <option value="withdrawn">Withdrawn</option>
-              <option value="transferred">Transferred</option>
+              <option value="withdrawn">{t("status.withdrawn")}</option>
+              <option value="transferred">{t("status.transferred")}</option>
             </Select>
           </Field>
-          <Field label="Effective date" htmlFor="withdraw-date">
+          <Field label="common.effectiveDate" htmlFor="withdraw-date">
             <TextInput
               id="withdraw-date"
               type="date"
@@ -294,7 +297,7 @@ function WithdrawPanel({
               onChange={(event) => setDate(event.target.value)}
             />
           </Field>
-          <Field label="Notes" htmlFor="withdraw-notes" className="sm:col-span-3">
+          <Field label="common.notes" htmlFor="withdraw-notes" className="sm:col-span-3">
             <TextArea
               id="withdraw-notes"
               value={notes}
@@ -313,7 +316,7 @@ function WithdrawPanel({
               loading={busy}
               onClick={() => void submit()}
             >
-              Confirm
+              {t("common.confirm")}
             </Button>
           </div>
         </div>

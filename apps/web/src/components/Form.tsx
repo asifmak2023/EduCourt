@@ -27,6 +27,7 @@ import {
   TextArea as HeroTextArea,
 } from "@heroui/react";
 import { Icon } from "@/components/Icons";
+import { useTr } from "@/lib/i18n";
 
 const FieldContext = createContext<{ label: string } | null>(null);
 
@@ -47,6 +48,8 @@ export function Field({
   children: ReactNode;
   className?: string;
 }) {
+  const tr = useTr();
+
   return (
     <FieldContext.Provider value={{ label }}>
       <div className={className}>
@@ -54,14 +57,16 @@ export function Field({
           htmlFor={htmlFor}
           className="mb-1 block text-sm font-medium text-foreground"
         >
-          {label}
+          {tr(label)}
           {required ? <span className="ml-0.5 text-danger">*</span> : null}
         </label>
         {children}
         {hint && !error ? (
-          <p className="mt-1 text-xs text-muted">{hint}</p>
+          <p className="mt-1 text-xs text-muted">{tr(hint)}</p>
         ) : null}
-        {error ? <p className="mt-1 text-xs text-danger">{error}</p> : null}
+        {error ? (
+          <p className="mt-1 text-xs text-danger">{tr(error)}</p>
+        ) : null}
       </div>
     </FieldContext.Provider>
   );
@@ -70,13 +75,16 @@ export function Field({
 export function TextInput({
   className = "",
   "aria-label": ariaLabel,
+  placeholder,
   ...props
 }: InputHTMLAttributes<HTMLInputElement>) {
   const field = useContext(FieldContext);
+  const tr = useTr();
   return (
     <Input
       fullWidth
-      aria-label={ariaLabel ?? field?.label ?? props.placeholder ?? props.name}
+      aria-label={tr(ariaLabel ?? field?.label ?? placeholder ?? props.name)}
+      placeholder={placeholder ? tr(placeholder) : undefined}
       {...props}
       className={className}
     />
@@ -93,6 +101,7 @@ export function PasswordInput({
   ...props
 }: InputHTMLAttributes<HTMLInputElement>) {
   const field = useContext(FieldContext);
+  const tr = useTr();
   const [show, setShow] = useState(false);
   const [hasValue, setHasValue] = useState(
     () => String(value ?? defaultValue ?? "").length > 0
@@ -119,7 +128,7 @@ export function PasswordInput({
         <button
           type="button"
           onClick={() => setShow((current) => !current)}
-          aria-label={show ? "Hide password" : "Show password"}
+          aria-label={tr(show ? "auth.hidePassword" : "auth.showPassword")}
           aria-pressed={show}
           tabIndex={-1}
           className="absolute inset-y-0 end-3 flex items-center text-muted transition-colors hover:text-foreground"
@@ -204,6 +213,7 @@ export function Select({
   "aria-label": ariaLabel,
 }: SelectHTMLAttributes<HTMLSelectElement>) {
   const field = useContext(FieldContext);
+  const tr = useTr();
   const options: OptionEntry[] = [];
   collectOptions(children, options);
 
@@ -214,12 +224,13 @@ export function Select({
       ? undefined
       : String(defaultValue);
   const disabledKeys = options.filter((o) => o.disabled).map((o) => o.value);
-  const accessibleLabel =
+  const accessibleLabel = tr(
     ariaLabel ??
-    field?.label ??
-    options.find((option) => option.value !== "")?.textValue ??
-    options[0]?.textValue ??
-    name;
+      field?.label ??
+      options.find((option) => option.value !== "")?.textValue ??
+      options[0]?.textValue ??
+      name
+  );
 
   return (
     <HeroSelect
@@ -249,9 +260,9 @@ export function Select({
             <ListBox.Item
               key={option.value}
               id={option.value}
-              textValue={option.textValue}
+              textValue={tr(option.textValue)}
             >
-              {option.label}
+              {typeof option.label === "string" ? tr(option.label) : option.label}
             </ListBox.Item>
           ))}
         </ListBox>
@@ -263,13 +274,16 @@ export function Select({
 export function TextArea({
   className = "",
   "aria-label": ariaLabel,
+  placeholder,
   ...props
 }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   const field = useContext(FieldContext);
+  const tr = useTr();
   return (
     <HeroTextArea
       fullWidth
-      aria-label={ariaLabel ?? field?.label ?? props.placeholder ?? props.name}
+      aria-label={tr(ariaLabel ?? field?.label ?? placeholder ?? props.name)}
+      placeholder={placeholder ? tr(placeholder) : undefined}
       {...props}
       className={className}
     />
@@ -286,6 +300,8 @@ export function Checkbox({
   value,
   onChange,
 }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+  const tr = useTr();
+
   return (
     <HeroCheckbox
       id={id}
@@ -309,7 +325,7 @@ export function Checkbox({
         <HeroCheckbox.Control>
           <HeroCheckbox.Indicator />
         </HeroCheckbox.Control>
-        {label}
+        {tr(label)}
       </HeroCheckbox.Content>
     </HeroCheckbox>
   );
@@ -373,12 +389,14 @@ export function FormSection({
   description?: string;
   children: ReactNode;
 }) {
+  const tr = useTr();
+
   return (
     <section className="border-b border-border px-6 py-5 last:border-b-0">
       <div className="mb-4">
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+        <h2 className="text-sm font-semibold text-foreground">{tr(title)}</h2>
         {description ? (
-          <p className="mt-0.5 text-xs text-muted">{description}</p>
+          <p className="mt-0.5 text-xs text-muted">{tr(description)}</p>
         ) : null}
       </div>
       {children}

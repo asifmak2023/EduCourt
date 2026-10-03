@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useTranslation, type MessageKey } from "@eis/i18n";
 import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth, type AuthUser } from "@/lib/auth";
@@ -21,6 +22,7 @@ import {
   humanize,
 } from "@/lib/format";
 import { visibleSections } from "@/lib/nav";
+import { useTr } from "@/lib/i18n";
 import type { CampusDashboard, PlatformOverview, TimetableSlot } from "@/lib/types";
 
 type Mode = "platform" | "campus" | "teacher" | "general";
@@ -47,22 +49,24 @@ function todayIsoWeekday(): number {
   return day === 0 ? 7 : day;
 }
 
-function greeting(): string {
+function greetingKey(): MessageKey {
   const hour = new Date().getHours();
 
   if (hour < 12) {
-    return "Good morning";
+    return "dashboard.greeting.morning";
   }
 
   if (hour < 17) {
-    return "Good afternoon";
+    return "dashboard.greeting.afternoon";
   }
 
-  return "Good evening";
+  return "dashboard.greeting.evening";
 }
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { t } = useTranslation();
+  const tr = useTr();
   const [campus, setCampus] = useState<CampusDashboard | null>(null);
   const [platform, setPlatform] = useState<PlatformOverview | null>(null);
   const [slots, setSlots] = useState<TimetableSlot[]>([]);
@@ -115,7 +119,7 @@ export default function DashboardPage() {
           setError(
             err instanceof ApiError
               ? err.message
-              : "Unable to load your dashboard right now."
+              : "dashboard.loadError"
           );
         }
       } finally {
@@ -139,8 +143,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`${greeting()}, ${user.name.split(" ")[0]}`}
-        description={`${user.campus?.name ?? "All campuses"} - ${roleSummary(user)}`}
+        title={`${t(greetingKey())}, ${user.name.split(" ")[0]}`}
+        description={`${user.campus?.name ?? t("dashboard.allCampuses")} - ${roleSummary(user, tr)}`}
         actions={
           <span className="rounded-full bg-surface px-3 py-1 text-xs font-medium text-muted ring-1 ring-border-secondary">
             {formatDate(new Date().toISOString())}
@@ -150,7 +154,7 @@ export default function DashboardPage() {
 
       {error ? <ErrorNotice message={error} /> : null}
 
-      {loading ? <Spinner label="Loading dashboard..." /> : null}
+      {loading ? <Spinner label="dashboard.loading" /> : null}
 
       {!loading && mode === "platform" && platform ? (
         <PlatformView overview={platform} />
@@ -169,50 +173,52 @@ export default function DashboardPage() {
   );
 }
 
-function roleSummary(user: AuthUser): string {
+function roleSummary(user: AuthUser, tr: (value: string) => string): string {
   return user.roles
     .slice(0, 2)
-    .map((role) => humanize(role))
+    .map((role) => tr(humanize(role)))
     .join(" / ");
 }
 
 function PlatformView({ overview }: { overview: PlatformOverview }) {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6">
       <section className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <StatCard label="Institutions" value={formatNumber(overview.totals.institutions)} />
-        <StatCard label="Campuses" value={formatNumber(overview.totals.campuses)} />
-        <StatCard label="Students" value={formatNumber(overview.totals.students)} />
-        <StatCard label="Staff" value={formatNumber(overview.totals.staff)} />
+        <StatCard label="dashboard.institutions" value={formatNumber(overview.totals.institutions)} />
+        <StatCard label="dashboard.campuses" value={formatNumber(overview.totals.campuses)} />
+        <StatCard label="dashboard.students" value={formatNumber(overview.totals.students)} />
+        <StatCard label="dashboard.staff" value={formatNumber(overview.totals.staff)} />
         <StatCard
-          label="Active enrollments"
+          label="dashboard.activeEnrollments"
           value={formatNumber(overview.totals.active_enrollments)}
         />
       </section>
 
       <Card>
         <div className="flex items-center justify-between border-b border-border-secondary px-5 py-4">
-          <h2 className="text-sm font-semibold text-foreground">Institutions</h2>
+          <h2 className="text-sm font-semibold text-foreground">{t("dashboard.institutions")}</h2>
           <Link
             href="/dashboard/institutions"
             className="text-xs font-medium text-muted hover:text-foreground"
           >
-            Manage
+            {t("common.manage")}
           </Link>
         </div>
         {overview.institutions.length === 0 ? (
-          <EmptyState message="No institutions have been created yet." />
+          <EmptyState message="dashboard.noInstitutions" />
         ) : (
           <div className="overflow-x-auto">
             <Table variant="secondary">
               <Table.ScrollContainer>
-                <Table.Content aria-label="Institutions">
+                <Table.Content aria-label={t("dashboard.institutions")}>
                 <Table.Header>
-                  <Table.Column isRowHeader>Institution</Table.Column>
-                  <Table.Column>Code</Table.Column>
-                  <Table.Column className="text-right">Campuses</Table.Column>
-                  <Table.Column className="text-right">Students</Table.Column>
-                  <Table.Column className="text-right">Staff</Table.Column>
+                  <Table.Column isRowHeader>{t("dashboard.institution")}</Table.Column>
+                  <Table.Column>{t("dashboard.code")}</Table.Column>
+                  <Table.Column className="text-right">{t("dashboard.campuses")}</Table.Column>
+                  <Table.Column className="text-right">{t("dashboard.students")}</Table.Column>
+                  <Table.Column className="text-right">{t("dashboard.staff")}</Table.Column>
                 </Table.Header>
                 <Table.Body>
                 {overview.institutions.map((institution) => (
@@ -236,6 +242,7 @@ function PlatformView({ overview }: { overview: PlatformOverview }) {
 }
 
 function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
+  const { t } = useTranslation();
   const girls = dashboard.students_by_gender.find((item) => item.gender === "female")?.total ?? 0;
   const boys = dashboard.students_by_gender.find((item) => item.gender === "male")?.total ?? 0;
 
@@ -243,53 +250,53 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
     <div className="space-y-6">
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="Active students"
+          label="dashboard.activeStudents"
           value={formatNumber(dashboard.students_active)}
-          hint={`${boys} boys / ${girls} girls`}
+          hint={t("dashboard.boysGirls", { boys, girls })}
         />
-        <StatCard label="Staff employed" value={formatNumber(dashboard.staff_employed)} />
+        <StatCard label="dashboard.staffEmployed" value={formatNumber(dashboard.staff_employed)} />
         <StatCard
-          label="Outstanding fees"
+          label="dashboard.outstandingFees"
           value={formatCurrency(dashboard.outstanding_fees)}
           tone="danger"
-          hint={`${dashboard.unpaid_vouchers} unpaid vouchers`}
+          hint={t("dashboard.unpaidVouchers", { count: dashboard.unpaid_vouchers })}
         />
         <StatCard
-          label="Collected this month"
+          label="dashboard.collectedThisMonth"
           value={formatCurrency(dashboard.fees_collected_this_month)}
           tone="positive"
         />
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Admissions pending" value={formatNumber(dashboard.admissions_pending)} tone="warning" />
-        <StatCard label="Scholarships active" value={formatNumber(dashboard.scholarships_active)} />
-        <StatCard label="Exams scheduled" value={formatNumber(dashboard.exams_scheduled)} />
-        <StatCard label="Leave pending" value={formatNumber(dashboard.leave_pending)} tone="warning" />
+        <StatCard label="dashboard.admissionsPending" value={formatNumber(dashboard.admissions_pending)} tone="warning" />
+        <StatCard label="dashboard.scholarshipsActive" value={formatNumber(dashboard.scholarships_active)} />
+        <StatCard label="dashboard.examsScheduled" value={formatNumber(dashboard.exams_scheduled)} />
+        <StatCard label="dashboard.leavePending" value={formatNumber(dashboard.leave_pending)} tone="warning" />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
         <QuickLinks
-          title="Students & admissions"
+          title="dashboard.studentsAdmissions"
           links={[
-            { href: "/dashboard/students", label: "Students" },
-            { href: "/dashboard/admissions", label: "Admissions" },
+            { href: "/dashboard/students", label: "dashboard.students" },
+            { href: "/dashboard/admissions", label: "dashboard.admissions" },
           ]}
         />
         <QuickLinks
-          title="Finance"
+          title="dashboard.finance"
           links={[
-            { href: "/dashboard/fees", label: "Fee vouchers" },
-            { href: "/dashboard/reports", label: "Reports" },
+            { href: "/dashboard/fees", label: "dashboard.feeVouchers" },
+            { href: "/dashboard/reports", label: "dashboard.reports" },
           ]}
         />
         <Card className="p-5">
-          <h2 className="text-sm font-semibold text-foreground">Today at a glance</h2>
+          <h2 className="text-sm font-semibold text-foreground">{t("dashboard.todayAtGlance")}</h2>
           <dl className="mt-3 space-y-2 text-sm">
-            <Row label="Active enrollments" value={formatNumber(dashboard.enrollments_active)} />
-            <Row label="Open conduct cases" value={formatNumber(dashboard.conduct_open)} />
-            <Row label="Payroll draft runs" value={formatNumber(dashboard.payroll_draft_runs)} />
-            <Row label="Upcoming events" value={formatNumber(dashboard.upcoming_events)} />
+            <Row label="dashboard.activeEnrollments" value={formatNumber(dashboard.enrollments_active)} />
+            <Row label="dashboard.openConductCases" value={formatNumber(dashboard.conduct_open)} />
+            <Row label="dashboard.payrollDraftRuns" value={formatNumber(dashboard.payroll_draft_runs)} />
+            <Row label="dashboard.upcomingEvents" value={formatNumber(dashboard.upcoming_events)} />
           </dl>
         </Card>
       </section>
@@ -299,11 +306,11 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
 
 function GeneralView({ user }: { user: AuthUser }) {
   const sections = visibleSections(user.permissions).filter(
-    (section) => section.label !== "Overview"
+    (section) => section.label !== "navigation.section.overview"
   );
 
   if (sections.length === 0) {
-    return <EmptyState message="There is nothing assigned to your account yet." />;
+    return <EmptyState message="dashboard.noModulesAssigned" />;
   }
 
   return (
@@ -330,6 +337,7 @@ function TeacherView({
   twoFactorEnabled: boolean;
 }) {
   const today = todayIsoWeekday();
+  const { t } = useTranslation();
   const todaySlots = slots
     .filter((slot) => slot.day_of_week === today)
     .sort((a, b) => (a.period?.id ?? 0) - (b.period?.id ?? 0));
@@ -337,11 +345,11 @@ function TeacherView({
   return (
     <div className="space-y-6">
       <section className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Periods this week" value={formatNumber(slots.length)} />
-        <StatCard label="Periods today" value={formatNumber(todaySlots.length)} />
+        <StatCard label="dashboard.periodsThisWeek" value={formatNumber(slots.length)} />
+        <StatCard label="dashboard.periodsToday" value={formatNumber(todaySlots.length)} />
         <StatCard
-          label="Two-factor"
-          value={twoFactorEnabled ? "Enabled" : "Not enabled"}
+          label="dashboard.twoFactor"
+          value={twoFactorEnabled ? t("dashboard.enabled") : t("dashboard.notEnabled")}
           tone={twoFactorEnabled ? "positive" : "warning"}
         />
       </section>
@@ -349,23 +357,23 @@ function TeacherView({
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <div className="border-b border-border-secondary px-5 py-4">
-            <h2 className="text-sm font-semibold text-foreground">Today&apos;s schedule</h2>
+            <h2 className="text-sm font-semibold text-foreground">{t("dashboard.todaysSchedule")}</h2>
           </div>
           {todaySlots.length === 0 ? (
-            <EmptyState message="You have no periods scheduled for today." />
+            <EmptyState message="dashboard.noPeriodsToday" />
           ) : (
             <ul className="divide-y divide-border-secondary">
               {todaySlots.map((slot) => (
                 <li key={slot.id} className="flex items-center gap-4 px-5 py-3">
                   <div className="w-24 text-xs font-medium text-muted">
-                    {slot.period?.starts_at ?? `Period ${slot.period?.id ?? ""}`}
+                    {slot.period?.starts_at ?? t("dashboard.period", { id: slot.period?.id ?? "" })}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">
-                      {slot.subject?.name ?? "Subject"}
+                      {slot.subject?.name ?? t("dashboard.subject")}
                     </p>
                     <p className="truncate text-xs text-muted">
-                      {slot.class_room?.name ?? "Class"}
+                      {slot.class_room?.name ?? t("dashboard.class")}
                       {slot.section?.name ? ` - ${slot.section.name}` : ""}
                     </p>
                   </div>
@@ -379,11 +387,11 @@ function TeacherView({
         </Card>
 
         <QuickLinks
-          title="My workspace"
+          title="dashboard.myWorkspace"
           links={[
-            { href: "/dashboard/students", label: "Students" },
-            { href: "/dashboard/exams", label: "Exams & results" },
-            { href: "/dashboard/timetable", label: "Timetable" },
+            { href: "/dashboard/students", label: "navigation.students" },
+            { href: "/dashboard/exams", label: "navigation.exams" },
+            { href: "/dashboard/timetable", label: "navigation.timetable" },
           ]}
         />
       </div>
@@ -398,9 +406,11 @@ function QuickLinks({
   title: string;
   links: { href: string; label: string }[];
 }) {
+  const tr = useTr();
+
   return (
     <Card className="p-5">
-      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+      <h2 className="text-sm font-semibold text-foreground">{tr(title)}</h2>
       <ul className="mt-3 space-y-1">
         {links.map((link) => (
           <li key={link.href}>
@@ -408,7 +418,7 @@ function QuickLinks({
               href={link.href}
               className="flex items-center justify-between rounded-lg px-2 py-2 text-sm text-muted transition hover:bg-surface-secondary hover:text-foreground"
             >
-              {link.label}
+              {tr(link.label)}
               <Icon name="arrowUp" className="h-3.5 w-3.5 rotate-90" />
             </Link>
           </li>
@@ -419,9 +429,11 @@ function QuickLinks({
 }
 
 function Row({ label, value }: { label: string; value: string }) {
+  const tr = useTr();
+
   return (
     <div className="flex items-center justify-between">
-      <dt className="text-muted">{label}</dt>
+      <dt className="text-muted">{tr(label)}</dt>
       <dd className="font-medium text-foreground">{value}</dd>
     </div>
   );

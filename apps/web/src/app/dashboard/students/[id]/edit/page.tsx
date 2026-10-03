@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslation } from "@eis/i18n";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
@@ -36,7 +37,7 @@ export default function EditStudentPage() {
 
   if (!can("student.edit") && !can("student.photo")) {
     return (
-      <ErrorNotice message="You do not have permission to view this page." />
+      <ErrorNotice message="errors.forbidden" />
     );
   }
 
@@ -59,7 +60,7 @@ function EditStudentLoader() {
   }
 
   if (!data) {
-    return <ErrorNotice message="Student not found." />;
+    return <ErrorNotice message="students.notFound" />;
   }
 
   return <EditStudentForm student={data} />;
@@ -101,6 +102,7 @@ function profileFromStudent(student: StudentDetail): StudentProfile {
 function EditStudentForm({ student }: { student: StudentDetail }) {
   const router = useRouter();
   const { can } = useAuth();
+  const { t } = useTranslation();
   const canEdit = can("student.edit");
 
   const [photoUrl, setPhotoUrl] = useState<string | null>(
@@ -193,7 +195,7 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
           setFieldErrors(err.errors);
         }
       } else {
-        setError("Unable to save student.");
+        setError("students.saveError");
       }
     } finally {
       setBusy(false);
@@ -203,14 +205,14 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Edit ${student.full_name}`}
-        description={`Admission no ${student.admission_no}`}
+        title={t("students.editTitle", { name: student.full_name })}
+        description={t("students.admissionNoWith", { no: student.admission_no })}
         actions={
           <Link
             href={`/dashboard/students/${student.id}`}
             className={buttonClasses("secondary")}
           >
-            Cancel
+            {t("common.cancel")}
           </Link>
         }
       />
@@ -241,7 +243,7 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
           <div className="border-b border-border px-6 py-5">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground">
-                Guardians
+                {t("students.guardians")}
               </h2>
               <Button
                 type="button"
@@ -262,13 +264,13 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
                   setNextKey((value) => value + 1);
                 }}
               >
-                Add guardian
+                {t("students.addGuardian")}
               </Button>
             </div>
 
             {guardians.length === 0 ? (
               <p className="text-sm text-muted">
-                No guardians linked. Use Add guardian to attach one.
+                {t("students.noGuardiansEdit")}
               </p>
             ) : (
               <div className="space-y-4">
@@ -278,7 +280,7 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
                     className="grid gap-4 rounded-xl border border-border p-4 sm:grid-cols-2 lg:grid-cols-4"
                   >
                     <Field
-                      label="Name"
+                      label="common.name"
                       htmlFor={`gname-${row.key}`}
                       required={row.guardian_id === null}
                     >
@@ -291,7 +293,7 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
                         }
                       />
                     </Field>
-                    <Field label="Phone" htmlFor={`gphone-${row.key}`}>
+                    <Field label="common.phone" htmlFor={`gphone-${row.key}`}>
                       <TextInput
                         id={`gphone-${row.key}`}
                         value={row.phone}
@@ -303,7 +305,7 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
                         }
                       />
                     </Field>
-                    <Field label="Relationship" htmlFor={`grel-${row.key}`}>
+                    <Field label="common.relationship" htmlFor={`grel-${row.key}`}>
                       <Select
                         id={`grel-${row.key}`}
                         value={row.relationship}
@@ -313,15 +315,15 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
                           })
                         }
                       >
-                        <option value="father">Father</option>
-                        <option value="mother">Mother</option>
-                        <option value="guardian">Guardian</option>
-                        <option value="other">Other</option>
+                        <option value="father">{t("relationship.father")}</option>
+                        <option value="mother">{t("relationship.mother")}</option>
+                        <option value="guardian">{t("relationship.guardian")}</option>
+                        <option value="other">{t("relationship.otherOption")}</option>
                       </Select>
                     </Field>
                     <div className="flex items-end gap-4">
                       <Checkbox
-                        label="Primary"
+                        label="common.primary"
                         checked={row.is_primary}
                         onChange={(event) =>
                           updateGuardian(row.key, {
@@ -330,7 +332,7 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
                         }
                       />
                       <Checkbox
-                        label="Emergency"
+                        label="common.emergency"
                         checked={row.is_emergency_contact}
                         onChange={(event) =>
                           updateGuardian(row.key, {
@@ -349,7 +351,7 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
                           )
                         }
                       >
-                        Remove guardian
+                        {t("students.removeGuardian")}
                       </Button>
                     </div>
                   </div>
@@ -360,19 +362,19 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
 
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
             <p className="text-xs text-muted">
-              Enrollments are managed from the student record:{" "}
+              {t("students.enrollmentsManaged")}{" "}
               {student.enrollments.length === 0
-                ? "none recorded"
+                ? t("students.noneRecorded")
                 : student.enrollments
                     .map(
                       (enrollment) =>
-                        `${enrollment.academic_year?.name ?? "Year"} · ${
-                          enrollment.class_room?.name ?? "Class"
+                        `${enrollment.academic_year?.name ?? t("common.academicYear")} · ${
+                          enrollment.class_room?.name ?? t("common.class")
                         } (${enrollment.status ?? "-"})`
                     )
                     .join(", ")}
               {student.enrollments.length > 0
-                ? ` · since ${formatDate(student.enrollments[0].starts_on)}`
+                ? ` · ${t("students.since", { date: formatDate(student.enrollments[0].starts_on) })}`
                 : ""}
             </p>
             <div className="flex items-center gap-2">
@@ -380,10 +382,10 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
                 href={`/dashboard/students/${student.id}`}
                 className={buttonClasses("secondary")}
               >
-                Cancel
+                {t("common.cancel")}
               </Link>
               <Button type="submit" loading={busy}>
-                Save changes
+                {t("common.saveChanges")}
               </Button>
             </div>
           </div>

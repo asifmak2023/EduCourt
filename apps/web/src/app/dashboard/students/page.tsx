@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Table } from "@heroui/react";
+import { useTranslation, type MessageKey } from "@eis/i18n";
 import { useList } from "@/lib/useList";
 import { useAuth } from "@/lib/auth";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -19,13 +20,13 @@ import {
 import { formatDate } from "@/lib/format";
 import type { Student } from "@/lib/types";
 
-const STATUS_OPTIONS = [
-  { value: "", label: "All statuses" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-  { value: "graduated", label: "Graduated" },
-  { value: "transferred", label: "Transferred" },
-  { value: "withdrawn", label: "Withdrawn" },
+const STATUS_OPTIONS: { value: string; label: MessageKey }[] = [
+  { value: "", label: "status.all" },
+  { value: "active", label: "status.active" },
+  { value: "inactive", label: "status.inactive" },
+  { value: "graduated", label: "status.graduated" },
+  { value: "transferred", label: "status.transferred" },
+  { value: "withdrawn", label: "status.withdrawn" },
 ];
 
 export default function StudentsPage() {
@@ -38,6 +39,7 @@ export default function StudentsPage() {
 
 function StudentsTable() {
   const { can } = useAuth();
+  const { t } = useTranslation();
   const [status, setStatus] = useState("");
   const [gender, setGender] = useState("");
 
@@ -47,8 +49,8 @@ function StudentsTable() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Students"
-        description="Student register for the active campus."
+        title="students.title"
+        description="students.description"
         actions={
           <>
             <div className="w-56">
@@ -59,7 +61,7 @@ function StudentsTable() {
                   setPage(1);
                   setSearch(event.target.value);
                 }}
-                placeholder="Search name or admission no"
+                placeholder="students.searchPlaceholder"
               />
             </div>
             {can("student.create") ? (
@@ -67,7 +69,7 @@ function StudentsTable() {
                 href="/dashboard/students/new"
                 className={buttonClasses("primary")}
               >
-                New student
+                {t("students.new")}
               </Link>
             ) : null}
           </>
@@ -85,7 +87,7 @@ function StudentsTable() {
           >
             {STATUS_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {t(option.label)}
               </option>
             ))}
           </Select>
@@ -98,10 +100,10 @@ function StudentsTable() {
               setGender(event.target.value);
             }}
           >
-            <option value="">All genders</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
+            <option value="">{t("gender.all")}</option>
+            <option value="male">{t("gender.male")}</option>
+            <option value="female">{t("gender.female")}</option>
+            <option value="other">{t("gender.otherOption")}</option>
           </Select>
         </div>
       </div>
@@ -112,17 +114,17 @@ function StudentsTable() {
         {loading ? (
           <Spinner />
         ) : items.length === 0 ? (
-          <EmptyState message="No students match your search." />
+          <EmptyState message="students.empty" />
         ) : (
           <Table variant="secondary">
             <Table.ScrollContainer>
-              <Table.Content aria-label="Students" className="min-w-[760px]">
+              <Table.Content aria-label={t("students.title")} className="min-w-[760px]">
                 <Table.Header>
-                  <Table.Column isRowHeader>Admission no</Table.Column>
-                  <Table.Column>Name</Table.Column>
-                  <Table.Column>Gender</Table.Column>
-                  <Table.Column>Date of birth</Table.Column>
-                  <Table.Column>Status</Table.Column>
+                  <Table.Column isRowHeader>{t("students.admissionNo")}</Table.Column>
+                  <Table.Column>{t("common.name")}</Table.Column>
+                  <Table.Column>{t("common.gender")}</Table.Column>
+                  <Table.Column>{t("students.field.dateOfBirth")}</Table.Column>
+                  <Table.Column>{t("common.status")}</Table.Column>
                 </Table.Header>
                 <Table.Body>
                   {items.map((student) => (

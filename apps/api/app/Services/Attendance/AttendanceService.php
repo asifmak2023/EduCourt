@@ -115,11 +115,12 @@ class AttendanceService
      *
      * @return array{from: string, to: string, classes: array<int, array<string, mixed>>, totals: array<string, int>}
      */
-    public function classSummary(int $campusId, string $from, string $to, ?int $classRoomId = null, ?int $sectionId = null): array
+    public function classSummary(int $campusId, string $from, string $to, ?int $classRoomId = null, ?int $sectionId = null, ?array $studentIds = null): array
     {
         $aggregate = StudentAttendance::query()
             ->where('campus_id', $campusId)
             ->whereBetween('attendance_date', [$from, $to])
+            ->when($studentIds !== null, fn ($q) => $q->whereIn('student_id', $studentIds))
             ->when($classRoomId, fn ($q) => $q->where('class_room_id', $classRoomId))
             ->when($sectionId, fn ($q) => $q->where('section_id', $sectionId))
             ->select('class_room_id')
@@ -135,6 +136,7 @@ class AttendanceService
             ->join('students', 'students.id', '=', 'student_attendances.student_id')
             ->where('student_attendances.campus_id', $campusId)
             ->whereBetween('student_attendances.attendance_date', [$from, $to])
+            ->when($studentIds !== null, fn ($q) => $q->whereIn('student_attendances.student_id', $studentIds))
             ->when($classRoomId, fn ($q) => $q->where('student_attendances.class_room_id', $classRoomId))
             ->when($sectionId, fn ($q) => $q->where('student_attendances.section_id', $sectionId))
             ->groupBy('student_attendances.class_room_id', 'students.gender')

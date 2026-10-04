@@ -8,6 +8,7 @@ use App\Http\Resources\TimetableSlotResource;
 use App\Models\ClassSubject;
 use App\Models\TeachingAssignment;
 use App\Models\TimetableSlot;
+use App\Services\Access\TeacherScope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,8 @@ use Illuminate\Validation\ValidationException;
 class TimetableSlotController extends Controller
 {
     use StampsAcademicTenant;
+
+    public function __construct(private readonly TeacherScope $teacherScope) {}
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -30,8 +33,13 @@ class TimetableSlotController extends Controller
             ->when($request->filled('teacher_user_id'), fn ($q) => $q->where('teacher_user_id', $request->integer('teacher_user_id')))
             ->when($request->filled('day_of_week'), fn ($q) => $q->where('day_of_week', $request->integer('day_of_week')))
             ->orderBy('day_of_week')
-            ->orderBy('period_id')
-            ->paginate($request->integer('per_page', 100));
+            ->orderBy('period_id');
+
+        if ($this->teacherScope->isTeacherScoped($request->user())) {
+            $slots->where('teacher_user_id', $request->user()->id);
+        }
+
+        $slots = $slots->paginate($request->integer('per_page', 100));
 
         return TimetableSlotResource::collection($slots);
     }
@@ -52,8 +60,12 @@ class TimetableSlotController extends Controller
             ->setStatusCode(201);
     }
 
-    public function show(TimetableSlot $timetableSlot): TimetableSlotResource
+    public function show(Request $request, TimetableSlot $timetableSlot): TimetableSlotResource
     {
+        if ($this->teacherScope->isTeacherScoped($request->user())) {
+            abort_unless((int) $timetableSlot->teacher_user_id === (int) $request->user()->id, 403, 'This timetable slot is outside your schedule.');
+        }
+
         return new TimetableSlotResource($timetableSlot->load([
             'period', 'subject', 'teacher', 'classRoom', 'section', 'room',
         ]));

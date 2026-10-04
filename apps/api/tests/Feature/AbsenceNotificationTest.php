@@ -13,6 +13,8 @@ use App\Models\Section;
 use App\Models\Stage;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
+use App\Models\Subject;
+use App\Models\TeachingAssignment;
 use App\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -93,6 +95,23 @@ class AbsenceNotificationTest extends TestCase
             'class_room_id' => $this->class->id,
             'section_id' => $section->id,
             'status' => 'active',
+        ]);
+
+        $subject = Subject::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'name' => 'Mathematics', 'code' => 'MATH',
+        ]);
+
+        TeachingAssignment::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'academic_year_id' => $this->year->id,
+            'teacher_user_id' => $this->teacher->id,
+            'subject_id' => $subject->id,
+            'class_room_id' => $this->class->id,
+            'section_id' => $section->id,
+            'is_active' => true,
         ]);
 
         $guardian = Guardian::create([

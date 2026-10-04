@@ -11,6 +11,7 @@ use App\Models\ClassRoom;
 use App\Models\Institution;
 use App\Models\Stage;
 use App\Models\Subject;
+use App\Models\TeachingAssignment;
 use App\Models\Term;
 use App\Models\User;
 use Database\Seeders\RbacSeeder;
@@ -85,6 +86,16 @@ class CurriculumTest extends TestCase
             'name' => 'Term 1', 'sequence' => 1,
             'starts_on' => '2026-04-01', 'ends_on' => '2026-08-31',
             'is_current' => true,
+        ]);
+
+        TeachingAssignment::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'academic_year_id' => $this->year->id,
+            'teacher_user_id' => $this->teacher->id,
+            'subject_id' => $this->subject->id,
+            'class_room_id' => $this->class->id,
+            'is_active' => true,
         ]);
     }
 

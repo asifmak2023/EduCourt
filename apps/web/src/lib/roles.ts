@@ -27,3 +27,15 @@ export function roleSummary(
     .map((role) => roleLabel(role, t))
     .join(" / ");
 }
+
+const PORTAL_ROLES = new Set(["student", "parent_guardian"]);
+
+export function isPortalOnly(
+  roles: readonly string[] | undefined | null
+): boolean {
+  if (!roles || roles.length === 0) {
+    return false;
+  }
+
+  return roles.every((role) => PORTAL_ROLES.has(role));
+}

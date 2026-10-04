@@ -205,14 +205,13 @@ return [
         ],
 
         RoleName::ParentGuardian->value => [
-            'student.view', 'attendance.view', 'exam.view', 'fee.view',
-            'academic.view', 'timetable.view', 'credit.view',
-            'complaint.create', 'complaint.view', 'circular.view',
+            // Portal account: family data is served only by the permission-free
+            // /v1/me/* endpoints, which authorize by linked student record.
+            // Portal roles intentionally hold no staff-module permissions.
         ],
 
         RoleName::Student->value => [
-            'attendance.view', 'exam.view', 'circular.view', 'complaint.create',
-            'academic.view', 'timetable.view', 'credit.view',
+            // Portal account: see ParentGuardian note above.
         ],
     ],
 ];

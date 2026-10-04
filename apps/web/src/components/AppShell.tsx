@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "@eis/i18n";
 import { useAuth } from "@/lib/auth";
 import { useTr } from "@/lib/i18n";
-import { roleLabel as roleText } from "@/lib/roles";
+import { roleLabel as roleText, isPortalOnly } from "@/lib/roles";
 import { findNavItem, sectionForPath, visibleSections } from "@/lib/nav";
 import { Icon } from "@/components/Icons";
 import { Avatar } from "@/components/Avatar";
@@ -67,6 +67,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted">
         {t("app.loading")}
+      </div>
+    );
+  }
+
+  if (isPortalOnly(user.roles)) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
+        <p className="brand-glow font-logo text-3xl font-bold tracking-tight text-foreground">
+          EduCourt
+        </p>
+        <h1 className="text-lg font-semibold text-foreground">
+          {t("portal.webOnly.title")}
+        </h1>
+        <p className="max-w-md text-sm text-muted">
+          {t("portal.webOnly.body")}
+        </p>
+        <div className="mt-2 flex items-center gap-3">
+          <LanguageSwitcher />
+          <button
+            type="button"
+            onClick={() => {
+              void logout().then(() => router.replace("/login"));
+            }}
+            className="rounded-lg border border-border-secondary px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-surface-tertiary"
+          >
+            {t("common.signOut")}
+          </button>
+        </div>
       </div>
     );
   }

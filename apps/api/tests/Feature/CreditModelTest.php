@@ -220,7 +220,7 @@ class CreditModelTest extends TestCase
         $this->assertSame(7.0, (float) $transcript['credits_earned']);
     }
 
-    public function test_student_can_view_transcript_but_cannot_register(): void
+    public function test_a_student_cannot_reach_staff_credit_endpoints(): void
     {
         $this->register($this->termOne, $this->math, 3);
         $this->enterMarks($this->mathPaperTermOne, 90);
@@ -229,7 +229,7 @@ class CreditModelTest extends TestCase
 
         $this->api($studentUser)
             ->getJson("/api/v1/students/{$this->ali->id}/transcript")
-            ->assertOk();
+            ->assertForbidden();
 
         $this->api($studentUser)->postJson('/api/v1/course-registrations', [
             'student_id' => $this->ali->id,

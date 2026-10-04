@@ -493,5 +493,7 @@
   "students.withdraw.error": "طالب علم کو دستبردار نہیں کیا جا سکا۔",
   "students.enrollment.title": "اندراج",
   "students.enrollment.desc": "اختیاری پہلی کلاس تقرری۔",
-  "students.enrollment.enrollNow": "ابھی داخل کریں"
+  "students.enrollment.enrollNow": "ابھی داخل کریں",
+  "portal.webOnly.title": "EduCourt موبائل ایپ استعمال کریں",
+  "portal.webOnly.body": "یہ اکاؤنٹ طالب علم یا والدین کا پورٹل ہے۔ حاضری، نتائج، فیس اور ٹائم ٹیبل دیکھنے کے لیے EduCourt موبائل ایپ سے سائن ان کریں۔"
 }

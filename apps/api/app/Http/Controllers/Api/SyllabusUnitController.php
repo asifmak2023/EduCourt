@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\SyllabusUnitResource;
 use App\Models\SyllabusUnit;
+use App\Services\Access\TeacherScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -14,6 +15,8 @@ use Illuminate\Validation\Rule;
 class SyllabusUnitController extends Controller
 {
     use StampsAcademicTenant;
+
+    public function __construct(private readonly TeacherScope $teacherScope) {}
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -25,8 +28,11 @@ class SyllabusUnitController extends Controller
             ->when($request->filled('term_id'), fn ($q) => $q->where('term_id', $request->integer('term_id')))
             ->orderBy('class_room_id')
             ->orderBy('subject_id')
-            ->orderBy('sequence')
-            ->paginate($request->integer('per_page', 50));
+            ->orderBy('sequence');
+
+        $this->teacherScope->applyTo($units, $request->user(), 'class_room_id');
+
+        $units = $units->paginate($request->integer('per_page', 50));
 
         return SyllabusUnitResource::collection($units);
     }
@@ -35,6 +41,9 @@ class SyllabusUnitController extends Controller
     {
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
+
+        abort_unless($this->teacherScope->allowsClassRoom($request->user(), (int) $data['class_room_id']), 403, 'This class is outside your assigned classes.');
+
         $data += $tenant;
 
         $unit = SyllabusUnit::create($data);
@@ -44,13 +53,17 @@ class SyllabusUnitController extends Controller
             ->setStatusCode(201);
     }
 
-    public function show(SyllabusUnit $syllabusUnit): SyllabusUnitResource
+    public function show(Request $request, SyllabusUnit $syllabusUnit): SyllabusUnitResource
     {
+        abort_unless($this->teacherScope->allowsClassRoom($request->user(), $syllabusUnit->class_room_id), 403, 'This unit is outside your assigned classes.');
+
         return new SyllabusUnitResource($syllabusUnit->load(['subject', 'classRoom', 'term']));
     }
 
     public function update(Request $request, SyllabusUnit $syllabusUnit): SyllabusUnitResource
     {
+        abort_unless($this->teacherScope->allowsClassRoom($request->user(), $syllabusUnit->class_room_id), 403, 'This unit is outside your assigned classes.');
+
         $data = $request->validate($this->rules($syllabusUnit->campus_id, false));
 
         $syllabusUnit->update($data);
@@ -58,8 +71,10 @@ class SyllabusUnitController extends Controller
         return new SyllabusUnitResource($syllabusUnit->load(['subject', 'classRoom', 'term']));
     }
 
-    public function destroy(SyllabusUnit $syllabusUnit): JsonResponse
+    public function destroy(Request $request, SyllabusUnit $syllabusUnit): JsonResponse
     {
+        abort_unless($this->teacherScope->allowsClassRoom($request->user(), $syllabusUnit->class_room_id), 403, 'This unit is outside your assigned classes.');
+
         $syllabusUnit->delete();
 
         return response()->json(['message' => 'Syllabus unit removed.']);

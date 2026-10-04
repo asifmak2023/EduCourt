@@ -10,6 +10,7 @@ use App\Models\CourseRegistration;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Term;
+use App\Services\Access\TeacherScope;
 use App\Services\Academics\CreditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,10 @@ class CourseRegistrationController extends Controller
 {
     use StampsAcademicTenant;
 
-    public function __construct(private readonly CreditService $credits) {}
+    public function __construct(
+        private readonly CreditService $credits,
+        private readonly TeacherScope $teacherScope,
+    ) {}
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -30,8 +34,11 @@ class CourseRegistrationController extends Controller
             ->when($request->filled('term_id'), fn ($q) => $q->where('term_id', $request->integer('term_id')))
             ->when($request->filled('subject_id'), fn ($q) => $q->where('subject_id', $request->integer('subject_id')))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->orderByDesc('id')
-            ->paginate($request->integer('per_page', 50));
+            ->orderByDesc('id');
+
+        $this->teacherScope->applyTo($registrations, $request->user(), 'student_id');
+
+        $registrations = $registrations->paginate($request->integer('per_page', 50));
 
         return CourseRegistrationResource::collection($registrations);
     }
@@ -49,6 +56,8 @@ class CourseRegistrationController extends Controller
             'remarks' => ['nullable', 'string', 'max:255'],
         ]);
 
+        abort_unless($this->teacherScope->allowsStudent($request->user(), (int) $data['student_id']), 403, 'This student is outside your assigned classes.');
+
         $registration = $this->credits->register(
             $tenant,
             Student::query()->whereKey($data['student_id'])->firstOrFail(),
@@ -64,13 +73,17 @@ class CourseRegistrationController extends Controller
             ->setStatusCode(201);
     }
 
-    public function show(CourseRegistration $registration): CourseRegistrationResource
+    public function show(Request $request, CourseRegistration $registration): CourseRegistrationResource
     {
+        abort_unless($this->teacherScope->allowsStudent($request->user(), $registration->student_id), 403, 'This registration is outside your assigned classes.');
+
         return new CourseRegistrationResource($registration->load(['student', 'term', 'subject']));
     }
 
-    public function drop(CourseRegistration $registration): CourseRegistrationResource
+    public function drop(Request $request, CourseRegistration $registration): CourseRegistrationResource
     {
+        abort_unless($this->teacherScope->allowsStudent($request->user(), $registration->student_id), 403, 'This registration is outside your assigned classes.');
+
         $registration = $this->credits->drop($registration);
 
         return new CourseRegistrationResource($registration->load(['student', 'term', 'subject']));

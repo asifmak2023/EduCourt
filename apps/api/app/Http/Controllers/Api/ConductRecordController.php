@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ConductRecordResource;
 use App\Models\ConductRecord;
 use App\Models\Student;
+use App\Services\Access\TeacherScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -18,6 +19,8 @@ use Illuminate\Validation\Rule;
 class ConductRecordController extends Controller
 {
     use StampsAcademicTenant;
+
+    public function __construct(private readonly TeacherScope $teacherScope) {}
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -31,8 +34,11 @@ class ConductRecordController extends Controller
             ->when($request->filled('from'), fn ($q) => $q->whereDate('occurred_on', '>=', $request->date('from')))
             ->when($request->filled('to'), fn ($q) => $q->whereDate('occurred_on', '<=', $request->date('to')))
             ->orderByDesc('occurred_on')
-            ->orderByDesc('id')
-            ->paginate($request->integer('per_page', 25));
+            ->orderByDesc('id');
+
+        $this->teacherScope->applyTo($records, $request->user(), 'student_id');
+
+        $records = $records->paginate($request->integer('per_page', 25));
 
         return ConductRecordResource::collection($records);
     }
@@ -41,6 +47,8 @@ class ConductRecordController extends Controller
     {
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
+
+        abort_unless($this->teacherScope->allowsStudent($request->user(), (int) $data['student_id']), 403, 'This student is outside your assigned classes.');
 
         $record = ConductRecord::create($data + $tenant + [
             'status' => $data['status'] ?? ConductStatus::Open,
@@ -52,8 +60,10 @@ class ConductRecordController extends Controller
             ->response()->setStatusCode(201);
     }
 
-    public function show(ConductRecord $conductRecord): ConductRecordResource
+    public function show(Request $request, ConductRecord $conductRecord): ConductRecordResource
     {
+        abort_unless($this->teacherScope->allowsStudent($request->user(), $conductRecord->student_id), 403, 'This record is outside your assigned classes.');
+
         return new ConductRecordResource(
             $conductRecord->load(['student', 'academicYear', 'reportedBy', 'resolvedBy'])
         );
@@ -61,6 +71,8 @@ class ConductRecordController extends Controller
 
     public function update(Request $request, ConductRecord $conductRecord): ConductRecordResource
     {
+        abort_unless($this->teacherScope->allowsStudent($request->user(), $conductRecord->student_id), 403, 'This record is outside your assigned classes.');
+
         $data = $request->validate($this->rules($conductRecord->campus_id, true));
 
         $conductRecord->update($data);
@@ -72,6 +84,8 @@ class ConductRecordController extends Controller
 
     public function resolve(Request $request, ConductRecord $conductRecord): ConductRecordResource
     {
+        abort_unless($this->teacherScope->allowsStudent($request->user(), $conductRecord->student_id), 403, 'This record is outside your assigned classes.');
+
         $data = $request->validate([
             'status' => ['required', Rule::in([ConductStatus::Resolved->value, ConductStatus::Dismissed->value])],
             'resolution_note' => ['nullable', 'string', 'max:2000'],

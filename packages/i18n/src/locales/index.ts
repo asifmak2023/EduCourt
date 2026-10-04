@@ -513,4 +513,6 @@ export type MessageKey =
   | "students.withdraw.error"
   | "students.enrollment.title"
   | "students.enrollment.desc"
-  | "students.enrollment.enrollNow";
+  | "students.enrollment.enrollNow"
+  | "portal.webOnly.title"
+  | "portal.webOnly.body";

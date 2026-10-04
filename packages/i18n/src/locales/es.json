@@ -526,5 +526,7 @@
   "Draft": "Borrador",
   "Actions": "Acciones",
   "Name": "Nombre",
-  "Code": "Código"
+  "Code": "Código",
+  "portal.webOnly.title": "Usa la aplicación móvil de EduCourt",
+  "portal.webOnly.body": "Esta cuenta es un portal de estudiante o padre. Inicia sesión en la aplicación móvil de EduCourt para ver la asistencia, los resultados, las tarifas y tu horario."
 }

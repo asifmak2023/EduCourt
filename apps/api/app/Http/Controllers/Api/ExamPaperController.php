@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ExamPaperResource;
 use App\Models\ExamPaper;
+use App\Services\Access\TeacherScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -15,6 +16,8 @@ class ExamPaperController extends Controller
 {
     use StampsAcademicTenant;
 
+    public function __construct(private readonly TeacherScope $teacherScope) {}
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $papers = ExamPaper::query()
@@ -23,8 +26,11 @@ class ExamPaperController extends Controller
             ->when($request->filled('class_room_id'), fn ($q) => $q->where('class_room_id', $request->integer('class_room_id')))
             ->when($request->filled('subject_id'), fn ($q) => $q->where('subject_id', $request->integer('subject_id')))
             ->orderBy('exam_date')
-            ->orderBy('starts_at')
-            ->paginate($request->integer('per_page', 50));
+            ->orderBy('starts_at');
+
+        $this->teacherScope->applyTo($papers, $request->user(), 'class_room_id');
+
+        $papers = $papers->paginate($request->integer('per_page', 50));
 
         return ExamPaperResource::collection($papers);
     }
@@ -42,8 +48,10 @@ class ExamPaperController extends Controller
             ->setStatusCode(201);
     }
 
-    public function show(ExamPaper $examPaper): ExamPaperResource
+    public function show(Request $request, ExamPaper $examPaper): ExamPaperResource
     {
+        abort_unless($this->teacherScope->allowsClassRoom($request->user(), $examPaper->class_room_id), 403, 'This exam paper is outside your assigned classes.');
+
         return new ExamPaperResource($examPaper->load(['subject', 'classRoom', 'room', 'duties.user']));
     }
 

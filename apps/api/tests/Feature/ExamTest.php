@@ -114,6 +114,17 @@ class ExamTest extends TestCase
 
         $this->ali = $this->student('ADM-1', 'Ali', 'Raza', $section);
         $this->sara = $this->student('ADM-2', 'Sara', 'Khan', $section);
+
+        TeachingAssignment::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'academic_year_id' => $this->year->id,
+            'teacher_user_id' => $this->teacher->id,
+            'subject_id' => $this->subject->id,
+            'class_room_id' => $this->class->id,
+            'section_id' => $section->id,
+            'is_active' => true,
+        ]);
     }
 
     public function test_exam_type_exam_and_paper_can_be_created(): void

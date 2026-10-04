@@ -11,12 +11,18 @@ use App\Models\FeePayment;
 use App\Models\FeeVoucher;
 use App\Models\Student;
 use App\Models\StudentAttendance;
+use App\Services\Access\TeacherScope;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class StudentHistoryController extends Controller
 {
-    public function show(Student $student): JsonResponse
+    public function __construct(private readonly TeacherScope $teacherScope) {}
+
+    public function show(Request $request, Student $student): JsonResponse
     {
+        abort_unless($this->teacherScope->allowsStudent($request->user(), $student->id), 403, 'This student is outside your assigned classes.');
+
         $student->load([
             'guardians',
             'enrollments.academicYear',

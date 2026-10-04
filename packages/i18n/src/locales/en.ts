@@ -518,4 +518,6 @@ export const en = {
   "students.enrollment.title": "Enrollment",
   "students.enrollment.desc": "Optional first class placement.",
   "students.enrollment.enrollNow": "Enroll now",
+  "portal.webOnly.title": "Use the EduCourt mobile app",
+  "portal.webOnly.body": "This account is a student or parent portal. Sign in with the EduCourt mobile app to view attendance, results, fees and your timetable.",
 } as const;

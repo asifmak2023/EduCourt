@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\LessonPlanResource;
 use App\Models\LessonPlan;
+use App\Services\Access\TeacherScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -15,6 +16,8 @@ use Illuminate\Validation\Rule;
 class LessonPlanController extends Controller
 {
     use StampsAcademicTenant;
+
+    public function __construct(private readonly TeacherScope $teacherScope) {}
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -26,8 +29,11 @@ class LessonPlanController extends Controller
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->when($request->filled('created_by'), fn ($q) => $q->where('created_by', $request->integer('created_by')))
             ->orderByDesc('planned_from')
-            ->orderByDesc('id')
-            ->paginate($request->integer('per_page', 25));
+            ->orderByDesc('id');
+
+        $this->teacherScope->applyTo($plans, $request->user(), 'class_room_id');
+
+        $plans = $plans->paginate($request->integer('per_page', 25));
 
         return LessonPlanResource::collection($plans);
     }
@@ -36,6 +42,9 @@ class LessonPlanController extends Controller
     {
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
+
+        abort_unless($this->teacherScope->allowsClassRoom($request->user(), (int) $data['class_room_id']), 403, 'This class is outside your assigned classes.');
+
         $data += $tenant;
         $data['created_by'] = $request->user()->id;
         $data['status'] = LessonPlanStatus::Draft;
@@ -47,13 +56,17 @@ class LessonPlanController extends Controller
             ->setStatusCode(201);
     }
 
-    public function show(LessonPlan $lessonPlan): LessonPlanResource
+    public function show(Request $request, LessonPlan $lessonPlan): LessonPlanResource
     {
+        abort_unless($this->teacherScope->allowsClassRoom($request->user(), $lessonPlan->class_room_id), 403, 'This lesson plan is outside your assigned classes.');
+
         return new LessonPlanResource($lessonPlan->load(['subject', 'classRoom', 'syllabusUnit']));
     }
 
     public function update(Request $request, LessonPlan $lessonPlan): LessonPlanResource
     {
+        abort_unless($this->teacherScope->allowsClassRoom($request->user(), $lessonPlan->class_room_id), 403, 'This lesson plan is outside your assigned classes.');
+
         $data = $request->validate($this->rules($lessonPlan->campus_id, false));
 
         if (isset($data['status'])) {
@@ -68,6 +81,8 @@ class LessonPlanController extends Controller
 
     public function approve(Request $request, LessonPlan $lessonPlan): LessonPlanResource
     {
+        abort_unless($this->teacherScope->allowsClassRoom($request->user(), $lessonPlan->class_room_id), 403, 'This lesson plan is outside your assigned classes.');
+
         if ($lessonPlan->status === LessonPlanStatus::Approved) {
             return new LessonPlanResource($lessonPlan->load(['subject', 'classRoom', 'syllabusUnit']));
         }
@@ -81,8 +96,10 @@ class LessonPlanController extends Controller
         return new LessonPlanResource($lessonPlan->load(['subject', 'classRoom', 'syllabusUnit']));
     }
 
-    public function destroy(LessonPlan $lessonPlan): JsonResponse
+    public function destroy(Request $request, LessonPlan $lessonPlan): JsonResponse
     {
+        abort_unless($this->teacherScope->allowsClassRoom($request->user(), $lessonPlan->class_room_id), 403, 'This lesson plan is outside your assigned classes.');
+
         $lessonPlan->delete();
 
         return response()->json(['message' => 'Lesson plan removed.']);

@@ -526,5 +526,7 @@
   "Draft": "Brouillon",
   "Actions": "Actions",
   "Name": "Nom",
-  "Code": "Code"
+  "Code": "Code",
+  "portal.webOnly.title": "Utilisez l'application mobile EduCourt",
+  "portal.webOnly.body": "Ce compte est un portail élève ou parent. Connectez-vous avec l'application mobile EduCourt pour consulter les présences, les résultats, les frais et votre emploi du temps."
 }

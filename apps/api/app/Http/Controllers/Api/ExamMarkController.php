@@ -9,6 +9,7 @@ use App\Models\Exam;
 use App\Models\ExamMark;
 use App\Models\ExamPaper;
 use App\Models\Student;
+use App\Services\Access\TeacherScope;
 use App\Services\Exams\ResultService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,7 +22,10 @@ class ExamMarkController extends Controller
 {
     use StampsAcademicTenant;
 
-    public function __construct(private readonly ResultService $results) {}
+    public function __construct(
+        private readonly ResultService $results,
+        private readonly TeacherScope $teacherScope,
+    ) {}
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -30,8 +34,11 @@ class ExamMarkController extends Controller
             ->when($request->filled('exam_paper_id'), fn ($q) => $q->where('exam_paper_id', $request->integer('exam_paper_id')))
             ->when($request->filled('exam_id'), fn ($q) => $q->where('exam_id', $request->integer('exam_id')))
             ->when($request->filled('student_id'), fn ($q) => $q->where('student_id', $request->integer('student_id')))
-            ->orderBy('student_id')
-            ->paginate($request->integer('per_page', 200));
+            ->orderBy('student_id');
+
+        $this->teacherScope->applyTo($marks, $request->user(), 'student_id');
+
+        $marks = $marks->paginate($request->integer('per_page', 200));
 
         return ExamMarkResource::collection($marks);
     }
@@ -53,6 +60,8 @@ class ExamMarkController extends Controller
         if ($paper->campus_id !== $tenant['campus_id']) {
             abort(403, 'This paper belongs to another campus.');
         }
+
+        $this->guardScope($request, $paper, $data['marks']);
 
         $maxMarks = (float) $paper->max_marks;
 
@@ -103,10 +112,36 @@ class ExamMarkController extends Controller
         ]);
     }
 
-    public function resultCard(Exam $exam, Student $student): JsonResponse
+    public function resultCard(Request $request, Exam $exam, Student $student): JsonResponse
     {
+        abort_unless($this->teacherScope->allowsStudent($request->user(), $student->id), 403, 'This student is outside your assigned classes.');
+
         return response()->json([
             'data' => $this->results->resultCard($student, $exam),
         ]);
+    }
+
+    /**
+     * @param  array<int, array{student_id: int|string}>  $marks
+     */
+    private function guardScope(Request $request, ExamPaper $paper, array $marks): void
+    {
+        $user = $request->user();
+
+        if (! $this->teacherScope->isTeacherScoped($user)) {
+            return;
+        }
+
+        abort_unless(
+            $this->teacherScope->allowsClassRoom($user, $paper->class_room_id),
+            403,
+            'This exam paper is outside your assigned classes.',
+        );
+
+        $allowed = $this->teacherScope->studentIds($user);
+
+        foreach ($marks as $row) {
+            abort_if(! in_array((int) $row['student_id'], $allowed, true), 403, 'One or more students are outside your assigned classes.');
+        }
     }
 }

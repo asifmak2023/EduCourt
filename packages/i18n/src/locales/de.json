@@ -526,5 +526,7 @@
   "Draft": "Entwurf",
   "Actions": "Aktionen",
   "Name": "Name",
-  "Code": "Code"
+  "Code": "Code",
+  "portal.webOnly.title": "Verwenden Sie die EduCourt-App",
+  "portal.webOnly.body": "Dieses Konto ist ein Schüler- oder Elternportal. Melden Sie sich mit der EduCourt-App an, um Anwesenheit, Ergebnisse, Gebühren und Ihren Stundenplan zu sehen."
 }

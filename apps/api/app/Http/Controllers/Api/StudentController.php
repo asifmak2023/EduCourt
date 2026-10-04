@@ -10,6 +10,7 @@ use App\Http\Resources\StudentResource;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
+use App\Services\Access\TeacherScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -19,6 +20,8 @@ use Illuminate\Validation\Rule;
 class StudentController extends Controller
 {
     use StampsAcademicTenant;
+
+    public function __construct(private readonly TeacherScope $teacherScope) {}
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -43,8 +46,11 @@ class StudentController extends Controller
                 })
             )
             ->orderBy('first_name')
-            ->orderBy('last_name')
-            ->paginate($request->integer('per_page', 25));
+            ->orderBy('last_name');
+
+        $this->teacherScope->applyTo($students, $request->user(), 'student_id');
+
+        $students = $students->paginate($request->integer('per_page', 25));
 
         return StudentResource::collection($students);
     }
@@ -78,8 +84,10 @@ class StudentController extends Controller
             ->response()->setStatusCode(201);
     }
 
-    public function show(Student $student): StudentResource
+    public function show(Request $request, Student $student): StudentResource
     {
+        abort_unless($this->teacherScope->allowsStudent($request->user(), $student->id), 403, 'This student is outside your assigned classes.');
+
         return new StudentResource($student->load([
             'guardians', 'enrollments.academicYear', 'enrollments.classRoom', 'enrollments.section',
         ]));

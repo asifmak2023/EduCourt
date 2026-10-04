@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\StudentAttendanceResource;
 use App\Models\Student;
 use App\Models\StudentAttendance;
+use App\Services\Access\TeacherScope;
 use App\Services\Attendance\AttendanceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,10 @@ class StudentAttendanceController extends Controller
 {
     use StampsAcademicTenant;
 
-    public function __construct(private readonly AttendanceService $attendance) {}
+    public function __construct(
+        private readonly AttendanceService $attendance,
+        private readonly TeacherScope $teacherScope,
+    ) {}
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -30,7 +34,11 @@ class StudentAttendanceController extends Controller
             ->when($request->filled('class_room_id'), fn ($q) => $q->where('class_room_id', $request->integer('class_room_id')))
             ->when($request->filled('section_id'), fn ($q) => $q->where('section_id', $request->integer('section_id')))
             ->when($request->filled('student_id'), fn ($q) => $q->where('student_id', $request->integer('student_id')))
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()));
+
+        $this->teacherScope->applyTo($records, $request->user(), 'student_id');
+
+        $records = $records
             ->orderByDesc('attendance_date')
             ->orderBy('student_id')
             ->paginate($request->integer('per_page', 50));
@@ -42,6 +50,8 @@ class StudentAttendanceController extends Controller
     {
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->recordRules($tenant['campus_id'], true));
+
+        $this->guardStudents($request, [$data['student_id']]);
 
         $records = $this->attendance->markStudents(
             $tenant,
@@ -76,6 +86,8 @@ class StudentAttendanceController extends Controller
             'records.*.remarks' => ['nullable', 'string', 'max:1000'],
         ]);
 
+        $this->guardStudents($request, collect($data['records'])->pluck('student_id')->all());
+
         $records = $this->attendance->markStudents(
             $tenant,
             $request->user(),
@@ -90,6 +102,8 @@ class StudentAttendanceController extends Controller
 
     public function update(Request $request, StudentAttendance $studentAttendance): StudentAttendanceResource
     {
+        abort_unless($this->teacherScope->allowsStudent($request->user(), $studentAttendance->student_id), 403, 'This record is outside your assigned classes.');
+
         $data = $request->validate([
             'status' => ['sometimes', Rule::enum(AttendanceStatus::class)],
             'remarks' => ['nullable', 'string', 'max:1000'],
@@ -100,8 +114,10 @@ class StudentAttendanceController extends Controller
         return new StudentAttendanceResource($studentAttendance->refresh()->load('student'));
     }
 
-    public function destroy(StudentAttendance $studentAttendance): JsonResponse
+    public function destroy(Request $request, StudentAttendance $studentAttendance): JsonResponse
     {
+        abort_unless($this->teacherScope->allowsStudent($request->user(), $studentAttendance->student_id), 403, 'This record is outside your assigned classes.');
+
         $studentAttendance->delete();
 
         return response()->json(['message' => 'Attendance record removed.']);
@@ -120,6 +136,9 @@ class StudentAttendanceController extends Controller
 
         $from = isset($data['from']) ? $data['from'] : now()->startOfMonth()->toDateString();
         $to = isset($data['to']) ? $data['to'] : now()->toDateString();
+        $scopeStudentIds = $this->teacherScope->isTeacherScoped($request->user())
+            ? $this->teacherScope->studentIds($request->user())
+            : null;
 
         return response()->json([
             'data' => $this->attendance->classSummary(
@@ -128,12 +147,15 @@ class StudentAttendanceController extends Controller
                 $to,
                 $data['class_room_id'] ?? null,
                 $data['section_id'] ?? null,
+                $scopeStudentIds,
             ),
         ]);
     }
 
     public function studentReport(Request $request, Student $student): JsonResponse
     {
+        abort_unless($this->teacherScope->allowsStudent($request->user(), $student->id), 403, 'This student is outside your assigned classes.');
+
         $data = $request->validate([
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date', 'after_or_equal:from'],
@@ -179,5 +201,23 @@ class StudentAttendanceController extends Controller
             'class_room_id' => $data['class_room_id'] ?? null,
             'section_id' => $data['section_id'] ?? null,
         ];
+    }
+
+    /**
+     * @param  array<int, int|string>  $studentIds
+     */
+    private function guardStudents(Request $request, array $studentIds): void
+    {
+        $user = $request->user();
+
+        if (! $this->teacherScope->isTeacherScoped($user)) {
+            return;
+        }
+
+        $allowed = $this->teacherScope->studentIds($user);
+
+        foreach ($studentIds as $studentId) {
+            abort_if(! in_array((int) $studentId, $allowed, true), 403, 'One or more students are outside your assigned classes.');
+        }
     }
 }

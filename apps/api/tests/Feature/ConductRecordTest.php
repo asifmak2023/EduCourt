@@ -14,6 +14,8 @@ use App\Models\Section;
 use App\Models\Stage;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
+use App\Models\Subject;
+use App\Models\TeachingAssignment;
 use App\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -32,6 +34,12 @@ class ConductRecordTest extends TestCase
     private AcademicYear $year;
 
     private Student $student;
+
+    private ClassRoom $class;
+
+    private Section $section;
+
+    private Subject $subject;
 
     protected function setUp(): void
     {
@@ -77,6 +85,15 @@ class ConductRecordTest extends TestCase
             'class_room_id' => $class->id, 'name' => 'A',
         ]);
 
+        $this->class = $class;
+        $this->section = $section;
+
+        $this->subject = Subject::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'name' => 'Mathematics', 'code' => 'MATH',
+        ]);
+
         $this->student = Student::create([
             'institution_id' => $this->institution->id,
             'campus_id' => $this->campus->id,
@@ -99,6 +116,17 @@ class ConductRecordTest extends TestCase
     public function test_a_teacher_can_report_an_incident(): void
     {
         $teacher = $this->userWithRole(RoleName::Teacher);
+
+        TeachingAssignment::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'academic_year_id' => $this->year->id,
+            'teacher_user_id' => $teacher->id,
+            'subject_id' => $this->subject->id,
+            'class_room_id' => $this->class->id,
+            'section_id' => $this->section->id,
+            'is_active' => true,
+        ]);
 
         $this->as($teacher)->postJson('/api/v1/conduct-records', [
             'student_id' => $this->student->id,

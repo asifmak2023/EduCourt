@@ -15,6 +15,7 @@ import { TimetableGridScreen } from "./screens/TimetableGridScreen";
 import { TranscriptScreen } from "./screens/TranscriptScreen";
 import { ResultCardScreen } from "./screens/ResultCardScreen";
 import { MeritListScreen } from "./screens/MeritListScreen";
+import { AnalyticsScreen } from "./screens/AnalyticsScreen";
 
 export interface CustomScreenProps {
   permissions: string[];
@@ -35,6 +36,7 @@ export const CUSTOM_SCREENS: Record<string, ComponentType<CustomScreenProps>> = 
   transcript: TranscriptScreen,
   resultCard: ResultCardScreen,
   meritList: MeritListScreen,
+  analytics: AnalyticsScreen,
 };
 
 export function findCustomScreen(name: string): ComponentType<CustomScreenProps> | null {

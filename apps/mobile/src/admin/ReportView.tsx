@@ -31,6 +31,64 @@ function scalarValue(value: unknown, key = ""): string | null {
   return formatCellValue(key, value);
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function hasContent(value: unknown): boolean {
+  if (Array.isArray(value)) {
+    return value.some(isRecord);
+  }
+  if (isRecord(value)) {
+    return Object.entries(value).some(
+      ([key, item]) => scalarValue(item, key) !== null || hasContent(item)
+    );
+  }
+  return scalarValue(value) !== null;
+}
+
+function ReportSection({ label, value }: { label: string; value: unknown }) {
+  if (!hasContent(value)) {
+    return null;
+  }
+
+  if (Array.isArray(value)) {
+    const rows = value.filter(isRecord);
+    return (
+      <Card>
+        <SectionLabel>{label}</SectionLabel>
+        <DataTable rows={rows} />
+      </Card>
+    );
+  }
+
+  if (isRecord(value)) {
+    const scalars: StatItem[] = [];
+    const children: { label: string; value: unknown }[] = [];
+
+    for (const [key, item] of Object.entries(value)) {
+      const text = scalarValue(item, key);
+      if (text !== null) {
+        scalars.push({ label: humanize(key), value: text });
+        continue;
+      }
+      children.push({ label: humanize(key), value: item });
+    }
+
+    return (
+      <View style={{ marginTop: 16 }}>
+        <SectionLabel>{label}</SectionLabel>
+        <StatGrid items={scalars} />
+        {children.map((child) => (
+          <ReportSection key={child.label} label={child.label} value={child.value} />
+        ))}
+      </View>
+    );
+  }
+
+  return null;
+}
+
 export function ReportView({
   endpoint,
   params,
@@ -72,50 +130,22 @@ export function ReportView({
 
   const source = data as Record<string, unknown>;
   const metrics: StatItem[] = [];
-  const tables: { label: string; rows: Record<string, unknown>[] }[] = [];
-  const nested: { label: string; values: StatItem[] }[] = [];
+  const sections: { label: string; value: unknown }[] = [];
 
   for (const [key, value] of Object.entries(source)) {
-    if (Array.isArray(value)) {
-      const rows = value.filter(
-        (item): item is Record<string, unknown> => typeof item === "object" && item !== null
-      );
-      tables.push({ label: humanize(key), rows });
-      continue;
-    }
-    if (value !== null && typeof value === "object") {
-      const values: StatItem[] = [];
-      for (const [nestedKey, nestedValue] of Object.entries(value as Record<string, unknown>)) {
-        const text = scalarValue(nestedValue, nestedKey);
-        if (text !== null) {
-          values.push({ label: `${humanize(key)} · ${humanize(nestedKey)}`, value: text });
-        }
-      }
-      if (values.length > 0) {
-        nested.push({ label: humanize(key), values });
-      }
-      continue;
-    }
     const text = scalarValue(value, key);
     if (text !== null) {
       metrics.push({ label: humanize(key), value: text });
+      continue;
     }
+    sections.push({ label: humanize(key), value });
   }
 
   return (
     <View>
       <StatGrid items={metrics} />
-      {nested.map((group) => (
-        <View key={group.label} style={{ marginTop: 16 }}>
-          <SectionLabel>{group.label}</SectionLabel>
-          <StatGrid items={group.values} />
-        </View>
-      ))}
-      {tables.map((table) => (
-        <Card key={table.label}>
-          <SectionLabel>{table.label}</SectionLabel>
-          <DataTable rows={table.rows} />
-        </Card>
+      {sections.map((section) => (
+        <ReportSection key={section.label} label={section.label} value={section.value} />
       ))}
     </View>
   );

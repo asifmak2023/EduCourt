@@ -89,15 +89,27 @@ export function buildNav(user: AuthUser | null, portal: boolean): NavSection[] {
   const permissions = user?.permissions ?? [];
   const sections: NavSection[] = [];
 
+  const overviewItems: NavItem[] = [
+    {
+      key: "dashboard",
+      label: "navigation.dashboard",
+      subtitle: "navigation.subtitle.dashboard",
+    },
+  ];
+
+  if (isStaffUser(user) && can(permissions, "report.view")) {
+    overviewItems.push({
+      key: "analytics",
+      label: "Analytics",
+      subtitle: "Overview",
+      permission: "report.view",
+      customScreen: "analytics",
+    });
+  }
+
   sections.push({
     label: "navigation.section.overview",
-    items: [
-      {
-        key: "dashboard",
-        label: "navigation.dashboard",
-        subtitle: "navigation.subtitle.dashboard",
-      },
-    ],
+    items: overviewItems,
   });
 
   if (portal) {

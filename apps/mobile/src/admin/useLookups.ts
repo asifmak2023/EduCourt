@@ -64,6 +64,8 @@ const LOOKUPS: Record<string, LookupDef> = {
     depParam: "sport_id",
   },
   clubs: { endpoint: "/v1/student-affairs/clubs", labelKey: "name" },
+  institutions: { endpoint: "/v1/institutions", labelKey: "name" },
+  campuses: { endpoint: "/v1/campuses", labelKey: "name" },
 };
 
 const cache = new Map<string, SelectOption[]>();

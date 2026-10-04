@@ -187,6 +187,30 @@ export function buildNav(user: AuthUser | null, portal: boolean): NavSection[] {
       });
       groups.set("Operations", list);
     }
+
+    if (can(permissions, "role.view")) {
+      const list = groups.get("Administration") ?? [];
+      list.push({
+        key: "role-scopes",
+        label: "Roles & scopes",
+        subtitle: "Administration",
+        permission: "role.view",
+        customScreen: "roles",
+      });
+      groups.set("Administration", list);
+    }
+
+    if (can(permissions, "audit.view")) {
+      const list = groups.get("Administration") ?? [];
+      list.push({
+        key: "audit-log",
+        label: "Audit log",
+        subtitle: "Administration",
+        permission: "audit.view",
+        customScreen: "auditLog",
+      });
+      groups.set("Administration", list);
+    }
   }
 
   for (const name of [...STAFF_ORDER, ...groups.keys()]) {

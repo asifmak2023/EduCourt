@@ -20,6 +20,7 @@ import {
 import { SECTIONS } from "./sections";
 import { OPERATIONS_MODULES } from "./operations";
 import { ADMINISTRATION_MODULES } from "./administration";
+import { ACADEMICS_MODULES } from "./academics";
 
 export { SECTIONS };
 
@@ -2491,6 +2492,7 @@ export const MODULES: ModuleConfig[] = [
   },
   ...OPERATIONS_MODULES,
   ...ADMINISTRATION_MODULES,
+  ...ACADEMICS_MODULES,
 ];
 
 export function findModule(key: string): ModuleConfig | null {

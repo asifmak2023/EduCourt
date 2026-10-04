@@ -66,6 +66,11 @@ const LOOKUPS: Record<string, LookupDef> = {
   clubs: { endpoint: "/v1/student-affairs/clubs", labelKey: "name" },
   institutions: { endpoint: "/v1/institutions", labelKey: "name" },
   campuses: { endpoint: "/v1/campuses", labelKey: "name" },
+  rooms: { endpoint: "/v1/rooms", labelKey: "name" },
+  periods: { endpoint: "/v1/periods", labelKey: "name" },
+  examTypes: { endpoint: "/v1/exam-types", labelKey: "name" },
+  exams: { endpoint: "/v1/exams", labelKey: "name" },
+  examPapers: { endpoint: "/v1/exam-papers", labelKey: "exam_date" },
 };
 
 const cache = new Map<string, SelectOption[]>();

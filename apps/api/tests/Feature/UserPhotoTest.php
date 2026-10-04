@@ -194,6 +194,66 @@ class UserPhotoTest extends TestCase
             ->assertJsonPath('data.photo_url', fn ($value) => is_string($value) && str_contains($value, $student->photo_path));
     }
 
+    public function test_a_user_can_manage_their_own_photo(): void
+    {
+        $this->as($this->staff)
+            ->post('/api/v1/auth/photo', [
+                'photo' => UploadedFile::fake()->image('me.jpg', 200, 200),
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.photo_url', fn ($value) => is_string($value) && $value !== '');
+
+        $path = $this->staff->refresh()->photo_path;
+
+        $this->assertNotNull($path);
+        Storage::disk('public')->assertExists($path);
+
+        $this->as($this->staff)
+            ->deleteJson('/api/v1/auth/photo')
+            ->assertOk();
+
+        $this->assertNull($this->staff->refresh()->photo_path);
+        Storage::disk('public')->assertMissing($path);
+    }
+
+    public function test_a_user_own_photo_must_be_an_image(): void
+    {
+        $this->as($this->staff)
+            ->post('/api/v1/auth/photo', [
+                'photo' => UploadedFile::fake()->create('notes.txt', 10, 'text/plain'),
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('photo');
+    }
+
+    public function test_a_student_own_photo_syncs_the_student_record(): void
+    {
+        $user = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $user->syncRoles([RoleName::Student->value]);
+
+        $student = Student::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'user_id' => $user->id,
+            'admission_no' => 'ADM-SELF',
+            'first_name' => 'Sara', 'last_name' => 'Khan',
+            'gender' => 'female', 'status' => 'active',
+        ]);
+
+        $this->as($user)
+            ->post('/api/v1/auth/photo', [
+                'photo' => UploadedFile::fake()->image('me.jpg'),
+            ])
+            ->assertOk();
+
+        $this->assertNotNull($user->refresh()->photo_path);
+        $this->assertSame($user->photo_path, $student->refresh()->photo_path);
+        Storage::disk('public')->assertExists($student->photo_path);
+    }
+
     private function upload(): void
     {
         $this->as($this->admin)

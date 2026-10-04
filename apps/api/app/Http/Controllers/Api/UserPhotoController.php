@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\Files\FileScanner;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -23,8 +24,30 @@ class UserPhotoController extends Controller
             'photo' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png,webp'],
         ]);
 
-        $file = $request->file('photo');
+        return $this->applyPhoto($request->file('photo'), $user);
+    }
 
+    public function storeSelf(Request $request): UserResource
+    {
+        $request->validate([
+            'photo' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png,webp'],
+        ]);
+
+        return $this->applyPhoto($request->file('photo'), $request->user());
+    }
+
+    public function destroy(User $user): JsonResponse
+    {
+        return $this->removePhoto($user);
+    }
+
+    public function destroySelf(Request $request): JsonResponse
+    {
+        return $this->removePhoto($request->user());
+    }
+
+    private function applyPhoto(UploadedFile $file, User $user): UserResource
+    {
         $this->assertClean($file->getRealPath());
 
         $this->deleteExisting($user);
@@ -40,7 +63,7 @@ class UserPhotoController extends Controller
         ]));
     }
 
-    public function destroy(User $user): JsonResponse
+    private function removePhoto(User $user): JsonResponse
     {
         $this->deleteExisting($user);
 

@@ -209,6 +209,9 @@ Route::prefix('v1')->group(function () {
 
         Route::put('auth/password', [ProfileController::class, 'updatePassword']);
 
+        Route::post('auth/photo', [UserPhotoController::class, 'storeSelf']);
+        Route::delete('auth/photo', [UserPhotoController::class, 'destroySelf']);
+
         Route::post('auth/two-factor/enable', [TwoFactorController::class, 'enable']);
         Route::post('auth/two-factor/confirm', [TwoFactorController::class, 'confirm']);
         Route::post('auth/two-factor/disable', [TwoFactorController::class, 'disable']);

@@ -22,6 +22,13 @@ const CREDIT = {
   delete: "credit.delete",
 };
 
+const ATTENDANCE = {
+  view: "attendance.view",
+  create: "attendance.create",
+  edit: "attendance.edit",
+  delete: "attendance.edit",
+};
+
 const ACTIVE: SelectOption[] = [
   { value: "1", label: "Active" },
   { value: "0", label: "Inactive" },
@@ -87,6 +94,14 @@ const COURSE_STATUS: SelectOption[] = [
   { value: "completed", label: "Completed" },
   { value: "failed", label: "Failed" },
   { value: "dropped", label: "Dropped" },
+];
+
+const ATTENDANCE_STATUS: SelectOption[] = [
+  { value: "present", label: "Present" },
+  { value: "absent", label: "Absent" },
+  { value: "late", label: "Late" },
+  { value: "leave", label: "Leave" },
+  { value: "excused", label: "Excused" },
 ];
 
 function dayLabel(value: unknown): string {
@@ -451,6 +466,55 @@ export const ACADEMICS_MODULES: ModuleConfig[] = [
         confirm: "Drop this course registration?",
         successMessage: "Course registration dropped.",
       },
+    ],
+  },
+  {
+    key: "student-attendance",
+    section: SECTIONS.academics,
+    label: "Student attendance",
+    endpoint: "/v1/attendance/students",
+    permissions: ATTENDANCE,
+    filters: [{ param: "status", label: "Status", options: ATTENDANCE_STATUS }],
+    columns: [
+      { key: "student.name", label: "Student" },
+      { key: "student.admission_no", label: "Admission no" },
+      { key: "attendance_date", label: "Date", format: "date" },
+      { key: "class_room", label: "Class" },
+      { key: "section", label: "Section" },
+      { key: "status_label", label: "Status", format: "badge" },
+      { key: "remarks", label: "Remarks" },
+    ],
+    fields: [
+      { name: "student_id", label: "Student", type: "lookup", lookup: "students", required: true, displayKey: "student.name" },
+      { name: "attendance_date", label: "Date", type: "date", required: true },
+      { name: "status", label: "Status", type: "select", options: ATTENDANCE_STATUS, required: true },
+      { name: "class_room_id", label: "Class", type: "lookup", lookup: "classRooms", displayKey: "class_room.name" },
+      { name: "section_id", label: "Section", type: "lookup", lookup: "sections", dependsOn: "class_room_id", displayKey: "section.name" },
+      { name: "remarks", label: "Remarks", type: "textarea" },
+    ],
+  },
+  {
+    key: "staff-attendance",
+    section: SECTIONS.academics,
+    label: "Staff attendance",
+    endpoint: "/v1/attendance/staff",
+    permissions: ATTENDANCE,
+    filters: [{ param: "status", label: "Status", options: ATTENDANCE_STATUS }],
+    columns: [
+      { key: "user.name", label: "Staff" },
+      { key: "attendance_date", label: "Date", format: "date" },
+      { key: "status_label", label: "Status", format: "badge" },
+      { key: "check_in", label: "Check in" },
+      { key: "check_out", label: "Check out" },
+      { key: "remarks", label: "Remarks" },
+    ],
+    fields: [
+      { name: "user_id", label: "Staff", type: "lookup", lookup: "staffUsers", required: true, displayKey: "user.name" },
+      { name: "attendance_date", label: "Date", type: "date", required: true },
+      { name: "status", label: "Status", type: "select", options: ATTENDANCE_STATUS, required: true },
+      { name: "check_in", label: "Check in", type: "time" },
+      { name: "check_out", label: "Check out", type: "time" },
+      { name: "remarks", label: "Remarks", type: "textarea" },
     ],
   },
 ];

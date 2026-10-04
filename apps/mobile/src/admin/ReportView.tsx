@@ -11,6 +11,7 @@ import { apiFetch } from "../lib/api";
 import { useCampusId } from "../lib/campus";
 import { useAsync } from "../lib/useAsync";
 import { useTheme } from "../theme/ThemeProvider";
+import { buildQuery, type QueryValue } from "./query";
 
 type ReportPayload = Record<string, unknown> | Record<string, unknown>[];
 
@@ -30,16 +31,23 @@ function scalarValue(value: unknown, key = ""): string | null {
   return formatCellValue(key, value);
 }
 
-export function ReportView({ endpoint }: { endpoint: string }) {
+export function ReportView({
+  endpoint,
+  params,
+}: {
+  endpoint: string;
+  params?: Record<string, QueryValue>;
+}) {
   const { colors } = useTheme();
   const campusId = useCampusId();
+  const query = buildQuery(params ?? {});
 
   const loader = useCallback(async () => {
-    const response = await apiFetch<{ data: ReportPayload }>(endpoint, { campusId });
+    const response = await apiFetch<{ data: ReportPayload }>(`${endpoint}${query}`, { campusId });
     return response.data;
-  }, [endpoint, campusId]);
+  }, [endpoint, query, campusId]);
 
-  const { data, loading, error, reload } = useAsync<ReportPayload>(loader, [endpoint, campusId]);
+  const { data, loading, error, reload } = useAsync<ReportPayload>(loader, [endpoint, query, campusId]);
 
   if (loading) {
     return <ActivityIndicator color={colors.accent} style={{ marginTop: 24 }} />;

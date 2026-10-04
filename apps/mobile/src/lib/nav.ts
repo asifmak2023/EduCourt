@@ -188,6 +188,37 @@ export function buildNav(user: AuthUser | null, portal: boolean): NavSection[] {
       groups.set("Operations", list);
     }
 
+    if (can(permissions, "attendance.create")) {
+      const list = groups.get("Academics") ?? [];
+      list.push({
+        key: "student-attendance-mark",
+        label: "Mark student attendance",
+        subtitle: "Academics",
+        permission: "attendance.create",
+        customScreen: "studentAttendanceMark",
+      });
+      list.push({
+        key: "staff-attendance-mark",
+        label: "Mark staff attendance",
+        subtitle: "Academics",
+        permission: "attendance.create",
+        customScreen: "staffAttendanceMark",
+      });
+      groups.set("Academics", list);
+    }
+
+    if (can(permissions, "attendance.view")) {
+      const list = groups.get("Academics") ?? [];
+      list.push({
+        key: "attendance-reports",
+        label: "Attendance reports",
+        subtitle: "Academics",
+        permission: "attendance.view",
+        customScreen: "attendanceReports",
+      });
+      groups.set("Academics", list);
+    }
+
     if (can(permissions, "role.view")) {
       const list = groups.get("Administration") ?? [];
       list.push({

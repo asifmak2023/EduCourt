@@ -17,8 +17,11 @@ export function Breadcrumbs() {
   }
 
   return (
-    <nav aria-label={t("navigation.breadcrumb")} className="mb-4">
-      <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted sm:text-sm">
+    <nav
+      aria-label={t("navigation.breadcrumb")}
+      className="breadcrumb-bar mb-4"
+    >
+      <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs sm:text-sm">
         {crumbs.map((crumb, index) => {
           const linkable = !crumb.isCurrent && isRoutable(crumb.href);
 
@@ -28,7 +31,7 @@ export function Breadcrumbs() {
               className="flex min-w-0 items-center gap-1.5"
             >
               {index > 0 ? (
-                <span aria-hidden="true" className="text-muted/50">
+                <span aria-hidden="true" className="text-muted">
                   /
                 </span>
               ) : null}
@@ -36,15 +39,17 @@ export function Breadcrumbs() {
               {linkable ? (
                 <Link
                   href={crumb.href}
-                  className="max-w-[14rem] truncate rounded transition-colors hover:text-foreground hover:underline"
+                  className="max-w-[14rem] truncate rounded px-0.5 font-medium text-foreground/70 transition-colors hover:text-accent hover:underline"
                 >
                   {crumb.label}
                 </Link>
               ) : (
                 <span
                   aria-current={crumb.isCurrent ? "page" : undefined}
-                  className={`max-w-[14rem] truncate ${
-                    crumb.isCurrent ? "font-medium text-foreground" : ""
+                  className={`max-w-[14rem] truncate px-0.5 ${
+                    crumb.isCurrent
+                      ? "font-semibold text-accent"
+                      : "text-foreground/80"
                   }`}
                 >
                   {crumb.label}

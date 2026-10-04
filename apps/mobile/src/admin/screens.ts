@@ -11,6 +11,10 @@ import {
   StaffAttendanceMarkScreen,
 } from "./screens/AttendanceMarkScreen";
 import { AttendanceReportsScreen } from "./screens/AttendanceReportsScreen";
+import { TimetableGridScreen } from "./screens/TimetableGridScreen";
+import { TranscriptScreen } from "./screens/TranscriptScreen";
+import { ResultCardScreen } from "./screens/ResultCardScreen";
+import { MeritListScreen } from "./screens/MeritListScreen";
 
 export interface CustomScreenProps {
   permissions: string[];
@@ -27,6 +31,10 @@ export const CUSTOM_SCREENS: Record<string, ComponentType<CustomScreenProps>> = 
   studentAttendanceMark: StudentAttendanceMarkScreen,
   staffAttendanceMark: StaffAttendanceMarkScreen,
   attendanceReports: AttendanceReportsScreen,
+  timetableGrid: TimetableGridScreen,
+  transcript: TranscriptScreen,
+  resultCard: ResultCardScreen,
+  meritList: MeritListScreen,
 };
 
 export function findCustomScreen(name: string): ComponentType<CustomScreenProps> | null {

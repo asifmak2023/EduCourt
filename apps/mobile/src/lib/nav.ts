@@ -219,6 +219,49 @@ export function buildNav(user: AuthUser | null, portal: boolean): NavSection[] {
       groups.set("Academics", list);
     }
 
+    if (can(permissions, "timetable.view")) {
+      const list = groups.get("Academics") ?? [];
+      list.push({
+        key: "timetable-grid",
+        label: "Timetable",
+        subtitle: "Academics",
+        permission: "timetable.view",
+        customScreen: "timetableGrid",
+      });
+      groups.set("Academics", list);
+    }
+
+    if (can(permissions, "exam.view")) {
+      const list = groups.get("Academics") ?? [];
+      list.push({
+        key: "exam-result-card",
+        label: "Result card",
+        subtitle: "Academics",
+        permission: "exam.view",
+        customScreen: "resultCard",
+      });
+      list.push({
+        key: "exam-merit-list",
+        label: "Merit list",
+        subtitle: "Academics",
+        permission: "exam.view",
+        customScreen: "meritList",
+      });
+      groups.set("Academics", list);
+    }
+
+    if (can(permissions, "credit.view")) {
+      const list = groups.get("Academics") ?? [];
+      list.push({
+        key: "transcript",
+        label: "Transcript",
+        subtitle: "Academics",
+        permission: "credit.view",
+        customScreen: "transcript",
+      });
+      groups.set("Academics", list);
+    }
+
     if (can(permissions, "role.view")) {
       const list = groups.get("Administration") ?? [];
       list.push({

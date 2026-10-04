@@ -100,6 +100,8 @@
   "navigation.student": "Estudiante",
   "navigation.campus": "Campus",
   "navigation.open": "Abrir navegación",
+  "navigation.collapseSidebar": "Contraer barra lateral",
+  "navigation.expandSidebar": "Expandir barra lateral",
   "navigation.promotions": "Promociones",
   "navigation.feeReports": "Informes de cuotas",
   "navigation.financeReports": "Informes financieros",

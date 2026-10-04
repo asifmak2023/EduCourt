@@ -14,6 +14,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const SIDEBAR_KEY = "eis.sidebar.section";
+const COLLAPSE_KEY = "eis.sidebar.collapsed";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth();
@@ -34,6 +35,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   });
   const [lastPath, setLastPath] = useState(pathname);
+  const [collapsed, setCollapsed] = useState(false);
+  const [collapsedReady, setCollapsedReady] = useState(false);
+
+  useEffect(() => {
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      let stored = false;
+      try {
+        stored = window.localStorage.getItem(COLLAPSE_KEY) === "1";
+      } catch {
+        // Ignore storage failures.
+      }
+      setCollapsed(stored);
+      raf2 = requestAnimationFrame(() => setCollapsedReady(true));
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, []);
 
   if (pathname !== lastPath) {
     setLastPath(pathname);
@@ -56,6 +77,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         if (next) {
           window.localStorage.setItem(SIDEBAR_KEY, next);
         }
+      } catch {
+        // Ignore storage failures.
+      }
+      return next;
+    });
+  }
+
+  function toggleCollapsed() {
+    setCollapsed((current) => {
+      const next = !current;
+      try {
+        window.localStorage.setItem(COLLAPSE_KEY, next ? "1" : "0");
       } catch {
         // Ignore storage failures.
       }
@@ -104,67 +137,127 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const roleLabelString = user.roles
     .map((role) => roleText(role, t))
     .join(", ");
+  const currentUser = user;
 
-  const sidebar = (
+  function renderSidebar(isCollapsed: boolean, showToggle: boolean) {
+    return (
     <div className="app-glass app-sidebar flex h-full flex-col bg-surface-secondary text-foreground">
-      <Link
-        href="/dashboard"
-        onClick={() => setMenuOpen(false)}
-        aria-label={t("navigation.home")}
-        className={`flex items-center gap-3 px-5 py-5 transition-colors hover:bg-surface-tertiary ${
-          isRTL ? "" : "justify-center text-center"
-        }`}
-      >
-        <div className="min-w-0">
-          <p className="brand-glow truncate font-logo text-2xl font-bold tracking-tight text-foreground">
-            EduCourt
-          </p>
-          <p className="truncate text-xs text-muted">
-            {user.institution?.name ?? t("navigation.educationSystem")}
-          </p>
-        </div>
-      </Link>
+      <div className={`flex items-center gap-2 px-4 py-5 ${isCollapsed ? "flex-col" : ""}`}>
+        <Link
+          href="/dashboard"
+          onClick={() => setMenuOpen(false)}
+          aria-label={t("navigation.home")}
+          className={`flex min-w-0 flex-1 items-center gap-3 rounded-lg transition-colors hover:bg-surface-tertiary ${
+            isCollapsed || !isRTL ? "justify-center text-center" : ""
+          }`}
+        >
+          {isCollapsed ? (
+            <span className="brand-glow font-logo text-2xl font-bold tracking-tight text-foreground">
+              E
+            </span>
+          ) : (
+            <div className="min-w-0">
+              <p className="brand-glow truncate font-logo text-2xl font-bold tracking-tight text-foreground">
+                EduCourt
+              </p>
+              <p className="truncate text-xs text-muted">
+                {currentUser.institution?.name ?? t("navigation.educationSystem")}
+              </p>
+            </div>
+          )}
+        </Link>
+        {showToggle ? (
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-expanded={!collapsed}
+            aria-label={
+              collapsed
+                ? t("navigation.expandSidebar")
+                : t("navigation.collapseSidebar")
+            }
+            title={
+              collapsed
+                ? t("navigation.expandSidebar")
+                : t("navigation.collapseSidebar")
+            }
+            className="shrink-0 rounded-lg border border-border-secondary p-1.5 text-muted transition-colors hover:bg-surface-tertiary hover:text-foreground"
+          >
+            <Icon
+              name="panelLeft"
+              className={`h-4 w-4 transition-transform duration-200 ${
+                collapsed ? "scale-x-[-1]" : ""
+              } ${isRTL ? "rotate-180" : ""}`}
+            />
+          </button>
+        ) : null}
+      </div>
 
       <nav
         aria-label={t("navigation.primary")}
         tabIndex={0}
-        className="app-sidebar-nav flex-1 space-y-3 overflow-y-auto px-3 pb-4 outline-none"
+        className={`app-sidebar-nav flex-1 overflow-y-auto pb-4 outline-none ${
+          isCollapsed ? "space-y-1 px-2" : "space-y-3 px-3"
+        }`}
       >
-        {sections.map((section) => {
+        {sections.map((section, sectionIndex) => {
           const isOpen = openSection === section.label;
 
           return (
-            <div key={section.label}>
-              <button
-                type="button"
-                onClick={() => toggleSection(section.label)}
-                aria-expanded={isOpen}
-                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold uppercase tracking-wide text-muted transition-colors hover:bg-accent-soft hover:text-accent-soft-foreground"
-              >
-                <span className="flex-1 text-start">{tr(section.label)}</span>
-                <Icon
-                  name="chevronDown"
-                  className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${
-                    isOpen ? "rotate-0" : isRTL ? "rotate-90" : "-rotate-90"
-                  }`}
-                />
-              </button>
+            <div
+              key={section.label}
+              className={
+                isCollapsed && sectionIndex > 0
+                  ? "border-t border-border-secondary pt-1"
+                  : ""
+              }
+            >
+              {isCollapsed ? null : (
+                <button
+                  type="button"
+                  onClick={() => toggleSection(section.label)}
+                  aria-expanded={isOpen}
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold uppercase tracking-wide text-muted transition-colors hover:bg-accent-soft hover:text-accent-soft-foreground"
+                >
+                  <span className="flex-1 text-start">{tr(section.label)}</span>
+                  <Icon
+                    name="chevronDown"
+                    className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${
+                      isOpen ? "rotate-0" : isRTL ? "rotate-90" : "-rotate-90"
+                    }`}
+                  />
+                </button>
+              )}
 
-              <div className="collapse-grid" data-open={isOpen}>
+              <div
+                className={isCollapsed ? "" : "collapse-grid"}
+                data-open={isCollapsed ? true : isOpen}
+              >
                 <div className="overflow-hidden">
-                  <ul className="space-y-1 pt-1">
+                  <ul className={isCollapsed ? "space-y-1" : "space-y-1 pt-1"}>
                     {section.items.map((item) => {
                       const isActive = pathname === item.href;
 
                       if (!item.ready) {
                         return (
                           <li key={item.href}>
-                            <span className="flex cursor-not-allowed items-center gap-3 rounded-lg px-2.5 py-2.5 text-[15px] text-muted">
+                            <span
+                              title={tr(item.label)}
+                              className={`flex cursor-not-allowed items-center rounded-lg text-muted ${
+                                isCollapsed
+                                  ? "justify-center py-2.5"
+                                  : "gap-3 px-2.5 py-2.5 text-[15px]"
+                              }`}
+                            >
                               <Icon name={item.icon} className="h-[18px] w-[18px] shrink-0" />
-                              <span className="flex-1 truncate">{tr(item.label)}</span>
-                              <span className="rounded bg-surface-tertiary px-1.5 py-0.5 text-[10px] font-medium uppercase text-muted">
-                                {t("navigation.soon")}
-                              </span>
+                              {isCollapsed ? null : (
+                                <>
+                                  <span className="flex-1 truncate">{tr(item.label)}</span>
+                                  <span className="rounded bg-surface-tertiary px-1.5 py-0.5 text-[10px] font-medium uppercase text-muted">
+                                    {t("navigation.soon")}
+                                  </span>
+                                </>
+                              )}
                             </span>
                           </li>
                         );
@@ -175,14 +268,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                           <Link
                             href={item.href}
                             onClick={() => setMenuOpen(false)}
-                            className={`flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-[15px] transition-colors duration-150 ${
+                            title={tr(item.label)}
+                            className={`flex items-center rounded-lg transition-colors duration-150 ${
+                              isCollapsed
+                                ? "justify-center py-2.5"
+                                : "gap-3 px-2.5 py-2.5 text-[15px]"
+                            } ${
                               isActive
                                 ? "bg-accent-soft font-semibold text-accent-soft-foreground"
                                 : "font-medium text-foreground/80 hover:bg-accent-soft hover:text-accent-soft-foreground"
                             }`}
                           >
                             <Icon name={item.icon} className="h-[18px] w-[18px] shrink-0" />
-                            <span className="flex-1 truncate">{tr(item.label)}</span>
+                            {isCollapsed ? null : (
+                              <span className="flex-1 truncate">{tr(item.label)}</span>
+                            )}
                           </Link>
                         </li>
                       );
@@ -196,30 +296,54 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </nav>
 
       <div className="border-t border-border-secondary px-4 py-4">
-        <div className="flex items-center gap-3">
-          <Avatar name={user.name} photoUrl={user.photo_url} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
-            <p className="truncate text-xs capitalize text-muted">{roleLabelString}</p>
+        {isCollapsed ? (
+          <div className="flex flex-col items-center gap-3">
+              <Avatar name={currentUser.name} photoUrl={currentUser.photo_url} />
+            <button
+              type="button"
+              onClick={() => {
+                void logout().then(() => router.replace("/login"));
+              }}
+              aria-label={t("common.signOut")}
+              title={t("common.signOut")}
+              className="rounded-lg border border-border-secondary p-2 text-muted transition-colors hover:bg-surface-tertiary hover:text-danger"
+            >
+              <Icon name="logout" className="h-4 w-4" />
+            </button>
           </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            void logout().then(() => router.replace("/login"));
-          }}
-          className="mt-3 w-full rounded-lg border border-border-secondary px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-surface-tertiary"
-        >
-          {t("common.signOut")}
-        </button>
+        ) : (
+          <>
+            <div className="flex items-center gap-3">
+            <Avatar name={currentUser.name} photoUrl={currentUser.photo_url} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-foreground">{currentUser.name}</p>
+                <p className="truncate text-xs capitalize text-muted">{roleLabelString}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                void logout().then(() => router.replace("/login"));
+              }}
+              className="mt-3 w-full rounded-lg border border-border-secondary px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-surface-tertiary"
+            >
+              {t("common.signOut")}
+            </button>
+          </>
+        )}
       </div>
     </div>
-  );
+    );
+  }
 
   return (
     <div className="min-h-screen">
-      <aside className="fixed inset-y-0 start-0 z-30 hidden w-64 lg:block">
-        {sidebar}
+      <aside
+        className={`fixed inset-y-0 start-0 z-30 hidden lg:block ${
+          collapsedReady ? "transition-[width] duration-200" : ""
+        } ${collapsed ? "w-[4.5rem]" : "w-64"}`}
+      >
+        {renderSidebar(collapsed, true)}
       </aside>
 
       {menuOpen ? (
@@ -229,11 +353,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onClick={() => setMenuOpen(false)}
             aria-hidden="true"
           />
-          <div className="absolute inset-y-0 start-0 w-64">{sidebar}</div>
+          <div className="absolute inset-y-0 start-0 w-64">{renderSidebar(false, false)}</div>
         </div>
       ) : null}
 
-      <div className="flex min-h-screen min-w-0 flex-col lg:ps-64">
+      <div
+        className={`flex min-h-screen min-w-0 flex-col ${
+          collapsedReady ? "transition-[padding-inline-start] duration-200" : ""
+        } ${collapsed ? "lg:ps-[4.5rem]" : "lg:ps-64"}`}
+      >
         <header className="app-glass sticky top-0 z-30 border-b border-border-secondary bg-surface/80 backdrop-blur">
           <div className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <button

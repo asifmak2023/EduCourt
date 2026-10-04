@@ -124,6 +124,8 @@ export type MessageKey =
   | "navigation.student"
   | "navigation.campus"
   | "navigation.open"
+  | "navigation.collapseSidebar"
+  | "navigation.expandSidebar"
   | "navigation.promotions"
   | "navigation.feeReports"
   | "navigation.financeReports"

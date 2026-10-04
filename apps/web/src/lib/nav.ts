@@ -34,7 +34,9 @@ export type NavIcon =
   | "moon"
   | "sparkles"
   | "eye"
-  | "eyeOff";
+  | "eyeOff"
+  | "panelLeft"
+  | "logout";
 
 export interface NavItem {
   label: string;

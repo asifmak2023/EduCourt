@@ -99,6 +99,8 @@ export const en = {
   "navigation.student": "Student",
   "navigation.campus": "Campus",
   "navigation.open": "Open navigation",
+  "navigation.collapseSidebar": "Collapse sidebar",
+  "navigation.expandSidebar": "Expand sidebar",
   "navigation.promotions": "Promotions",
   "navigation.feeReports": "Fee reports",
   "navigation.financeReports": "Finance reports",

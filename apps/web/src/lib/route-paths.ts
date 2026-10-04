@@ -222,6 +222,7 @@ export const ROUTE_PATHS: readonly string[] = [
   "/dashboard/library/report",
   "/dashboard/notifications",
   "/dashboard/notifications/_",
+  "/dashboard/profile",
   "/dashboard/promotions",
   "/dashboard/reports",
   "/dashboard/reports/attendance",
@@ -322,5 +323,11 @@ export const ROUTE_PATHS: readonly string[] = [
   "/dashboard/users/_/edit",
   "/dashboard/users/new",
   "/login",
-  "/page.tsx"
+  "/page.tsx",
+  "/portal",
+  "/portal/attendance",
+  "/portal/fees",
+  "/portal/profile",
+  "/portal/results",
+  "/portal/timetable"
 ];

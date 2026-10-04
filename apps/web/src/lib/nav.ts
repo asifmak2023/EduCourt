@@ -56,6 +56,7 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "navigation.section.overview",
     items: [
       { label: "navigation.dashboard", href: "/dashboard", icon: "grid", permission: null, ready: true },
+      { label: "navigation.profile", href: "/dashboard/profile", icon: "idCard", permission: null, ready: true },
     ],
   },
   {

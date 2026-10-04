@@ -10,6 +10,7 @@ import { roleLabel as roleText, isPortalOnly } from "@/lib/roles";
 import { findNavItem, sectionForPath, visibleSections } from "@/lib/nav";
 import { Icon } from "@/components/Icons";
 import { Avatar } from "@/components/Avatar";
+import { AccountMenu } from "@/components/AccountMenu";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
@@ -70,6 +71,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [loading, user, router]);
 
+  useEffect(() => {
+    if (!loading && user && isPortalOnly(user.roles)) {
+      router.replace("/portal");
+    }
+  }, [loading, user, router]);
+
   function toggleSection(label: string) {
     setOpenSection((current) => {
       const next = current === label ? null : label;
@@ -106,28 +113,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (isPortalOnly(user.roles)) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="brand-glow font-logo text-3xl font-bold tracking-tight text-foreground">
-          EduCourt
-        </p>
-        <h1 className="text-lg font-semibold text-foreground">
-          {t("portal.webOnly.title")}
-        </h1>
-        <p className="max-w-md text-sm text-muted">
-          {t("portal.webOnly.body")}
-        </p>
-        <div className="mt-2 flex items-center gap-3">
-          <LanguageSwitcher />
-          <button
-            type="button"
-            onClick={() => {
-              void logout().then(() => router.replace("/login"));
-            }}
-            className="rounded-lg border border-border-secondary px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-surface-tertiary"
-          >
-            {t("common.signOut")}
-          </button>
-        </div>
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted">
+        {t("portal.redirecting")}
       </div>
     );
   }
@@ -298,7 +285,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="border-t border-border-secondary px-4 py-4">
         {isCollapsed ? (
           <div className="flex flex-col items-center gap-3">
+            <Link
+              href="/dashboard/profile"
+              title={t("navigation.profile")}
+              onClick={() => setMenuOpen(false)}
+            >
               <Avatar name={currentUser.name} photoUrl={currentUser.photo_url} />
+            </Link>
             <button
               type="button"
               onClick={() => {
@@ -313,13 +306,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-3">
-            <Avatar name={currentUser.name} photoUrl={currentUser.photo_url} />
+            <Link
+              href="/dashboard/profile"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-3 rounded-lg p-1 transition-colors hover:bg-surface-tertiary"
+            >
+              <Avatar name={currentUser.name} photoUrl={currentUser.photo_url} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-foreground">{currentUser.name}</p>
                 <p className="truncate text-xs capitalize text-muted">{roleLabelString}</p>
               </div>
-            </div>
+            </Link>
             <button
               type="button"
               onClick={() => {
@@ -384,6 +381,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {roleLabelString}
             </span>
             <LanguageSwitcher />
+            <AccountMenu />
           </div>
         </header>
 

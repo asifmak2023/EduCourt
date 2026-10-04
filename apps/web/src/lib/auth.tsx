@@ -16,6 +16,7 @@ export interface AuthUser {
   email: string;
   phone?: string | null;
   job_title?: string | null;
+  employee_code?: string | null;
   roles: string[];
   permissions: string[];
   campus_id: number | null;
@@ -47,6 +48,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<LoginResult>;
   verifyTwoFactor: (challengeToken: string, code: string) => Promise<void>;
   logout: () => Promise<void>;
+  refresh: () => Promise<void>;
   can: (permission: string | null) => boolean;
 }
 
@@ -154,8 +156,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ user, loading, login, verifyTwoFactor, logout, can }),
-    [user, loading, login, verifyTwoFactor, logout, can]
+    () => ({ user, loading, login, verifyTwoFactor, logout, refresh: loadProfile, can }),
+    [user, loading, login, verifyTwoFactor, logout, loadProfile, can]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

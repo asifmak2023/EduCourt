@@ -81,6 +81,14 @@ const BADGE_COLORS: Record<string, BadgeColor> = {
   failed: "danger",
   sent: "success",
   cancelled: "default",
+  passed: "success",
+  pass: "success",
+  fail: "danger",
+  present: "success",
+  absent: "danger",
+  late: "warning",
+  leave: "accent",
+  excused: "default",
   default: "default",
 };
 

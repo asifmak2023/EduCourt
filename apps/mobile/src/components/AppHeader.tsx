@@ -4,14 +4,21 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../theme/ThemeProvider";
 import { withAlpha } from "../theme/colors";
 
+export interface Crumb {
+  label: string;
+  onPress?: () => void;
+}
+
 export function AppHeader({
   title,
   subtitle,
+  breadcrumbs,
   onMenu,
   onBack,
 }: {
   title: string;
   subtitle?: string;
+  breadcrumbs?: Crumb[];
   onMenu?: () => void;
   onBack?: () => void;
 }) {
@@ -84,6 +91,43 @@ export function AppHeader({
           ) : null}
         </View>
       </View>
+
+      {breadcrumbs && breadcrumbs.length > 1 ? (
+        <View style={styles.crumbs}>
+          {breadcrumbs.map((crumb, index) => (
+            <View key={`${crumb.label}:${index}`} style={styles.crumbItem}>
+              {index > 0 ? (
+                <Text style={[styles.crumbSep, { color: colors.muted }]}>/</Text>
+              ) : null}
+              {crumb.onPress ? (
+                <Pressable
+                  onPress={crumb.onPress}
+                  accessibilityRole="link"
+                  hitSlop={6}
+                >
+                  <Text
+                    style={[styles.crumbText, { color: colors.muted }]}
+                    numberOfLines={1}
+                  >
+                    {crumb.label}
+                  </Text>
+                </Pressable>
+              ) : (
+                <Text
+                  style={[
+                    styles.crumbText,
+                    styles.crumbCurrent,
+                    { color: colors.foreground },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {crumb.label}
+                </Text>
+              )}
+            </View>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -125,6 +169,28 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginTop: 2,
+    fontSize: 12,
+  },
+  crumbs: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    marginTop: 10,
+    gap: 4,
+  },
+  crumbItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  crumbText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  crumbCurrent: {
+    fontWeight: "700",
+  },
+  crumbSep: {
     fontSize: 12,
   },
 });

@@ -24,7 +24,7 @@ import { ModuleListScreen } from "./src/admin/ModuleListScreen";
 import { ModuleFormScreen } from "./src/admin/ModuleFormScreen";
 import { ModuleDetailScreen } from "./src/admin/ModuleDetailScreen";
 import { AppearanceModal } from "./src/components/AppearanceModal";
-import { AppHeader } from "./src/components/AppHeader";
+import { AppHeader, type Crumb } from "./src/components/AppHeader";
 import { Sidebar } from "./src/components/Sidebar";
 import { AppBackground } from "./src/theme/AppBackground";
 import { ThemeProvider, useTheme } from "./src/theme/ThemeProvider";
@@ -166,6 +166,36 @@ function AppInner() {
     ? findCustomScreen(activeItem.customScreen)
     : null;
   const inModuleFlow = Boolean(activeModule && moduleRoute && moduleRoute.mode !== "list");
+  const activeSection =
+    sections.find((section) => section.items.some((item) => item.key === activeKey)) ??
+    null;
+
+  const breadcrumbs: Crumb[] = [];
+  if (activeKey !== "dashboard" && activeItem) {
+    breadcrumbs.push({
+      label: t("navigation.dashboard"),
+      onPress: () => {
+        setActiveKey("dashboard");
+        setModuleRoute(null);
+      },
+    });
+    if (activeSection && activeSection.label !== "navigation.section.overview") {
+      breadcrumbs.push({ label: tr(activeSection.label) });
+    }
+    breadcrumbs.push({
+      label: tr(activeItem.label),
+      onPress: inModuleFlow ? () => setModuleRoute({ mode: "list" }) : undefined,
+    });
+    if (activeModule && moduleRoute) {
+      if (moduleRoute.mode === "detail") {
+        breadcrumbs.push({ label: t("common.details") });
+      } else if (moduleRoute.mode === "create") {
+        breadcrumbs.push({ label: t("common.create") });
+      } else if (moduleRoute.mode === "edit") {
+        breadcrumbs.push({ label: t("common.edit") });
+      }
+    }
+  }
 
   const selectItem = (item: NavItem) => {
     setActiveKey(item.key);
@@ -207,6 +237,7 @@ function AppInner() {
                     ? tr(activeModule.label)
                     : tr(activeItem?.subtitle)
                 }
+                breadcrumbs={breadcrumbs}
                 onMenu={wide ? undefined : () => setDrawerOpen(true)}
                 onBack={
                   inModuleFlow ? () => setModuleRoute({ mode: "list" }) : undefined

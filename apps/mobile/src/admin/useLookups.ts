@@ -49,6 +49,21 @@ const LOOKUPS: Record<string, LookupDef> = {
   designations: { endpoint: "/v1/designations", labelKey: "name" },
   staffMembers: { endpoint: "/v1/staff", labelKey: "full_name" },
   salaryComponents: { endpoint: "/v1/salary-components", labelKey: "name" },
+  inventoryCategories: { endpoint: "/v1/inventory/categories", labelKey: "name" },
+  books: { endpoint: "/v1/library/books", labelKey: "title" },
+  labs: { endpoint: "/v1/labs", labelKey: "name" },
+  vehicles: { endpoint: "/v1/transport/vehicles", labelKey: "name" },
+  transportRoutes: { endpoint: "/v1/transport/routes", labelKey: "name" },
+  hostels: { endpoint: "/v1/hostels", labelKey: "name" },
+  canteenItems: { endpoint: "/v1/canteen/items", labelKey: "name" },
+  canteenSuppliers: { endpoint: "/v1/canteen/suppliers", labelKey: "name" },
+  sports: { endpoint: "/v1/sports", labelKey: "name" },
+  sportTeams: {
+    endpoint: "/v1/sports/teams",
+    labelKey: "name",
+    depParam: "sport_id",
+  },
+  clubs: { endpoint: "/v1/student-affairs/clubs", labelKey: "name" },
 };
 
 const cache = new Map<string, SelectOption[]>();

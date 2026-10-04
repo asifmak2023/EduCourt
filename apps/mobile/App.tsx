@@ -245,7 +245,7 @@ function AppInner() {
               />
 
               {CustomScreen ? (
-                <CustomScreen />
+                <CustomScreen permissions={user.permissions} />
               ) : activeModule && moduleRoute ? (
                 <ModuleFlow
                   key={`${activeModule.key}:${moduleRoute.mode}:${moduleRoute.id ?? ""}`}

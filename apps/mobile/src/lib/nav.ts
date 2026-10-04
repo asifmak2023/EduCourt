@@ -156,6 +156,37 @@ export function buildNav(user: AuthUser | null, portal: boolean): NavSection[] {
       });
       groups.set("Finance", list);
     }
+
+    const operationsReports = [
+      "inventory.view",
+      "library.view",
+      "transport.view",
+      "sports.view",
+      "canteen.view",
+    ];
+    if (operationsReports.some((permission) => can(permissions, permission))) {
+      const list = groups.get("Operations") ?? [];
+      list.push({
+        key: "operations-reports",
+        label: "Operations reports",
+        subtitle: "Operations",
+        permission: null,
+        customScreen: "operationsReports",
+      });
+      groups.set("Operations", list);
+    }
+
+    if (can(permissions, "notification.view")) {
+      const list = groups.get("Operations") ?? [];
+      list.push({
+        key: "notifications",
+        label: "navigation.notifications",
+        subtitle: "Operations",
+        permission: "notification.view",
+        customScreen: "notifications",
+      });
+      groups.set("Operations", list);
+    }
   }
 
   for (const name of [...STAFF_ORDER, ...groups.keys()]) {

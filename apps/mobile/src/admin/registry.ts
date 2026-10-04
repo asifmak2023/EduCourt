@@ -17,14 +17,10 @@ import {
   staffSalaryItemsSection,
 } from "./peopleSections";
 
-export const SECTIONS = {
-  overview: "Overview",
-  admissionsStudents: "Admissions & Students",
-  academics: "Academics",
-  finance: "Finance",
-  people: "People",
-  account: "Account",
-} as const;
+import { SECTIONS } from "./sections";
+import { OPERATIONS_MODULES } from "./operations";
+
+export { SECTIONS };
 
 const YEAR_STATUS: SelectOption[] = [
   { value: "draft", label: "Draft" },
@@ -2492,6 +2488,7 @@ export const MODULES: ModuleConfig[] = [
       },
     ],
   },
+  ...OPERATIONS_MODULES,
 ];
 
 export function findModule(key: string): ModuleConfig | null {

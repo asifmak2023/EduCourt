@@ -134,8 +134,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           href="/dashboard"
           onClick={() => setMenuOpen(false)}
           aria-label={t("navigation.home")}
-          className={`flex min-w-0 flex-1 items-center gap-3 rounded-lg transition-colors hover:bg-surface-tertiary ${
-            isCollapsed || !isRTL ? "justify-center text-center" : ""
+          className={`flex min-w-0 flex-1 rounded-lg transition-colors hover:bg-surface-tertiary ${
+            isCollapsed
+              ? "items-center justify-center"
+              : "flex-col items-start gap-1"
           }`}
         >
           {isCollapsed ? (
@@ -143,14 +145,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               E
             </span>
           ) : (
-            <div className="min-w-0">
-              <p className="brand-glow truncate font-logo text-2xl font-bold tracking-tight text-foreground">
+            <>
+              <span className="brand-glow font-logo text-2xl font-bold tracking-tight text-foreground">
                 EduCourt
-              </p>
-              <p className="truncate text-sm text-muted">
-                {currentUser.institution?.name ?? t("navigation.educationSystem")}
-              </p>
-            </div>
+              </span>
+              <div className="w-full min-w-0">
+                <p className="truncate text-base font-bold leading-tight text-foreground">
+                  {currentUser.institution?.name ?? t("navigation.educationSystem")}
+                </p>
+                <p className="truncate text-sm font-semibold leading-tight text-muted">
+                  {currentUser.campus?.name ?? t("navigation.allCampuses")}
+                </p>
+              </div>
+            </>
           )}
         </Link>
         {showToggle ? (

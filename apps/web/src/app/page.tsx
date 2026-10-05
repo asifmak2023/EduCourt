@@ -308,49 +308,50 @@ export default function LandingPage() {
           </div>
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
             {PLANS.map((plan) => (
-              <div
-                key={plan.key}
-                className={`surface-card relative rounded-2xl border p-6 ${
-                  plan.popular
-                    ? "border-accent shadow-lg"
-                    : "border-border-secondary"
-                }`}
-              >
+              <div key={plan.key} className="relative h-full">
                 {plan.popular ? (
-                  <span className="absolute -top-3 start-6 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
+                  <span className="absolute -top-3 start-6 z-10 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
                     {t("landing.plan.popular")}
                   </span>
                 ) : null}
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
-                  {t(`landing.plan.${plan.key}.name` as never)}
-                </h3>
-                <p className="mt-3 text-3xl font-bold text-foreground">
-                  {t(`landing.plan.${plan.key}.price` as never)}
-                </p>
-                <p className="text-xs text-muted">
-                  {t(`landing.plan.${plan.key}.period` as never)}
-                </p>
-                <p className="mt-4 text-sm text-muted">
-                  {t(`landing.plan.${plan.key}.desc` as never)}
-                </p>
-                <ul className="mt-6 space-y-2 text-sm text-foreground/80">
-                  {["f1", "f2", "f3"].map((feature) => (
-                    <li key={feature} className="flex items-center gap-2">
-                      <Icon name="check" className="h-4 w-4 shrink-0 text-success" />
-                      {t(`landing.plan.${plan.key}.${feature}` as never)}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/login"
-                  className={`mt-6 block rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition-colors ${
+                <div
+                  className={`surface-card flex h-full min-h-[380px] flex-col rounded-2xl border p-7 ${
                     plan.popular
-                      ? "bg-accent text-accent-foreground hover:opacity-90"
-                      : "border border-border-secondary text-foreground hover:bg-surface-tertiary"
+                      ? "border-accent shadow-lg"
+                      : "border-border-secondary"
                   }`}
                 >
-                  {t("landing.nav.getStarted")}
-                </Link>
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+                    {t(`landing.plan.${plan.key}.name` as never)}
+                  </h3>
+                  <p className="mt-3 text-3xl font-bold text-foreground">
+                    {t(`landing.plan.${plan.key}.price` as never)}
+                  </p>
+                  <p className="text-xs text-muted">
+                    {t(`landing.plan.${plan.key}.period` as never)}
+                  </p>
+                  <p className="mt-4 text-sm text-muted">
+                    {t(`landing.plan.${plan.key}.desc` as never)}
+                  </p>
+                  <ul className="mt-6 space-y-2 text-sm text-foreground/80">
+                    {["f1", "f2", "f3"].map((feature) => (
+                      <li key={feature} className="flex items-center gap-2">
+                        <Icon name="check" className="h-4 w-4 shrink-0 text-success" />
+                        {t(`landing.plan.${plan.key}.${feature}` as never)}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href="/login"
+                    className={`mt-auto block rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition-colors ${
+                      plan.popular
+                        ? "bg-accent text-accent-foreground hover:opacity-90"
+                        : "border border-border-secondary text-foreground hover:bg-surface-tertiary"
+                    }`}
+                  >
+                    {t("landing.nav.getStarted")}
+                  </Link>
+                </div>
               </div>
             ))}
           </div>

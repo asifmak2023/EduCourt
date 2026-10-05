@@ -49,11 +49,13 @@ export interface NavItem {
 export interface NavSection {
   label: string;
   items: NavItem[];
+  collapsible?: boolean;
 }
 
 export const NAV_SECTIONS: NavSection[] = [
   {
     label: "navigation.section.overview",
+    collapsible: false,
     items: [
       { label: "navigation.dashboard", href: "/dashboard", icon: "grid", permission: null, ready: true },
       { label: "navigation.profile", href: "/dashboard/profile", icon: "idCard", permission: null, ready: true },
@@ -141,6 +143,7 @@ export function can(userPermissions: string[], permission: string | null): boole
 export function visibleSections(userPermissions: string[]): NavSection[] {
   return NAV_SECTIONS.map((section) => ({
     label: section.label,
+    collapsible: section.collapsible,
     items: section.items.filter((item) => can(userPermissions, item.permission)),
   })).filter((section) => section.items.length > 0);
 }

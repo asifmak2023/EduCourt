@@ -12,12 +12,16 @@ export function PhotoField({
   photoUrl,
   onChanged,
   hint,
+  showAvatar = true,
+  showHeading = true,
 }: {
   endpoint: string;
   name: string;
   photoUrl: string | null;
   onChanged: (photoUrl: string | null) => void;
   hint?: string;
+  showAvatar?: boolean;
+  showHeading?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -71,13 +75,23 @@ export function PhotoField({
 
   return (
     <div className="px-6 py-5">
-      <h2 className="text-sm font-semibold text-foreground">Profile photo</h2>
-      <p className="mt-0.5 text-xs text-muted">
-        {hint ?? "JPG, PNG or WebP, up to 5 MB."}
-      </p>
+      {showHeading ? (
+        <>
+          <h2 className="text-sm font-semibold text-foreground">Profile photo</h2>
+          <p className="mt-0.5 text-xs text-muted">
+            {hint ?? "JPG, PNG or WebP, up to 5 MB."}
+          </p>
+        </>
+      ) : null}
 
-      <div className="mt-4 flex flex-wrap items-center gap-5">
-        <Avatar name={name} photoUrl={photoUrl} size="lg" />
+      <div
+        className={`flex flex-wrap items-center gap-5 ${
+          showAvatar ? "" : "justify-center"
+        } ${showHeading ? "mt-4" : ""}`}
+      >
+        {showAvatar ? (
+          <Avatar name={name} photoUrl={photoUrl} size="lg" />
+        ) : null}
 
         <div className="flex flex-wrap items-center gap-2">
           <input

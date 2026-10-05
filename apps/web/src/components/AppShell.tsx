@@ -374,7 +374,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <p className="truncate text-base font-semibold text-foreground">
                 {activeItem ? tr(activeItem.label) : t("navigation.dashboard")}
               </p>
-              <p className="truncate text-xs text-muted">
+              <p className="truncate text-sm text-muted">
                 {user.campus?.name ?? t("navigation.allCampuses")}
               </p>
             </div>

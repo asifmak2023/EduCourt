@@ -7,7 +7,7 @@ import { useTranslation } from "@eis/i18n";
 import { useAuth } from "@/lib/auth";
 import { useTr } from "@/lib/i18n";
 import { roleLabel as roleText, isPortalOnly } from "@/lib/roles";
-import { findNavItem, sectionForPath, visibleSections } from "@/lib/nav";
+import { sectionForPath, visibleSections } from "@/lib/nav";
 import { Icon } from "@/components/Icons";
 import { Avatar } from "@/components/Avatar";
 import { AccountMenu } from "@/components/AccountMenu";
@@ -120,70 +120,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const sections = visibleSections(user.permissions);
-  const activeItem = findNavItem(pathname);
   const roleLabelString = user.roles
     .map((role) => roleText(role, t))
     .join(", ");
   const currentUser = user;
 
-  function renderSidebar(isCollapsed: boolean, showToggle: boolean) {
+  function renderSidebar(isCollapsed: boolean) {
     return (
     <div className="app-glass app-sidebar flex h-full flex-col bg-surface-secondary text-foreground">
-      <div className={`flex items-center gap-2 px-4 py-5 ${isCollapsed ? "flex-col" : ""}`}>
-        <Link
-          href="/dashboard"
-          onClick={() => setMenuOpen(false)}
-          aria-label={t("navigation.home")}
-          className={`flex min-w-0 flex-1 items-center rounded-lg transition-colors hover:bg-surface-tertiary ${
-            isCollapsed ? "justify-center" : ""
-          }`}
-        >
-          {isCollapsed ? (
-            <span className="font-logo text-xl font-bold tracking-tight text-foreground">
-              {(currentUser.institution?.name ?? "E").slice(0, 1).toUpperCase()}
-            </span>
-          ) : (
-            <div className="min-w-0 flex-1">
-              <p className="text-base font-bold leading-snug text-foreground">
-                {currentUser.institution?.name ?? t("navigation.educationSystem")}
-              </p>
-              <p className="text-sm font-semibold leading-snug text-muted">
-                {currentUser.campus?.name ?? t("navigation.allCampuses")}
-              </p>
-            </div>
-          )}
-        </Link>
-        {showToggle ? (
-          <button
-            type="button"
-            onClick={toggleCollapsed}
-            aria-expanded={!collapsed}
-            aria-label={
-              collapsed
-                ? t("navigation.expandSidebar")
-                : t("navigation.collapseSidebar")
-            }
-            title={
-              collapsed
-                ? t("navigation.expandSidebar")
-                : t("navigation.collapseSidebar")
-            }
-            className="shrink-0 rounded-lg border border-border-secondary p-1.5 text-muted transition-colors hover:bg-surface-tertiary hover:text-foreground"
-          >
-            <Icon
-              name="panelLeft"
-              className={`h-4 w-4 transition-transform duration-200 ${
-                collapsed ? "scale-x-[-1]" : ""
-              } ${isRTL ? "rotate-180" : ""}`}
-            />
-          </button>
-        ) : null}
-      </div>
-
       <nav
         aria-label={t("navigation.primary")}
         tabIndex={0}
-        className={`app-sidebar-nav flex-1 overflow-y-auto pb-4 outline-none ${
+        className={`app-sidebar-nav flex-1 overflow-y-auto py-4 outline-none ${
           isCollapsed ? "space-y-1 px-2" : "space-y-3 px-3"
         }`}
       >
@@ -341,7 +289,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           collapsedReady ? "transition-[width] duration-200" : ""
         } ${collapsed ? "w-[4.5rem]" : "w-64"}`}
       >
-        {renderSidebar(collapsed, true)}
+        {renderSidebar(collapsed)}
       </aside>
 
       {menuOpen ? (
@@ -351,7 +299,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onClick={() => setMenuOpen(false)}
             aria-hidden="true"
           />
-          <div className="absolute inset-y-0 start-0 w-64">{renderSidebar(false, false)}</div>
+          <div className="absolute inset-y-0 start-0 w-64">{renderSidebar(false)}</div>
         </div>
       ) : null}
 
@@ -364,20 +312,53 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <button
               type="button"
+              onClick={toggleCollapsed}
+              aria-expanded={!collapsed}
+              aria-label={
+                collapsed
+                  ? t("navigation.expandSidebar")
+                  : t("navigation.collapseSidebar")
+              }
+              title={
+                collapsed
+                  ? t("navigation.expandSidebar")
+                  : t("navigation.collapseSidebar")
+              }
+              className="hidden shrink-0 rounded-lg border border-border-secondary p-2 text-muted transition-colors hover:bg-surface-tertiary hover:text-foreground lg:inline-flex"
+            >
+              <Icon
+                name="panelLeft"
+                className={`h-5 w-5 transition-transform duration-200 ${
+                  collapsed ? "scale-x-[-1]" : ""
+                } ${isRTL ? "rotate-180" : ""}`}
+              />
+            </button>
+            <button
+              type="button"
               onClick={() => setMenuOpen(true)}
               className="rounded-lg border border-border-secondary p-2 text-muted transition-colors hover:bg-surface-tertiary lg:hidden"
               aria-label={t("navigation.open")}
             >
               <Icon name="list" className="h-5 w-5" />
             </button>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-base font-semibold text-foreground">
-                {activeItem ? tr(activeItem.label) : t("navigation.dashboard")}
-              </p>
-              <p className="truncate text-sm text-muted">
-                {user.campus?.name ?? t("navigation.allCampuses")}
-              </p>
-            </div>
+            <Link
+              href="/dashboard"
+              onClick={() => setMenuOpen(false)}
+              aria-label={t("navigation.home")}
+              className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition-colors hover:bg-surface-tertiary"
+            >
+              <span className="brand-glow shrink-0 font-logo text-xl font-bold tracking-tight text-foreground">
+                EduCourt
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-base font-bold leading-tight text-foreground">
+                  {user.institution?.name ?? t("navigation.educationSystem")}
+                </p>
+                <p className="truncate text-sm font-semibold leading-tight text-muted">
+                  {user.campus?.name ?? t("navigation.allCampuses")}
+                </p>
+              </div>
+            </Link>
             <span className="hidden rounded-full bg-surface-tertiary px-3 py-1 text-xs font-medium text-muted sm:inline">
               {roleLabelString}
             </span>

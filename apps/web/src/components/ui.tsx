@@ -89,6 +89,8 @@ const BADGE_COLORS: Record<string, BadgeColor> = {
   late: "warning",
   leave: "accent",
   excused: "default",
+  overdue: "danger",
+  current: "accent",
   default: "default",
 };
 
@@ -124,7 +126,9 @@ export function PageHeader({
           <p className="mt-1 text-md">{tr(description)}</p>
         ) : null}
       </div>
-      {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
+      {actions ? (
+        <div className="flex flex-wrap items-center justify-end gap-2">{actions}</div>
+      ) : null}
     </div>
   );
 }

@@ -214,6 +214,37 @@ export interface FeePlan {
   };
 }
 
+export interface ReceivableRow {
+  student_id: number;
+  student: string | null;
+  admission_no: string | null;
+  class_room_id: number | null;
+  class: string | null;
+  section: string | null;
+  vouchers: number;
+  outstanding: string;
+  oldest_due_date: string | null;
+  max_days_overdue: number;
+  bucket: string;
+}
+
+export interface ReceivableReport {
+  as_of: string;
+  summary: {
+    students: number;
+    vouchers: number;
+    outstanding: string;
+    buckets: {
+      current: string;
+      days_1_30: string;
+      days_31_60: string;
+      days_61_90: string;
+      days_over_90: string;
+    };
+  };
+  data: ReceivableRow[];
+}
+
 export interface FeeVoucherLine {
   id: number;
   fee_head_id: number;

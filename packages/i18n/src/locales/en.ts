@@ -112,6 +112,7 @@ export const en = {
   "navigation.credits": "Credits & GPA",
   "navigation.feeVouchers": "Fee vouchers",
   "navigation.feePayments": "Fee payments",
+  "navigation.receivables": "Receivables",
   "navigation.feeHeads": "Fee heads",
   "navigation.feePlans": "Fee plans",
   "navigation.chartOfAccounts": "Chart of accounts",

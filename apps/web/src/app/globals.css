@@ -95,6 +95,32 @@ html[data-theme="dark"] .breadcrumb-bar {
   animation: eis-fade-in 0.18s ease-out;
 }
 
+/* Modal overlay + panel. The panel uses an explicit, opaque theme surface so
+   content never bleeds through from the page behind the dialog. */
+.dialog-overlay {
+  background-color: color-mix(in oklab, #000 45%, transparent);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+
+.dialog-panel {
+  background-color: var(--surface);
+  border: 1px solid var(--border-secondary);
+  box-shadow: var(--overlay-shadow);
+}
+
+html[data-glass="true"] .dialog-panel {
+  background-color: color-mix(in oklab, var(--surface) 92%, transparent);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-glass="true"] .dialog-panel {
+    background-color: var(--surface);
+  }
+}
+
 .surface-card {
   transition:
     transform 0.18s ease,

@@ -201,3 +201,54 @@ Fee head (fee.create) ──▶ Fee plan (fee.create)
 - Installment percentages must total exactly 100 (server enforces within
   0.01); the form shows a live total to prevent avoidable 422s.
 - Currency is PKR and formatting already handled by `formatCurrency`.
+
+## Phase 2 — Accounts Receivable report + generation UX
+
+Follow-up requested after Phase 1 shipped: (a) fix the Generate Voucher modal
+visibility bug, (b) close real gaps between the database and the attached
+Accounts Receivable spec, (c) keep bulk generation but make it hassle-free so a
+user never re-enters academic year / class / section per student.
+
+### Accounts Receivable report (`/dashboard/fees/receivables`)
+
+Uses the existing, permission-gated endpoint
+`GET /v1/fee-reports/defaulters` (`permission:fee.view`) — no API change:
+
+- `academic_year_id`, `class_room_id`, `as_of`, `overdue_only`, `min_balance`.
+- Returns `{ as_of, summary: { students, vouchers, outstanding, buckets },
+  data: ReceivableRow[] }`.
+
+Page (`apps/web/src/app/dashboard/fees/receivables/page.tsx`):
+
+- Summary stat cards: **Total accounts receivable**, students with dues, open
+  vouchers.
+- Aging buckets: current, 1-30, 31-60, 61-90, 90+ days.
+- Filters: as-of date, academic year (defaults to the current year, with
+  "All academic years"), class, overdue-only toggle, and a client-side
+  student / roll-no search.
+- Table columns: Student, Roll no, Class, Section, Vouchers, Oldest due, Days
+  overdue, Outstanding, Status (`overdue` / `current` badges).
+- **Print** (`window.print()`) and **Export CSV** (client-side Blob download;
+  Excel-compatible).
+- Nav entry `navigation.receivables` under the Finance section.
+
+Outstanding gap vs. the attached doc: the spec's per-voucher columns (Campus,
+Fee Type, Fee Month, Amount Due, Amount Paid) are represented in aggregate per
+student here; true voucher-level detail remains available on
+`/dashboard/fees`. Adding a per-voucher report is deferred until requested.
+
+### Generate Voucher dialog fixes
+
+- Root cause of the invisible/misplaced modal: the overlay was rendered inside
+  a `data-glass` ancestor whose `transform` created a containing block. Fixed
+  by rendering through `createPortal` to `document.body`.
+- Added `.dialog-overlay` / `.dialog-panel` in `globals.css` using the opaque
+  `--surface` token (with a glass-aware variant and a `backdrop-filter`
+  fallback) so page content never bleeds through.
+- Plan-first flow: pick a **fee plan** and the academic year + class are
+  derived automatically; class/section are no longer re-entered per student.
+- Mode toggle preserves bulk generation (whole class) and also supports a
+  single prorated student with a join date.
+- `PageHeader` action container is now `flex-wrap` so the Generate button no
+  longer overflows off-screen on narrow viewports.
+

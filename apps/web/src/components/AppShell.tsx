@@ -147,7 +147,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <p className="brand-glow truncate font-logo text-2xl font-bold tracking-tight text-foreground">
                 EduCourt
               </p>
-              <p className="truncate text-xs text-muted">
+              <p className="truncate text-sm text-muted">
                 {currentUser.institution?.name ?? t("navigation.educationSystem")}
               </p>
             </div>

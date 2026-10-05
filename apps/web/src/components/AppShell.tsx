@@ -188,7 +188,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         }`}
       >
         {sections.map((section, sectionIndex) => {
-          const isOpen = openSection === section.label;
+          const isHeaderless = section.collapsible === false;
+          const isOpen = isHeaderless ? true : openSection === section.label;
 
           return (
             <div
@@ -199,7 +200,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   : ""
               }
             >
-              {isCollapsed ? null : (
+              {isCollapsed || isHeaderless ? null : (
                 <button
                   type="button"
                   onClick={() => toggleSection(section.label)}

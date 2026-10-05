@@ -309,61 +309,63 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         } ${collapsed ? "lg:ps-[4.5rem]" : "lg:ps-64"}`}
       >
         <header className="app-glass sticky top-0 z-30 border-b border-border-secondary bg-surface/80 backdrop-blur">
-          <div className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
-            <button
-              type="button"
-              onClick={toggleCollapsed}
-              aria-expanded={!collapsed}
-              aria-label={
-                collapsed
-                  ? t("navigation.expandSidebar")
-                  : t("navigation.collapseSidebar")
-              }
-              title={
-                collapsed
-                  ? t("navigation.expandSidebar")
-                  : t("navigation.collapseSidebar")
-              }
-              className="hidden shrink-0 rounded-lg border border-border-secondary p-2 text-muted transition-colors hover:bg-surface-tertiary hover:text-foreground lg:inline-flex"
-            >
-              <Icon
-                name="panelLeft"
-                className={`h-5 w-5 transition-transform duration-200 ${
-                  collapsed ? "scale-x-[-1]" : ""
-                } ${isRTL ? "rotate-180" : ""}`}
-              />
-            </button>
-            <button
-              type="button"
-              onClick={() => setMenuOpen(true)}
-              className="rounded-lg border border-border-secondary p-2 text-muted transition-colors hover:bg-surface-tertiary lg:hidden"
-              aria-label={t("navigation.open")}
-            >
-              <Icon name="list" className="h-5 w-5" />
-            </button>
-            <Link
-              href="/dashboard"
-              onClick={() => setMenuOpen(false)}
-              aria-label={t("navigation.home")}
-              className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition-colors hover:bg-surface-tertiary"
-            >
-              <span className="brand-glow shrink-0 font-logo text-xl font-bold tracking-tight text-foreground">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
+            <div className="flex min-w-0 items-center gap-3">
+              <button
+                type="button"
+                onClick={toggleCollapsed}
+                aria-expanded={!collapsed}
+                aria-label={
+                  collapsed
+                    ? t("navigation.expandSidebar")
+                    : t("navigation.collapseSidebar")
+                }
+                title={
+                  collapsed
+                    ? t("navigation.expandSidebar")
+                    : t("navigation.collapseSidebar")
+                }
+                className="hidden shrink-0 rounded-lg border border-border-secondary p-2 text-muted transition-colors hover:bg-surface-tertiary hover:text-foreground lg:inline-flex"
+              >
+                <Icon
+                  name="panelLeft"
+                  className={`h-5 w-5 transition-transform duration-200 ${
+                    collapsed ? "scale-x-[-1]" : ""
+                  } ${isRTL ? "rotate-180" : ""}`}
+                />
+              </button>
+              <button
+                type="button"
+                onClick={() => setMenuOpen(true)}
+                className="shrink-0 rounded-lg border border-border-secondary p-2 text-muted transition-colors hover:bg-surface-tertiary lg:hidden"
+                aria-label={t("navigation.open")}
+              >
+                <Icon name="list" className="h-5 w-5" />
+              </button>
+              <Link
+                href="/dashboard"
+                onClick={() => setMenuOpen(false)}
+                aria-label={t("navigation.home")}
+                className="brand-glow shrink-0 font-logo text-xl font-bold tracking-tight text-foreground"
+              >
                 EduCourt
+              </Link>
+            </div>
+            <div className="min-w-0 text-center">
+              <p className="truncate text-base leading-tight text-foreground">
+                {user.institution?.name ?? t("navigation.educationSystem")}
+              </p>
+              <p className="truncate text-sm leading-tight text-muted">
+                {user.campus?.name ?? t("navigation.allCampuses")}
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-3">
+              <span className="hidden rounded-full bg-surface-tertiary px-3 py-1 text-xs font-medium text-muted sm:inline">
+                {roleLabelString}
               </span>
-              <div className="min-w-0">
-                <p className="truncate text-base font-bold leading-tight text-foreground">
-                  {user.institution?.name ?? t("navigation.educationSystem")}
-                </p>
-                <p className="truncate text-sm font-semibold leading-tight text-muted">
-                  {user.campus?.name ?? t("navigation.allCampuses")}
-                </p>
-              </div>
-            </Link>
-            <span className="hidden rounded-full bg-surface-tertiary px-3 py-1 text-xs font-medium text-muted sm:inline">
-              {roleLabelString}
-            </span>
-            <LanguageSwitcher />
-            <AccountMenu />
+              <LanguageSwitcher />
+              <AccountMenu />
+            </div>
           </div>
         </header>
 

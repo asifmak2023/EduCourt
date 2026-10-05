@@ -371,7 +371,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Icon name="list" className="h-5 w-5" />
             </button>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-foreground">
+              <p className="truncate text-s font-semibold text-foreground">
                 {activeItem ? tr(activeItem.label) : t("navigation.dashboard")}
               </p>
               <p className="truncate text-xs text-muted">

@@ -227,7 +227,7 @@ export function SectionCard({
         <div>
           <h2 className="text-sm font-semibold text-foreground">{tr(title)}</h2>
           {description ? (
-            <p className="mt-0.5 text-xs text-muted">{tr(description)}</p>
+            <p className="mt-0.5 text-s text-muted">{tr(description)}</p>
           ) : null}
         </div>
         {actions}

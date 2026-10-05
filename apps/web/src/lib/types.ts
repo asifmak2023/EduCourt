@@ -169,6 +169,49 @@ export interface FeeHead {
   id: number;
   code: string | null;
   name: string;
+  income_account_id?: number | null;
+  description?: string | null;
+  sort_order?: number | null;
+  is_active?: boolean;
+  income_account?: ChartOfAccount | null;
+}
+
+export interface FeePlanItem {
+  id?: number;
+  fee_head_id: number;
+  amount: string | number;
+  is_optional: boolean;
+  sort_order?: number | null;
+  fee_head?: FeeHead | null;
+}
+
+export interface FeeInstallment {
+  id?: number;
+  sequence?: number | null;
+  label: string;
+  due_date: string;
+  percentage: string | number;
+}
+
+export interface FeePlan {
+  id: number;
+  academic_year_id: number;
+  class_room_id: number;
+  name: string;
+  description: string | null;
+  is_active: boolean;
+  late_fee_type: string | null;
+  late_fee_amount: string | null;
+  late_fee_grace_days: number | null;
+  academic_year?: AcademicYear | null;
+  class_room?: ClassRoom | null;
+  items?: FeePlanItem[];
+  installments?: FeeInstallment[];
+  totals?: {
+    required: string;
+    optional: string;
+    grand: string;
+  };
 }
 
 export interface FeeVoucherLine {

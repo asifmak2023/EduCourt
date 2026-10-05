@@ -112,6 +112,8 @@ export const en = {
   "navigation.credits": "Credits & GPA",
   "navigation.feeVouchers": "Fee vouchers",
   "navigation.feePayments": "Fee payments",
+  "navigation.feeHeads": "Fee heads",
+  "navigation.feePlans": "Fee plans",
   "navigation.chartOfAccounts": "Chart of accounts",
   "navigation.journal": "Journal",
   "navigation.trialBalance": "Trial balance",

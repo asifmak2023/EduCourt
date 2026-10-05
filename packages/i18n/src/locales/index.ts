@@ -137,6 +137,8 @@ export type MessageKey =
   | "navigation.credits"
   | "navigation.feeVouchers"
   | "navigation.feePayments"
+  | "navigation.feeHeads"
+  | "navigation.feePlans"
   | "navigation.chartOfAccounts"
   | "navigation.journal"
   | "navigation.trialBalance"

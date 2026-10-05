@@ -17,6 +17,8 @@ import type {
   ExamPaper,
   ExamType,
   ExpenseCategory,
+  FeeHead,
+  FeePlan,
   FiscalYear,
   GradeScale,
   Hostel,
@@ -195,6 +197,16 @@ export function useExpenseCategories(
 
 export function useVendors(enabled = true): ListLookupState<Vendor> {
   return useCollection<Vendor>(enabled ? "/v1/vendors?is_active=1&per_page=200" : null);
+}
+
+export function useFeeHeads(enabled = true): ListLookupState<FeeHead> {
+  return useCollection<FeeHead>(
+    enabled ? "/v1/fee-heads?is_active=1&per_page=200" : null
+  );
+}
+
+export function useFeePlans(enabled = true): ListLookupState<FeePlan> {
+  return useCollection<FeePlan>(enabled ? "/v1/fee-plans?per_page=200" : null);
 }
 
 function useAcademicCollection<T>(

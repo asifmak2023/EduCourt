@@ -113,7 +113,7 @@ export function PageHeader({
           {tr(title)}
         </h1>
         {description ? (
-          <p className="mt-1 text-sm text-muted">{tr(description)}</p>
+          <p className="mt-1 text-md">{tr(description)}</p>
         ) : null}
       </div>
       {actions ? <div className="flex items-center gap-2">{actions}</div> : null}

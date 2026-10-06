@@ -5,9 +5,11 @@ import Link from "next/link";
 import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useClassRooms, useSections } from "@/lib/useLookups";
+import { useAuth } from "@/lib/auth";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Pagination } from "@/components/Pagination";
 import { Select, TextInput, buttonClasses } from "@/components/Form";
+import { FeeVoucherAction } from "@/components/fee-counter/FeeVoucherAction";
 import {
   Badge,
   Card,
@@ -36,6 +38,7 @@ export default function StudentAttendancePage() {
 }
 
 function RecordsTable() {
+  const { can } = useAuth();
   const { items: classes } = useClassRooms();
   const { items: sections } = useSections();
 
@@ -156,7 +159,7 @@ function RecordsTable() {
             <Table.ScrollContainer>
               <Table.Content
                 aria-label="Student attendance"
-                className="min-w-[880px]"
+                className="min-w-[1020px]"
               >
                 <Table.Header>
                   <Table.Column isRowHeader>Date</Table.Column>
@@ -165,6 +168,7 @@ function RecordsTable() {
                   <Table.Column>Section</Table.Column>
                   <Table.Column>Status</Table.Column>
                   <Table.Column>Remarks</Table.Column>
+                  {can("fee.create") ? <Table.Column>Actions</Table.Column> : null}
                 </Table.Header>
                 <Table.Body>
                   {items.map((record) => (
@@ -197,6 +201,17 @@ function RecordsTable() {
                       <Table.Cell className="text-muted">
                         {record.remarks ?? "-"}
                       </Table.Cell>
+                      {can("fee.create") ? (
+                        <Table.Cell>
+                          <FeeVoucherAction
+                            student={{
+                              id: record.student_id,
+                              full_name: record.student?.name ?? null,
+                              admission_no: record.student?.admission_no ?? null,
+                            }}
+                          />
+                        </Table.Cell>
+                      ) : null}
                     </Table.Row>
                   ))}
                 </Table.Body>

@@ -5,6 +5,7 @@ import { Table } from "@heroui/react";
 import { PermissionGate } from "@/components/PermissionGate";
 import { ReportsTabs } from "@/components/ReportsTabs";
 import { Field, Select } from "@/components/Form";
+import { FeeVoucherAction } from "@/components/fee-counter/FeeVoucherAction";
 import {
   Card,
   EmptyState,
@@ -34,6 +35,10 @@ function StudentYearlyReport() {
     studentId ? `/v1/reports/students/${studentId}/yearly` : null
   );
 
+  const selectedStudent = students.find(
+    (student) => String(student.id) === studentId
+  );
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -43,21 +48,32 @@ function StudentYearlyReport() {
       <ReportsTabs active="students" />
 
       <Card className="p-4">
-        <div className="max-w-md">
-          <Field label="Student" htmlFor="yearly_student" required>
-            <Select
-              id="yearly_student"
-              value={studentId}
-              onChange={(event) => setStudentId(event.target.value)}
-            >
-              <option value="">Select student</option>
-              {students.map((student) => (
-                <option key={student.id} value={student.id}>
-                  {student.full_name} ({student.admission_no})
-                </option>
-              ))}
-            </Select>
-          </Field>
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="w-full max-w-md">
+            <Field label="Student" htmlFor="yearly_student" required>
+              <Select
+                id="yearly_student"
+                value={studentId}
+                onChange={(event) => setStudentId(event.target.value)}
+              >
+                <option value="">Select student</option>
+                {students.map((student) => (
+                  <option key={student.id} value={student.id}>
+                    {student.full_name} ({student.admission_no})
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+          {selectedStudent ? (
+            <FeeVoucherAction
+              student={{
+                id: selectedStudent.id,
+                full_name: selectedStudent.full_name,
+                admission_no: selectedStudent.admission_no,
+              }}
+            />
+          ) : null}
         </div>
       </Card>
 

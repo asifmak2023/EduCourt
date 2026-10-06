@@ -6,9 +6,11 @@ import { useSearchParams } from "next/navigation";
 import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useExamPapers, useExams } from "@/lib/useLookups";
+import { useAuth } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Button, Checkbox, Field, Select, TextInput, buttonClasses } from "@/components/Form";
+import { FeeVoucherAction } from "@/components/fee-counter/FeeVoucherAction";
 import {
   Card,
   EmptyState,
@@ -37,6 +39,7 @@ export default function MarksEntryPage() {
 
 function MarksSheet() {
   const searchParams = useSearchParams();
+  const { can } = useAuth();
   const { items: exams } = useExams();
   const { items: papers, loading: papersLoading } = useExamPapers();
 
@@ -252,12 +255,13 @@ function MarksSheet() {
         ) : (
           <Table variant="secondary">
             <Table.ScrollContainer>
-              <Table.Content aria-label="Marks entry" className="min-w-[760px]">
+              <Table.Content aria-label="Marks entry" className="min-w-[900px]">
                 <Table.Header>
                   <Table.Column isRowHeader>Student</Table.Column>
                   <Table.Column>Marks</Table.Column>
                   <Table.Column>Absent</Table.Column>
                   <Table.Column>Remarks</Table.Column>
+                  {can("fee.create") ? <Table.Column>Actions</Table.Column> : null}
                 </Table.Header>
                 <Table.Body>
                   {students.map((student) => (
@@ -301,6 +305,17 @@ function MarksSheet() {
                           }
                         />
                       </Table.Cell>
+                      {can("fee.create") ? (
+                        <Table.Cell>
+                          <FeeVoucherAction
+                            student={{
+                              id: student.id,
+                              full_name: student.full_name,
+                              admission_no: student.admission_no,
+                            }}
+                          />
+                        </Table.Cell>
+                      ) : null}
                     </Table.Row>
                   ))}
                 </Table.Body>

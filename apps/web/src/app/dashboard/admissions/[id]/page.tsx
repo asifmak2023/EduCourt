@@ -8,6 +8,7 @@ import { useResource } from "@/lib/useResource";
 import { useAcademicOptions } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
 import { ApiError, apiFetch } from "@/lib/api";
+import { FeeVoucherAction } from "@/components/fee-counter/FeeVoucherAction";
 import {
   Button,
   buttonClasses,
@@ -147,13 +148,16 @@ function AdmissionDetailView() {
       />
 
       {data.student_id ? (
-        <div className="text-sm">
+        <div className="flex flex-wrap items-center gap-4 text-sm">
           <Link
             href={`/dashboard/students/${data.student_id}`}
             className="font-medium text-foreground underline"
           >
             View student record
           </Link>
+          <FeeVoucherAction
+            student={{ id: data.student_id, full_name: data.full_name }}
+          />
         </div>
       ) : null}
     </div>

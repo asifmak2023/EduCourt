@@ -49,12 +49,16 @@ use App\Http\Controllers\Api\ExamTypeController;
 use App\Http\Controllers\Api\ExpenseCategoryController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\ExpensePaymentController;
+use App\Http\Controllers\Api\FeeChargeController;
+use App\Http\Controllers\Api\FeeCounterController;
 use App\Http\Controllers\Api\FeeHeadController;
 use App\Http\Controllers\Api\FeePaymentController;
 use App\Http\Controllers\Api\FeePlanController;
+use App\Http\Controllers\Api\FeeReceiptController;
 use App\Http\Controllers\Api\FeeRefundController;
 use App\Http\Controllers\Api\FeeReminderController;
 use App\Http\Controllers\Api\FeeReportController;
+use App\Http\Controllers\Api\FeeStructureController;
 use App\Http\Controllers\Api\FeeVoucherController;
 use App\Http\Controllers\Api\FinanceReportController;
 use App\Http\Controllers\Api\FineRuleController;
@@ -549,12 +553,30 @@ Route::prefix('v1')->group(function () {
             Route::put('fee-plans/{feePlan}', [FeePlanController::class, 'update'])->middleware('permission:fee.edit');
             Route::delete('fee-plans/{feePlan}', [FeePlanController::class, 'destroy'])->middleware('permission:fee.delete');
 
+            Route::get('fee-structures', [FeeStructureController::class, 'index'])->middleware('permission:fee.view');
+            Route::post('fee-structures', [FeeStructureController::class, 'store'])->middleware('permission:fee.create');
+            Route::get('fee-structures/resolve', [FeeStructureController::class, 'resolve'])->middleware('permission:fee.view');
+            Route::get('fee-structures/{feeStructure}', [FeeStructureController::class, 'show'])->middleware('permission:fee.view');
+            Route::put('fee-structures/{feeStructure}', [FeeStructureController::class, 'update'])->middleware('permission:fee.edit');
+            Route::delete('fee-structures/{feeStructure}', [FeeStructureController::class, 'destroy'])->middleware('permission:fee.delete');
+
             Route::get('fee-vouchers', [FeeVoucherController::class, 'index'])->middleware('permission:fee.view');
             Route::post('fee-vouchers/generate', [FeeVoucherController::class, 'generate'])->middleware('permission:fee.create');
             Route::post('fee-vouchers/generate-prorated', [FeeVoucherController::class, 'generateProrated'])->middleware('permission:fee.create');
             Route::get('fee-vouchers/{feeVoucher}', [FeeVoucherController::class, 'show'])->middleware('permission:fee.view');
             Route::post('fee-vouchers/{feeVoucher}/void', [FeeVoucherController::class, 'void'])->middleware('permission:fee.approve');
             Route::post('fee-vouchers/{feeVoucher}/late-fee', [FeeVoucherController::class, 'applyLateFee'])->middleware('permission:fee.approve');
+
+            Route::get('fee-counter/students', [FeeCounterController::class, 'students'])->middleware('permission:fee.view');
+            Route::get('fee-counter/students/{student}/dues', [FeeCounterController::class, 'studentDues'])->middleware('permission:fee.view');
+            Route::post('fee-counter/generate', [FeeCounterController::class, 'generate'])->middleware('permission:fee.create');
+
+            Route::get('fee-charges', [FeeChargeController::class, 'index'])->middleware('permission:fee.view');
+            Route::get('fee-charges/{feeCharge}', [FeeChargeController::class, 'show'])->middleware('permission:fee.view');
+            Route::post('fee-charges/{feeCharge}/void', [FeeChargeController::class, 'void'])->middleware('permission:fee.approve');
+
+            Route::get('fee-receipts', [FeeReceiptController::class, 'index'])->middleware('permission:fee.view');
+            Route::get('fee-receipts/{feeReceipt}', [FeeReceiptController::class, 'show'])->middleware('permission:fee.view');
 
             Route::get('fee-payments', [FeePaymentController::class, 'index'])->middleware('permission:fee.view');
             Route::post('fee-payments', [FeePaymentController::class, 'store'])->middleware('permission:fee.create');
@@ -600,6 +622,8 @@ Route::prefix('v1')->group(function () {
             Route::get('fee-reports/students/{student}/statement', [FeeReportController::class, 'studentStatement'])->middleware('permission:fee.view');
             Route::get('fee-reports/classes/summary', [FeeReportController::class, 'classSummary'])->middleware('permission:fee.view');
             Route::get('fee-reports/collection', [FeeReportController::class, 'collection'])->middleware('permission:fee.view');
+            Route::get('fee-reports/ar', [FeeReportController::class, 'ar'])->middleware('permission:fee.view');
+            Route::get('fee-reports/ar-summary', [FeeReportController::class, 'arSummary'])->middleware('permission:fee.view');
 
             Route::get('reference/academic-options', [ReferenceDataController::class, 'academicOptions'])
                 ->middleware('permission:admission.view|student.view');

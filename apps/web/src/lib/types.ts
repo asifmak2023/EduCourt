@@ -298,6 +298,189 @@ export interface FeePayment {
   voucher?: FeeVoucherDetail | null;
 }
 
+export type BillingKind =
+  | "monthly"
+  | "exam"
+  | "one_time"
+  | "other"
+  | "legacy_installment";
+
+export type ExamTerm = "first" | "second" | "third" | "final" | "monthly_test";
+
+export interface FeeStructureItem {
+  id?: number;
+  fee_structure_id?: number;
+  fee_head_id: number | null;
+  name: string;
+  billing_kind: BillingKind;
+  exam_term?: ExamTerm | null;
+  amount: string | number;
+  is_optional?: boolean;
+  sort_order?: number | null;
+  is_active?: boolean;
+  fee_head?: FeeHead | null;
+}
+
+export interface FeeStructure {
+  id: number;
+  institution_id?: number;
+  campus_id?: number;
+  academic_year_id: number;
+  class_room_id: number;
+  name: string;
+  is_active: boolean;
+  monthly_total?: number;
+  items?: FeeStructureItem[];
+  academic_year?: AcademicYear | null;
+  class_room?: ClassRoom | null;
+}
+
+export interface FeeChargeLine {
+  id: number;
+  fee_charge_id: number;
+  fee_head_id: number | null;
+  description: string | null;
+  amount: string;
+  discount_amount: string;
+  fee_head?: FeeHead | null;
+}
+
+export interface FeeCharge {
+  id: number;
+  institution_id: number;
+  campus_id: number;
+  academic_year_id: number;
+  student_id: number;
+  enrollment_id: number | null;
+  class_room_id: number | null;
+  section_id: number | null;
+  fee_structure_item_id: number | null;
+  fee_head_id: number | null;
+  voucher_no: string;
+  billing_kind: BillingKind;
+  billing_kind_label?: string | null;
+  exam_term: ExamTerm | null;
+  exam_term_label?: string | null;
+  period_year: number | null;
+  period_month: number | null;
+  title: string | null;
+  amount: string;
+  discount_amount: string;
+  paid_amount: string;
+  balance: string;
+  due_date: string | null;
+  status: string | null;
+  source: string | null;
+  notes: string | null;
+  student?: Student | null;
+  class_room?: ClassRoom | null;
+  section?: Section | null;
+  lines?: FeeChargeLine[];
+}
+
+export interface FeeReceiptAllocation {
+  id: number;
+  fee_receipt_id: number;
+  fee_charge_id: number;
+  amount: string;
+  charge?: FeeCharge | null;
+}
+
+export interface FeeReceipt {
+  id: number;
+  student_id: number;
+  receipt_no: string;
+  payment_date: string | null;
+  amount: string;
+  method: string | null;
+  method_label?: string | null;
+  reference: string | null;
+  notes: string | null;
+  status: string | null;
+  student?: Student | null;
+  allocations?: FeeReceiptAllocation[];
+}
+
+export interface CounterStudent {
+  id: number;
+  admission_no: string | null;
+  roll_number: string | null;
+  full_name: string;
+  photo_url: string | null;
+  class_room_id: number | null;
+  class: string | null;
+  section_id: number | null;
+  section: string | null;
+  academic_year_id: number | null;
+  outstanding: string;
+}
+
+export interface ArChargeRow {
+  id: number;
+  campus: string | null;
+  student_id: number;
+  student_name: string | null;
+  admission_no: string | null;
+  roll_number: string | null;
+  class: string | null;
+  section: string | null;
+  fee_type: string | null;
+  billing_kind: BillingKind | null;
+  exam_term: ExamTerm | null;
+  period: string | null;
+  voucher_no: string;
+  due_date: string | null;
+  amount_due: string;
+  amount_paid: string;
+  outstanding: string;
+  days_overdue: number;
+  bucket: string;
+  status: string | null;
+  status_label: string | null;
+}
+
+export interface ArReport {
+  as_of: string;
+  summary: {
+    charges: number;
+    billed: string;
+    collected: string;
+    outstanding: string;
+  };
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+  data: ArChargeRow[];
+}
+
+export interface ArSummary {
+  as_of: string;
+  totals: {
+    billed: string;
+    collected: string;
+    outstanding: string;
+  };
+  collection: {
+    today: string;
+    this_month: string;
+  };
+  aging: {
+    current: string;
+    days_1_30: string;
+    days_31_60: string;
+    days_61_90: string;
+    days_over_90: string;
+  };
+  counts: {
+    unpaid: number;
+    partial: number;
+    paid: number;
+  };
+}
+
 export interface GenderedCount {
   gender: string | null;
   total: number;

@@ -19,6 +19,7 @@ import type {
   ExpenseCategory,
   FeeHead,
   FeePlan,
+  FeeStructure,
   FiscalYear,
   GradeScale,
   Hostel,
@@ -207,6 +208,12 @@ export function useFeeHeads(enabled = true): ListLookupState<FeeHead> {
 
 export function useFeePlans(enabled = true): ListLookupState<FeePlan> {
   return useCollection<FeePlan>(enabled ? "/v1/fee-plans?per_page=200" : null);
+}
+
+export function useFeeStructures(enabled = true): ListLookupState<FeeStructure> {
+  return useCollection<FeeStructure>(
+    enabled ? "/v1/fee-structures?per_page=200" : null
+  );
 }
 
 function useAcademicCollection<T>(

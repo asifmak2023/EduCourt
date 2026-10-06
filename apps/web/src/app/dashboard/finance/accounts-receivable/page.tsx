@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useJson } from "@/lib/useJson";
 import { PermissionGate } from "@/components/PermissionGate";
+import { AR_VIEW } from "@/lib/permissions";
 import { buttonClasses } from "@/components/Form";
 import {
   Card,
@@ -25,7 +26,7 @@ const AGING = [
 
 export default function AccountsReceivablePage() {
   return (
-    <PermissionGate permission="fee.view">
+    <PermissionGate permission={AR_VIEW}>
       <AccountsReceivableOverview />
     </PermissionGate>
   );

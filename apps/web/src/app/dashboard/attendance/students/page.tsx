@@ -6,6 +6,7 @@ import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useClassRooms, useSections } from "@/lib/useLookups";
 import { useAuth } from "@/lib/auth";
+import { AR_VIEW } from "@/lib/permissions";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Pagination } from "@/components/Pagination";
 import { Select, TextInput, buttonClasses } from "@/components/Form";
@@ -38,7 +39,7 @@ export default function StudentAttendancePage() {
 }
 
 function RecordsTable() {
-  const { can } = useAuth();
+  const { canAny } = useAuth();
   const { items: classes } = useClassRooms();
   const { items: sections } = useSections();
 
@@ -168,7 +169,7 @@ function RecordsTable() {
                   <Table.Column>Section</Table.Column>
                   <Table.Column>Status</Table.Column>
                   <Table.Column>Remarks</Table.Column>
-                  {can("fee.create") ? <Table.Column>Actions</Table.Column> : null}
+                  {canAny(AR_VIEW) ? <Table.Column>Actions</Table.Column> : null}
                 </Table.Header>
                 <Table.Body>
                   {items.map((record) => (
@@ -201,7 +202,7 @@ function RecordsTable() {
                       <Table.Cell className="text-muted">
                         {record.remarks ?? "-"}
                       </Table.Cell>
-                      {can("fee.create") ? (
+                      {canAny(AR_VIEW) ? (
                         <Table.Cell>
                           <FeeVoucherAction
                             student={{

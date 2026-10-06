@@ -7,6 +7,7 @@ import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useExamPapers, useExams } from "@/lib/useLookups";
 import { useAuth } from "@/lib/auth";
+import { AR_VIEW } from "@/lib/permissions";
 import { formatDate } from "@/lib/format";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Button, Checkbox, Field, Select, TextInput, buttonClasses } from "@/components/Form";
@@ -39,7 +40,7 @@ export default function MarksEntryPage() {
 
 function MarksSheet() {
   const searchParams = useSearchParams();
-  const { can } = useAuth();
+  const { canAny } = useAuth();
   const { items: exams } = useExams();
   const { items: papers, loading: papersLoading } = useExamPapers();
 
@@ -261,7 +262,7 @@ function MarksSheet() {
                   <Table.Column>Marks</Table.Column>
                   <Table.Column>Absent</Table.Column>
                   <Table.Column>Remarks</Table.Column>
-                  {can("fee.create") ? <Table.Column>Actions</Table.Column> : null}
+                  {canAny(AR_VIEW) ? <Table.Column>Actions</Table.Column> : null}
                 </Table.Header>
                 <Table.Body>
                   {students.map((student) => (
@@ -305,7 +306,7 @@ function MarksSheet() {
                           }
                         />
                       </Table.Cell>
-                      {can("fee.create") ? (
+                      {canAny(AR_VIEW) ? (
                         <Table.Cell>
                           <FeeVoucherAction
                             student={{

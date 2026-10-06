@@ -103,6 +103,7 @@ return [
             'curriculum.view', 'curriculum.approve',
             'concession.view', 'concession.approve',
             'fine.view', 'fine.approve',
+            'fee.view', 'fee.create', 'fee.export',
             'reminder.view', 'reminder.send',
             'conduct.view', 'conduct.approve',
             'notification.view', 'notification.send',

@@ -8,7 +8,7 @@ export function PermissionGate({
   permission,
   children,
 }: {
-  permission: string;
+  permission: string | string[];
   children: React.ReactNode;
 }) {
   const { user } = useAuth();
@@ -18,7 +18,10 @@ export function PermissionGate({
     return null;
   }
 
-  if (!user.permissions.includes(permission)) {
+  const required = Array.isArray(permission) ? permission : [permission];
+  const allowed = required.some((entry) => user.permissions.includes(entry));
+
+  if (!allowed) {
     return <ErrorNotice message={t("errors.forbidden")} />;
   }
 

@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { PermissionGate } from "@/components/PermissionGate";
 import { useAuth } from "@/lib/auth";
+import { AR_VIEW } from "@/lib/permissions";
 import { Card, PageHeader } from "@/components/ui";
 
 interface HubLink {
   title: string;
   description: string;
   href: string;
-  permission: string;
+  permission: string | string[];
 }
 
 const LINKS: HubLink[] = [
@@ -17,7 +18,7 @@ const LINKS: HubLink[] = [
     title: "Accounts receivable",
     description: "Fee structures, voucher generation, collections and ageing reports.",
     href: "/dashboard/finance/accounts-receivable",
-    permission: "fee.view",
+    permission: AR_VIEW,
   },
   {
     title: "Chart of accounts",
@@ -65,15 +66,17 @@ const LINKS: HubLink[] = [
 
 export default function FinanceHubPage() {
   return (
-    <PermissionGate permission="fee.view">
+    <PermissionGate permission={AR_VIEW}>
       <FinanceHub />
     </PermissionGate>
   );
 }
 
 function FinanceHub() {
-  const { can } = useAuth();
-  const visible = LINKS.filter((link) => can(link.permission));
+  const { canAny } = useAuth();
+  const visible = LINKS.filter((link) =>
+    canAny(Array.isArray(link.permission) ? link.permission : [link.permission])
+  );
 
   return (
     <div className="space-y-6">

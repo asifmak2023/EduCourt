@@ -133,6 +133,7 @@ export type MessageKey =
   | "navigation.feePlans"
   | "navigation.feeStructure"
   | "navigation.generateVoucher"
+  | "navigation.receipts"
   | "navigation.financeOverview"
   | "navigation.accountsReceivable"
   | "navigation.arReports"

@@ -6,6 +6,7 @@ import { Table } from "@heroui/react";
 import { useTranslation, type MessageKey } from "@eis/i18n";
 import { useList } from "@/lib/useList";
 import { useAuth } from "@/lib/auth";
+import { AR_VIEW } from "@/lib/permissions";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Pagination } from "@/components/Pagination";
 import { Button, Select, TextInput, buttonClasses } from "@/components/Form";
@@ -40,7 +41,7 @@ export default function StudentsPage() {
 }
 
 function StudentsTable() {
-  const { can } = useAuth();
+  const { can, canAny } = useAuth();
   const { t } = useTranslation();
   const [status, setStatus] = useState("");
   const [gender, setGender] = useState("");
@@ -75,7 +76,7 @@ function StudentsTable() {
                 {t("students.new")}
               </Link>
             ) : null}
-            {can("fee.create") ? (
+            {canAny(AR_VIEW) ? (
               <Button
                 type="button"
                 variant="secondary"
@@ -137,7 +138,7 @@ function StudentsTable() {
                   <Table.Column>{t("common.gender")}</Table.Column>
                   <Table.Column>{t("students.field.dateOfBirth")}</Table.Column>
                   <Table.Column>{t("common.status")}</Table.Column>
-                  {can("fee.create") ? (
+                  {canAny(AR_VIEW) ? (
                     <Table.Column>{t("common.actions")}</Table.Column>
                   ) : null}
                 </Table.Header>
@@ -164,7 +165,7 @@ function StudentsTable() {
                       <Table.Cell>
                         <Badge value={student.status} />
                       </Table.Cell>
-                      {can("fee.create") ? (
+                      {canAny(AR_VIEW) ? (
                         <Table.Cell>
                           <FeeVoucherAction
                             student={{

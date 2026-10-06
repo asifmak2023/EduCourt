@@ -117,6 +117,7 @@ export const en = {
   "navigation.feePlans": "Fee plans",
   "navigation.feeStructure": "Fee structure",
   "navigation.generateVoucher": "Generate voucher",
+  "navigation.receipts": "Receipts",
   "navigation.financeOverview": "Finance overview",
   "navigation.accountsReceivable": "Accounts receivable",
   "navigation.arReports": "AR reports",

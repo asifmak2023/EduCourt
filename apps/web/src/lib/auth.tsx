@@ -50,6 +50,7 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   can: (permission: string | null) => boolean;
+  canAny: (permissions: string[] | null) => boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -155,9 +156,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [user]
   );
 
+  const canAny = useCallback(
+    (permissions: string[] | null) => {
+      if (permissions === null || permissions.length === 0) {
+        return true;
+      }
+
+      return permissions.some((permission) =>
+        user?.permissions.includes(permission) ?? false
+      );
+    },
+    [user]
+  );
+
   const value = useMemo(
-    () => ({ user, loading, login, verifyTwoFactor, logout, refresh: loadProfile, can }),
-    [user, loading, login, verifyTwoFactor, logout, loadProfile, can]
+    () => ({
+      user,
+      loading,
+      login,
+      verifyTwoFactor,
+      logout,
+      refresh: loadProfile,
+      can,
+      canAny,
+    }),
+    [user, loading, login, verifyTwoFactor, logout, loadProfile, can, canAny]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

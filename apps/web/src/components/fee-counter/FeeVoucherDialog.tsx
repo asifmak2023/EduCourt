@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/lib/auth";
+import { AR_VIEW } from "@/lib/permissions";
 import {
   FeeVoucherGenerator,
   type FeeVoucherContext,
@@ -25,9 +26,9 @@ export function FeeVoucherDialog({
   onClose,
   onGenerated,
 }: FeeVoucherDialogProps) {
-  const { can } = useAuth();
+  const { canAny } = useAuth();
 
-  if (!open || !can("fee.create") || typeof document === "undefined") {
+  if (!open || !canAny(AR_VIEW) || typeof document === "undefined") {
     return null;
   }
 

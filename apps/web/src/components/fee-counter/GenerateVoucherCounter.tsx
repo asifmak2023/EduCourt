@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { AR_VIEW } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui";
 import { Button } from "@/components/Form";
 import { FeeVoucherGenerator } from "./FeeVoucherGenerator";
 import { BulkFeeVoucherDialog } from "./BulkFeeVoucherDialog";
 
 export function GenerateVoucherCounter() {
-  const { can } = useAuth();
+  const { canAny } = useAuth();
   const [bulkOpen, setBulkOpen] = useState(false);
 
   return (
@@ -17,7 +18,7 @@ export function GenerateVoucherCounter() {
         title="Generate voucher"
         description="Search a student, pick charges and optional payment, then generate."
         actions={
-          can("fee.create") ? (
+          canAny(AR_VIEW) ? (
             <Button
               type="button"
               variant="secondary"

@@ -1,14 +1,15 @@
 "use client";
 
 import { useAuth } from "@/lib/auth";
+import { AR_VIEW } from "@/lib/permissions";
 import { Icon } from "@/components/Icons";
 import { useFeeVoucher } from "./FeeVoucherProvider";
 
 export function FeeVoucherQuickAction() {
-  const { can } = useAuth();
+  const { canAny } = useAuth();
   const { openVoucher } = useFeeVoucher();
 
-  if (!can("fee.create")) {
+  if (!canAny(AR_VIEW)) {
     return null;
   }
 

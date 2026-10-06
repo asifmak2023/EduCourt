@@ -1,3 +1,5 @@
+import { AR_VIEW } from "./permissions";
+
 export type NavIcon =
   | "grid"
   | "users"
@@ -42,7 +44,7 @@ export interface NavItem {
   label: string;
   href: string;
   icon: NavIcon;
-  permission: string | null;
+  permission: string | string[] | null;
   ready: boolean;
 }
 
@@ -84,11 +86,12 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: "navigation.section.finance",
     items: [
-      { label: "navigation.financeOverview", href: "/dashboard/finance", icon: "grid", permission: "fee.view", ready: true },
-      { label: "navigation.accountsReceivable", href: "/dashboard/finance/accounts-receivable", icon: "receipt", permission: "fee.view", ready: true },
+      { label: "navigation.financeOverview", href: "/dashboard/finance", icon: "grid", permission: AR_VIEW, ready: true },
+      { label: "navigation.accountsReceivable", href: "/dashboard/finance/accounts-receivable", icon: "receipt", permission: AR_VIEW, ready: true },
       { label: "navigation.feeStructure", href: "/dashboard/finance/accounts-receivable/fee-structure", icon: "clipboard", permission: "fee.view", ready: true },
-      { label: "navigation.generateVoucher", href: "/dashboard/finance/accounts-receivable/generate-voucher", icon: "receipt", permission: "fee.view", ready: true },
-      { label: "navigation.arReports", href: "/dashboard/finance/accounts-receivable/reports", icon: "chart", permission: "fee.view", ready: true },
+      { label: "navigation.generateVoucher", href: "/dashboard/finance/accounts-receivable/generate-voucher", icon: "receipt", permission: AR_VIEW, ready: true },
+      { label: "navigation.arReports", href: "/dashboard/finance/accounts-receivable/reports", icon: "chart", permission: AR_VIEW, ready: true },
+      { label: "navigation.receipts", href: "/dashboard/finance/accounts-receivable/receipts", icon: "receipt", permission: AR_VIEW, ready: true },
       { label: "navigation.feeHeads", href: "/dashboard/finance/fee-heads", icon: "list", permission: "fee.view", ready: true },
       { label: "navigation.chartOfAccounts", href: "/dashboard/finance/accounts", icon: "list", permission: "finance.view", ready: true },
       { label: "navigation.journal", href: "/dashboard/finance/journal", icon: "list", permission: "finance.view", ready: true },
@@ -136,12 +139,17 @@ export const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
-export function can(userPermissions: string[], permission: string | null): boolean {
+export function can(
+  userPermissions: string[],
+  permission: string | string[] | null
+): boolean {
   if (permission === null) {
     return true;
   }
 
-  return userPermissions.includes(permission);
+  const required = Array.isArray(permission) ? permission : [permission];
+
+  return required.some((entry) => userPermissions.includes(entry));
 }
 
 export function visibleSections(userPermissions: string[]): NavSection[] {

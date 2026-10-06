@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { AR_VIEW } from "@/lib/permissions";
 import { useAcademicYears, useClassRooms, useSections } from "@/lib/useLookups";
 import { Button, Field, Select, TextInput } from "@/components/Form";
 import { ErrorNotice, SuccessNotice } from "@/components/ui";
@@ -41,9 +42,9 @@ export function BulkFeeVoucherDialog({
   onClose,
   onGenerated,
 }: BulkFeeVoucherDialogProps) {
-  const { can } = useAuth();
+  const { canAny } = useAuth();
 
-  if (!open || !can("fee.create") || typeof document === "undefined") {
+  if (!open || !canAny(AR_VIEW) || typeof document === "undefined") {
     return null;
   }
 

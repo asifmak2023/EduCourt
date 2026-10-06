@@ -567,17 +567,18 @@ Route::prefix('v1')->group(function () {
             Route::post('fee-vouchers/{feeVoucher}/void', [FeeVoucherController::class, 'void'])->middleware('permission:fee.approve');
             Route::post('fee-vouchers/{feeVoucher}/late-fee', [FeeVoucherController::class, 'applyLateFee'])->middleware('permission:fee.approve');
 
-            Route::get('fee-counter/students', [FeeCounterController::class, 'students'])->middleware('permission:fee.view');
-            Route::get('fee-counter/students/{student}/dues', [FeeCounterController::class, 'studentDues'])->middleware('permission:fee.view');
-            Route::post('fee-counter/generate', [FeeCounterController::class, 'generate'])->middleware('permission:fee.create');
-            Route::post('fee-counter/generate-bulk', [FeeCounterController::class, 'generateBulk'])->middleware('permission:fee.create');
+            Route::get('fee-counter/students', [FeeCounterController::class, 'students'])->middleware('permission:fee.view|finance.view|academic.view');
+            Route::get('fee-counter/students/{student}/dues', [FeeCounterController::class, 'studentDues'])->middleware('permission:fee.view|finance.view|academic.view');
+            Route::post('fee-counter/generate', [FeeCounterController::class, 'generate'])->middleware('permission:fee.view|finance.view|academic.view|fee.create|finance.create|academic.create|academic.edit');
+            Route::post('fee-counter/generate-bulk', [FeeCounterController::class, 'generateBulk'])->middleware('permission:fee.view|finance.view|academic.view|fee.create|finance.create|academic.create|academic.edit');
 
-            Route::get('fee-charges', [FeeChargeController::class, 'index'])->middleware('permission:fee.view');
-            Route::get('fee-charges/{feeCharge}', [FeeChargeController::class, 'show'])->middleware('permission:fee.view');
+            Route::get('fee-charges', [FeeChargeController::class, 'index'])->middleware('permission:fee.view|finance.view|academic.view');
+            Route::get('fee-charges/{feeCharge}', [FeeChargeController::class, 'show'])->middleware('permission:fee.view|finance.view|academic.view');
             Route::post('fee-charges/{feeCharge}/void', [FeeChargeController::class, 'void'])->middleware('permission:fee.approve');
 
-            Route::get('fee-receipts', [FeeReceiptController::class, 'index'])->middleware('permission:fee.view');
-            Route::get('fee-receipts/{feeReceipt}', [FeeReceiptController::class, 'show'])->middleware('permission:fee.view');
+            Route::get('fee-receipts', [FeeReceiptController::class, 'index'])->middleware('permission:fee.view|finance.view|academic.view');
+            Route::post('fee-receipts', [FeeReceiptController::class, 'store'])->middleware('permission:fee.view|finance.view|academic.view|fee.create|finance.create|academic.create|academic.edit');
+            Route::get('fee-receipts/{feeReceipt}', [FeeReceiptController::class, 'show'])->middleware('permission:fee.view|finance.view|academic.view');
 
             Route::get('fee-payments', [FeePaymentController::class, 'index'])->middleware('permission:fee.view');
             Route::post('fee-payments', [FeePaymentController::class, 'store'])->middleware('permission:fee.create');
@@ -619,12 +620,12 @@ Route::prefix('v1')->group(function () {
             Route::post('fee-reminders/{reminder}/cancel', [FeeReminderController::class, 'cancel'])->middleware('permission:reminder.send');
             Route::delete('fee-reminders/{reminder}', [FeeReminderController::class, 'destroy'])->middleware('permission:reminder.delete');
 
-            Route::get('fee-reports/defaulters', [FeeReportController::class, 'defaulters'])->middleware('permission:fee.view');
-            Route::get('fee-reports/students/{student}/statement', [FeeReportController::class, 'studentStatement'])->middleware('permission:fee.view');
-            Route::get('fee-reports/classes/summary', [FeeReportController::class, 'classSummary'])->middleware('permission:fee.view');
-            Route::get('fee-reports/collection', [FeeReportController::class, 'collection'])->middleware('permission:fee.view');
-            Route::get('fee-reports/ar', [FeeReportController::class, 'ar'])->middleware('permission:fee.view');
-            Route::get('fee-reports/ar-summary', [FeeReportController::class, 'arSummary'])->middleware('permission:fee.view');
+            Route::get('fee-reports/defaulters', [FeeReportController::class, 'defaulters'])->middleware('permission:fee.view|finance.view|academic.view');
+            Route::get('fee-reports/students/{student}/statement', [FeeReportController::class, 'studentStatement'])->middleware('permission:fee.view|finance.view|academic.view');
+            Route::get('fee-reports/classes/summary', [FeeReportController::class, 'classSummary'])->middleware('permission:fee.view|finance.view|academic.view');
+            Route::get('fee-reports/collection', [FeeReportController::class, 'collection'])->middleware('permission:fee.view|finance.view|academic.view');
+            Route::get('fee-reports/ar', [FeeReportController::class, 'ar'])->middleware('permission:fee.view|finance.view|academic.view');
+            Route::get('fee-reports/ar-summary', [FeeReportController::class, 'arSummary'])->middleware('permission:fee.view|finance.view|academic.view');
 
             Route::get('reference/academic-options', [ReferenceDataController::class, 'academicOptions'])
                 ->middleware('permission:admission.view|student.view');

@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/lib/auth";
+import { AR_VIEW } from "@/lib/permissions";
 import { Button, type ButtonVariant } from "@/components/Form";
 import type { FeeVoucherStudent } from "./FeeVoucherGenerator";
 import { useFeeVoucher } from "./FeeVoucherProvider";
@@ -16,10 +17,10 @@ export function FeeVoucherAction({
   label = "Generate voucher",
   variant = "secondary",
 }: FeeVoucherActionProps) {
-  const { can } = useAuth();
+  const { canAny } = useAuth();
   const { openVoucher } = useFeeVoucher();
 
-  if (!can("fee.create")) {
+  if (!canAny(AR_VIEW)) {
     return null;
   }
 

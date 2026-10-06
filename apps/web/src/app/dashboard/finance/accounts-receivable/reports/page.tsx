@@ -8,6 +8,7 @@ import {
 } from "@/lib/useLookups";
 import { useJson } from "@/lib/useJson";
 import { useAuth } from "@/lib/auth";
+import { AR_VIEW } from "@/lib/permissions";
 import { Button, Field, Select, TextInput } from "@/components/Form";
 import { Pagination } from "@/components/Pagination";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -41,14 +42,14 @@ const TABS = [
 
 export default function ArReportsPage() {
   return (
-    <PermissionGate permission="fee.view">
+    <PermissionGate permission={AR_VIEW}>
       <ArReports />
     </PermissionGate>
   );
 }
 
 function ArReports() {
-  const { can } = useAuth();
+  const { canAny } = useAuth();
   const { items: years } = useAcademicYears();
   const { items: classes } = useClassRooms();
   const { items: sections } = useSections();
@@ -353,7 +354,7 @@ function ArReports() {
                   <th className="px-3 py-2 text-right">Paid</th>
                   <th className="px-3 py-2 text-right">Outstanding</th>
                   <th className="px-3 py-2">Status</th>
-                  {can("fee.create") ? <th className="px-3 py-2" /> : null}
+                  {canAny(AR_VIEW) ? <th className="px-3 py-2" /> : null}
                 </tr>
               </thead>
               <tbody>
@@ -383,7 +384,7 @@ function ArReports() {
                       {formatCurrency(row.outstanding)}
                     </td>
                     <td className="px-3 py-2 text-muted">{row.status_label ?? "-"}</td>
-                    {can("fee.create") ? (
+                    {canAny(AR_VIEW) ? (
                       <td className="px-3 py-2 text-right">
                         <FeeVoucherAction
                           student={{
@@ -399,7 +400,7 @@ function ArReports() {
               </tbody>
               <tfoot>
                 <tr className="border-t-2 border-border-secondary font-semibold text-foreground">
-                  <td className="px-3 py-2" colSpan={can("fee.create") ? 10 : 9}>
+                  <td className="px-3 py-2" colSpan={canAny(AR_VIEW) ? 10 : 9}>
                     Total Accounts Receivable
                   </td>
                   <td className="px-3 py-2 text-right">

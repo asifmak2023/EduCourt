@@ -210,6 +210,110 @@ class FeeCounterService
     }
 
     /**
+     * Generate a monthly voucher for every active student in a class/section.
+     *
+     * @return array<string, mixed>
+     */
+    public function generateMonthlyBulk(
+        int $academicYearId,
+        int $classRoomId,
+        ?int $sectionId,
+        int $periodYear,
+        int $periodMonth,
+        ?string $dueDate,
+        int $userId,
+    ): array {
+        $enrollments = StudentEnrollment::query()
+            ->with(['student', 'classRoom:id,name', 'section:id,name'])
+            ->where('academic_year_id', $academicYearId)
+            ->where('class_room_id', $classRoomId)
+            ->when($sectionId !== null, fn ($q) => $q->where('section_id', $sectionId))
+            ->whereHas('student', fn ($q) => $q->where('status', 'active'))
+            ->orderByDesc('id')
+            ->get()
+            ->unique('student_id');
+
+        $structure = FeeStructure::query()
+            ->with('items')
+            ->where('academic_year_id', $academicYearId)
+            ->where('class_room_id', $classRoomId)
+            ->where('is_active', true)
+            ->first();
+
+        $monthlyItems = $structure
+            ? $structure->items
+                ->where('billing_kind', BillingKind::Monthly)
+                ->where('is_active', true)
+                ->values()
+            : collect();
+
+        $monthlyTotal = $monthlyItems->sum('amount');
+
+        $created = 0;
+        $skipped = 0;
+        $errors = 0;
+        $results = [];
+
+        foreach ($enrollments as $enrollment) {
+            $student = $enrollment->student;
+
+            if ($student === null) {
+                continue;
+            }
+
+            $base = [
+                'student_id' => $student->id,
+                'student_name' => $student->full_name,
+                'admission_no' => $student->admission_no,
+            ];
+
+            if ($structure === null || $monthlyTotal <= 0) {
+                $skipped++;
+                $results[] = $base + ['status' => 'skipped', 'message' => 'No monthly fee structure.'];
+                continue;
+            }
+
+            try {
+                $item = [
+                    'billing_kind' => BillingKind::Monthly->value,
+                    'period_year' => $periodYear,
+                    'period_month' => $periodMonth,
+                    'title' => 'Monthly Fee',
+                    'amount' => $monthlyTotal,
+                    'source' => 'structure',
+                    'due_date' => $dueDate ?: now()->toDateString(),
+                    'lines' => $monthlyItems->map(fn (FeeStructureItem $line) => [
+                        'fee_head_id' => $line->fee_head_id,
+                        'description' => $line->name,
+                        'amount' => $line->amount,
+                    ])->all(),
+                ];
+
+                $result = $this->generate($student, ['academic_year_id' => $academicYearId], [$item], null, $userId);
+                $charge = collect($result['charges'])->first();
+
+                if ($charge !== null && $charge->wasRecentlyCreated) {
+                    $created++;
+                    $results[] = $base + ['status' => 'created', 'voucher_no' => $charge->voucher_no];
+                } else {
+                    $skipped++;
+                    $results[] = $base + ['status' => 'skipped', 'message' => 'Already billed for this month.'];
+                }
+            } catch (\Throwable $e) {
+                $errors++;
+                $results[] = $base + ['status' => 'error', 'message' => $e->getMessage()];
+            }
+        }
+
+        return [
+            'created' => $created,
+            'skipped' => $skipped,
+            'errors' => $errors,
+            'results' => $results,
+        ];
+    }
+
+    /**
      * @param  array<int, array<string, mixed>>  $items
      * @param  array<string, mixed>|null  $payment
      * @return array<string, mixed>

@@ -570,6 +570,7 @@ Route::prefix('v1')->group(function () {
             Route::get('fee-counter/students', [FeeCounterController::class, 'students'])->middleware('permission:fee.view');
             Route::get('fee-counter/students/{student}/dues', [FeeCounterController::class, 'studentDues'])->middleware('permission:fee.view');
             Route::post('fee-counter/generate', [FeeCounterController::class, 'generate'])->middleware('permission:fee.create');
+            Route::post('fee-counter/generate-bulk', [FeeCounterController::class, 'generateBulk'])->middleware('permission:fee.create');
 
             Route::get('fee-charges', [FeeChargeController::class, 'index'])->middleware('permission:fee.view');
             Route::get('fee-charges/{feeCharge}', [FeeChargeController::class, 'show'])->middleware('permission:fee.view');

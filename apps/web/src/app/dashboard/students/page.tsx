@@ -8,8 +8,9 @@ import { useList } from "@/lib/useList";
 import { useAuth } from "@/lib/auth";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Pagination } from "@/components/Pagination";
-import { Select, TextInput, buttonClasses } from "@/components/Form";
+import { Button, Select, TextInput, buttonClasses } from "@/components/Form";
 import { FeeVoucherAction } from "@/components/fee-counter/FeeVoucherAction";
+import { BulkFeeVoucherDialog } from "@/components/fee-counter/BulkFeeVoucherDialog";
 import {
   Badge,
   Card,
@@ -43,6 +44,7 @@ function StudentsTable() {
   const { t } = useTranslation();
   const [status, setStatus] = useState("");
   const [gender, setGender] = useState("");
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const { items, meta, loading, error, page, setPage, search, setSearch } =
     useList<Student>("/v1/students", { status, gender });
@@ -72,6 +74,15 @@ function StudentsTable() {
               >
                 {t("students.new")}
               </Link>
+            ) : null}
+            {can("fee.create") ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setBulkOpen(true)}
+              >
+                Generate for class
+              </Button>
             ) : null}
           </>
         }
@@ -181,6 +192,11 @@ function StudentsTable() {
           />
         ) : null}
       </Card>
+
+      <BulkFeeVoucherDialog
+        open={bulkOpen}
+        onClose={() => setBulkOpen(false)}
+      />
     </div>
   );
 }

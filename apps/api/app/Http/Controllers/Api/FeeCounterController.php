@@ -53,6 +53,46 @@ class FeeCounterController extends Controller
         return response()->json(['data' => $this->counter->dues($student, $academicYearId)]);
     }
 
+    public function generateBulk(Request $request): JsonResponse
+    {
+        $tenant = $this->academicTenantAttributes();
+
+        $data = $request->validate([
+            'academic_year_id' => [
+                'required', 'integer',
+                Rule::exists('academic_years', 'id')->where('campus_id', $tenant['campus_id'])->whereNull('deleted_at'),
+            ],
+            'class_room_id' => ['required', 'integer'],
+            'section_id' => ['nullable', 'integer'],
+            'period_year' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'period_month' => ['required', 'integer', 'between:1,12'],
+            'due_date' => ['nullable', 'date'],
+        ]);
+
+        $summary = $this->counter->generateMonthlyBulk(
+            (int) $data['academic_year_id'],
+            (int) $data['class_room_id'],
+            isset($data['section_id']) ? (int) $data['section_id'] : null,
+            (int) $data['period_year'],
+            (int) $data['period_month'],
+            $data['due_date'] ?? null,
+            $request->user()->id,
+        );
+
+        return response()->json([
+            'message' => sprintf(
+                'Generated %d voucher(s), skipped %d, %d error(s).',
+                $summary['created'],
+                $summary['skipped'],
+                $summary['errors'],
+            ),
+            'created' => $summary['created'],
+            'skipped' => $summary['skipped'],
+            'errors' => $summary['errors'],
+            'results' => $summary['results'],
+        ], 201);
+    }
+
     public function generate(Request $request): JsonResponse
     {
         $tenant = $this->academicTenantAttributes();

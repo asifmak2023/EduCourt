@@ -42,6 +42,8 @@ class FeeChargeResource extends JsonResource
             'section' => SectionResource::make($this->whenLoaded('section')),
             'fee_head' => FeeHeadResource::make($this->whenLoaded('feeHead')),
             'lines' => FeeChargeLineResource::collection($this->whenLoaded('lines')),
+            'campus' => CampusResource::make($this->whenLoaded('campus')),
+            'institution' => InstitutionResource::make($this->whenLoaded('institution')),
             'created_at' => $this->created_at,
         ];
     }

@@ -24,6 +24,8 @@ class FeeReceiptResource extends JsonResource
             'status' => $this->status?->value,
             'journal_entry_id' => $this->journal_entry_id,
             'student' => StudentResource::make($this->whenLoaded('student')),
+            'campus' => CampusResource::make($this->whenLoaded('campus')),
+            'institution' => InstitutionResource::make($this->whenLoaded('institution')),
             'allocations' => $this->whenLoaded('allocations', fn () => $this->allocations->map(fn ($allocation) => [
                 'id' => $allocation->id,
                 'fee_charge_id' => $allocation->fee_charge_id,

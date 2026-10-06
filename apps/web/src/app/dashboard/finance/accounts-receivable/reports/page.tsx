@@ -13,6 +13,7 @@ import { Button, Field, Select, TextInput } from "@/components/Form";
 import { Pagination } from "@/components/Pagination";
 import { PermissionGate } from "@/components/PermissionGate";
 import { FeeVoucherAction } from "@/components/fee-counter/FeeVoucherAction";
+import { ChargePrintButton } from "@/components/fee-counter/ChargePrintButton";
 import {
   Card,
   EmptyState,
@@ -386,13 +387,16 @@ function ArReports() {
                     <td className="px-3 py-2 text-muted">{row.status_label ?? "-"}</td>
                     {canAny(AR_VIEW) ? (
                       <td className="px-3 py-2 text-right">
-                        <FeeVoucherAction
-                          student={{
-                            id: row.student_id,
-                            full_name: row.student_name,
-                            admission_no: row.admission_no,
-                          }}
-                        />
+                        <div className="flex justify-end gap-2">
+                          <ChargePrintButton chargeId={row.id} />
+                          <FeeVoucherAction
+                            student={{
+                              id: row.student_id,
+                              full_name: row.student_name,
+                              admission_no: row.admission_no,
+                            }}
+                          />
+                        </div>
                       </td>
                     ) : null}
                   </tr>

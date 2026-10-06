@@ -37,6 +37,7 @@ class FeeChargeController extends Controller
     {
         return new FeeChargeResource($feeCharge->load([
             'student', 'classRoom', 'section', 'feeHead', 'lines.feeHead',
+            'campus.institution', 'institution',
         ]));
     }
 

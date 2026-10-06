@@ -285,7 +285,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen">
       <aside
-        className={`fixed inset-y-0 start-0 z-30 hidden lg:block ${
+        className={`fixed inset-y-0 start-0 z-30 hidden lg:block print:hidden ${
           collapsedReady ? "transition-[width] duration-200" : ""
         } ${collapsed ? "w-[4.5rem]" : "w-64"}`}
       >
@@ -293,7 +293,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {menuOpen ? (
-        <div className="fixed inset-0 z-40 lg:hidden">
+        <div className="fixed inset-0 z-40 lg:hidden print:hidden">
           <div
             className="absolute inset-0 bg-black/40"
             onClick={() => setMenuOpen(false)}
@@ -304,11 +304,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       ) : null}
 
       <div
-        className={`flex min-h-screen min-w-0 flex-col ${
+        className={`flex min-h-screen min-w-0 flex-col print:ps-0 ${
           collapsedReady ? "transition-[padding-inline-start] duration-200" : ""
         } ${collapsed ? "lg:ps-[4.5rem]" : "lg:ps-64"}`}
       >
-        <header className="app-glass sticky top-0 z-30 border-b border-border-secondary bg-surface/80 backdrop-blur">
+        <header className="app-glass sticky top-0 z-30 border-b border-border-secondary bg-surface/80 backdrop-blur print:hidden">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <div className="flex min-w-0 items-center gap-3">
               <button
@@ -369,8 +369,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          <Breadcrumbs />
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 print:max-w-none print:px-0 print:py-0">
+          <div className="print:hidden">
+            <Breadcrumbs />
+          </div>
           <div key={pathname} className="page-enter">
             {children}
           </div>

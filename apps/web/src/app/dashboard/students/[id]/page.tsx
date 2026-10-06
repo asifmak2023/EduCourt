@@ -12,6 +12,7 @@ import { Avatar } from "@/components/Avatar";
 import { ApiError, apiFetch } from "@/lib/api";
 import { Button, buttonClasses, Field, Select, TextArea, TextInput } from "@/components/Form";
 import { FeeVoucherAction } from "@/components/fee-counter/FeeVoucherAction";
+import { StudentFeeVouchersCard } from "@/components/fee-counter/StudentFeeVouchersCard";
 import {
   Badge,
   Card,
@@ -118,6 +119,8 @@ function StudentDetailView() {
           <DataItem label="common.notes" value={data.notes} />
         </DataList>
       </SectionCard>
+
+      <StudentFeeVouchersCard studentId={data.id} />
 
       <SectionCard
         title="students.guardians"

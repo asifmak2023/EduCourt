@@ -21,6 +21,7 @@ class CampusResource extends JsonResource
             'website' => $this->website,
             'address' => $this->address,
             'is_active' => $this->is_active,
+            'settings' => $this->settings,
             'institution' => InstitutionResource::make($this->whenLoaded('institution')),
             'created_at' => $this->created_at,
         ];

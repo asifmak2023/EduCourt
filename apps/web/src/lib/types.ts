@@ -40,6 +40,7 @@ export interface Campus {
   website?: string | null;
   address?: string | null;
   is_active?: boolean;
+  settings?: Record<string, unknown> | null;
   institution?: Institution;
   created_at?: string;
 }
@@ -375,7 +376,10 @@ export interface FeeCharge {
   student?: Student | null;
   class_room?: ClassRoom | null;
   section?: Section | null;
+  fee_head?: FeeHead | null;
   lines?: FeeChargeLine[];
+  campus?: Campus | null;
+  institution?: Institution | null;
 }
 
 export interface FeeReceiptAllocation {
@@ -398,6 +402,8 @@ export interface FeeReceipt {
   notes: string | null;
   status: string | null;
   student?: Student | null;
+  campus?: Campus | null;
+  institution?: Institution | null;
   allocations?: FeeReceiptAllocation[];
 }
 

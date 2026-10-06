@@ -12,6 +12,7 @@ import { Icon } from "@/components/Icons";
 import { Avatar } from "@/components/Avatar";
 import { AccountMenu } from "@/components/AccountMenu";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { FeeVoucherQuickAction } from "@/components/fee-counter/FeeVoucherQuickAction";
 
 const SIDEBAR_KEY = "eis.sidebar.section";
 const COLLAPSE_KEY = "eis.sidebar.collapsed";
@@ -362,6 +363,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span className="hidden rounded-full bg-surface-tertiary px-3 py-1 text-xs font-medium text-muted sm:inline">
                 {roleLabelString}
               </span>
+              <FeeVoucherQuickAction />
               <AccountMenu />
             </div>
           </div>

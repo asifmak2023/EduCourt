@@ -1,9 +1,14 @@
 import { AppShell } from "@/components/AppShell";
+import { FeeVoucherProvider } from "@/components/fee-counter/FeeVoucherProvider";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <AppShell>{children}</AppShell>;
+  return (
+    <FeeVoucherProvider>
+      <AppShell>{children}</AppShell>
+    </FeeVoucherProvider>
+  );
 }

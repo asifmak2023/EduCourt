@@ -15,7 +15,7 @@ import {
   Spinner,
 } from "@/components/ui";
 import { Select, TextInput, buttonClasses } from "@/components/Form";
-import { GenerateVoucherDialog } from "@/components/GenerateVoucherDialog";
+import { FeeVoucherAction } from "@/components/fee-counter/FeeVoucherAction";
 import { formatCurrency, formatDate } from "@/lib/format";
 import type { FeeVoucher } from "@/lib/types";
 
@@ -38,7 +38,7 @@ export default function FeesPage() {
 function VouchersTable() {
   const [status, setStatus] = useState("");
 
-  const { items, meta, loading, error, page, setPage, search, setSearch, reload } =
+  const { items, meta, loading, error, page, setPage, search, setSearch } =
     useList<FeeVoucher>("/v1/fee-vouchers", status === "" ? {} : { status });
 
   return (
@@ -65,7 +65,7 @@ function VouchersTable() {
             >
               Payments
             </Link>
-            <GenerateVoucherDialog onDone={reload} />
+            <FeeVoucherAction />
           </>
         }
       />

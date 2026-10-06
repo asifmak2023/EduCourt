@@ -67,6 +67,34 @@ class ReportService
             ->whereBetween('payment_date', [$today->startOfMonth()->toDateString(), $today->endOfMonth()->toDateString()])
             ->sum('amount');
 
+        $postedPayments = FeePayment::query()->where('status', PaymentStatus::Posted->value);
+
+        $collectionsByMonth = collect(range(5, 0))->map(function (int $monthsBack) use ($today, $postedPayments) {
+            $month = $today->subMonths($monthsBack);
+
+            $total = (clone $postedPayments)
+                ->whereBetween('payment_date', [$month->startOfMonth()->toDateString(), $month->endOfMonth()->toDateString()])
+                ->sum('amount');
+
+            return [
+                'month' => $month->format('Y-m'),
+                'label' => $month->translatedFormat('M'),
+                'total' => round((float) $total, 2),
+            ];
+        })->values();
+
+        $vouchersByStatus = FeeVoucher::query()
+            ->select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->map(fn ($count) => (int) $count);
+
+        $admissionsByStatus = Admission::query()
+            ->select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->map(fn ($count) => (int) $count);
+
         return [
             'as_on' => $today->toDateString(),
             'students_active' => (int) $students->count(),
@@ -87,6 +115,9 @@ class ReportService
             'unpaid_vouchers' => (int) (clone $unpaid)->count(),
             'outstanding_fees' => round((float) (clone $unpaid)->sum('amount') - (float) (clone $unpaid)->sum('paid_amount'), 2),
             'fees_collected_this_month' => round((float) $collectedThisMonth, 2),
+            'collections_by_month' => $collectionsByMonth,
+            'vouchers_by_status' => $vouchersByStatus,
+            'admissions_by_status' => $admissionsByStatus,
             'scholarships_active' => (int) ScholarshipAward::query()
                 ->where('status', 'active')
                 ->count(),

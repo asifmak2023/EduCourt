@@ -23,9 +23,49 @@ import {
 import { visibleSections } from "@/lib/nav";
 import { roleSummary } from "@/lib/roles";
 import { useTr } from "@/lib/i18n";
-import type { CampusDashboard, PlatformOverview, TimetableSlot } from "@/lib/types";
+import {
+  BarStatChart,
+  ChartCard,
+  DonutChart,
+  GroupedBarsChart,
+  TrendChart,
+  useChartColors,
+} from "@/components/Charts";
+import type {
+  CampusDashboard,
+  PlatformOverview,
+  TimetableSlot,
+} from "@/lib/types";
 
 type Mode = "platform" | "campus" | "teacher" | "general";
+
+const STATUS_KEYS: Record<string, MessageKey> = {
+  enquiry: "status.enquiry",
+  applied: "status.applied",
+  under_review: "status.underReview",
+  approved: "status.approved",
+  rejected: "status.rejected",
+  enrolled: "status.enrolled",
+  unpaid: "status.unpaid",
+  partial: "status.partial",
+  paid: "status.paid",
+  void: "status.void",
+};
+
+const ADMISSION_FUNNEL = [
+  "enquiry",
+  "applied",
+  "under_review",
+  "approved",
+  "enrolled",
+] as const;
+
+function compactCurrency(value: number): string {
+  return new Intl.NumberFormat("en", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
 
 function modeFor(user: AuthUser): Mode {
   if (user.roles.includes("platform_admin")) {
@@ -174,6 +214,16 @@ export default function DashboardPage() {
 
 function PlatformView({ overview }: { overview: PlatformOverview }) {
   const { t } = useTranslation();
+  const colors = useChartColors();
+
+  const compared = [...overview.institutions]
+    .sort((a, b) => b.students - a.students)
+    .slice(0, 8)
+    .map((institution) => ({
+      label: institution.code || institution.name,
+      students: institution.students,
+      staff: institution.staff,
+    }));
 
   return (
     <div className="space-y-6">
@@ -187,6 +237,19 @@ function PlatformView({ overview }: { overview: PlatformOverview }) {
           value={formatNumber(overview.totals.active_enrollments)}
         />
       </section>
+
+      <ChartCard
+        title="dashboard.institutionsCompare"
+        description="dashboard.institutionsCompareHint"
+      >
+        <GroupedBarsChart
+          data={compared}
+          series={[
+            { key: "students", label: t("dashboard.students"), color: colors["--accent"] },
+            { key: "staff", label: t("dashboard.staff"), color: colors["--success"] },
+          ]}
+        />
+      </ChartCard>
 
       <Card>
         <div className="flex items-center justify-between border-b border-border-secondary px-5 py-4">
@@ -235,6 +298,7 @@ function PlatformView({ overview }: { overview: PlatformOverview }) {
 
 function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
   const { t } = useTranslation();
+  const colors = useChartColors();
   const girls = dashboard.students_by_gender.find((item) => item.gender === "female")?.total ?? 0;
   const boys = dashboard.students_by_gender.find((item) => item.gender === "male")?.total ?? 0;
 
@@ -268,6 +332,46 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
+        <ChartCard
+          title="dashboard.feeCollectionTrend"
+          description="dashboard.collectionTrendHint"
+          className="lg:col-span-2"
+        >
+          <TrendChart
+            data={(dashboard.collections_by_month ?? []).map((month) => ({
+              label: month.label,
+              value: month.total,
+            }))}
+            formatValue={compactCurrency}
+          />
+        </ChartCard>
+
+        <ChartCard title="dashboard.studentsByGender">
+          <DonutChart
+            data={[
+              { label: t("gender.male"), value: boys, color: colors["--accent"] },
+              { label: t("gender.female"), value: girls, color: colors["--danger"] },
+            ]}
+          />
+        </ChartCard>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-3">
+        <ChartCard title="dashboard.vouchersByStatus">
+          <VoucherStatusDonut dashboard={dashboard} />
+        </ChartCard>
+
+        <ChartCard title="dashboard.admissionsPipeline" className="lg:col-span-2">
+          <BarStatChart
+            data={ADMISSION_FUNNEL.map((status) => ({
+              label: t(STATUS_KEYS[status]),
+              value: dashboard.admissions_by_status?.[status] ?? 0,
+            }))}
+          />
+        </ChartCard>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-3">
         <QuickLinks
           title="dashboard.studentsAdmissions"
           links={[
@@ -293,6 +397,41 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
         </Card>
       </section>
     </div>
+  );
+}
+
+function VoucherStatusDonut({
+  dashboard,
+}: {
+  dashboard: CampusDashboard;
+}) {
+  const { t } = useTranslation();
+  const colors = useChartColors();
+
+  const sliceColors: Record<string, string> = {
+    unpaid: colors["--danger"],
+    partial: colors["--warning"],
+    paid: colors["--success"],
+    void: colors["--muted"],
+  };
+
+  const slices = Object.entries(dashboard.vouchers_by_status ?? {})
+    .filter(([, count]) => count > 0)
+    .map(([status, count]) => ({
+      label: STATUS_KEYS[status] ? t(STATUS_KEYS[status]) : status,
+      value: count,
+      color: sliceColors[status] ?? colors["--muted"],
+    }))
+    .sort((a, b) => b.value - a.value);
+
+  const total = slices.reduce((sum, slice) => sum + slice.value, 0);
+
+  return (
+    <DonutChart
+      data={slices}
+      centerValue={formatNumber(total)}
+      centerLabel={t("dashboard.totalVouchers")}
+    />
   );
 }
 

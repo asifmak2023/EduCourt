@@ -144,6 +144,13 @@ class ReportTest extends TestCase
         $this->assertSame(2, $dashboard['students_active']);
         $this->assertSame(2, $dashboard['enrollments_active']);
         $this->assertSame(1, $dashboard['staff_employed']);
+        $this->assertCount(6, $dashboard['collections_by_month']);
+        $this->assertSame(
+            now()->format('Y-m'),
+            $dashboard['collections_by_month'][5]['month']
+        );
+        $this->assertIsArray($dashboard['vouchers_by_status']);
+        $this->assertIsArray($dashboard['admissions_by_status']);
 
         $progress = $this->api($this->admin)
             ->getJson('/api/v1/reports/progress?academic_year_id='.$this->year->id)

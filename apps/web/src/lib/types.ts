@@ -557,6 +557,12 @@ export interface GenderedCount {
   total: number;
 }
 
+export interface MonthlyTotal {
+  month: string;
+  label: string;
+  total: number;
+}
+
 export interface CampusDashboard {
   as_on: string;
   students_active: number;
@@ -567,6 +573,9 @@ export interface CampusDashboard {
   unpaid_vouchers: number;
   outstanding_fees: number;
   fees_collected_this_month: number;
+  collections_by_month: MonthlyTotal[];
+  vouchers_by_status: Record<string, number>;
+  admissions_by_status: Record<string, number>;
   scholarships_active: number;
   exams_scheduled: number;
   leave_pending: number;

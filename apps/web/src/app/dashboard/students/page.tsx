@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/auth";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Pagination } from "@/components/Pagination";
 import { Select, TextInput, buttonClasses } from "@/components/Form";
+import { FeeVoucherAction } from "@/components/fee-counter/FeeVoucherAction";
 import {
   Badge,
   Card,
@@ -118,13 +119,16 @@ function StudentsTable() {
         ) : (
           <Table variant="secondary">
             <Table.ScrollContainer>
-              <Table.Content aria-label={t("students.title")} className="min-w-[760px]">
+              <Table.Content aria-label={t("students.title")} className="min-w-[900px]">
                 <Table.Header>
                   <Table.Column isRowHeader>{t("students.admissionNo")}</Table.Column>
                   <Table.Column>{t("common.name")}</Table.Column>
                   <Table.Column>{t("common.gender")}</Table.Column>
                   <Table.Column>{t("students.field.dateOfBirth")}</Table.Column>
                   <Table.Column>{t("common.status")}</Table.Column>
+                  {can("fee.create") ? (
+                    <Table.Column>{t("common.actions")}</Table.Column>
+                  ) : null}
                 </Table.Header>
                 <Table.Body>
                   {items.map((student) => (
@@ -149,6 +153,17 @@ function StudentsTable() {
                       <Table.Cell>
                         <Badge value={student.status} />
                       </Table.Cell>
+                      {can("fee.create") ? (
+                        <Table.Cell>
+                          <FeeVoucherAction
+                            student={{
+                              id: student.id,
+                              full_name: student.full_name,
+                              admission_no: student.admission_no,
+                            }}
+                          />
+                        </Table.Cell>
+                      ) : null}
                     </Table.Row>
                   ))}
                 </Table.Body>

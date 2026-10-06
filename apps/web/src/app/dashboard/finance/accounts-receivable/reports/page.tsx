@@ -7,9 +7,11 @@ import {
   useSections,
 } from "@/lib/useLookups";
 import { useJson } from "@/lib/useJson";
+import { useAuth } from "@/lib/auth";
 import { Button, Field, Select, TextInput } from "@/components/Form";
 import { Pagination } from "@/components/Pagination";
 import { PermissionGate } from "@/components/PermissionGate";
+import { FeeVoucherAction } from "@/components/fee-counter/FeeVoucherAction";
 import {
   Card,
   EmptyState,
@@ -46,6 +48,7 @@ export default function ArReportsPage() {
 }
 
 function ArReports() {
+  const { can } = useAuth();
   const { items: years } = useAcademicYears();
   const { items: classes } = useClassRooms();
   const { items: sections } = useSections();
@@ -336,7 +339,7 @@ function ArReports() {
           <EmptyState message="No receivable charges match these filters." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px] text-sm">
+            <table className="w-full min-w-[1120px] text-sm">
               <thead className="bg-[var(--surface-secondary)] text-left text-xs uppercase text-muted">
                 <tr>
                   <th className="px-3 py-2">Student</th>
@@ -350,6 +353,7 @@ function ArReports() {
                   <th className="px-3 py-2 text-right">Paid</th>
                   <th className="px-3 py-2 text-right">Outstanding</th>
                   <th className="px-3 py-2">Status</th>
+                  {can("fee.create") ? <th className="px-3 py-2" /> : null}
                 </tr>
               </thead>
               <tbody>
@@ -379,12 +383,23 @@ function ArReports() {
                       {formatCurrency(row.outstanding)}
                     </td>
                     <td className="px-3 py-2 text-muted">{row.status_label ?? "-"}</td>
+                    {can("fee.create") ? (
+                      <td className="px-3 py-2 text-right">
+                        <FeeVoucherAction
+                          student={{
+                            id: row.student_id,
+                            full_name: row.student_name,
+                            admission_no: row.admission_no,
+                          }}
+                        />
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr className="border-t-2 border-border-secondary font-semibold text-foreground">
-                  <td className="px-3 py-2" colSpan={9}>
+                  <td className="px-3 py-2" colSpan={can("fee.create") ? 10 : 9}>
                     Total Accounts Receivable
                   </td>
                   <td className="px-3 py-2 text-right">

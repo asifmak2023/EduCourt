@@ -11,6 +11,7 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { Avatar } from "@/components/Avatar";
 import { ApiError, apiFetch } from "@/lib/api";
 import { Button, buttonClasses, Field, Select, TextArea, TextInput } from "@/components/Form";
+import { FeeVoucherAction } from "@/components/fee-counter/FeeVoucherAction";
 import {
   Badge,
   Card,
@@ -63,6 +64,13 @@ function StudentDetailView() {
         description={t("students.admissionNoWith", { no: data.admission_no })}
         actions={
           <>
+            <FeeVoucherAction
+              student={{
+                id: data.id,
+                full_name: data.full_name,
+                admission_no: data.admission_no,
+              }}
+            />
             <Link
               href="/dashboard/students"
               className={buttonClasses("secondary")}

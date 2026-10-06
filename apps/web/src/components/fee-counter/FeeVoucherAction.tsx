@@ -2,11 +2,11 @@
 
 import { useAuth } from "@/lib/auth";
 import { Button, type ButtonVariant } from "@/components/Form";
-import type { CounterStudent } from "@/lib/types";
+import type { FeeVoucherStudent } from "./FeeVoucherGenerator";
 import { useFeeVoucher } from "./FeeVoucherProvider";
 
 export interface FeeVoucherActionProps {
-  student?: CounterStudent | null;
+  student?: FeeVoucherStudent | null;
   label?: string;
   variant?: ButtonVariant;
 }

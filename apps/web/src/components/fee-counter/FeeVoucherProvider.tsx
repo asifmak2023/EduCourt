@@ -7,11 +7,11 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { CounterStudent } from "@/lib/types";
+import type { FeeVoucherStudent } from "./FeeVoucherGenerator";
 import { FeeVoucherDialog } from "./FeeVoucherDialog";
 
 interface OpenVoucherOptions {
-  student?: CounterStudent | null;
+  student?: FeeVoucherStudent | null;
 }
 
 interface FeeVoucherContextValue {
@@ -30,7 +30,7 @@ export function useFeeVoucher(): FeeVoucherContextValue {
 
 export function FeeVoucherProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
-  const [student, setStudent] = useState<CounterStudent | null>(null);
+  const [student, setStudent] = useState<FeeVoucherStudent | null>(null);
 
   const openVoucher = useCallback((options?: OpenVoucherOptions) => {
     setStudent(options?.student ?? null);

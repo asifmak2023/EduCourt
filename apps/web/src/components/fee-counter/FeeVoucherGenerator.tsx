@@ -53,8 +53,15 @@ export interface FeeVoucherContext {
   section_id?: number;
 }
 
+export interface FeeVoucherStudent {
+  id: number;
+  full_name?: string | null;
+  admission_no?: string | null;
+  academic_year_id?: number | null;
+}
+
 export interface FeeVoucherGeneratorProps {
-  initialStudent?: CounterStudent | null;
+  initialStudent?: FeeVoucherStudent | null;
   initialContext?: FeeVoucherContext;
   showSearch?: boolean;
   onGenerated?: (result: GenerateResult) => void;
@@ -121,7 +128,7 @@ export function FeeVoucherGenerator({
     reload: reloadStudents,
   } = useList<CounterStudent>("/v1/fee-counter/students", studentParams);
 
-  const [selected, setSelected] = useState<CounterStudent | null>(initialStudent);
+  const [selected, setSelected] = useState<FeeVoucherStudent | null>(initialStudent);
 
   const duesPath = selected
     ? `/v1/fee-counter/students/${selected.id}/dues${

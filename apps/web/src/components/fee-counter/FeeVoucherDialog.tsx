@@ -3,16 +3,16 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/lib/auth";
-import type { CounterStudent } from "@/lib/types";
 import {
   FeeVoucherGenerator,
   type FeeVoucherContext,
+  type FeeVoucherStudent,
   type GenerateResult,
 } from "./FeeVoucherGenerator";
 
 export interface FeeVoucherDialogProps {
   open: boolean;
-  student?: CounterStudent | null;
+  student?: FeeVoucherStudent | null;
   context?: FeeVoucherContext;
   onClose: () => void;
   onGenerated?: (result: GenerateResult) => void;
@@ -48,7 +48,7 @@ function DialogFrame({
   onClose,
   onGenerated,
 }: {
-  student: CounterStudent | null;
+  student: FeeVoucherStudent | null;
   context?: FeeVoucherContext;
   onClose: () => void;
   onGenerated?: (result: GenerateResult) => void;

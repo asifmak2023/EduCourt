@@ -27,25 +27,31 @@ Make Accounts Receivable the fastest, smoothest surface in the product:
    vouchers and record payments. This is intentional: front-desk, academic and
    accounts staff all need to issue vouchers and take money without waiting on a
    separate grant.
-2. **Principal is in.** Principal is covered by the OR set already (it holds
-   `finance.view` and `academic.view`), and additionally receives explicit
+2. **Academic access is scoped to academic managers, not every academic
+   viewer.** The original proposal used `academic.view`, but every teacher holds
+   that permission, which would have let teachers issue vouchers, collect money
+   and read fee reports. AR now uses `academic.create | academic.edit` instead,
+   covering the Principal and Academic Coordinator while excluding plain
+   `academic.view` holders such as teachers, librarians and IT admins.
+3. **Principal is in.** Principal is covered by the OR set already (it holds
+   `fee.view` and `finance.view`), and additionally receives explicit
    `fee.view` / `fee.create` so the intent is literal and robust.
-3. **D1 — reuse, don't duplicate.** The existing AR reports list already
+4. **D1 — reuse, don't duplicate.** The existing AR reports list already
    searches, filters, paginates, exports and prints. It becomes the voucher
    workspace with per-row **Print** and **Collect payment** actions. A single new
    **Receipts** list is added. No parallel voucher list.
-4. **No schema changes.** Reuse `fee_charges`, `fee_charge_lines`, `fee_receipts`
+5. **No schema changes.** Reuse `fee_charges`, `fee_charge_lines`, `fee_receipts`
    and `fee_receipt_allocations` exactly as shipped. Payments are recorded
    through a new endpoint on the existing receipt model.
-5. **Destructive and configuration actions stay restricted.** Voiding charges,
+6. **Destructive and configuration actions stay restricted.** Voiding charges,
    fee-structure authoring, refunds and approvals keep their current permissions.
 
 ## Permission model
 
 Two OR-sets, expressed with Spatie's pipe syntax (`a|b` = any-of):
 
-- `AR_VIEW`  = `fee.view | finance.view | academic.view`
-- `AR_WRITE` = `fee.view | finance.view | academic.view | fee.create | finance.create | academic.create | academic.edit`
+- `AR_VIEW`  = `fee.view | finance.view | academic.create | academic.edit`
+- `AR_WRITE` = `fee.view | finance.view | academic.create | academic.edit | fee.create | finance.create`
 
 ### Route changes (`apps/api/routes/api.php`)
 
@@ -151,9 +157,10 @@ Print receipt     -> GET  /v1/fee-receipts/{id}    -> receipts/[id]?print=1
 ## Testing
 
 - Feature tests:
-  - `academic.view` user can list charges, generate a voucher, and record a
-    receipt; a user with none of the perms gets 403.
-  - Void charge still 403 for `academic.view`.
+  - An `academic.create` user can list charges, generate a voucher, and record a
+    receipt; an `academic.view`-only user (e.g. a teacher) and a user with none
+    of the perms both get 403.
+  - Void charge still 403 for `academic.create`.
   - `receivePayment` allocates FIFO, updates statuses, rejects overpayment.
   - Principal permission set includes the fee view/create perms.
 - Playwright: print a challan from students list, profile and AR reports; collect

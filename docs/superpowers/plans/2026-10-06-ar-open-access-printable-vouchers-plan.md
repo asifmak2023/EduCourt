@@ -17,9 +17,12 @@ Backend:
 - `apps/api/config/rbac.php`: Principal gets `fee.view`, `fee.create`,
   `fee.export`.
 - `apps/api/routes/api.php`: switch the AR read routes to
-  `permission:fee.view|finance.view|academic.view` and the AR write routes
-  (`fee-counter/generate`, `fee-counter/generate-bulk`) to
-  `fee.view|finance.view|academic.view|fee.create|finance.create|academic.create|academic.edit`.
+  `permission:fee.view|finance.view|academic.create|academic.edit` and the AR
+  write routes (`fee-counter/generate`, `fee-counter/generate-bulk`,
+  `fee-receipts` store) to
+  `fee.view|finance.view|academic.create|academic.edit|fee.create|finance.create`.
+  `academic.create|academic.edit` is used instead of `academic.view` so plain
+  teachers (who hold `academic.view`) are excluded.
 - Apply the targeted, idempotent Principal grant on production during deploy.
 
 Frontend:
@@ -33,8 +36,8 @@ Frontend:
 - AR pages' `PermissionGate`: accept/allow the `AR_VIEW` set (extend
   `PermissionGate` to accept `string | string[]`).
 
-Verification: an `academic.view` user sees AR nav + actions; a no-permission user
-does not.
+Verification: an `academic.create`/`academic.edit` or `fee.view`/`finance.view`
+user sees AR nav + actions; an `academic.view`-only user (teacher) does not.
 
 ---
 

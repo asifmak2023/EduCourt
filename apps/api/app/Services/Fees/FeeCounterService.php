@@ -395,6 +395,74 @@ class FeeCounterService
     }
 
     /**
+     * Record a payment against a student's open fee charges and allocate it
+     * oldest-first (or to a specific pinned charge first).
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public function receivePayment(Student $student, array $data, int $userId): array
+    {
+        $amount = round((float) $data['amount'], 2);
+        $academicYearId = isset($data['academic_year_id']) ? (int) $data['academic_year_id'] : null;
+        $pinnedId = isset($data['fee_charge_id']) ? (int) $data['fee_charge_id'] : null;
+
+        return DB::transaction(function () use ($student, $data, $userId, $amount, $academicYearId, $pinnedId) {
+            $query = FeeCharge::query()
+                ->where('student_id', $student->id)
+                ->whereIn('status', [VoucherStatus::Unpaid->value, VoucherStatus::Partial->value]);
+
+            if ($academicYearId !== null) {
+                $query->where('academic_year_id', $academicYearId);
+            }
+
+            if ($pinnedId !== null) {
+                $query->where('id', $pinnedId);
+            }
+
+            $targets = $query->orderBy('due_date')->orderBy('id')->get();
+
+            if ($targets->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'amount' => ['There is no outstanding balance to receive a payment against.'],
+                ]);
+            }
+
+            $outstanding = round($targets->sum(fn (FeeCharge $charge) => $charge->balance()), 2);
+
+            if ($amount > $outstanding + 0.005) {
+                throw ValidationException::withMessages([
+                    'amount' => ["The amount exceeds the outstanding balance of {$outstanding}."],
+                ]);
+            }
+
+            $receipt = FeeReceipt::create([
+                'institution_id' => $student->institution_id,
+                'campus_id' => $student->campus_id,
+                'student_id' => $student->id,
+                'receipt_no' => $this->nextReceiptNo($student->campus_id),
+                'payment_date' => $data['payment_date'] ?? now()->toDateString(),
+                'amount' => $amount,
+                'method' => $data['method'] ?? 'cash',
+                'reference' => $data['reference'] ?? null,
+                'notes' => $data['notes'] ?? null,
+                'status' => 'posted',
+                'created_by' => $userId,
+            ]);
+
+            $allocations = $this->allocatePayment(
+                $receipt,
+                $amount,
+                $targets,
+                $student->id,
+                $academicYearId ?? (int) $targets->first()->academic_year_id,
+            );
+
+            return ['receipt' => $receipt, 'allocations' => $allocations];
+        });
+    }
+
+    /**
      * @param  array<string, mixed>  $item
      * @param  array<string, mixed>  $overrides
      */

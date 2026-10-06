@@ -14,6 +14,7 @@ import { Pagination } from "@/components/Pagination";
 import { PermissionGate } from "@/components/PermissionGate";
 import { FeeVoucherAction } from "@/components/fee-counter/FeeVoucherAction";
 import { ChargePrintButton } from "@/components/fee-counter/ChargePrintButton";
+import { CollectPaymentButton } from "@/components/fee-counter/CollectPaymentButton";
 import {
   Card,
   EmptyState,
@@ -388,6 +389,17 @@ function ArReports() {
                     {canAny(AR_VIEW) ? (
                       <td className="px-3 py-2 text-right">
                         <div className="flex justify-end gap-2">
+                          {row.status !== "void" && Number(row.outstanding) > 0 ? (
+                            <CollectPaymentButton
+                              student={{
+                                id: row.student_id,
+                                full_name: row.student_name,
+                                admission_no: row.admission_no,
+                              }}
+                              chargeId={row.id}
+                              label="Collect"
+                            />
+                          ) : null}
                           <ChargePrintButton chargeId={row.id} />
                           <FeeVoucherAction
                             student={{

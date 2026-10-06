@@ -11,6 +11,7 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { Pagination } from "@/components/Pagination";
 import { Button, Select, TextInput, buttonClasses } from "@/components/Form";
 import { FeeVoucherAction } from "@/components/fee-counter/FeeVoucherAction";
+import { CollectPaymentButton } from "@/components/fee-counter/CollectPaymentButton";
 import { BulkFeeVoucherDialog } from "@/components/fee-counter/BulkFeeVoucherDialog";
 import {
   Badge,
@@ -167,13 +168,23 @@ function StudentsTable() {
                       </Table.Cell>
                       {canAny(AR_VIEW) ? (
                         <Table.Cell>
-                          <FeeVoucherAction
-                            student={{
-                              id: student.id,
-                              full_name: student.full_name,
-                              admission_no: student.admission_no,
-                            }}
-                          />
+                          <div className="flex flex-wrap gap-2">
+                            <CollectPaymentButton
+                              student={{
+                                id: student.id,
+                                full_name: student.full_name,
+                                admission_no: student.admission_no,
+                              }}
+                              label="Collect"
+                            />
+                            <FeeVoucherAction
+                              student={{
+                                id: student.id,
+                                full_name: student.full_name,
+                                admission_no: student.admission_no,
+                              }}
+                            />
+                          </div>
                         </Table.Cell>
                       ) : null}
                     </Table.Row>

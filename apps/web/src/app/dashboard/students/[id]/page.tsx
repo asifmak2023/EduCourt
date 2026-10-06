@@ -120,7 +120,11 @@ function StudentDetailView() {
         </DataList>
       </SectionCard>
 
-      <StudentFeeVouchersCard studentId={data.id} />
+      <StudentFeeVouchersCard
+        studentId={data.id}
+        studentName={data.full_name}
+        admissionNo={data.admission_no}
+      />
 
       <SectionCard
         title="students.guardians"

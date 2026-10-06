@@ -8,7 +8,6 @@ import { useAuth } from "@/lib/auth";
 import { useTr } from "@/lib/i18n";
 import { isPortalOnly } from "@/lib/roles";
 import { Icon } from "@/components/Icons";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import type { NavIcon } from "@/lib/nav";
 
 const NAV_LINKS = [
@@ -100,7 +99,6 @@ export default function LandingPage() {
           </nav>
 
           <div className="ms-auto flex items-center gap-2">
-            <LanguageSwitcher />
             <Link
               href="/login"
               className="hidden rounded-lg px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-surface-tertiary sm:inline-flex"

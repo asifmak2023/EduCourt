@@ -11,7 +11,6 @@ import { PortalProvider, usePortal } from "@/lib/portal-context";
 import { Icon } from "@/components/Icons";
 import { Avatar } from "@/components/Avatar";
 import { AccountMenu } from "@/components/AccountMenu";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import type { NavIcon } from "@/lib/nav";
 
 const PORTAL_TABS: { href: string; label: string; icon: NavIcon }[] = [
@@ -111,7 +110,6 @@ function PortalFrame({ children }: { children: ReactNode }) {
                 {childName}
               </span>
             ) : null}
-            <LanguageSwitcher />
             <AccountMenu profileHref="/portal/profile" />
           </div>
         </div>

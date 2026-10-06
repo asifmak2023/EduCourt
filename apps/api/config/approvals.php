@@ -3,6 +3,7 @@
 use App\Models\Expense;
 use App\Models\FeeRefund;
 use App\Models\OtherIncome;
+use App\Models\PaymentVoucher;
 use App\Models\PayrollRun;
 use App\Models\TaxReturn;
 
@@ -25,6 +26,7 @@ return [
         'other_income' => OtherIncome::class,
         'tax_return' => TaxReturn::class,
         'payroll_run' => PayrollRun::class,
+        'payment_voucher' => PaymentVoucher::class,
     ],
 
 ];

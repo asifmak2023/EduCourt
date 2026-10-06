@@ -129,6 +129,7 @@ export const ROUTE_PATHS: readonly string[] = [
   "/dashboard/finance/accounts-receivable/fee-structure",
   "/dashboard/finance/accounts-receivable/fee-structure/_/edit",
   "/dashboard/finance/accounts-receivable/fee-structure/new",
+  "/dashboard/finance/accounts-receivable/generate-voucher",
   "/dashboard/finance/accounts/_",
   "/dashboard/finance/accounts/_/edit",
   "/dashboard/finance/accounts/new",

@@ -116,6 +116,7 @@ export const en = {
   "navigation.feeHeads": "Fee heads",
   "navigation.feePlans": "Fee plans",
   "navigation.feeStructure": "Fee structure",
+  "navigation.generateVoucher": "Generate voucher",
   "navigation.chartOfAccounts": "Chart of accounts",
   "navigation.journal": "Journal",
   "navigation.trialBalance": "Trial balance",

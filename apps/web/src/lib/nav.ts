@@ -90,6 +90,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "navigation.feeHeads", href: "/dashboard/finance/fee-heads", icon: "list", permission: "fee.view", ready: true },
       { label: "navigation.feePlans", href: "/dashboard/finance/fee-plans", icon: "clipboard", permission: "fee.view", ready: true },
       { label: "navigation.feeStructure", href: "/dashboard/finance/accounts-receivable/fee-structure", icon: "clipboard", permission: "fee.view", ready: true },
+      { label: "navigation.generateVoucher", href: "/dashboard/finance/accounts-receivable/generate-voucher", icon: "receipt", permission: "fee.view", ready: true },
       { label: "navigation.chartOfAccounts", href: "/dashboard/finance/accounts", icon: "list", permission: "finance.view", ready: true },
       { label: "navigation.journal", href: "/dashboard/finance/journal", icon: "list", permission: "finance.view", ready: true },
       { label: "navigation.trialBalance", href: "/dashboard/finance/trial-balance", icon: "chart", permission: "finance.view", ready: true },

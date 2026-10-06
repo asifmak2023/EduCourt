@@ -415,6 +415,71 @@ export interface CounterStudent {
   outstanding: string;
 }
 
+export interface CounterStructureItem {
+  id: number;
+  name: string;
+  amount: string;
+  fee_head_id: number | null;
+}
+
+export interface CounterExamItem extends CounterStructureItem {
+  exam_term: ExamTerm;
+}
+
+export interface CounterStructure {
+  id: number;
+  monthly_amount: string;
+  monthly_items: CounterStructureItem[];
+  exam_terms: CounterExamItem[];
+  other_items: CounterStructureItem[];
+}
+
+export interface CounterOpenCharge {
+  id: number;
+  voucher_no: string;
+  billing_kind: BillingKind;
+  exam_term: ExamTerm | null;
+  period_year: number | null;
+  period_month: number | null;
+  title: string | null;
+  amount: string;
+  paid_amount: string;
+  balance: string;
+  due_date: string | null;
+  status: string | null;
+}
+
+export interface CounterPendingMonth {
+  period_year: number;
+  period_month: number;
+  amount: string;
+}
+
+export interface CounterDues {
+  student: {
+    id: number;
+    admission_no: string | null;
+    roll_number: string | null;
+    full_name: string;
+    photo_url: string | null;
+    campus_id: number;
+    academic_year_id: number;
+    class_room_id: number | null;
+    class: string | null;
+    section_id: number | null;
+    section: string | null;
+    guardian_phone: string | null;
+  };
+  structure: CounterStructure | null;
+  open_charges: CounterOpenCharge[];
+  pending_months: CounterPendingMonth[];
+  totals: {
+    outstanding: string;
+    billed: string;
+    paid: string;
+  };
+}
+
 export interface ArChargeRow {
   id: number;
   campus: string | null;

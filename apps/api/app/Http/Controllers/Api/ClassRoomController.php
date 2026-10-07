@@ -26,6 +26,7 @@ class ClassRoomController extends Controller
                     ->orWhere('code', 'like', "%{$search}%");
             }))
             ->when($request->filled('stage_id'), fn ($q) => $q->where('stage_id', $request->integer('stage_id')))
+            ->when($request->filled('section_id'), fn ($q) => $q->whereHas('sections', fn ($s) => $s->where('id', $request->integer('section_id'))))
             ->when($request->has('is_active'), fn ($q) => $q->where('is_active', $request->boolean('is_active')))
             ->orderBy('sequence')
             ->orderBy('name')

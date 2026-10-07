@@ -1,6 +1,6 @@
 "use client";
 
-import { useStages } from "@/lib/useLookups";
+import { useStages, useSections } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
 import { MasterList } from "@/components/MasterList";
 import { Badge } from "@/components/ui";
@@ -16,6 +16,7 @@ export default function ClassesPage() {
 
 function ClassesTable() {
   const { items: stages } = useStages();
+  const { items: sections } = useSections();
 
   return (
     <MasterList<ClassRoom>
@@ -34,6 +35,16 @@ function ClassesTable() {
           options: stages.map((stage) => ({
             value: String(stage.id),
             label: stage.name,
+          })),
+        },
+        {
+          param: "section_id",
+          placeholder: "All sections",
+          options: sections.map((section) => ({
+            value: String(section.id),
+            label: section.class_room
+              ? `${section.class_room.name} – ${section.name}`
+              : section.name,
           })),
         },
         {

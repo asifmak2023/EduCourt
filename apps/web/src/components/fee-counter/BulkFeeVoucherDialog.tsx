@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { AR_VIEW } from "@/lib/permissions";
@@ -15,6 +16,7 @@ interface BulkResultRow {
   admission_no: string | null;
   status: "created" | "skipped" | "error";
   voucher_no?: string;
+  charge_id?: number | null;
   message?: string;
 }
 
@@ -62,8 +64,8 @@ function BulkDialogFrame({
   onGenerated?: (result: BulkResult) => void;
 }) {
   const { items: years } = useAcademicYears();
-  const { items: classes } = useClassRooms();
-  const { items: sections } = useSections();
+  const { items: classes, loading: classesLoading } = useClassRooms();
+  const { items: sections, loading: sectionsLoading } = useSections();
 
   const [academicYearId, setAcademicYearId] = useState("");
   const [classId, setClassId] = useState("");
@@ -132,6 +134,26 @@ function BulkDialogFrame({
     }
   };
 
+  const printAll = () => {
+    if (!result) return;
+    const ids = result.results
+      .filter((row) => row.charge_id != null)
+      .map((row) => row.charge_id as number);
+    if (ids.length === 0) return;
+    // Open each voucher print page in a new tab
+    for (const id of ids) {
+      window.open(
+        `/dashboard/finance/accounts-receivable/vouchers/${id}?print=1`,
+        "_blank"
+      );
+    }
+  };
+
+  // Detect empty class / section state after loading is complete
+  const noClasses = !classesLoading && classes.length === 0;
+  const noSections =
+    !sectionsLoading && classId !== "" && filteredSections.length === 0;
+
   return (
     <div
       className="dialog-overlay fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto p-4"
@@ -148,6 +170,7 @@ function BulkDialogFrame({
         aria-label="Generate class vouchers"
         className="dialog-panel dialog-enter my-auto flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl"
       >
+        {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-border-secondary px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold text-foreground">
@@ -179,11 +202,29 @@ function BulkDialogFrame({
           </button>
         </div>
 
+        {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {error ? <ErrorNotice message={error} /> : null}
           {result ? (
             <div className="mb-4">
               <SuccessNotice message={result.message} />
+            </div>
+          ) : null}
+
+          {/* Empty-class prompt */}
+          {noClasses ? (
+            <div className="mb-4 rounded-xl border border-warning/40 bg-warning/5 px-4 py-3 text-sm text-foreground">
+              <p className="font-medium">No classes found</p>
+              <p className="mt-0.5 text-muted">
+                You need to create at least one class before generating vouchers.{" "}
+                <Link
+                  href="/dashboard/academics/classes/new"
+                  className="font-medium text-primary underline underline-offset-2"
+                  onClick={onClose}
+                >
+                  Create a class →
+                </Link>
+              </p>
             </div>
           ) : null}
 
@@ -224,6 +265,7 @@ function BulkDialogFrame({
                 id="bulk_section"
                 value={sectionId}
                 onChange={(event) => setSectionId(event.target.value)}
+                disabled={!classId}
               >
                 <option value="">All sections</option>
                 {filteredSections.map((section) => (
@@ -232,6 +274,19 @@ function BulkDialogFrame({
                   </option>
                 ))}
               </Select>
+              {/* Empty-section inline prompt */}
+              {noSections ? (
+                <p className="mt-1 text-xs text-warning">
+                  This class has no sections.{" "}
+                  <Link
+                    href="/dashboard/academics/sections/new"
+                    className="font-medium underline underline-offset-2"
+                    onClick={onClose}
+                  >
+                    Add a section →
+                  </Link>
+                </p>
+              ) : null}
             </Field>
             <Field label="Month" htmlFor="bulk_month" required>
               <TextInput
@@ -251,6 +306,7 @@ function BulkDialogFrame({
             </Field>
           </div>
 
+          {/* Results table */}
           {result ? (
             <div className="mt-5 overflow-hidden rounded-xl border border-border-secondary">
               <table className="w-full text-sm">
@@ -260,6 +316,7 @@ function BulkDialogFrame({
                     <th className="px-3 py-2">Admission</th>
                     <th className="px-3 py-2">Status</th>
                     <th className="px-3 py-2">Voucher</th>
+                    <th className="px-3 py-2"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -273,10 +330,22 @@ function BulkDialogFrame({
                       </td>
                       <td className="px-3 py-2 capitalize text-muted">
                         {row.status}
-                        {row.message ? ` - ${row.message}` : ""}
+                        {row.message ? ` — ${row.message}` : ""}
                       </td>
                       <td className="px-3 py-2 font-mono text-xs text-muted">
                         {row.voucher_no ?? "-"}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        {row.charge_id ? (
+                          <Link
+                            href={`/dashboard/finance/accounts-receivable/vouchers/${row.charge_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-medium text-primary hover:underline"
+                          >
+                            Print
+                          </Link>
+                        ) : null}
                       </td>
                     </tr>
                   ))}
@@ -286,6 +355,7 @@ function BulkDialogFrame({
           ) : null}
         </div>
 
+        {/* Footer */}
         <div className="flex items-center justify-between gap-2 border-t border-border-secondary px-6 py-4">
           <span className="text-xs text-muted">
             {result
@@ -296,6 +366,11 @@ function BulkDialogFrame({
             <Button type="button" variant="secondary" onClick={onClose}>
               Close
             </Button>
+            {result && result.created > 0 ? (
+              <Button type="button" variant="secondary" onClick={printAll}>
+                Print all ({result.created})
+              </Button>
+            ) : null}
             <Button type="button" loading={busy} onClick={() => void submit()}>
               Generate
             </Button>

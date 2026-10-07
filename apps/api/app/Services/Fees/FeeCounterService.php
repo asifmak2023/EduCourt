@@ -294,10 +294,10 @@ class FeeCounterService
 
                 if ($charge !== null && $charge->wasRecentlyCreated) {
                     $created++;
-                    $results[] = $base + ['status' => 'created', 'voucher_no' => $charge->voucher_no];
+                    $results[] = $base + ['status' => 'created', 'voucher_no' => $charge->voucher_no, 'charge_id' => $charge->id];
                 } else {
                     $skipped++;
-                    $results[] = $base + ['status' => 'skipped', 'message' => 'Already billed for this month.'];
+                    $results[] = $base + ['status' => 'skipped', 'message' => 'Already billed for this month.', 'charge_id' => $charge?->id];
                 }
             } catch (\Throwable $e) {
                 $errors++;

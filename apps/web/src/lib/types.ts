@@ -552,6 +552,33 @@ export interface ArSummary {
   };
 }
 
+export interface PayableSummary {
+  as_of: string;
+  totals: {
+    payable: string;
+    paid: string;
+    outstanding: string;
+    overdue: string;
+  };
+  counts: {
+    overdue: number;
+    pending_approval: number;
+    draft: number;
+  };
+  vouchers_by_status: Record<string, number>;
+  by_category: {
+    category: string;
+    payable: string;
+    paid: string;
+  }[];
+  by_month: {
+    month: string;
+    label: string;
+    payable: string;
+    paid: string;
+  }[];
+}
+
 export interface GenderedCount {
   gender: string | null;
   total: number;

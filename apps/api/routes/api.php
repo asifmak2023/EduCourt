@@ -61,6 +61,7 @@ use App\Http\Controllers\Api\FeeReportController;
 use App\Http\Controllers\Api\FeeStructureController;
 use App\Http\Controllers\Api\FeeVoucherController;
 use App\Http\Controllers\Api\FinanceReportController;
+use App\Http\Controllers\Api\PayableReportController;
 use App\Http\Controllers\Api\FineRuleController;
 use App\Http\Controllers\Api\FiscalYearController;
 use App\Http\Controllers\Api\GradeScaleController;
@@ -431,6 +432,8 @@ Route::prefix('v1')->group(function () {
 
             Route::get('finance/reports/payables', [FinanceReportController::class, 'payables'])->middleware('permission:finance.view');
             Route::get('finance/reports/expenses', [FinanceReportController::class, 'expenseSummary'])->middleware('permission:finance.view');
+
+            Route::get('payable-reports/summary', [PayableReportController::class, 'summary'])->middleware('permission:finance.view');
 
             Route::get('vendors', [VendorController::class, 'index'])->middleware('permission:finance.view');
             Route::post('vendors', [VendorController::class, 'store'])->middleware('permission:finance.create');

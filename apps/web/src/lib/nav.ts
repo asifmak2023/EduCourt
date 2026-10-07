@@ -88,6 +88,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "navigation.financeOverview", href: "/dashboard/finance", icon: "grid", permission: AR_VIEW, ready: true },
       { label: "navigation.accountsReceivable", href: "/dashboard/finance/accounts-receivable", icon: "receipt", permission: AR_VIEW, ready: true },
+      { label: "navigation.accountsPayable", href: "/dashboard/finance/accounts-payable", icon: "banknote", permission: "finance.view", ready: true },
       { label: "navigation.feeStructure", href: "/dashboard/finance/accounts-receivable/fee-structure", icon: "clipboard", permission: "fee.view", ready: true },
       { label: "navigation.generateVoucher", href: "/dashboard/finance/accounts-receivable/generate-voucher", icon: "receipt", permission: AR_VIEW, ready: true },
       { label: "navigation.arReports", href: "/dashboard/finance/accounts-receivable/reports", icon: "chart", permission: AR_VIEW, ready: true },

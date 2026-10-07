@@ -21,6 +21,12 @@ const LINKS: HubLink[] = [
     permission: AR_VIEW,
   },
   {
+    title: "Accounts payable",
+    description: "Payment vouchers, staff salaries, utilities and outstanding payables.",
+    href: "/dashboard/finance/accounts-payable",
+    permission: "finance.view",
+  },
+  {
     title: "Chart of accounts",
     description: "Ledger accounts used for double-entry postings.",
     href: "/dashboard/finance/accounts",

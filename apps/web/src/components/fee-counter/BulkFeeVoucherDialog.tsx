@@ -138,15 +138,10 @@ function BulkDialogFrame({
     if (!result) return;
     const ids = result.results
       .filter((row) => row.charge_id != null)
-      .map((row) => row.charge_id as number);
+      .map((row) => String(row.charge_id));
     if (ids.length === 0) return;
-    // Open each voucher print page in a new tab
-    for (const id of ids) {
-      window.open(
-        `/dashboard/finance/accounts-receivable/vouchers/${id}?print=1`,
-        "_blank"
-      );
-    }
+    const url = `/dashboard/finance/accounts-receivable/vouchers/bulk-print?ids=${ids.join(",")}`;
+    window.open(url, "_blank");
   };
 
   // Detect empty class / section state after loading is complete

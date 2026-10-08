@@ -27,13 +27,32 @@ class UserController extends Controller
             ->when($search !== '', fn ($query) => $query
                 ->where(fn ($q) => $q
                     ->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")))
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('employee_code', 'like', "%{$search}%")
+                    ->orWhere('job_title', 'like', "%{$search}%")))
             ->when($request->filled('campus_id'), fn ($query) => $query
                 ->where('campus_id', $request->integer('campus_id')))
             ->when($request->filled('role'), fn ($query) => $query
                 ->role($request->string('role')->toString()))
             ->when($request->has('is_active'), fn ($query) => $query
                 ->where('is_active', $request->boolean('is_active')))
+            ->when($request->has('two_factor_enabled'), fn ($query) => $query
+                ->where(function ($q) use ($request) {
+                    if ($request->boolean('two_factor_enabled')) {
+                        $q->whereNotNull('two_factor_confirmed_at');
+                    } else {
+                        $q->whereNull('two_factor_confirmed_at');
+                    }
+                }))
+            ->when($request->has('has_student'), fn ($query) => $query
+                ->where(function ($q) use ($request) {
+                    if ($request->boolean('has_student')) {
+                        $q->whereHas('student');
+                    } else {
+                        $q->whereDoesntHave('student');
+                    }
+                }))
             ->orderBy('name')
             ->paginate($request->integer('per_page', 25));
 

@@ -46,6 +46,22 @@ export default function UsersPage() {
             { value: "0", label: "Inactive" },
           ],
         },
+        {
+          param: "two_factor_enabled",
+          placeholder: "All 2FA states",
+          options: [
+            { value: "1", label: "2FA enabled" },
+            { value: "0", label: "2FA disabled" },
+          ],
+        },
+        {
+          param: "has_student",
+          placeholder: "All account types",
+          options: [
+            { value: "1", label: "Linked to student" },
+            { value: "0", label: "No student link" },
+          ],
+        },
       ]}
       columns={[
         {

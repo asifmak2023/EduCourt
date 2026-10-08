@@ -5,9 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { PermissionGate } from "@/components/PermissionGate";
 import { AR_VIEW } from "@/lib/permissions";
 import { apiFetch } from "@/lib/api";
-import { PrintHeader } from "@/components/fee-counter/PrintHeader";
+import { VoucherSlip } from "@/components/fee-counter/VoucherSlip";
 import { Spinner, ErrorNotice } from "@/components/ui";
-import { amountInWords, formatCurrency, formatDate } from "@/lib/format";
 import { Button } from "@/components/Form";
 import type { FeeCharge } from "@/lib/types";
 
@@ -123,152 +122,19 @@ function BulkVoucherPrint() {
       </div>
 
       {/* All vouchers — each on its own print page */}
-      {charges.map((charge, index) => (
-        <VoucherPage
-          key={charge.id}
-          charge={charge}
-          isLast={index === charges.length - 1}
-        />
-      ))}
-    </div>
-  );
-}
-
-function VoucherPage({
-  charge,
-  isLast,
-}: {
-  charge: FeeCharge;
-  isLast: boolean;
-}) {
-  const amount = Number(charge.amount ?? 0);
-  const discount = Number(charge.discount_amount ?? 0);
-  const paid = Number(charge.paid_amount ?? 0);
-  const balance = Number(charge.balance ?? 0);
-  const subtotal = amount + discount;
-  const lines = charge.lines ?? [];
-
-  return (
-    <div
-      className={`mx-auto max-w-[820px] bg-white p-8 text-black shadow-sm print:max-w-none print:p-6 print:shadow-none${
-        isLast ? "" : " mb-6 print:mb-0 print:break-after-page"
-      }`}
-    >
-      <PrintHeader
-        title="Fee Voucher"
-        campus={charge.campus}
-        institution={charge.institution}
-      />
-
-      <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-        <div className="space-y-1">
-          <Row label="Voucher no" value={charge.voucher_no} />
-          <Row
-            label="Fee type"
-            value={charge.billing_kind_label ?? charge.billing_kind ?? "-"}
-          />
-          {charge.title ? <Row label="Particulars" value={charge.title} /> : null}
-        </div>
-        <div className="space-y-1">
-          <Row label="Issue / due date" value={formatDate(charge.due_date)} />
-          <Row label="Status" value={charge.status ?? "-"} />
-        </div>
-      </div>
-
-      <div className="mt-4 rounded border border-black/20 p-3 text-sm">
-        <p className="text-xs font-semibold uppercase tracking-wide text-black/60">
-          Student
-        </p>
-        <div className="mt-1 grid grid-cols-2 gap-x-6 gap-y-1">
-          <Row label="Name" value={charge.student?.full_name ?? "-"} />
-          <Row label="Admission no" value={charge.student?.admission_no ?? "-"} />
-          <Row label="Class" value={charge.class_room?.name ?? "-"} />
-          <Row label="Section" value={charge.section?.name ?? "-"} />
-        </div>
-      </div>
-
-      <table className="mt-5 w-full border-collapse text-sm">
-        <thead>
-          <tr className="border-b border-black/60 text-left">
-            <th className="py-2 pr-3 font-semibold">#</th>
-            <th className="py-2 pr-3 font-semibold">Fee head</th>
-            <th className="py-2 text-right font-semibold">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          {lines.length > 0 ? (
-            lines.map((line, idx) => (
-              <tr key={line.id} className="border-b border-black/10">
-                <td className="py-2 pr-3">{idx + 1}</td>
-                <td className="py-2 pr-3">
-                  {line.fee_head?.name ?? line.description ?? charge.title ?? "Fee"}
-                </td>
-                <td className="py-2 text-right">{formatCurrency(line.amount)}</td>
-              </tr>
-            ))
-          ) : (
-            <tr className="border-b border-black/10">
-              <td className="py-2 pr-3">1</td>
-              <td className="py-2 pr-3">
-                {charge.fee_head?.name ?? charge.title ?? "Fee"}
-              </td>
-              <td className="py-2 text-right">{formatCurrency(amount)}</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-
-      <div className="mt-4 flex justify-end">
-        <table className="text-sm">
-          <tbody>
-            <TotalRow label="Subtotal" value={subtotal} />
-            {discount > 0 ? (
-              <TotalRow label="Discount" value={-discount} />
-            ) : null}
-            <TotalRow label="Payable" value={amount} strong />
-            {paid > 0 ? <TotalRow label="Paid" value={paid} /> : null}
-            {paid > 0 ? <TotalRow label="Balance" value={balance} strong /> : null}
-          </tbody>
-        </table>
-      </div>
-
-      <p className="mt-3 text-sm">
-        <span className="font-semibold">Amount in words: </span>
-        {amountInWords(amount)}
-      </p>
-
-      <div className="mt-10 flex items-end justify-between text-xs text-black/70">
-        <p>Please pay on or before the due date to avoid a late fee.</p>
-        <p className="border-t border-black/60 px-8 pt-1">Authorised signature</p>
+      <div className="space-y-8 print:space-y-0">
+        {charges.map((charge, index) => (
+          <div
+            key={charge.id}
+            className="mx-auto max-w-[1000px] bg-white p-6 shadow-sm print:max-w-none print:p-0 print:shadow-none"
+          >
+            <VoucherSlip
+              charge={charge}
+              breakAfter={index < charges.length - 1}
+            />
+          </div>
+        ))}
       </div>
     </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <p>
-      <span className="text-black/60">{label}: </span>
-      <span className="font-medium">{value}</span>
-    </p>
-  );
-}
-
-function TotalRow({
-  label,
-  value,
-  strong = false,
-}: {
-  label: string;
-  value: number;
-  strong?: boolean;
-}) {
-  return (
-    <tr>
-      <td className={`py-1 pr-8 ${strong ? "font-semibold" : ""}`}>{label}</td>
-      <td className={`py-1 text-right ${strong ? "font-semibold" : ""}`}>
-        {formatCurrency(Math.abs(value))}
-      </td>
-    </tr>
   );
 }

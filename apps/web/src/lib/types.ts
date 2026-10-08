@@ -370,6 +370,7 @@ export interface FeeCharge {
   paid_amount: string;
   balance: string;
   due_date: string | null;
+  created_at?: string | null;
   status: string | null;
   source: string | null;
   notes: string | null;

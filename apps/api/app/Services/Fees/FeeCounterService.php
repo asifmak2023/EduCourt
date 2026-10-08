@@ -274,6 +274,21 @@ class FeeCounterService
             }
 
             try {
+                // Void any existing unpaid voucher for this period so it can be regenerated.
+                // Charges that already have payments (paid/partial) are left untouched.
+                $existingUnpaid = FeeCharge::query()
+                    ->where('student_id', $student->id)
+                    ->where('billing_kind', BillingKind::Monthly->value)
+                    ->where('period_year', $periodYear)
+                    ->where('period_month', $periodMonth)
+                    ->where('title', 'Monthly Fee')
+                    ->where('status', VoucherStatus::Unpaid->value)
+                    ->first();
+
+                if ($existingUnpaid !== null) {
+                    $existingUnpaid->update(['status' => VoucherStatus::Void->value]);
+                }
+
                 $item = [
                     'billing_kind' => BillingKind::Monthly->value,
                     'period_year' => $periodYear,
@@ -296,6 +311,7 @@ class FeeCounterService
                     $created++;
                     $results[] = $base + ['status' => 'created', 'voucher_no' => $charge->voucher_no, 'charge_id' => $charge->id];
                 } else {
+                    // Voucher exists and has payments — skip without regenerating.
                     $skipped++;
                     $results[] = $base + ['status' => 'skipped', 'message' => 'Already billed for this month.', 'charge_id' => $charge?->id];
                 }

@@ -107,6 +107,7 @@ export const en = {
   "navigation.admissions": "Admissions",
   "navigation.scholarships": "Scholarships",
   "navigation.academicStructure": "Academic structure",
+  "navigation.classRoster": "Class roster",
   "navigation.exams": "Exams & results",
   "navigation.curriculum": "Curriculum",
   "navigation.credits": "Credits & GPA",

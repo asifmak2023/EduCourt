@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useStages, useSections } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
 import { MasterList } from "@/components/MasterList";
 import { Badge } from "@/components/ui";
+import { buttonClasses } from "@/components/Form";
 import type { ClassRoom } from "@/lib/types";
 
 export default function ClassesPage() {
@@ -27,7 +29,7 @@ function ClassesTable() {
       createHref="/dashboard/academics/classes/new"
       createPermission="academic.create"
       createLabel="New class"
-      editHref={(room) => `/dashboard/academics/classes/${room.id}/edit`}
+      editHref={(room) => `/dashboard/academics/classes/${room.id}`}
       filters={[
         {
           param: "stage_id",
@@ -84,6 +86,18 @@ function ClassesTable() {
           header: "Status",
           render: (room) => (
             <Badge value={room.is_active ? "active" : "inactive"} />
+          ),
+        },
+        {
+          header: "Students",
+          render: (room) => (
+            <Link
+              href={`/dashboard/academics/classes/${room.id}/students`}
+              className={buttonClasses("secondary")}
+              style={{ fontSize: "0.75rem", padding: "0.25rem 0.75rem" }}
+            >
+              Roster
+            </Link>
           ),
         },
       ]}

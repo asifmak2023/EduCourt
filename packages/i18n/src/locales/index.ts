@@ -123,6 +123,7 @@ export type MessageKey =
   | "navigation.admissions"
   | "navigation.scholarships"
   | "navigation.academicStructure"
+  | "navigation.classRoster"
   | "navigation.exams"
   | "navigation.curriculum"
   | "navigation.credits"

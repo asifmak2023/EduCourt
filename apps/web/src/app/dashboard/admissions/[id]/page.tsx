@@ -214,7 +214,7 @@ function WorkflowActions({
     admission.status !== "rejected" &&
     admission.status !== "enrolled";
   const canEnroll =
-    canApprove && admission.status !== "enrolled" && admission.status !== "rejected";
+    canApprove && admission.status === "approved";
 
   if (!canEdit && !canApprove) {
     return null;

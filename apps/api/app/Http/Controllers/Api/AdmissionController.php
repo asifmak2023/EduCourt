@@ -36,6 +36,9 @@ class AdmissionController extends Controller
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))
             ->when($request->filled('class_room_id'), fn ($q) => $q->where('class_room_id', $request->integer('class_room_id')))
             ->when($request->filled('academic_year_id'), fn ($q) => $q->where('academic_year_id', $request->integer('academic_year_id')))
+            ->when($request->filled('gender'), fn ($q) => $q->where('gender', $request->string('gender')->toString()))
+            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('applied_on', '>=', $request->string('date_from')->toString()))
+            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('applied_on', '<=', $request->string('date_to')->toString()))
             ->orderByDesc('applied_on')
             ->orderByDesc('id')
             ->paginate($request->integer('per_page', 25));

@@ -3,12 +3,13 @@
 import { MasterList } from "@/components/MasterList";
 import { Avatar } from "@/components/Avatar";
 import { Badge } from "@/components/ui";
-import { useRoleOptions } from "@/lib/useLookups";
+import { useCampuses, useRoleOptions } from "@/lib/useLookups";
 import { formatDateTime } from "@/lib/format";
 import type { User } from "@/lib/types";
 
 export default function UsersPage() {
   const { items: roles } = useRoleOptions();
+  const { items: campuses } = useCampuses();
 
   return (
     <MasterList<User>
@@ -27,6 +28,14 @@ export default function UsersPage() {
           options: roles.map((role) => ({
             value: role.value,
             label: role.label,
+          })),
+        },
+        {
+          param: "campus_id",
+          placeholder: "All campuses",
+          options: campuses.map((campus) => ({
+            value: String(campus.id),
+            label: campus.name,
           })),
         },
         {

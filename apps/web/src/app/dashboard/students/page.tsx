@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Table } from "@heroui/react";
 import { useTranslation, type MessageKey } from "@eis/i18n";
@@ -22,6 +22,7 @@ import {
   Spinner,
 } from "@/components/ui";
 import { formatDate } from "@/lib/format";
+import { useAcademicYears, useClassRooms, useSections } from "@/lib/useLookups";
 import type { Student } from "@/lib/types";
 
 const STATUS_OPTIONS: { value: string; label: MessageKey }[] = [
@@ -44,12 +45,41 @@ export default function StudentsPage() {
 function StudentsTable() {
   const { can, canAny } = useAuth();
   const { t } = useTranslation();
+
   const [status, setStatus] = useState("");
   const [gender, setGender] = useState("");
+  const [academicYearId, setAcademicYearId] = useState("");
+  const [classId, setClassId] = useState("");
+  const [sectionId, setSectionId] = useState("");
   const [bulkOpen, setBulkOpen] = useState(false);
 
+  const { items: years } = useAcademicYears();
+  const { items: classes } = useClassRooms();
+  const { items: allSections } = useSections();
+
+  const filteredSections = useMemo(
+    () =>
+      allSections.filter(
+        (s) => !classId || String(s.class_room_id) === classId
+      ),
+    [allSections, classId]
+  );
+
+  const params: Record<string, string | number> = {};
+  if (status) params.status = status;
+  if (gender) params.gender = gender;
+  if (academicYearId) params.academic_year_id = academicYearId;
+  if (classId) params.class_room_id = classId;
+  if (sectionId) params.section_id = sectionId;
+
   const { items, meta, loading, error, page, setPage, search, setSearch } =
-    useList<Student>("/v1/students", { status, gender });
+    useList<Student>("/v1/students", params);
+
+  const handleClassChange = (value: string) => {
+    setClassId(value);
+    setSectionId("");
+    setPage(1);
+  };
 
   return (
     <div className="space-y-6">
@@ -90,8 +120,10 @@ function StudentsTable() {
         }
       />
 
+      {/* Filter bar */}
       <div className="flex flex-wrap gap-3">
-        <div className="w-52">
+        {/* Status */}
+        <div className="w-44">
           <Select
             value={status}
             onChange={(event) => {
@@ -106,7 +138,9 @@ function StudentsTable() {
             ))}
           </Select>
         </div>
-        <div className="w-52">
+
+        {/* Gender */}
+        <div className="w-44">
           <Select
             value={gender}
             onChange={(event) => {
@@ -118,6 +152,58 @@ function StudentsTable() {
             <option value="male">{t("gender.male")}</option>
             <option value="female">{t("gender.female")}</option>
             <option value="other">{t("gender.otherOption")}</option>
+          </Select>
+        </div>
+
+        {/* Academic year */}
+        <div className="w-44">
+          <Select
+            value={academicYearId}
+            onChange={(event) => {
+              setPage(1);
+              setAcademicYearId(event.target.value);
+            }}
+          >
+            <option value="">All years</option>
+            {years.map((year) => (
+              <option key={year.id} value={year.id}>
+                {year.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        {/* Class */}
+        <div className="w-44">
+          <Select
+            value={classId}
+            onChange={(event) => handleClassChange(event.target.value)}
+          >
+            <option value="">All classes</option>
+            {classes.map((room) => (
+              <option key={room.id} value={room.id}>
+                {room.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        {/* Section — only meaningful once a class is selected */}
+        <div className="w-44">
+          <Select
+            value={sectionId}
+            onChange={(event) => {
+              setPage(1);
+              setSectionId(event.target.value);
+            }}
+            disabled={!classId}
+          >
+            <option value="">All sections</option>
+            {filteredSections.map((section) => (
+              <option key={section.id} value={section.id}>
+                {section.name}
+              </option>
+            ))}
           </Select>
         </div>
       </div>

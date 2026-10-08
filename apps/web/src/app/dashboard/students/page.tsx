@@ -218,10 +218,13 @@ function StudentsTable() {
         ) : (
           <Table variant="secondary">
             <Table.ScrollContainer>
-              <Table.Content aria-label={t("students.title")} className="min-w-[900px]">
+              <Table.Content aria-label={t("students.title")} className="min-w-[1100px]">
                 <Table.Header>
                   <Table.Column isRowHeader>{t("students.admissionNo")}</Table.Column>
                   <Table.Column>{t("common.name")}</Table.Column>
+                  <Table.Column>{t("common.class")}</Table.Column>
+                  <Table.Column>{t("common.section")}</Table.Column>
+                  <Table.Column>{t("common.rollNo")}</Table.Column>
                   <Table.Column>{t("common.gender")}</Table.Column>
                   <Table.Column>{t("students.field.dateOfBirth")}</Table.Column>
                   <Table.Column>{t("common.status")}</Table.Column>
@@ -230,7 +233,11 @@ function StudentsTable() {
                   ) : null}
                 </Table.Header>
                 <Table.Body>
-                  {items.map((student) => (
+                  {items.map((student) => {
+                    const enrollment =
+                      student.enrollments?.find((e) => e.status === "active") ??
+                      student.enrollments?.[0];
+                    return (
                     <Table.Row key={student.id} id={student.id}>
                       <Table.Cell className="font-mono text-xs text-muted">
                         {student.admission_no}
@@ -242,6 +249,15 @@ function StudentsTable() {
                         >
                           {student.full_name}
                         </Link>
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {enrollment?.class_room?.name ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="text-muted">
+                        {enrollment?.section?.name ?? "-"}
+                      </Table.Cell>
+                      <Table.Cell className="font-mono text-xs text-muted">
+                        {enrollment?.roll_number ?? "-"}
                       </Table.Cell>
                       <Table.Cell className="capitalize text-muted">
                         {student.gender ?? "-"}
@@ -274,7 +290,8 @@ function StudentsTable() {
                         </Table.Cell>
                       ) : null}
                     </Table.Row>
-                  ))}
+                    );
+                  })}
                 </Table.Body>
               </Table.Content>
             </Table.ScrollContainer>

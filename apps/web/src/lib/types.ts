@@ -58,6 +58,7 @@ export interface Student {
   phone?: string | null;
   photo_path?: string | null;
   photo_url?: string | null;
+  enrollments?: Enrollment[];
 }
 
 export interface Guardian {

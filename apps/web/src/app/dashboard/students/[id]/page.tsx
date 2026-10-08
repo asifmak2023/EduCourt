@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Table } from "@heroui/react";
 import { useTranslation } from "@eis/i18n";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
@@ -13,6 +12,7 @@ import { ApiError, apiFetch } from "@/lib/api";
 import { Button, buttonClasses, Field, Select, TextArea, TextInput } from "@/components/Form";
 import { FeeVoucherAction } from "@/components/fee-counter/FeeVoucherAction";
 import { StudentFeeVouchersCard } from "@/components/fee-counter/StudentFeeVouchersCard";
+import { EnrollmentPanel } from "@/components/EnrollmentPanel";
 import {
   Badge,
   Card,
@@ -164,57 +164,12 @@ function StudentDetailView() {
         )}
       </SectionCard>
 
-      <SectionCard
-        title="students.enrollments"
-        description="students.enrollmentsDesc"
-      >
-        {data.enrollments.length === 0 ? (
-          <EmptyState message="students.noEnrollments" />
-        ) : (
-          <Table variant="secondary">
-            <Table.ScrollContainer>
-              <Table.Content aria-label={t("students.enrollments")} className="min-w-[880px]">
-                <Table.Header>
-                  <Table.Column isRowHeader>{t("common.academicYear")}</Table.Column>
-                  <Table.Column>{t("common.class")}</Table.Column>
-                  <Table.Column>{t("common.section")}</Table.Column>
-                  <Table.Column>{t("common.rollNo")}</Table.Column>
-                  <Table.Column>{t("common.status")}</Table.Column>
-                  <Table.Column>{t("common.starts")}</Table.Column>
-                  <Table.Column>{t("common.ends")}</Table.Column>
-                </Table.Header>
-                <Table.Body>
-                  {data.enrollments.map((enrollment) => (
-                    <Table.Row key={enrollment.id} id={enrollment.id}>
-                      <Table.Cell className="text-foreground">
-                        {enrollment.academic_year?.name ?? "-"}
-                      </Table.Cell>
-                      <Table.Cell className="text-foreground">
-                        {enrollment.class_room?.name ?? "-"}
-                      </Table.Cell>
-                      <Table.Cell className="text-foreground">
-                        {enrollment.section?.name ?? "-"}
-                      </Table.Cell>
-                      <Table.Cell className="text-foreground">
-                        {enrollment.roll_number ?? "-"}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Badge value={enrollment.status} />
-                      </Table.Cell>
-                      <Table.Cell className="text-muted">
-                        {formatDate(enrollment.starts_on)}
-                      </Table.Cell>
-                      <Table.Cell className="text-muted">
-                        {formatDate(enrollment.ends_on)}
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Content>
-            </Table.ScrollContainer>
-          </Table>
-        )}
-      </SectionCard>
+      <EnrollmentPanel
+        studentId={data.id}
+        enrollments={data.enrollments}
+        onChanged={reload}
+        canEdit={can("student.edit")}
+      />
 
       {can("student.approve") && data.status === "active" ? (
         <WithdrawPanel studentId={data.id} onDone={reload} />

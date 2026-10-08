@@ -20,12 +20,12 @@ import {
   type StudentProfile,
 } from "@/components/StudentProfileFields";
 import { StudentPhotoField } from "@/components/StudentPhotoField";
+import { EnrollmentPanel } from "@/components/EnrollmentPanel";
 import {
   ErrorNotice,
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { formatDate } from "@/lib/format";
 import type { StudentDetail } from "@/lib/types";
 
 export default function EditStudentPage() {
@@ -47,7 +47,7 @@ export default function EditStudentPage() {
 function EditStudentLoader() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
-  const { data, loading, error } = useResource<StudentDetail>(
+  const { data, loading, error, reload } = useResource<StudentDetail>(
     id ? `/v1/students/${id}` : null
   );
 
@@ -63,7 +63,7 @@ function EditStudentLoader() {
     return <ErrorNotice message="students.notFound" />;
   }
 
-  return <EditStudentForm student={data} />;
+  return <EditStudentForm student={data} onEnrollmentChanged={reload} />;
 }
 
 interface GuardianRow {
@@ -99,7 +99,13 @@ function profileFromStudent(student: StudentDetail): StudentProfile {
   };
 }
 
-function EditStudentForm({ student }: { student: StudentDetail }) {
+function EditStudentForm({
+  student,
+  onEnrollmentChanged,
+}: {
+  student: StudentDetail;
+  onEnrollmentChanged: () => void;
+}) {
   const router = useRouter();
   const { can } = useAuth();
   const { t } = useTranslation();
@@ -360,38 +366,28 @@ function EditStudentForm({ student }: { student: StudentDetail }) {
             )}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
-            <p className="text-xs text-muted">
-              {t("students.enrollmentsManaged")}{" "}
-              {student.enrollments.length === 0
-                ? t("students.noneRecorded")
-                : student.enrollments
-                    .map(
-                      (enrollment) =>
-                        `${enrollment.academic_year?.name ?? t("common.academicYear")} · ${
-                          enrollment.class_room?.name ?? t("common.class")
-                        } (${enrollment.status ?? "-"})`
-                    )
-                    .join(", ")}
-              {student.enrollments.length > 0
-                ? ` · ${t("students.since", { date: formatDate(student.enrollments[0].starts_on) })}`
-                : ""}
-            </p>
-            <div className="flex items-center gap-2">
-              <Link
-                href={`/dashboard/students/${student.id}`}
-                className={buttonClasses("secondary")}
-              >
-                {t("common.cancel")}
-              </Link>
-              <Button type="submit" loading={busy}>
-                {t("common.saveChanges")}
-              </Button>
-            </div>
+          <div className="flex flex-wrap items-center justify-end gap-3 px-6 py-4">
+            <Link
+              href={`/dashboard/students/${student.id}`}
+              className={buttonClasses("secondary")}
+            >
+              {t("common.cancel")}
+            </Link>
+            <Button type="submit" loading={busy}>
+              {t("common.saveChanges")}
+            </Button>
           </div>
         </div>
       </form>
       ) : null}
+
+      {/* Enrollment management — available whether or not user can edit profile */}
+      <EnrollmentPanel
+        studentId={student.id}
+        enrollments={student.enrollments}
+        onChanged={onEnrollmentChanged}
+        canEdit={canEdit}
+      />
     </div>
   );
 }

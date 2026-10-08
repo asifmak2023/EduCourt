@@ -90,13 +90,40 @@ function AdmissionDetailView() {
       <div className="flex flex-wrap items-center gap-2">
         <Badge value={data.status} />
         {data.gender ? <Badge value={data.gender} /> : null}
-        {data.student_id ? <Badge value="student created" /> : null}
       </div>
 
       {enrolledStudentId ? (
         <SuccessNotice
           message={`Enrolled successfully. Student record #${enrolledStudentId} created.`}
         />
+      ) : null}
+
+      {data.status === "enrolled" && data.student_id ? (
+        <Card className="p-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                ✓ This applicant has been enrolled as a student
+              </p>
+              <p className="mt-1 text-xs text-muted">
+                The student record was created when this admission was enrolled.
+                To change the assigned class, section, or roll number — open the
+                student record and use the <strong>Enrollments</strong> section there.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href={`/dashboard/students/${data.student_id}`}
+                className={buttonClasses("primary")}
+              >
+                Open student record →
+              </Link>
+              <FeeVoucherAction
+                student={{ id: data.student_id, full_name: data.full_name }}
+              />
+            </div>
+          </div>
+        </Card>
       ) : null}
 
       <SectionCard title="Applicant">
@@ -147,19 +174,6 @@ function AdmissionDetailView() {
         }}
       />
 
-      {data.student_id ? (
-        <div className="flex flex-wrap items-center gap-4 text-sm">
-          <Link
-            href={`/dashboard/students/${data.student_id}`}
-            className="font-medium text-foreground underline"
-          >
-            View student record
-          </Link>
-          <FeeVoucherAction
-            student={{ id: data.student_id, full_name: data.full_name }}
-          />
-        </div>
-      ) : null}
     </div>
   );
 }
@@ -206,28 +220,44 @@ function WorkflowActions({
     }
   };
 
+  const isEnrolled = admission.status === "enrolled";
   const canSubmit =
     canEdit &&
     (admission.status === "enquiry" || admission.status === "applied");
   const canApproveAction =
     canApprove &&
-    admission.status !== "rejected" &&
-    admission.status !== "enrolled";
+    !isEnrolled &&
+    admission.status !== "rejected";
   const canEnroll =
     canApprove && admission.status === "approved";
+
+  // Nothing to show for enrolled admissions — the banner above handles it.
+  if (isEnrolled) {
+    return null;
+  }
 
   if (!canEdit && !canApprove) {
     return null;
   }
+
+  // Determine what status the admission is at so we can guide the user.
+  const statusGuide: Record<string, string> = {
+    enquiry: 'Click "Submit for review" to move this application forward.',
+    applied: 'Click "Submit for review" to move this application forward.',
+    under_review: 'Review the application, then click "Approve" or "Reject".',
+    approved: 'Application is approved. Click "Enroll" to create the student record.',
+    rejected: 'This application was rejected. No further action is available.',
+  };
+  const guide = statusGuide[admission.status ?? ""] ?? null;
 
   return (
     <Card className="p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold text-foreground">Workflow</h2>
-          <p className="mt-0.5 text-xs text-muted">
-            Move the application through review, decision and enrollment.
-          </p>
+          {guide ? (
+            <p className="mt-0.5 text-xs text-muted">{guide}</p>
+          ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {canSubmit ? (
@@ -264,11 +294,11 @@ function WorkflowActions({
           ) : null}
           {canEnroll ? (
             <Button
-              variant="secondary"
               type="button"
+              loading={busy}
               onClick={() => setMode("enroll")}
             >
-              Enroll
+              Enroll student
             </Button>
           ) : null}
         </div>

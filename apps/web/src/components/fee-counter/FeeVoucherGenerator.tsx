@@ -170,7 +170,7 @@ export function FeeVoucherGenerator({
   const monthOptions = useMemo(() => {
     const now = new Date();
     const currentMonth = {
-      value: `${now.getFullYear()}-${now.getMonth() + 1}`,
+      value: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
       label: `${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`,
       amount: Number(dues?.structure?.monthly_amount ?? 0),
       period_year: now.getFullYear(),
@@ -179,7 +179,7 @@ export function FeeVoucherGenerator({
 
     if (dues?.pending_months?.length) {
       const pending = dues.pending_months.map((month) => ({
-        value: `${month.period_year}-${month.period_month}`,
+        value: `${month.period_year}-${String(month.period_month).padStart(2, '0')}`,
         label: `${MONTH_NAMES[month.period_month - 1]} ${month.period_year}`,
         amount: Number(month.amount),
         period_year: month.period_year,
@@ -221,13 +221,21 @@ export function FeeVoucherGenerator({
   };
 
   const addMonthly = () => {
-    const option = monthOptions.find((month) => month.value === monthKey);
-    if (!option) {
+    if (!monthKey) {
       setError("Select the month to bill.");
       return;
     }
 
-    const amount = Number(monthAmount) || option.amount;
+    const [yearStr, monthStr] = monthKey.split("-");
+    const period_year = Number(yearStr);
+    const period_month = Number(monthStr);
+
+    if (!period_year || !period_month || period_month < 1 || period_month > 12) {
+      setError("Invalid month selected.");
+      return;
+    }
+
+    const amount = Number(monthAmount) || Number(dues?.structure?.monthly_amount ?? 0);
     if (amount <= 0) {
       setError("Monthly amount must be greater than zero.");
       return;
@@ -242,12 +250,12 @@ export function FeeVoucherGenerator({
     setCart((current) => [
       ...current,
       {
-        key: `monthly-${option.value}-${Date.now()}`,
+        key: `monthly-${monthKey}-${Date.now()}`,
         billing_kind: "monthly",
         title: "Monthly Fee",
         amount,
-        period_year: option.period_year,
-        period_month: option.period_month,
+        period_year,
+        period_month,
         source: "structure",
         lines: lines.length ? lines : [{ description: "Monthly Fee", amount }],
       },
@@ -703,24 +711,17 @@ export function FeeVoucherGenerator({
                   {receiveType === "monthly" ? (
                     <div className="grid items-end gap-3 sm:grid-cols-[1.2fr_1fr_auto]">
                       <Field label="Month" htmlFor="cv_month">
-                        <Select
+                        <TextInput
                           id="cv_month"
+                          type="month"
                           value={monthKey}
                           onChange={(event) => {
-                            setMonthKey(event.target.value);
-                            const option = monthOptions.find(
-                              (month) => month.value === event.target.value
-                            );
+                            const value = event.target.value; // format: "YYYY-MM"
+                            setMonthKey(value);
+                            const option = monthOptions.find((month) => month.value === value);
                             setMonthAmount(option ? String(option.amount) : "");
                           }}
-                        >
-                          <option value="">Select month</option>
-                          {monthOptions.map((month) => (
-                            <option key={month.value} value={month.value}>
-                              {month.label}
-                            </option>
-                          ))}
-                        </Select>
+                        />
                       </Field>
                       <Field label="Amount" htmlFor="cv_month_amount">
                         <TextInput

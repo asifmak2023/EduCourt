@@ -7,9 +7,10 @@ import { Table } from "@heroui/react";
 import { useResource } from "@/lib/useResource";
 import { useList } from "@/lib/useList";
 import { useAcademicYears, useSections } from "@/lib/useLookups";
+import { useAuth } from "@/lib/auth";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Pagination } from "@/components/Pagination";
-import { Select, TextInput, buttonClasses } from "@/components/Form";
+import { Select, TextInput, Button, buttonClasses } from "@/components/Form";
 import {
   Badge,
   Card,
@@ -19,6 +20,7 @@ import {
   Spinner,
 } from "@/components/ui";
 import { formatDate } from "@/lib/format";
+import { BulkFeeVoucherDialog } from "@/components/fee-counter/BulkFeeVoucherDialog";
 import type { ClassRoom, Student } from "@/lib/types";
 
 export default function ClassStudentsPage() {
@@ -36,6 +38,9 @@ function ClassStudentsView() {
   const { data: classRoom, loading: classLoading } = useResource<ClassRoom>(
     classId ? `/v1/classes/${classId}` : null
   );
+
+  const { can } = useAuth();
+  const canGenerateVouchers = can("fee_counter.generate");
 
   const [academicYearId, setAcademicYearId] = useState("");
   const [sectionId, setSectionId] = useState("");
@@ -75,6 +80,10 @@ function ClassStudentsView() {
     ? `${classRoom.name} — Students`
     : "Class Roster";
 
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkAcademicYearId, setBulkAcademicYearId] = useState("");
+  const [bulkSectionId, setBulkSectionId] = useState("");
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -99,6 +108,19 @@ function ClassStudentsView() {
                 placeholder="Search name or admission no"
               />
             </div>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => {
+                setBulkAcademicYearId(academicYearId || "");
+                setBulkSectionId(sectionId || "");
+                setBulkOpen(true);
+              }}
+              disabled={!canGenerateVouchers}
+              style={{ display: canGenerateVouchers ? "inline-flex" : "none" }}
+            >
+              Generate Vouchers
+            </Button>
           </>
         }
       />
@@ -288,6 +310,14 @@ function ClassStudentsView() {
           />
         ) : null}
       </Card>
+
+      <BulkFeeVoucherDialog
+        open={bulkOpen}
+        onClose={() => setBulkOpen(false)}
+        initialClassId={classId}
+        initialAcademicYearId={bulkAcademicYearId}
+        initialSectionId={bulkSectionId}
+      />
     </div>
   );
 }

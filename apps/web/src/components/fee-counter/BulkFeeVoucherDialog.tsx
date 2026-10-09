@@ -32,6 +32,12 @@ export interface BulkFeeVoucherDialogProps {
   open: boolean;
   onClose: () => void;
   onGenerated?: (result: BulkResult) => void;
+  /** Pre-fill class (e.g. when opened from a class page) */
+  initialClassId?: string | number;
+  /** Pre-fill academic year */
+  initialAcademicYearId?: string | number;
+  /** Pre-fill section */
+  initialSectionId?: string | number;
 }
 
 function currentMonthValue(): string {
@@ -43,6 +49,9 @@ export function BulkFeeVoucherDialog({
   open,
   onClose,
   onGenerated,
+  initialClassId,
+  initialAcademicYearId,
+  initialSectionId,
 }: BulkFeeVoucherDialogProps) {
   const { canAny } = useAuth();
 
@@ -51,7 +60,13 @@ export function BulkFeeVoucherDialog({
   }
 
   return createPortal(
-    <BulkDialogFrame onClose={onClose} onGenerated={onGenerated} />,
+    <BulkDialogFrame
+      onClose={onClose}
+      onGenerated={onGenerated}
+      initialClassId={initialClassId}
+      initialAcademicYearId={initialAcademicYearId}
+      initialSectionId={initialSectionId}
+    />,
     document.body
   );
 }
@@ -59,17 +74,27 @@ export function BulkFeeVoucherDialog({
 function BulkDialogFrame({
   onClose,
   onGenerated,
+  initialClassId,
+  initialAcademicYearId,
+  initialSectionId,
 }: {
   onClose: () => void;
   onGenerated?: (result: BulkResult) => void;
+  initialClassId?: string | number;
+  initialAcademicYearId?: string | number;
+  initialSectionId?: string | number;
 }) {
   const { items: years } = useAcademicYears();
   const { items: classes, loading: classesLoading } = useClassRooms();
   const { items: sections, loading: sectionsLoading } = useSections();
 
-  const [academicYearId, setAcademicYearId] = useState("");
-  const [classId, setClassId] = useState("");
-  const [sectionId, setSectionId] = useState("");
+  const [academicYearId, setAcademicYearId] = useState(
+    initialAcademicYearId ? String(initialAcademicYearId) : ""
+  );
+  const [classId, setClassId] = useState(initialClassId ? String(initialClassId) : "");
+  const [sectionId, setSectionId] = useState(
+    initialSectionId ? String(initialSectionId) : ""
+  );
   const [month, setMonth] = useState(currentMonthValue());
   const [dueDate, setDueDate] = useState("");
   const [busy, setBusy] = useState(false);

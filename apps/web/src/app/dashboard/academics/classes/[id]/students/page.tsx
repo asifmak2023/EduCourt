@@ -40,6 +40,7 @@ function ClassStudentsView() {
   const [academicYearId, setAcademicYearId] = useState("");
   const [sectionId, setSectionId] = useState("");
   const [status, setStatus] = useState("active");
+  const [gender, setGender] = useState("");
 
   const { items: years } = useAcademicYears();
   const { items: allSections } = useSections();
@@ -53,9 +54,20 @@ function ClassStudentsView() {
   if (academicYearId) params2.academic_year_id = academicYearId;
   if (sectionId) params2.section_id = sectionId;
   if (status) params2.status = status;
+  if (gender) params2.gender = gender;
 
   const { items, meta, loading, error, page, setPage, search, setSearch } =
     useList<Student>("/v1/students", params2);
+
+  const activeFilterCount = [academicYearId, sectionId, status, gender].filter(Boolean).length;
+
+  const clearFilters = () => {
+    setAcademicYearId("");
+    setSectionId("");
+    setStatus("active");
+    setGender("");
+    setPage(1);
+  };
 
   const title = classLoading
     ? "Class Roster"
@@ -148,6 +160,33 @@ function ClassStudentsView() {
             </Select>
           </div>
         )}
+
+        {/* Gender */}
+        <div className="w-36">
+          <Select
+            value={gender}
+            onChange={(event) => {
+              setPage(1);
+              setGender(event.target.value);
+            }}
+          >
+            <option value="">All genders</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </Select>
+        </div>
+
+        {/* Clear filters */}
+        {activeFilterCount > 0 ? (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="self-end text-xs text-muted underline hover:text-foreground"
+          >
+            Clear {activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""}
+          </button>
+        ) : null}
       </div>
 
       {error ? <ErrorNotice message={error} /> : null}

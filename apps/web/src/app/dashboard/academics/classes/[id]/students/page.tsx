@@ -9,6 +9,7 @@ import { useList } from "@/lib/useList";
 import { useAcademicYears, useSections } from "@/lib/useLookups";
 import { useAuth } from "@/lib/auth";
 import { PermissionGate } from "@/components/PermissionGate";
+import { AR_VIEW } from "@/lib/permissions";
 import { Pagination } from "@/components/Pagination";
 import { Select, TextInput, Button, buttonClasses } from "@/components/Form";
 import {
@@ -39,8 +40,8 @@ function ClassStudentsView() {
     classId ? `/v1/classes/${classId}` : null
   );
 
-  const { can } = useAuth();
-  const canGenerateVouchers = can("fee_counter.generate");
+  const { canAny } = useAuth();
+  const canGenerateVouchers = canAny(AR_VIEW);
 
   const [academicYearId, setAcademicYearId] = useState("");
   const [sectionId, setSectionId] = useState("");

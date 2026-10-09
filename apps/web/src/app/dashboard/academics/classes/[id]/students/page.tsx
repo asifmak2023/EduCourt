@@ -108,19 +108,19 @@ function ClassStudentsView() {
                 placeholder="Search name or admission no"
               />
             </div>
-            <Button
-              type="button"
-              variant="primary"
-              onClick={() => {
-                setBulkAcademicYearId(academicYearId || "");
-                setBulkSectionId(sectionId || "");
-                setBulkOpen(true);
-              }}
-              disabled={!canGenerateVouchers}
-              style={{ display: canGenerateVouchers ? "inline-flex" : "none" }}
-            >
-              Generate Vouchers
-            </Button>
+            {canGenerateVouchers && (
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() => {
+                  setBulkAcademicYearId(academicYearId || "");
+                  setBulkSectionId(sectionId || "");
+                  setBulkOpen(true);
+                }}
+              >
+                Generate Vouchers
+              </Button>
+            )}
           </>
         }
       />

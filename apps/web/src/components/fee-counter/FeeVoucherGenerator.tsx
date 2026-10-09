@@ -168,26 +168,32 @@ export function FeeVoucherGenerator({
   const [structureDialogOpen, setStructureDialogOpen] = useState(false);
 
   const monthOptions = useMemo(() => {
+    const now = new Date();
+    const currentMonth = {
+      value: `${now.getFullYear()}-${now.getMonth() + 1}`,
+      label: `${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`,
+      amount: Number(dues?.structure?.monthly_amount ?? 0),
+      period_year: now.getFullYear(),
+      period_month: now.getMonth() + 1,
+    };
+
     if (dues?.pending_months?.length) {
-      return dues.pending_months.map((month) => ({
+      const pending = dues.pending_months.map((month) => ({
         value: `${month.period_year}-${month.period_month}`,
         label: `${MONTH_NAMES[month.period_month - 1]} ${month.period_year}`,
         amount: Number(month.amount),
         period_year: month.period_year,
         period_month: month.period_month,
       }));
+
+      // Always include current month if not already in pending
+      const hasCurrentMonth = pending.some(
+        (m) => m.period_year === currentMonth.period_year && m.period_month === currentMonth.period_month
+      );
+      return hasCurrentMonth ? pending : [...pending, currentMonth];
     }
 
-    const now = new Date();
-    return [
-      {
-        value: `${now.getFullYear()}-${now.getMonth() + 1}`,
-        label: `${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`,
-        amount: Number(dues?.structure?.monthly_amount ?? 0),
-        period_year: now.getFullYear(),
-        period_month: now.getMonth() + 1,
-      },
-    ];
+    return [currentMonth];
   }, [dues]);
 
   const subtotal = cart.reduce((sum, item) => sum + item.amount, 0);

@@ -146,8 +146,23 @@ export function FeeVoucherGenerator({
   } = useResource<CounterDues>(duesPath);
 
   const [receiveType, setReceiveType] = useState<ReceiveType>("monthly");
-  const [monthKey, setMonthKey] = useState("");
+  const [monthKey, setMonthKey] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
   const [monthAmount, setMonthAmount] = useState("");
+
+  // Auto-fill amount when month changes (including initial load)
+  useEffect(() => {
+    if (monthKey) {
+      const option = monthOptions.find((month) => month.value === monthKey);
+      if (option) {
+        setMonthAmount(String(option.amount));
+      } else {
+        setMonthAmount(String(dues?.structure?.monthly_amount ?? 0));
+      }
+    }
+  }, [monthKey, monthOptions, dues?.structure?.monthly_amount]);
   const [examItemId, setExamItemId] = useState("");
   const [otherTitle, setOtherTitle] = useState("");
   const [otherAmount, setOtherAmount] = useState("");
@@ -201,7 +216,8 @@ export function FeeVoucherGenerator({
   const netTotal = Math.max(subtotal - discountValue, 0);
 
   const resetEntry = () => {
-    setMonthKey("");
+    const now = new Date();
+    setMonthKey(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
     setMonthAmount("");
     setExamItemId("");
     setOtherTitle("");

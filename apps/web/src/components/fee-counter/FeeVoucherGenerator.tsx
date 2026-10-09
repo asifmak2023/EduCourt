@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useList } from "@/lib/useList";
 import { useResource } from "@/lib/useResource";
@@ -151,18 +151,6 @@ export function FeeVoucherGenerator({
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
   const [monthAmount, setMonthAmount] = useState("");
-
-  // Auto-fill amount when month changes (including initial load)
-  useEffect(() => {
-    if (monthKey) {
-      const option = monthOptions.find((month) => month.value === monthKey);
-      if (option) {
-        setMonthAmount(String(option.amount));
-      } else {
-        setMonthAmount(String(dues?.structure?.monthly_amount ?? 0));
-      }
-    }
-  }, [monthKey, monthOptions, dues?.structure?.monthly_amount]);
   const [examItemId, setExamItemId] = useState("");
   const [otherTitle, setOtherTitle] = useState("");
   const [otherAmount, setOtherAmount] = useState("");
@@ -210,6 +198,18 @@ export function FeeVoucherGenerator({
 
     return [currentMonth];
   }, [dues]);
+
+  // Auto-fill amount when month changes (including initial load)
+  useEffect(() => {
+    if (monthKey) {
+      const option = monthOptions.find((month) => month.value === monthKey);
+      if (option) {
+        setMonthAmount(String(option.amount));
+      } else {
+        setMonthAmount(String(dues?.structure?.monthly_amount ?? 0));
+      }
+    }
+  }, [monthKey, monthOptions, dues?.structure?.monthly_amount]);
 
   const subtotal = cart.reduce((sum, item) => sum + item.amount, 0);
   const discountValue = Number(discount) || 0;

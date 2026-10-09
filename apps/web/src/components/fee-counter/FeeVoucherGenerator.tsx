@@ -420,43 +420,24 @@ export function FeeVoucherGenerator({
   };
 
   const printReceipt = () => {
-    if (!result || !selected) {
+    if (!result || !result.charges.length) {
       return;
     }
 
-    const rows = result.charges
-      .map(
-        (charge) =>
-          `<tr><td>${charge.voucher_no}</td><td>${charge.title ?? charge.billing_kind_label ?? ""}</td><td style="text-align:right">${formatCurrency(charge.amount)}</td></tr>`
-      )
-      .join("");
-
-    const receiptLine = result.receipt
-      ? `<p><strong>Receipt:</strong> ${result.receipt.receipt_no} - ${formatCurrency(result.receipt.amount)} (${result.receipt.method_label ?? result.receipt.method ?? ""})</p>`
-      : "";
-
-    const win = window.open("", "_blank", "width=720,height=900");
-    if (!win) {
-      return;
+    // Use the first generated charge for single print, or bulk print if multiple
+    if (result.charges.length === 1) {
+      const chargeId = result.charges[0].id;
+      window.open(
+        `/dashboard/finance/accounts-receivable/vouchers/${chargeId}?print=1`,
+        "_blank"
+      );
+    } else {
+      const ids = result.charges.map((c) => c.id).join(",");
+      window.open(
+        `/dashboard/finance/accounts-receivable/vouchers/bulk-print?ids=${ids}`,
+        "_blank"
+      );
     }
-
-    win.document.write(`<!doctype html><html><head><title>Fee voucher</title>
-      <style>
-        body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
-        h1 { font-size: 20px; margin: 0 0 4px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-        th, td { border-bottom: 1px solid #ddd; padding: 8px; font-size: 14px; }
-        th { text-align: left; background: #f5f5f5; }
-      </style></head><body>
-      <h1>Fee Voucher</h1>
-      <p>${selected.full_name} (${selected.admission_no ?? ""})</p>
-      <p>Class: ${dues?.student.class ?? "-"} / Section: ${dues?.student.section ?? "-"}</p>
-      <table><thead><tr><th>Voucher No</th><th>Description</th><th style="text-align:right">Amount</th></tr></thead>
-      <tbody>${rows}</tbody></table>
-      ${receiptLine}
-      <script>window.onload = function () { window.print(); };</script>
-      </body></html>`);
-    win.document.close();
   };
 
   return (

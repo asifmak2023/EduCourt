@@ -47,6 +47,9 @@ function RolesView() {
   const { items: campuses } = useCampuses();
 
   const [version, setVersion] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>("all");
+  const [showOnlyWithRoles, setShowOnlyWithRoles] = useState(false);
   const assignments = useList<ScopeAssignment>("/v1/scope-assignments", {
     _r: version,
     per_page: 200,
@@ -63,15 +66,29 @@ function RolesView() {
     );
   }, [allRoles, isSuperUser]);
 
-  // Build user -> assignments map
-  const userAssignments = useMemo(() => {
-    const map = new Map<number, ScopeAssignment[]>();
-    assignments.items.forEach((a) => {
-      if (!map.has(a.user_id)) map.set(a.user_id, []);
-      map.get(a.user_id)!.push(a);
-    });
-    return map;
-  }, [assignments.items]);
+  // Filter users based on search and filters
+  const filteredUsers = useMemo(() => {
+    let result = users ?? [];
+    
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(
+        (u) =>
+          u.name.toLowerCase().includes(term) ||
+          u.email.toLowerCase().includes(term)
+      );
+    }
+    
+    if (selectedRoleFilter !== "all") {
+      result = result.filter((u) => hasRole(u.id, selectedRoleFilter));
+    }
+    
+    if (showOnlyWithRoles) {
+      result = result.filter((u) => getActiveRoles(u.id).length > 0);
+    }
+    
+    return result;
+  }, [users, searchTerm, selectedRoleFilter, showOnlyWithRoles, grantableRoles]);
 
   // Active assignments per user
   const getActiveRoles = (userId: number) => {
@@ -172,6 +189,41 @@ function RolesView() {
 
       {/* User Role Matrix */}
       <SectionCard title="User Access Matrix" description="Click roles to grant/revoke">
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3 mb-4 p-4 bg-surface-secondary/50 rounded-lg">
+          <div className="w-64">
+            <TextInput
+              type="search"
+              placeholder="Search name or email"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="w-44">
+            <Select
+              value={selectedRoleFilter}
+              onChange={(e) => setSelectedRoleFilter(e.target.value)}
+            >
+              <option value="all">All Roles</option>
+              {grantableRoles.map((role) => (
+                <option key={role.value} value={role.value}>
+                  {role.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <label className="flex items-center gap-2 text-sm text-muted cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showOnlyWithRoles}
+              onChange={(e) => setShowOnlyWithRoles(e.target.checked)}
+            />
+            Only users with roles
+          </label>
+          <span className="text-sm text-muted ml-auto">
+            {filteredUsers.length} of {users?.length ?? 0} users
+          </span>
+        </div>
         {usersLoading ? (
           <div className="py-8 text-center">
             <Spinner />
@@ -194,7 +246,7 @@ function RolesView() {
                 </tr>
               </thead>
               <tbody>
-                {users
+                {filteredUsers
                   .filter((u) => !isSuperUser || u.id !== user?.id)
                   .map((targetUser) => {
                     const activeRoles = getActiveRoles(targetUser.id);
@@ -264,17 +316,42 @@ function RolesView() {
                           );
                         })}
                         <td className="p-3">
-                          {activeRoles.length > 0 && (
-                            <Button
-                              variant="ghost"
-                              onClick={() =>
-                                activeRoles.forEach((a) => revokeRole(a.id))
-                              }
-                            >
-                              Revoke All
-                            </Button>
-                          )}
-                        </td>
+                            {/* Role dropdown for quick assignment */}
+                            <div className="relative">
+                              <Select
+                                value=""
+                                onChange={(e) => {
+                                  if (e.target.value) {
+                                    grantRole(targetUser.id, e.target.value);
+                                  }
+                                }}
+                                className="w-full max-w-[160px]"
+                                disabled={!can("role.edit")}
+                              >
+                                <option value="" disabled selected>
+                                  + Assign Role
+                                </option>
+                                {grantableRoles
+                                  .filter((role) => !hasRole(targetUser.id, role.value))
+                                  .map((role) => (
+                                    <option key={role.value} value={role.value}>
+                                      {role.label}
+                                    </option>
+                                  ))}
+                              </Select>
+                            </div>
+                            {activeRoles.length > 0 && (
+                              <Button
+                                variant="ghost"
+                                className="mt-2 w-full max-w-[160px]"
+                                onClick={() =>
+                                  activeRoles.forEach((a) => revokeRole(a.id))
+                                }
+                              >
+                                Revoke All
+                              </Button>
+                            )}
+                          </td>
                       </tr>
                     );
                   })}

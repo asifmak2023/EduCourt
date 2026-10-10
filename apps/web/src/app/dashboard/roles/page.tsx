@@ -66,6 +66,8 @@ function RolesView() {
     );
   }, [allRoles, isSuperUser]);
 
+  const canEditRoles = can("role.edit") || can("role.create") || can("role.update") || canAny(AR_WRITE);
+
   // Build user -> assignments map
   const userAssignments = useMemo(() => {
     const map = new Map<number, ScopeAssignment[]>();
@@ -286,12 +288,17 @@ function RolesView() {
                                     ? revokeRole(assignment!.id)
                                     : grantRole(targetUser.id, role.value)
                                 }
+                                disabled={!canEditRoles}
                                 className={`inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
-                                  hasThisRole
+                                  !canEditRoles
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : hasThisRole
                                     ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
                                     : "bg-surface-secondary text-muted hover:bg-accent/10 hover:text-accent"
                                 }`}
-                                title={hasThisRole
+                                title={!canEditRoles
+                                  ? "No permission to edit roles"
+                                  : hasThisRole
                                   ? `Revoke ${role.label}`
                                   : `Grant ${role.label}`}
                               >
@@ -336,7 +343,6 @@ function RolesView() {
                                   }
                                 }}
                                 className="w-full max-w-[160px]"
-                                disabled={!can("role.edit")}
                               >
                                 <option value="" disabled selected>
                                   + Assign Role

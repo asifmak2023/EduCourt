@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { AR_VIEW, AR_WRITE } from "@/lib/permissions";
 import { useList } from "@/lib/useList";
 import { formatDate } from "@/lib/format";
 import { useCampuses, usePermissionCatalog, useRoleOptions, useUsers } from "@/lib/useLookups";

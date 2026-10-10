@@ -66,10 +66,30 @@ function RolesView() {
     );
   }, [allRoles, isSuperUser]);
 
+  // Build user -> assignments map
+  const userAssignments = useMemo(() => {
+    const map = new Map<number, ScopeAssignment[]>();
+    assignments.items.forEach((a: ScopeAssignment) => {
+      if (!map.has(a.user_id)) map.set(a.user_id, []);
+      map.get(a.user_id)!.push(a);
+    });
+    return map;
+  }, [assignments.items]);
+
+  // Active assignments per user
+  const getActiveRoles = (userId: number) => {
+    return userAssignments.get(userId)?.filter((a: ScopeAssignment) => a.is_active) ?? [];
+  };
+
+  // Check if user already has a specific role
+  const hasRole = (userId: number, roleValue: string) => {
+    return getActiveRoles(userId).some((a: ScopeAssignment) => a.role === roleValue);
+  };
+
   // Filter users based on search and filters
   const filteredUsers = useMemo(() => {
     let result = users ?? [];
-    
+
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter(
@@ -78,27 +98,17 @@ function RolesView() {
           u.email.toLowerCase().includes(term)
       );
     }
-    
+
     if (selectedRoleFilter !== "all") {
       result = result.filter((u) => hasRole(u.id, selectedRoleFilter));
     }
-    
+
     if (showOnlyWithRoles) {
       result = result.filter((u) => getActiveRoles(u.id).length > 0);
     }
-    
+
     return result;
   }, [users, searchTerm, selectedRoleFilter, showOnlyWithRoles, grantableRoles]);
-
-  // Active assignments per user
-  const getActiveRoles = (userId: number) => {
-    return userAssignments.get(userId)?.filter((a) => a.is_active) ?? [];
-  };
-
-  // Check if user already has a specific role
-  const hasRole = (userId: number, roleValue: string) => {
-    return getActiveRoles(userId).some((a) => a.role === roleValue);
-  };
 
   // Handle grant
   const grantRole = async (

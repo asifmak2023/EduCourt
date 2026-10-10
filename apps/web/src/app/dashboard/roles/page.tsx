@@ -21,7 +21,11 @@ import {
   SuccessNotice,
 } from "@/components/ui";
 import { SCOPE_TYPE_OPTIONS } from "@/lib/rbacOptions";
-import type { ScopeAssignment, User } from "@/lib/types";
+import type { ScopeAssignment as BaseScopeAssignment, User } from "@/lib/types";
+
+type ScopeAssignment = BaseScopeAssignment & {
+  user?: User | null;
+};
 
 export default function RolesPage() {
   return (
@@ -39,7 +43,7 @@ function RolesView() {
 
   const { items: allRoles } = useRoleOptions();
   const permissionCatalog = usePermissionCatalog();
-  const { items: users, loading: usersLoading } = useUsers({ enabled: isCampusAdmin || isSuperUser });
+  const { items: users, loading: usersLoading } = useUsers(isCampusAdmin || isSuperUser);
   const { items: campuses } = useCampuses();
 
   const [version, setVersion] = useState(0);
@@ -167,7 +171,7 @@ function RolesView() {
       </div>
 
       {/* User Role Matrix */}
-      <SectionCard title="User Access Matrix" subtitle="Click roles to grant/revoke">
+      <SectionCard title="User Access Matrix" description="Click roles to grant/revoke">
         {usersLoading ? (
           <div className="py-8 text-center">
             <Spinner />
@@ -263,7 +267,6 @@ function RolesView() {
                           {activeRoles.length > 0 && (
                             <Button
                               variant="ghost"
-                              size="sm"
                               onClick={() =>
                                 activeRoles.forEach((a) => revokeRole(a.id))
                               }
@@ -345,7 +348,7 @@ function RolesView() {
                         {assignment.user?.name ?? `User #${assignment.user_id}`}
                       </Table.Cell>
                       <Table.Cell>
-                        <Badge value={assignment.role}>{assignment.role_label}</Badge>
+                        <Badge value={assignment.role_label ?? assignment.role ?? "-"} />
                       </Table.Cell>
                       <Table.Cell className="text-muted">
                         {assignment.scope_type ?? "-"}
@@ -369,7 +372,6 @@ function RolesView() {
                         {assignment.is_active ? (
                           <Button
                             variant="danger"
-                            size="sm"
                             onClick={() => revokeRole(assignment.id)}
                           >
                             Revoke
@@ -411,7 +413,7 @@ function BulkGrantForm({
   onComplete: () => void;
 }) {
   const [selectedRole, setSelectedRole] = useState("");
-  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -422,7 +424,7 @@ function BulkGrantForm({
     setError(null);
     setSuccess(null);
     try {
-      await onGranted(selectedUserIds, selectedRole);
+      await onGranted(selectedUserIds.map(Number), selectedRole);
       setSuccess(`Granted to ${selectedUserIds.length} user(s)`);
       setSelectedUserIds([]);
       onComplete();
@@ -474,8 +476,8 @@ function BulkGrantForm({
           </Button>
         </div>
       </div>
-      {error && <ErrorNotice message={error} className="mt-4" />}
-      {success && <SuccessNotice message={success} className="mt-4" />}
+      {error && <ErrorNotice message={error} />}
+      {success && <SuccessNotice message={success} />}
     </Card>
   );
 }
@@ -539,8 +541,8 @@ function CustomScopeForm({
       <p className="mt-0.5 text-xs text-muted">
         For custom scopes (institution, section, class, etc.) or specific date ranges.
       </p>
-      {error && <ErrorNotice message={error} className="mt-4" />}
-      {success && <SuccessNotice message={success} className="mt-4" />}
+      {error && <ErrorNotice message={error} />}
+      {success && <SuccessNotice message={success} />}
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Field label="User" htmlFor="scope_user" required>
           <Select

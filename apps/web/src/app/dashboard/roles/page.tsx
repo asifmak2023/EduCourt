@@ -1,25 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
 import { formatDate } from "@/lib/format";
-import {
-  useCampuses,
-  usePermissionCatalog,
-  useRoleOptions,
-  useUsers,
-} from "@/lib/useLookups";
+import { useCampuses, usePermissionCatalog, useRoleOptions, useUsers } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Pagination } from "@/components/Pagination";
-import {
-  Button,
-  Field,
-  Select,
-  TextInput,
-} from "@/components/Form";
+import { Button, Field, Select, TextInput } from "@/components/Form";
 import {
   Badge,
   Card,
@@ -28,9 +18,10 @@ import {
   PageHeader,
   SectionCard,
   Spinner,
+  SuccessNotice,
 } from "@/components/ui";
 import { SCOPE_TYPE_OPTIONS } from "@/lib/rbacOptions";
-import type { ScopeAssignment } from "@/lib/types";
+import type { ScopeAssignment, User } from "@/lib/types";
 
 export default function RolesPage() {
   return (
@@ -41,117 +32,285 @@ export default function RolesPage() {
 }
 
 function RolesView() {
-  const { can } = useAuth();
-  const { items: roles } = useRoleOptions();
+  const { can, canAny, user } = useAuth();
+  const isCampusAdmin = user?.roles?.includes("campus_admin") ?? false;
+  const isPlatformAdmin = user?.roles?.includes("platform_admin") ?? false;
+  const isSuperUser = isPlatformAdmin;
+
+  const { items: allRoles } = useRoleOptions();
   const permissionCatalog = usePermissionCatalog();
+  const { items: users, loading: usersLoading } = useUsers({ enabled: isCampusAdmin || isSuperUser });
+  const { items: campuses } = useCampuses();
 
   const [version, setVersion] = useState(0);
   const assignments = useList<ScopeAssignment>("/v1/scope-assignments", {
     _r: version,
+    per_page: 200,
   });
 
   const bump = () => setVersion((current) => current + 1);
 
-  const grouped = permissionCatalog.modules.map((module) => ({
-    module,
-    permissions: permissionCatalog.items.filter((permission) =>
-      permission.startsWith(`${module}.`)
-    ),
-  }));
-  const other = permissionCatalog.items.filter(
-    (permission) =>
-      !permissionCatalog.modules.some((module) =>
-        permission.startsWith(`${module}.`)
-      )
-  );
+  // Filter roles based on who's viewing
+  const grantableRoles = useMemo(() => {
+    if (isSuperUser) return allRoles;
+    // Campus admins can grant all except PlatformAdmin and CampusAdmin
+    return allRoles.filter(
+      (r) => r.value !== "platform_admin" && r.value !== "campus_admin"
+    );
+  }, [allRoles, isSuperUser]);
+
+  // Build user -> assignments map
+  const userAssignments = useMemo(() => {
+    const map = new Map<number, ScopeAssignment[]>();
+    assignments.items.forEach((a) => {
+      if (!map.has(a.user_id)) map.set(a.user_id, []);
+      map.get(a.user_id)!.push(a);
+    });
+    return map;
+  }, [assignments.items]);
+
+  // Active assignments per user
+  const getActiveRoles = (userId: number) => {
+    return userAssignments.get(userId)?.filter((a) => a.is_active) ?? [];
+  };
+
+  // Check if user already has a specific role
+  const hasRole = (userId: number, roleValue: string) => {
+    return getActiveRoles(userId).some((a) => a.role === roleValue);
+  };
+
+  // Handle grant
+  const grantRole = async (
+    targetUserId: number,
+    roleValue: string,
+    campusId?: number
+  ) => {
+    try {
+      await apiFetch("/v1/scope-assignments", {
+        method: "POST",
+        body: {
+          user_id: targetUserId,
+          role: roleValue,
+          scope_type: "campus",
+          campus_id: campusId ?? user?.campus_id,
+        },
+      });
+      bump();
+    } catch (err: unknown) {
+      throw err instanceof ApiError ? err.message : "Unable to grant role";
+    }
+  };
+
+  // Handle revoke
+  const revokeRole = async (assignmentId: number) => {
+    try {
+      await apiFetch(`/v1/scope-assignments/${assignmentId}`, {
+        method: "DELETE",
+      });
+      bump();
+    } catch (err: unknown) {
+      throw err instanceof ApiError ? err.message : "Unable to revoke role";
+    }
+  };
+
+  // Bulk grant
+  const bulkGrant = async (userIds: number[], roleValue: string) => {
+    try {
+      await Promise.all(
+        userIds.map((uid) =>
+          apiFetch("/v1/scope-assignments", {
+            method: "POST",
+            body: {
+              user_id: uid,
+              role: roleValue,
+              scope_type: "campus",
+              campus_id: user?.campus_id,
+            },
+          })
+        )
+      );
+      bump();
+    } catch (err: unknown) {
+      throw err instanceof ApiError ? err.message : "Bulk grant failed";
+    }
+  };
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Roles & scopes"
-        description="Role catalogue, permission reference and campus scope assignments."
+        title="Roles & Scopes"
+        description={isCampusAdmin
+          ? "Manage roles for your campus staff. Grant, revoke, and review access."
+          : "Super User view — manage all role assignments across campuses."}
       />
 
-      <SectionCard title="Role catalogue">
-        {roles.length === 0 ? (
-          <EmptyState message="No roles available." />
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {roles.map((role) => (
-              <div
-                key={role.value}
-                className="rounded-lg border border-border px-3 py-2"
-              >
-                <p className="text-sm font-medium text-foreground">
-                  {role.label}
-                </p>
-                <p className="text-xs text-muted">{role.value}</p>
-              </div>
-            ))}
+      {/* Quick Stats */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="p-4">
+          <p className="text-xs text-muted">Total Users</p>
+          <p className="text-2xl font-bold text-foreground">{users?.length ?? 0}</p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-xs text-muted">Active Assignments</p>
+          <p className="text-2xl font-bold text-foreground">
+            {assignments.items.filter((a) => a.is_active).length}
+          </p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-xs text-muted">Roles Available</p>
+          <p className="text-2xl font-bold text-foreground">{grantableRoles.length}</p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-xs text-muted">Your Role</p>
+          <Badge value={isSuperUser ? "platform_admin" : "campus_admin"} />
+        </Card>
+      </div>
+
+      {/* User Role Matrix */}
+      <SectionCard title="User Access Matrix" subtitle="Click roles to grant/revoke">
+        {usersLoading ? (
+          <div className="py-8 text-center">
+            <Spinner />
           </div>
+        ) : users && users.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border-secondary text-left text-xs uppercase text-muted">
+                  <th className="p-3 w-48">User</th>
+                  <th className="p-3 w-32">Email</th>
+                  {grantableRoles.map((role) => (
+                    <th key={role.value} className="p-3 text-center">
+                      <span className="truncate block max-w-[100px]">
+                        {role.label}
+                      </span>
+                    </th>
+                  ))}
+                  <th className="p-3 w-24">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users
+                  .filter((u) => !isSuperUser || u.id !== user?.id)
+                  .map((targetUser) => {
+                    const activeRoles = getActiveRoles(targetUser.id);
+                    return (
+                      <tr
+                        key={targetUser.id}
+                        className="border-b border-border-secondary/50 hover:bg-surface-secondary/50"
+                      >
+                        <td className="p-3 font-medium text-foreground">
+                          {targetUser.name}
+                        </td>
+                        <td className="p-3 text-muted text-xs">{targetUser.email}</td>
+                        {grantableRoles.map((role) => {
+                          const hasThisRole = hasRole(targetUser.id, role.value);
+                          const assignment = activeRoles.find(
+                            (a) => a.role === role.value
+                          );
+                          return (
+                            <td
+                              key={role.value}
+                              className="p-2 text-center"
+                            >
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  hasThisRole
+                                    ? revokeRole(assignment!.id)
+                                    : grantRole(targetUser.id, role.value)
+                                }
+                                className={`inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
+                                  hasThisRole
+                                    ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                                    : "bg-surface-secondary text-muted hover:bg-accent/10 hover:text-accent"
+                                }`}
+                                title={hasThisRole
+                                  ? `Revoke ${role.label}`
+                                  : `Grant ${role.label}`}
+                              >
+                                {hasThisRole ? (
+                                  <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                    aria-hidden="true"
+                                  >
+                                    <path d="M20 6 9 17l-5-5" />
+                                  </svg>
+                                ) : (
+                                  <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                    aria-hidden="true"
+                                  >
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 8v8M8 12h8" />
+                                  </svg>
+                                )}
+                              </button>
+                            </td>
+                          );
+                        })}
+                        <td className="p-3">
+                          {activeRoles.length > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                activeRoles.forEach((a) => revokeRole(a.id))
+                              }
+                            >
+                              Revoke All
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState message="No users found." />
         )}
       </SectionCard>
 
-      <Card className="p-6">
-        <h2 className="text-sm font-semibold text-foreground">
-          Permission reference
-        </h2>
-        {permissionCatalog.loading ? (
-          <div className="mt-4">
-            <Spinner />
-          </div>
-        ) : permissionCatalog.error ? (
-          <div className="mt-4">
-            <ErrorNotice message={permissionCatalog.error} />
-          </div>
-        ) : (
-          <div className="mt-4 space-y-4">
-            {grouped.map((group) => (
-              <div key={group.module}>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-                  {group.module}
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {group.permissions.map((permission) => (
-                    <span
-                      key={permission}
-                      className="rounded-md bg-surface-secondary px-2 py-1 text-xs text-muted"
-                    >
-                      {permission}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
-            {other.length > 0 ? (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-                  Other
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {other.map((permission) => (
-                    <span
-                      key={permission}
-                      className="rounded-md bg-surface-secondary px-2 py-1 text-xs text-muted"
-                    >
-                      {permission}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        )}
-      </Card>
+      {/* Bulk Actions */}
+      {can("role.edit") && (
+        <SectionCard title="Bulk Grant Role">
+          <BulkGrantForm
+            roles={grantableRoles}
+            users={users ?? []}
+            onGranted={bulkGrant}
+            onComplete={bump}
+          />
+        </SectionCard>
+      )}
 
-      {can("role.edit") ? (
-        <ScopeAssignmentForm roles={roles} onCreated={bump} />
-      ) : null}
+      {/* Detailed Scope Assignments */}
+      {can("role.edit") && (
+        <SectionCard title="Grant Custom Scope">
+          <CustomScopeForm
+            roles={grantableRoles}
+            campuses={campuses}
+            onCreated={bump}
+          />
+        </SectionCard>
+      )}
 
+      {/* Assignment History */}
       <Card>
         <div className="border-b border-border px-5 py-4">
           <h2 className="text-sm font-semibold text-foreground">
-            Scope assignments
+            All Scope Assignments
           </h2>
         </div>
         {assignments.loading ? (
@@ -170,19 +329,23 @@ function RolesView() {
                 className="min-w-[880px]"
               >
                 <Table.Header>
-                  <Table.Column isRowHeader>Role</Table.Column>
+                  <Table.Column isRowHeader>User</Table.Column>
+                  <Table.Column>Role</Table.Column>
                   <Table.Column>Scope</Table.Column>
                   <Table.Column>Campus</Table.Column>
                   <Table.Column>Valid from</Table.Column>
                   <Table.Column>Valid to</Table.Column>
                   <Table.Column>Status</Table.Column>
-                  {can("role.edit") ? <Table.Column>{""}</Table.Column> : null}
+                  <Table.Column>{""}</Table.Column>
                 </Table.Header>
                 <Table.Body>
                   {assignments.items.map((assignment) => (
                     <Table.Row key={assignment.id} id={assignment.id}>
                       <Table.Cell className="text-foreground">
-                        {assignment.role_label ?? assignment.role ?? "-"}
+                        {assignment.user?.name ?? `User #${assignment.user_id}`}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge value={assignment.role}>{assignment.role_label}</Badge>
                       </Table.Cell>
                       <Table.Cell className="text-muted">
                         {assignment.scope_type ?? "-"}
@@ -195,21 +358,26 @@ function RolesView() {
                         {formatDate(assignment.starts_at)}
                       </Table.Cell>
                       <Table.Cell className="text-muted">
-                        {formatDate(assignment.ends_at)}
+                        {formatDate(assignment.ends_at) ?? "—"}
                       </Table.Cell>
                       <Table.Cell>
                         <Badge
                           value={assignment.is_active ? "active" : "inactive"}
                         />
                       </Table.Cell>
-                      {can("role.edit") ? (
-                        <Table.Cell className="text-right">
-                          <RevokeButton
-                            assignmentId={assignment.id}
-                            onRevoked={bump}
-                          />
-                        </Table.Cell>
-                      ) : null}
+                      <Table.Cell className="text-right">
+                        {assignment.is_active ? (
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => revokeRole(assignment.id)}
+                          >
+                            Revoke
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-muted">Revoked</span>
+                        )}
+                      </Table.Cell>
                     </Table.Row>
                   ))}
                 </Table.Body>
@@ -231,15 +399,96 @@ function RolesView() {
   );
 }
 
-function ScopeAssignmentForm({
+function BulkGrantForm({
   roles,
+  users,
+  onGranted,
+  onComplete,
+}: {
+  roles: { value: string; label: string }[];
+  users: User[];
+  onGranted: (userIds: number[], roleValue: string) => Promise<void>;
+  onComplete: () => void;
+}) {
+  const [selectedRole, setSelectedRole] = useState("");
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const handleSubmit = async () => {
+    if (!selectedRole || selectedUserIds.length === 0) return;
+    setBusy(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      await onGranted(selectedUserIds, selectedRole);
+      setSuccess(`Granted to ${selectedUserIds.length} user(s)`);
+      setSelectedUserIds([]);
+      onComplete();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card className="p-6">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Field label="Role to grant" htmlFor="bulk_role" required>
+          <Select
+            id="bulk_role"
+            value={selectedRole}
+            onChange={(e) => setSelectedRole(e.target.value)}
+          >
+            <option value="">Select role</option>
+            {roles.map((r) => (
+              <option key={r.value} value={r.value}>
+                {r.label}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Users" htmlFor="bulk_users" required>
+          <Select
+            id="bulk_users"
+            multiple
+            value={selectedUserIds}
+            onChange={(e) => {
+              const options = Array.from(e.target.selectedOptions);
+              setSelectedUserIds(options.map((o) => Number(o.value)));
+            }}
+            className="min-h-[100px]"
+          >
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name} ({u.email})
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <div className="flex items-end">
+          <Button onClick={handleSubmit} loading={busy} disabled={!selectedRole || selectedUserIds.length === 0}>
+            Grant to {selectedUserIds.length} user(s)
+          </Button>
+        </div>
+      </div>
+      {error && <ErrorNotice message={error} className="mt-4" />}
+      {success && <SuccessNotice message={success} className="mt-4" />}
+    </Card>
+  );
+}
+
+function CustomScopeForm({
+  roles,
+  campuses,
   onCreated,
 }: {
   roles: { value: string; label: string }[];
+  campuses: { id: number; name: string }[];
   onCreated: () => void;
 }) {
-  const { items: users } = useUsers();
-  const { items: campuses } = useCampuses();
   const [userId, setUserId] = useState("");
   const [role, setRole] = useState("");
   const [campusId, setCampusId] = useState("");
@@ -249,10 +498,13 @@ function ScopeAssignmentForm({
   const [endsAt, setEndsAt] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const { items: users } = useUsers();
 
   const submit = async () => {
     setBusy(true);
     setError(null);
+    setSuccess(null);
     try {
       await apiFetch("/v1/scope-assignments", {
         method: "POST",
@@ -272,11 +524,10 @@ function ScopeAssignmentForm({
       setScopeId("");
       setStartsAt("");
       setEndsAt("");
+      setSuccess("Scope granted successfully");
       onCreated();
     } catch (err: unknown) {
-      setError(
-        err instanceof ApiError ? err.message : "Unable to grant this scope."
-      );
+      setError(err instanceof ApiError ? err.message : "Unable to grant scope");
     } finally {
       setBusy(false);
     }
@@ -284,29 +535,23 @@ function ScopeAssignmentForm({
 
   return (
     <Card className="p-6">
-      <h2 className="text-sm font-semibold text-foreground">
-        Grant scope assignment
-      </h2>
+      <h2 className="text-sm font-semibold text-foreground">Advanced scope assignment</h2>
       <p className="mt-0.5 text-xs text-muted">
-        Scope an existing account to a role within a campus. Granting the campus
-        admin role is reserved for the Super User.
+        For custom scopes (institution, section, class, etc.) or specific date ranges.
       </p>
-      {error ? (
-        <div className="mt-4">
-          <ErrorNotice message={error} />
-        </div>
-      ) : null}
-      <div className="mt-4 grid gap-4 sm:grid-cols-4">
+      {error && <ErrorNotice message={error} className="mt-4" />}
+      {success && <SuccessNotice message={success} className="mt-4" />}
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Field label="User" htmlFor="scope_user" required>
           <Select
             id="scope_user"
             value={userId}
-            onChange={(event) => setUserId(event.target.value)}
+            onChange={(e) => setUserId(e.target.value)}
           >
             <option value="">Select user</option>
-            {users.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.name} ({user.email})
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name} ({u.email})
               </option>
             ))}
           </Select>
@@ -315,12 +560,12 @@ function ScopeAssignmentForm({
           <Select
             id="scope_role"
             value={role}
-            onChange={(event) => setRole(event.target.value)}
+            onChange={(e) => setRole(e.target.value)}
           >
             <option value="">Select role</option>
-            {roles.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
+            {roles.map((r) => (
+              <option key={r.value} value={r.value}>
+                {r.label}
               </option>
             ))}
           </Select>
@@ -329,12 +574,12 @@ function ScopeAssignmentForm({
           <Select
             id="scope_campus"
             value={campusId}
-            onChange={(event) => setCampusId(event.target.value)}
+            onChange={(e) => setCampusId(e.target.value)}
           >
             <option value="">Current campus</option>
-            {campuses.map((campus) => (
-              <option key={campus.id} value={campus.id}>
-                {campus.name}
+            {campuses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
               </option>
             ))}
           </Select>
@@ -343,21 +588,21 @@ function ScopeAssignmentForm({
           <Select
             id="scope_type"
             value={scopeType}
-            onChange={(event) => setScopeType(event.target.value)}
+            onChange={(e) => setScopeType(e.target.value)}
           >
-            {SCOPE_TYPE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
+            {SCOPE_TYPE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
               </option>
             ))}
           </Select>
         </Field>
-        <Field label="Scope id" htmlFor="scope_id" hint="Optional target id">
+        <Field label="Scope ID" htmlFor="scope_id" hint="Optional">
           <TextInput
             id="scope_id"
             type="number"
             value={scopeId}
-            onChange={(event) => setScopeId(event.target.value)}
+            onChange={(e) => setScopeId(e.target.value)}
           />
         </Field>
         <Field label="Starts at" htmlFor="scope_starts">
@@ -365,7 +610,7 @@ function ScopeAssignmentForm({
             id="scope_starts"
             type="date"
             value={startsAt}
-            onChange={(event) => setStartsAt(event.target.value)}
+            onChange={(e) => setStartsAt(e.target.value)}
           />
         </Field>
         <Field label="Ends at" htmlFor="scope_ends">
@@ -373,43 +618,15 @@ function ScopeAssignmentForm({
             id="scope_ends"
             type="date"
             value={endsAt}
-            onChange={(event) => setEndsAt(event.target.value)}
+            onChange={(e) => setEndsAt(e.target.value)}
           />
         </Field>
       </div>
       <div className="mt-4">
         <Button onClick={submit} loading={busy} disabled={!userId || !role}>
-          Grant scope
+          Grant Scope
         </Button>
       </div>
     </Card>
-  );
-}
-
-function RevokeButton({
-  assignmentId,
-  onRevoked,
-}: {
-  assignmentId: number;
-  onRevoked: () => void;
-}) {
-  const [busy, setBusy] = useState(false);
-
-  const revoke = async () => {
-    setBusy(true);
-    try {
-      await apiFetch(`/v1/scope-assignments/${assignmentId}`, {
-        method: "DELETE",
-      });
-      onRevoked();
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <Button variant="danger" onClick={revoke} loading={busy}>
-      Revoke
-    </Button>
   );
 }

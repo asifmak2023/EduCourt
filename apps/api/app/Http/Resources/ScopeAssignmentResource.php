@@ -22,6 +22,7 @@ class ScopeAssignmentResource extends JsonResource
             'starts_at' => $this->starts_at,
             'ends_at' => $this->ends_at,
             'campus' => CampusResource::make($this->whenLoaded('campus')),
+            'user' => UserResource::make($this->whenLoaded('user')),
             'created_at' => $this->created_at,
         ];
     }

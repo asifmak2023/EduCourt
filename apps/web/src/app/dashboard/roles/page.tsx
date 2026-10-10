@@ -459,12 +459,12 @@ function BulkGrantForm({
             value={selectedUserIds}
             onChange={(e) => {
               const options = Array.from(e.target.selectedOptions);
-              setSelectedUserIds(options.map((o) => Number(o.value)));
+              setSelectedUserIds(options.map((o) => o.value));
             }}
             className="min-h-[100px]"
           >
             {users.map((u) => (
-              <option key={u.id} value={u.id}>
+              <option key={u.id} value={String(u.id)}>
                 {u.name} ({u.email})
               </option>
             ))}

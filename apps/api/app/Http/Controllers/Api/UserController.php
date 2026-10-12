@@ -35,6 +35,27 @@ class UserController extends Controller
                 ->where('campus_id', $request->integer('campus_id')))
             ->when($request->filled('role'), fn ($query) => $query
                 ->role($request->string('role')->toString()))
+            ->when($request->filled('account_type'), function ($query) use ($request) {
+                $type = $request->string('account_type')->toString();
+                $portal = [
+                    RoleName::Student->value,
+                    RoleName::ParentGuardian->value,
+                ];
+
+                if ($type === 'portal') {
+                    $query->role($portal)
+                        ->whereDoesntHave('roles', fn ($roles) => $roles
+                            ->whereNotIn('name', $portal));
+                } elseif ($type === 'unassigned') {
+                    $query->whereDoesntHave('roles');
+                } elseif ($type === 'staff') {
+                    $query->where(function ($inner) use ($portal) {
+                        $inner->whereDoesntHave('roles')
+                            ->orWhereHas('roles', fn ($roles) => $roles
+                                ->whereNotIn('name', $portal));
+                    });
+                }
+            })
             ->when($request->has('is_active'), fn ($query) => $query
                 ->where('is_active', $request->boolean('is_active')))
             ->when($request->has('two_factor_enabled'), fn ($query) => $query

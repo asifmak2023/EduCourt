@@ -11,7 +11,7 @@ import { useCampuses, useRoleCatalog } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Pagination } from "@/components/Pagination";
 import { Avatar } from "@/components/Avatar";
-import { Button, Field, Select, TextInput } from "@/components/Form";
+import { Button, Checkbox, Field, Select, TextInput } from "@/components/Form";
 import {
   Badge,
   Card,
@@ -73,16 +73,34 @@ function RolesView() {
     _r: version,
     per_page: 50,
     ...(selectedRoleFilter !== "all" ? { role: selectedRoleFilter } : {}),
+    ...(accountFilter !== "all" ? { account_type: accountFilter } : {}),
   });
   const assignments = useList<ScopeAssignment>("/v1/scope-assignments", {
     _r: version,
     per_page: 50,
+  });
+  const peopleTotals = useList<User>("/v1/users", { _r: version, per_page: 1 });
+  const staffTotals = useList<User>("/v1/users", {
+    _r: version,
+    per_page: 1,
+    account_type: "staff",
+  });
+  const activeAssignmentTotals = useList<ScopeAssignment>("/v1/scope-assignments", {
+    _r: version,
+    per_page: 1,
+    is_active: 1,
   });
   const users = people.items;
   const usersLoading = people.loading;
   const usersError = people.error;
 
   const bump = () => setVersion((current) => current + 1);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
 
   useEffect(() => {
     if (!selectedUser) {
@@ -120,36 +138,6 @@ function RolesView() {
       .filter((role): role is string => Boolean(role));
     return Array.from(new Set([...fromUser, ...fromAssignments]));
   };
-
-  const filteredUsers = useMemo(() => {
-    let result = users ?? [];
-
-    if (accountFilter === "staff") {
-      result = result.filter((entry) => {
-        const roles = getActiveRoles(entry);
-        return roles.length === 0 || roles.some((role) => !roleByValue.get(role)?.portal_only);
-      });
-    } else if (accountFilter === "portal") {
-      result = result.filter((entry) => {
-        const roles = getActiveRoles(entry);
-        return roles.length > 0 && roles.every((role) => roleByValue.get(role)?.portal_only);
-      });
-    } else if (accountFilter === "unassigned") {
-      result = result.filter((entry) => getActiveRoles(entry).length === 0);
-    }
-
-    return result;
-  }, [
-    users,
-    accountFilter,
-    roleByValue,
-    assignments.items,
-  ]);
-
-  const staffCount = (users ?? []).filter((entry) => {
-    const roles = getActiveRoles(entry);
-    return roles.length === 0 || roles.some((role) => !roleByValue.get(role)?.portal_only);
-  }).length;
 
   const flash = (kind: "ok" | "err", text: string) => {
     setNotice({ kind, text });
@@ -259,19 +247,34 @@ function RolesView() {
       />
 
       {notice ? (
-        notice.kind === "ok" ? (
-          <SuccessNotice message={notice.text} />
-        ) : (
-          <ErrorNotice message={notice.text} />
-        )
+        <button
+          type="button"
+          className="block w-full text-start"
+          onClick={() => setNotice(null)}
+          aria-label="Dismiss notice"
+        >
+          {notice.kind === "ok" ? (
+            <SuccessNotice message={notice.text} />
+          ) : (
+            <ErrorNotice message={notice.text} />
+          )}
+        </button>
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="People" value={users?.length ?? 0} hint="On this campus" />
-        <Stat label="Staff accounts" value={staffCount} hint="Excludes portal-only" />
+        <Stat
+          label="People"
+          value={peopleTotals.meta?.total ?? 0}
+          hint="On this campus"
+        />
+        <Stat
+          label="Staff accounts"
+          value={staffTotals.meta?.total ?? 0}
+          hint="Excludes portal-only"
+        />
         <Stat
           label="Active assignments"
-          value={assignments.items.filter((assignment) => assignment.is_active).length}
+          value={activeAssignmentTotals.meta?.total ?? 0}
           hint="Current grants"
         />
         <Stat
@@ -295,7 +298,7 @@ function RolesView() {
 
       {tab === "people" ? (
         <PeoplePanel
-          users={filteredUsers}
+          users={users}
           allCount={people.meta?.total ?? users?.length ?? 0}
           loading={usersLoading}
           error={usersError}
@@ -313,7 +316,10 @@ function RolesView() {
             setSelectedRoleFilter(value);
           }}
           accountFilter={accountFilter}
-          onAccountFilter={setAccountFilter}
+          onAccountFilter={(value) => {
+            people.setPage(1);
+            setAccountFilter(value);
+          }}
           roles={catalog.items}
           modules={catalog.modules}
           getActiveRoles={getActiveRoles}
@@ -580,15 +586,38 @@ function CataloguePanel({
   error: string | null;
 }) {
   const [openRole, setOpenRole] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [grantableOnly, setGrantableOnly] = useState(false);
+
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return roles.filter((role) => {
+      if (grantableOnly && role.grantable_by_campus_admin === false) {
+        return false;
+      }
+      if (needle === "") return true;
+      const haystack = [
+        role.label,
+        role.value,
+        role.description,
+        role.department_label,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(needle);
+    });
+  }, [roles, query, grantableOnly]);
+
   const grouped = useMemo(() => {
     const map = new Map<string, RoleOption[]>();
-    roles.forEach((role) => {
+    visible.forEach((role) => {
       const key = role.department_label ?? "Other";
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(role);
     });
     return Array.from(map.entries());
-  }, [roles]);
+  }, [visible]);
 
   if (loading) return <Spinner />;
   if (error) return <ErrorNotice message={error} />;
@@ -599,6 +628,27 @@ function CataloguePanel({
         These are the built-in roles. Each role comes with a default set of module
         permissions. Campus admins can grant any role except Campus Admin and Super User.
       </p>
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="w-72">
+          <TextInput
+            type="search"
+            placeholder="Search roles or departments"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </div>
+        <Checkbox
+          label="Grantable by campus admin"
+          checked={grantableOnly}
+          onChange={(event) => setGrantableOnly(event.target.checked)}
+        />
+        <p className="ms-auto text-sm text-muted">
+          {visible.length} of {roles.length}
+        </p>
+      </div>
+      {grouped.length === 0 ? (
+        <EmptyState message="No roles match this search." />
+      ) : null}
       {grouped.map(([department, items]) => (
         <SectionCard key={department} title={department}>
           <div className="grid gap-3 lg:grid-cols-2">

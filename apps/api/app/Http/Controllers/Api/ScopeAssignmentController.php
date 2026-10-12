@@ -28,6 +28,8 @@ class ScopeAssignmentController extends Controller
                 ->where('user_id', $request->integer('user_id')))
             ->when($request->filled('campus_id'), fn ($query) => $query
                 ->where('campus_id', $request->integer('campus_id')))
+            ->when($request->has('is_active'), fn ($query) => $query
+                ->where('is_active', $request->boolean('is_active')))
             ->when(! $actor->isPlatformAdmin(), function ($query) {
                 $campusId = $this->context->campusId();
                 $institutionId = $this->context->institutionId();

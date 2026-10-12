@@ -228,6 +228,63 @@ class RbacTest extends TestCase
             ->assertStatus(403);
     }
 
+    public function test_campus_admin_can_filter_staff_accounts(): void
+    {
+        $admin = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $admin->syncRoles([RoleName::CampusAdmin->value]);
+
+        $teacher = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $teacher->syncRoles([RoleName::Teacher->value]);
+
+        $student = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $student->syncRoles([RoleName::Student->value]);
+
+        $ids = collect(
+            $this->withToken($admin->createToken('t')->plainTextToken)
+                ->getJson('/api/v1/users?account_type=staff&per_page=100')
+                ->assertOk()
+                ->json('data')
+        )->pluck('id');
+
+        $this->assertTrue($ids->contains($teacher->id));
+        $this->assertFalse($ids->contains($student->id));
+
+        $portalIds = collect(
+            $this->withToken($admin->createToken('t')->plainTextToken)
+                ->getJson('/api/v1/users?account_type=portal&per_page=100')
+                ->assertOk()
+                ->json('data')
+        )->pluck('id');
+
+        $this->assertTrue($portalIds->contains($student->id));
+        $this->assertFalse($portalIds->contains($teacher->id));
+
+        $unassigned = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+
+        $unassignedIds = collect(
+            $this->withToken($admin->createToken('t')->plainTextToken)
+                ->getJson('/api/v1/users?account_type=unassigned&per_page=100')
+                ->assertOk()
+                ->json('data')
+        )->pluck('id');
+
+        $this->assertTrue($unassignedIds->contains($unassigned->id));
+        $this->assertFalse($unassignedIds->contains($teacher->id));
+        $this->assertFalse($unassignedIds->contains($student->id));
+    }
+
     public function test_campus_admin_cannot_create_another_campus_admin(): void
     {
         $admin = User::factory()->create([

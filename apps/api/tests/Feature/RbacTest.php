@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Enums\CampusType;
 use App\Enums\RoleName;
+use App\Enums\ScopeType;
 use App\Models\Campus;
 use App\Models\Institution;
+use App\Models\ScopeAssignment;
 use App\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -122,6 +124,108 @@ class RbacTest extends TestCase
             ->assertStatus(201)
             ->assertJsonPath('data.campus_id', $this->campus->id)
             ->assertJsonPath('data.roles.0', RoleName::Teacher->value);
+    }
+
+    public function test_campus_admin_has_role_edit_permission(): void
+    {
+        $admin = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $admin->syncRoles([RoleName::CampusAdmin->value]);
+
+        $this->assertTrue($admin->hasPermissionTo('role.edit'));
+    }
+
+    public function test_roles_catalog_includes_default_permissions(): void
+    {
+        $admin = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $admin->syncRoles([RoleName::CampusAdmin->value]);
+
+        $this->withToken($admin->createToken('t')->plainTextToken)
+            ->getJson('/api/v1/meta/roles')
+            ->assertOk()
+            ->assertJsonStructure([
+                'data' => [
+                    [
+                        'value',
+                        'label',
+                        'description',
+                        'department',
+                        'department_label',
+                        'grantable_by_campus_admin',
+                        'permissions',
+                        'modules',
+                    ],
+                ],
+                'modules',
+            ])
+            ->assertJsonFragment(['value' => RoleName::Teacher->value])
+            ->assertJsonFragment(['grantable_by_campus_admin' => false, 'value' => RoleName::CampusAdmin->value]);
+    }
+
+    public function test_campus_admin_can_grant_and_revoke_a_local_role(): void
+    {
+        $admin = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $admin->syncRoles([RoleName::CampusAdmin->value]);
+
+        $staff = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $staff->syncRoles([RoleName::Accountant->value]);
+
+        $this->withToken($admin->createToken('t')->plainTextToken)
+            ->postJson('/api/v1/scope-assignments', [
+                'user_id' => $staff->id,
+                'role' => RoleName::Teacher->value,
+                'scope_type' => ScopeType::Campus->value,
+            ])
+            ->assertCreated();
+
+        $this->assertTrue($staff->fresh()->hasRole(RoleName::Teacher->value));
+        $this->assertTrue($staff->fresh()->hasRole(RoleName::Accountant->value));
+
+        $assignmentId = ScopeAssignment::query()
+            ->where('user_id', $staff->id)
+            ->where('role', RoleName::Teacher->value)
+            ->value('id');
+
+        $this->withToken($admin->createToken('t')->plainTextToken)
+            ->deleteJson("/api/v1/scope-assignments/{$assignmentId}")
+            ->assertOk();
+
+        $this->assertFalse($staff->fresh()->hasRole(RoleName::Teacher->value));
+        $this->assertTrue($staff->fresh()->hasRole(RoleName::Accountant->value));
+    }
+
+    public function test_campus_admin_cannot_change_access_for_another_campus_admin(): void
+    {
+        $admin = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $admin->syncRoles([RoleName::CampusAdmin->value]);
+
+        $peer = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $peer->syncRoles([RoleName::CampusAdmin->value]);
+
+        $this->withToken($admin->createToken('t')->plainTextToken)
+            ->postJson('/api/v1/scope-assignments', [
+                'user_id' => $peer->id,
+                'role' => RoleName::Teacher->value,
+                'scope_type' => ScopeType::Campus->value,
+            ])
+            ->assertStatus(403);
     }
 
     public function test_campus_admin_cannot_create_another_campus_admin(): void

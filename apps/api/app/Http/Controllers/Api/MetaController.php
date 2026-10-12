@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\CampusType;
-use App\Enums\RoleName;
 use App\Enums\ScopeType;
 use App\Http\Controllers\Controller;
+use App\Support\RoleCatalog;
 use Illuminate\Http\JsonResponse;
 use Spatie\Permission\Models\Permission;
 
@@ -13,12 +13,10 @@ class MetaController extends Controller
 {
     public function roles(): JsonResponse
     {
-        $roles = array_map(fn (RoleName $role) => [
-            'value' => $role->value,
-            'label' => $role->label(),
-        ], RoleName::cases());
-
-        return response()->json(['data' => $roles]);
+        return response()->json([
+            'data' => RoleCatalog::roles(),
+            'modules' => RoleCatalog::moduleMeta(),
+        ]);
     }
 
     public function scopes(): JsonResponse

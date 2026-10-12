@@ -23,7 +23,7 @@ class UserController extends Controller
         $search = $request->string('search')->toString();
 
         $users = User::query()
-            ->with(['roles', 'campus', 'institution', 'student'])
+            ->with(['roles.permissions', 'permissions', 'campus', 'institution', 'student', 'scopeAssignments.campus'])
             ->when($search !== '', fn ($query) => $query
                 ->where(fn ($q) => $q
                     ->where('name', 'like', "%{$search}%")

@@ -927,6 +927,7 @@ export interface User {
   campus_id?: number | null;
   roles?: string[];
   permissions?: string[];
+  scope_assignments?: ScopeAssignment[];
   campus?: Campus | null;
   institution?: Institution | null;
   two_factor_enabled?: boolean;
@@ -937,6 +938,19 @@ export interface User {
 export interface RoleOption {
   value: string;
   label: string;
+  description?: string;
+  department?: string;
+  department_label?: string;
+  grantable_by_campus_admin?: boolean;
+  two_factor_required?: boolean;
+  portal_only?: boolean;
+  permissions?: string[];
+  modules?: Record<string, string[]>;
+}
+
+export interface RoleModuleMeta {
+  label: string;
+  actions: string[];
 }
 
 export interface ActivityLog {

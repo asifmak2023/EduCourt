@@ -21,7 +21,10 @@ class UserResource extends JsonResource
             'institution_id' => $this->institution_id,
             'campus_id' => $this->campus_id,
             'roles' => $this->whenLoaded('roles', fn () => $this->roles->pluck('name')->values()),
-            'permissions' => $this->whenLoaded('permissions', fn () => $this->getAllPermissions()->pluck('name')->values()),
+            'permissions' => $this->when(
+                $this->relationLoaded('roles') || $this->relationLoaded('permissions'),
+                fn () => $this->getAllPermissions()->pluck('name')->values()
+            ),
             'campus' => CampusResource::make($this->whenLoaded('campus')),
             'institution' => InstitutionResource::make($this->whenLoaded('institution')),
             'scope_assignments' => ScopeAssignmentResource::collection($this->whenLoaded('scopeAssignments')),

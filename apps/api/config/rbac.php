@@ -84,7 +84,7 @@ return [
         RoleName::CampusAdmin->value => [
             'institution.view',
             'campus.view', 'campus.edit',
-            'user.*', 'role.view',
+            'user.*', 'role.view', 'role.edit',
             'admission.*', 'student.*', 'attendance.*', 'exam.*', 'credit.*',
             'academic.*', 'timetable.*', 'scholarship.*', 'curriculum.*',
             'finance.*', 'fee.*', 'concession.*', 'fine.*', 'reminder.*',

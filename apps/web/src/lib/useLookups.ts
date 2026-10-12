@@ -30,6 +30,7 @@ import type {
   Paginated,
   Period,
   Room,
+  RoleModuleMeta,
   RoleOption,
   SalaryComponent,
   Scholarship,
@@ -420,6 +421,74 @@ export function useStudentEvents(
 
 export function useRoleOptions(enabled = true): ListLookupState<RoleOption> {
   return useCollection<RoleOption>(enabled ? "/v1/meta/roles" : null);
+}
+
+export interface RoleCatalogState {
+  items: RoleOption[];
+  modules: Record<string, RoleModuleMeta>;
+  loading: boolean;
+  error: string | null;
+}
+
+export function useRoleCatalog(enabled = true): RoleCatalogState {
+  const [state, setState] = useState<RoleCatalogState>({
+    items: [],
+    modules: {},
+    loading: enabled,
+    error: null,
+  });
+
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
+    const controller = new AbortController();
+    let active = true;
+
+    const run = async () => {
+      setState((current) => ({ ...current, loading: true, error: null }));
+
+      try {
+        const response = await apiFetch<{
+          data: RoleOption[];
+          modules?: Record<string, RoleModuleMeta>;
+        }>("/v1/meta/roles", { signal: controller.signal });
+
+        if (!active) {
+          return;
+        }
+
+        setState({
+          items: response.data,
+          modules: response.modules ?? {},
+          loading: false,
+          error: null,
+        });
+      } catch (err: unknown) {
+        if (!active || (err instanceof DOMException && err.name === "AbortError")) {
+          return;
+        }
+
+        setState({
+          items: [],
+          modules: {},
+          loading: false,
+          error:
+            err instanceof ApiError ? err.message : "Unable to load roles.",
+        });
+      }
+    };
+
+    void run();
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [enabled]);
+
+  return state;
 }
 
 export function useCampuses(enabled = true): ListLookupState<Campus> {

@@ -60,6 +60,66 @@ enum RoleName: string
         };
     }
 
+    public function description(): string
+    {
+        return match ($this) {
+            self::PlatformAdmin => 'Owns the product. Creates institutions and the campus admin for each campus.',
+            self::CampusAdmin => 'Runs one campus. Invokes and revokes staff roles and campus-wide access.',
+            self::Principal => 'Campus-wide academic and operational oversight, with approval rights.',
+            self::FinanceHead => 'Full finance, fees, payroll, scholarships and financial reports.',
+            self::Accountant => 'Day-to-day fees, receipts, bookkeeping and reminders.',
+            self::AdmissionsOfficer => 'Enquiries, admissions, student records and front office.',
+            self::HrOfficer => 'Staff records, designations and payroll preparation.',
+            self::AcademicCoordinator => 'Academic structure, timetable, curriculum and parent-teacher meetings.',
+            self::Teacher => 'Class attendance, marks, lesson plans and parent-teacher meetings.',
+            self::ExamController => 'Exams, marks entry, credits and result processing.',
+            self::StudentAffairsOfficer => 'Clubs, events, welfare, complaints and student conduct.',
+            self::Counsellor => 'Confidential counselling records for students.',
+            self::CanteenManager => 'Canteen sales, stock, wallets and related inventory.',
+            self::SportsDirector => 'Teams, fixtures, sports equipment and student sports records.',
+            self::ItAdministrator => 'User accounts, devices, IT change requests and audit visibility.',
+            self::Librarian => 'Library catalogue, circulation and related inventory.',
+            self::StoreIncharge => 'Stores, inventory and laboratory stock visibility.',
+            self::TransportHostelIncharge => 'Transport routes, vehicles, hostel rooms and allocations.',
+            self::ParentGuardian => 'Family portal only. No staff-module access.',
+            self::Student => 'Student portal only. No staff-module access.',
+        };
+    }
+
+    public function department(): string
+    {
+        return match ($this) {
+            self::PlatformAdmin, self::CampusAdmin, self::Principal => 'administration',
+            self::FinanceHead, self::Accountant => 'finance',
+            self::AdmissionsOfficer => 'admissions',
+            self::HrOfficer => 'people',
+            self::AcademicCoordinator, self::Teacher, self::ExamController => 'academics',
+            self::StudentAffairsOfficer, self::Counsellor, self::SportsDirector => 'student_life',
+            self::CanteenManager, self::Librarian, self::StoreIncharge, self::TransportHostelIncharge, self::ItAdministrator => 'operations',
+            self::ParentGuardian, self::Student => 'portal',
+        };
+    }
+
+    public function departmentLabel(): string
+    {
+        return match ($this->department()) {
+            'administration' => 'Administration',
+            'finance' => 'Finance',
+            'admissions' => 'Admissions',
+            'people' => 'People & HR',
+            'academics' => 'Academics',
+            'student_life' => 'Student life',
+            'operations' => 'Campus operations',
+            'portal' => 'Student & parent portal',
+            default => 'Other',
+        };
+    }
+
+    public function isPortal(): bool
+    {
+        return $this === self::Student || $this === self::ParentGuardian;
+    }
+
     /**
      * Roles that must use two-factor authentication.
      *

@@ -13,6 +13,7 @@ import {
   StatCard,
 } from "@/components/ui";
 import { formatNumber } from "@/lib/format";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicYears, useClassRooms } from "@/lib/useLookups";
 import { useReport } from "@/lib/useReport";
 import type { ReportAttendance } from "@/lib/types";
@@ -30,6 +31,7 @@ function AttendanceReport() {
   const { items: academicYears } = useAcademicYears();
   const [classRoomId, setClassRoomId] = useState("");
   const [academicYearId, setAcademicYearId] = useState("");
+  useAcademicYearDefault(academicYears, academicYearId, setAcademicYearId);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 

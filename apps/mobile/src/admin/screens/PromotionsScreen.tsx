@@ -187,6 +187,7 @@ export function PromotionsScreen() {
           value={toYear}
           onChange={setToYear}
           required
+          autoDefault={false}
         />
         <LookupField
           label="Class"

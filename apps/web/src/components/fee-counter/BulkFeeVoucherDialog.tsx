@@ -6,9 +6,11 @@ import Link from "next/link";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { AR_VIEW } from "@/lib/permissions";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicYears, useClassRooms, useSections } from "@/lib/useLookups";
 import { Button, Field, Select, TextInput } from "@/components/Form";
 import { ErrorNotice, SuccessNotice } from "@/components/ui";
+import { currentMonthValue } from "@/lib/format";
 
 interface BulkResultRow {
   student_id: number;
@@ -38,11 +40,6 @@ export interface BulkFeeVoucherDialogProps {
   initialAcademicYearId?: string | number;
   /** Pre-fill section */
   initialSectionId?: string | number;
-}
-
-function currentMonthValue(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
 export function BulkFeeVoucherDialog({
@@ -91,6 +88,7 @@ function BulkDialogFrame({
   const [academicYearId, setAcademicYearId] = useState(
     initialAcademicYearId ? String(initialAcademicYearId) : ""
   );
+  useAcademicYearDefault(years, academicYearId, setAcademicYearId);
   const [classId, setClassId] = useState(initialClassId ? String(initialClassId) : "");
   const [sectionId, setSectionId] = useState(
     initialSectionId ? String(initialSectionId) : ""

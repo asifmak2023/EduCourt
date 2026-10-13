@@ -13,6 +13,7 @@ import {
 } from "@/components/Form";
 import { ErrorNotice, SuccessNotice } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
+import { currentAcademicYearId } from "@/lib/academicYear";
 import {
   useAcademicYears,
   useClassRooms,
@@ -59,8 +60,7 @@ export function GenerateVoucherDialog({ onDone }: { onDone?: () => void }) {
     (plan) => !classFilter || plan.class_room_id === Number(classFilter)
   );
 
-  const currentYearId =
-    years.find((year) => year.is_current)?.id ?? null;
+  const currentYearId = currentAcademicYearId(years);
 
   const plansByYear = Array.from(
     visiblePlans.reduce((map, plan) => {

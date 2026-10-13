@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import {
   useAcademicYears,
   useClassRooms,
@@ -35,6 +36,7 @@ function PromotionView() {
   const { items: sections } = useSections();
 
   const [fromYear, setFromYear] = useState("");
+  useAcademicYearDefault(years, fromYear, setFromYear);
   const [fromClass, setFromClass] = useState("");
   const [toYear, setToYear] = useState("");
   const [toClass, setToClass] = useState("");

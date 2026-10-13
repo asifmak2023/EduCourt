@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicOptions } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Button, buttonClasses } from "@/components/Form";
@@ -42,6 +43,14 @@ function NewAdmissionForm() {
 
   const [profile, setProfile] = useState<AdmissionProfile>(
     emptyAdmissionProfile()
+  );
+  useAcademicYearDefault(
+    options.academic_years,
+    profile.academic_year_id,
+    (id) =>
+      setProfile((current) =>
+        current.academic_year_id ? current : { ...current, academic_year_id: id }
+      )
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

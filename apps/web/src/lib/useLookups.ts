@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { ApiError, apiFetch } from "./api";
+import {
+  academicYearSelectOptions,
+  currentAcademicYearId,
+} from "./academicYear";
 import type {
   AcademicOptions,
   AcademicYear,
@@ -232,6 +236,8 @@ export function useAcademicYears(
     enabled
   );
 }
+
+export { academicYearSelectOptions, currentAcademicYearId };
 
 export function useStages(enabled = true): ListLookupState<Stage> {
   return useAcademicCollection<Stage>("/v1/stages?per_page=200", enabled);

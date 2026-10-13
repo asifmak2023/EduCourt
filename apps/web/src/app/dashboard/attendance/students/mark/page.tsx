@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicYears, useClassRooms, useSections } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Button, Field, Select, TextInput, buttonClasses } from "@/components/Form";
@@ -43,14 +44,13 @@ function MarkSheet() {
   const { items: classes } = useClassRooms();
   const { items: sections } = useSections();
 
-  const currentYearId = years.find((year) => year.is_current)?.id;
-
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [yearId, setYearId] = useState("");
+  useAcademicYearDefault(years, yearId, setYearId);
   const [classId, setClassId] = useState("");
   const [sectionId, setSectionId] = useState("");
 
-  const effectiveYear = yearId || (currentYearId ? String(currentYearId) : "");
+  const effectiveYear = yearId;
 
   const [students, setStudents] = useState<Student[]>([]);
   const [marks, setMarks] = useState<Record<number, Mark>>({});

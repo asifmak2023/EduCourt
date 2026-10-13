@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { Table } from "@heroui/react";
 import { useResource } from "@/lib/useResource";
 import { useList } from "@/lib/useList";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicYears, useSections } from "@/lib/useLookups";
 import { useAuth } from "@/lib/auth";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -49,6 +50,7 @@ function ClassStudentsView() {
   const [gender, setGender] = useState("");
 
   const { items: years } = useAcademicYears();
+  useAcademicYearDefault(years, academicYearId, setAcademicYearId);
   const { items: allSections } = useSections();
   const filteredSections = allSections.filter(
     (s) => String(s.class_room_id) === classId

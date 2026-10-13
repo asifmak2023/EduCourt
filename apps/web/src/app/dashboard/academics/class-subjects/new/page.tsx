@@ -1,5 +1,6 @@
 "use client";
 
+import { academicYearSelectOptions } from "@/lib/academicYear";
 import {
   useAcademicYears,
   useClassRooms,
@@ -37,10 +38,7 @@ function NewClassSubjectForm() {
           label: "Academic year",
           type: "select",
           required: true,
-          options: years.map((year) => ({
-            value: String(year.id),
-            label: year.name,
-          })),
+          options: academicYearSelectOptions(years),
         },
         {
           name: "class_room_id",

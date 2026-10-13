@@ -1,4 +1,5 @@
 import type { MessageKey, TranslateFn } from "@eis/i18n";
+import { currentMonthValue } from "../lib/format";
 import type {
   AdminRecord,
   FieldConfig,
@@ -37,8 +38,15 @@ export function initialValues(
       values[groupToggleKey(field.name)] = false;
       continue;
     }
-    values[field.name] =
-      field.type === "checkbox" ? Boolean(field.defaultValue) : "";
+    if (field.type === "checkbox") {
+      values[field.name] = Boolean(field.defaultValue);
+      continue;
+    }
+    if (field.name === "period" && field.type === "text") {
+      values[field.name] = currentMonthValue();
+      continue;
+    }
+    values[field.name] = "";
   }
   return values;
 }

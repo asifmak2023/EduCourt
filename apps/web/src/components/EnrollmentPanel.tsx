@@ -9,6 +9,11 @@
 
 import { useMemo, useState } from "react";
 import { ApiError, apiFetch } from "@/lib/api";
+import {
+  currentAcademicYearId,
+  emptyAcademicYears,
+  useAcademicYearDefault,
+} from "@/lib/academicYear";
 import { useAcademicOptions } from "@/lib/useLookups";
 import { Button, Field, Select, TextInput } from "@/components/Form";
 import { Badge, ErrorNotice, SectionCard, Spinner, SuccessNotice } from "@/components/ui";
@@ -63,6 +68,14 @@ export function EnrollmentPanel({
   const { options, loading: optLoading } = useAcademicOptions();
   const [editing, setEditing] = useState<number | "new" | null>(null);
   const [form, setForm] = useState<EnrollmentForm>(emptyForm());
+  useAcademicYearDefault(
+    editing === "new" ? options.academic_years : emptyAcademicYears,
+    form.academic_year_id,
+    (id) =>
+      setForm((current) =>
+        current.academic_year_id ? current : { ...current, academic_year_id: id }
+      )
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -81,7 +94,10 @@ export function EnrollmentPanel({
   };
 
   const openNew = () => {
-    setForm(emptyForm());
+    setForm({
+      ...emptyForm(),
+      academic_year_id: currentAcademicYearId(options.academic_years),
+    });
     setError(null);
     setSuccess(null);
     setEditing("new");

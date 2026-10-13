@@ -1,5 +1,6 @@
 "use client";
 
+import { academicYearSelectOptions } from "@/lib/academicYear";
 import { useAuth } from "@/lib/auth";
 import {
   useAcademicYears,
@@ -55,10 +56,7 @@ function NewTeachingAssignmentForm() {
       label: "Academic year",
       type: "select",
       required: true,
-      options: years.map((year) => ({
-        value: String(year.id),
-        label: year.name,
-      })),
+      options: academicYearSelectOptions(years),
     },
     teacherField,
     {

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicYears } from "@/lib/useLookups";
 import { useAuth } from "@/lib/auth";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -32,6 +33,7 @@ function TermsTable() {
   const { can } = useAuth();
   const { items: years } = useAcademicYears();
   const [academicYearId, setAcademicYearId] = useState("");
+  useAcademicYearDefault(years, academicYearId, setAcademicYearId);
 
   const filters: Record<string, string | number> = {};
   if (academicYearId) filters.academic_year_id = Number(academicYearId);

@@ -2383,7 +2383,7 @@ export const MODULES: ModuleConfig[] = [
       { name: "staff_member_id", label: "Staff", type: "lookup", lookup: "staffMembers", required: true, displayKey: "staff_member.full_name" },
       { name: "type", label: "Type", type: "select", options: PAYROLL_ADJUSTMENT_TYPE, required: true },
       { name: "amount", label: "Amount", type: "number", required: true, min: 0, step: 0.01 },
-      { name: "period", label: "Period", type: "text", required: true, hint: "Format YYYY-MM, e.g. 2026-01." },
+      { name: "period", label: "Period", type: "text", required: true, hint: "Payroll month. Defaults to the current month." },
       { name: "reason", label: "Reason", type: "text" },
     ],
     deleteMessage: "Delete this payroll adjustment?",
@@ -2404,7 +2404,7 @@ export const MODULES: ModuleConfig[] = [
       { key: "total_net", label: "Net", format: "money", align: "right" },
     ],
     fields: [
-      { name: "period", label: "Period", type: "text", required: true, hint: "Format YYYY-MM, e.g. 2026-01." },
+      { name: "period", label: "Period", type: "text", required: true, hint: "Payroll month. Defaults to the current month." },
       { name: "notes", label: "Notes", type: "textarea" },
     ],
     detailSections: [payrollPayslipsSection],

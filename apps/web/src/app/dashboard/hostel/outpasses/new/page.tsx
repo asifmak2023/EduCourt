@@ -14,14 +14,15 @@ import {
   TextInput,
 } from "@/components/Form";
 import { Card, ErrorNotice, PageHeader } from "@/components/ui";
+import { currentDateTimeLocal } from "@/lib/format";
 
 export default function NewHostelOutpassPage() {
   const router = useRouter();
   const { items: students } = useStudents();
 
   const [studentId, setStudentId] = useState("");
-  const [fromDatetime, setFromDatetime] = useState("");
-  const [toDatetime, setToDatetime] = useState("");
+  const [fromDatetime, setFromDatetime] = useState(() => currentDateTimeLocal());
+  const [toDatetime, setToDatetime] = useState(() => currentDateTimeLocal());
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

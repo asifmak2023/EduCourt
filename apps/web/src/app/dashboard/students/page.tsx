@@ -22,6 +22,7 @@ import {
   Spinner,
 } from "@/components/ui";
 import { formatDate } from "@/lib/format";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicYears, useClassRooms, useSections } from "@/lib/useLookups";
 import type { Student } from "@/lib/types";
 
@@ -56,6 +57,7 @@ function StudentsTable() {
   const { items: years } = useAcademicYears();
   const { items: classes } = useClassRooms();
   const { items: allSections } = useSections();
+  useAcademicYearDefault(years, academicYearId, setAcademicYearId);
 
   const filteredSections = useMemo(
     () =>

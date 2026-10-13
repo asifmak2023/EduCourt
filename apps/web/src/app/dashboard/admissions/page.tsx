@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
 import { useAuth } from "@/lib/auth";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicYears, useClassRooms } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Pagination } from "@/components/Pagination";
@@ -50,6 +51,7 @@ function AdmissionsTable() {
 
   const { items: years } = useAcademicYears();
   const { items: classes } = useClassRooms();
+  useAcademicYearDefault(years, academicYearId, setAcademicYearId);
 
   const params: Record<string, string> = {};
   if (status) params.status = status;

@@ -16,9 +16,8 @@ export default function NewPayrollRunPage() {
           {
             name: "period",
             label: "Period",
-            type: "text",
+            type: "month",
             required: true,
-            placeholder: "YYYY-MM",
             hint: "One run per month.",
           },
           { name: "notes", label: "Notes", type: "text", span: 2 },

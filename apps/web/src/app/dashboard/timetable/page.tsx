@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { formatTime } from "@/lib/format";
 import {
   useAcademicYears,
@@ -56,16 +57,15 @@ function TimetableView() {
   const { items: periods } = usePeriods();
   const { items: users } = useUsers(can("user.view"));
 
-  const currentYearId = years.find((year) => year.is_current)?.id;
-
   const [yearId, setYearId] = useState("");
+  useAcademicYearDefault(years, yearId, setYearId);
   const [termId, setTermId] = useState("");
   const [mode, setMode] = useState<Mode>("me");
   const [classId, setClassId] = useState("");
   const [sectionId, setSectionId] = useState("");
   const [teacherId, setTeacherId] = useState("");
 
-  const effectiveYear = yearId || (currentYearId ? String(currentYearId) : "");
+  const effectiveYear = yearId;
 
   const [slots, setSlots] = useState<TimetableSlot[]>([]);
   const [loading, setLoading] = useState(false);

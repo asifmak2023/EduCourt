@@ -14,6 +14,7 @@ import {
   Spinner,
   StatCard,
 } from "@/components/ui";
+import { currentAcademicYearId } from "@/lib/academicYear";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { useAcademicYears, useClassRooms } from "@/lib/useLookups";
 import type { ReceivableReport } from "@/lib/types";
@@ -34,8 +35,6 @@ function ReceivablesReport() {
   const { items: years } = useAcademicYears();
   const { items: classes } = useClassRooms();
 
-  const currentYearId = years.find((year) => year.is_current)?.id ?? null;
-
   const [yearSelection, setYearSelection] = useState<string | null>(null);
   const [classId, setClassId] = useState("");
   const [asOf, setAsOf] = useState(today);
@@ -46,8 +45,7 @@ function ReceivablesReport() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const effectiveYearId =
-    yearSelection ?? (currentYearId !== null ? String(currentYearId) : "");
+  const effectiveYearId = yearSelection ?? currentAcademicYearId(years);
 
   useEffect(() => {
     const controller = new AbortController();

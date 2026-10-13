@@ -48,10 +48,9 @@ export default function NewPayrollAdjustmentPage() {
           {
             name: "period",
             label: "Period",
-            type: "text",
+            type: "month",
             required: true,
-            placeholder: "YYYY-MM",
-            hint: "Payroll month, e.g. 2026-09.",
+            hint: "Payroll month.",
           },
           { name: "reason", label: "Reason", type: "text", span: 2 },
         ]}

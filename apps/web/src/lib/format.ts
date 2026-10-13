@@ -74,6 +74,18 @@ export function formatDateTime(value: string | null | undefined): string {
   );
 }
 
+function pad2(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
+export function currentMonthValue(date = new Date()): string {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}`;
+}
+
+export function currentDateTimeLocal(date = new Date()): string {
+  return `${currentMonthValue(date)}-${pad2(date.getDate())}T${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+}
+
 export function formatTime(value: string | null | undefined): string {
   if (!value) {
     return "-";

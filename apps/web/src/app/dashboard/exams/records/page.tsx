@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Table } from "@heroui/react";
 import { useList } from "@/lib/useList";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicYears, useExamTypes } from "@/lib/useLookups";
 import { useAuth } from "@/lib/auth";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -41,6 +42,7 @@ function RecordsTable() {
   const { items: types } = useExamTypes();
 
   const [yearId, setYearId] = useState("");
+  useAcademicYearDefault(years, yearId, setYearId);
   const [typeId, setTypeId] = useState("");
   const [status, setStatus] = useState("");
 

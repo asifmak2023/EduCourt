@@ -28,6 +28,7 @@ import {
 } from "@heroui/react";
 import { Icon } from "@/components/Icons";
 import { useTr } from "@/lib/i18n";
+import { currentDateTimeLocal, currentMonthValue } from "@/lib/format";
 
 const FieldContext = createContext<{ label: string } | null>(null);
 
@@ -76,16 +77,32 @@ export function TextInput({
   className = "",
   "aria-label": ariaLabel,
   placeholder,
+  type,
+  value,
+  defaultValue,
   ...props
 }: InputHTMLAttributes<HTMLInputElement>) {
   const field = useContext(FieldContext);
   const tr = useTr();
+  const resolvedDefault =
+    defaultValue ??
+    (value === undefined
+      ? type === "month"
+        ? currentMonthValue()
+        : type === "datetime-local"
+          ? currentDateTimeLocal()
+          : undefined
+      : undefined);
+
   return (
     <Input
       fullWidth
       aria-label={tr(ariaLabel ?? field?.label ?? placeholder ?? props.name)}
       placeholder={placeholder ? tr(placeholder) : undefined}
       {...props}
+      type={type}
+      value={value}
+      defaultValue={resolvedDefault}
       className={className}
     />
   );

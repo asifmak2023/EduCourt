@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { emptyAcademicYears, useAcademicYearDefault } from "../../lib/academicYear";
 import { useTranslation } from "@eis/i18n";
 import {
   ActivityIndicator,
@@ -23,6 +24,7 @@ export function LookupField({
   error,
   required,
   dependsValue,
+  autoDefault = true,
 }: {
   label: string;
   lookup: string;
@@ -31,6 +33,7 @@ export function LookupField({
   error?: string;
   required?: boolean;
   dependsValue?: unknown;
+  autoDefault?: boolean;
 }) {
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -41,6 +44,14 @@ export function LookupField({
   const depParam = lookupDependsOn(lookup);
   const blocked = Boolean(depParam) && (dependsValue === null || dependsValue === undefined || dependsValue === "");
   const { options, loading, error: loadError } = useLookup(lookup, blocked ? null : (dependsValue as string | number | null));
+  useAcademicYearDefault(
+    autoDefault && lookup === "academicYears" ? options : emptyAcademicYears,
+    toText(value),
+    (id) => {
+      const option = options.find((item) => String(item.value) === id);
+      onChange(option ? option.value : id);
+    }
+  );
 
   const selected = options.find((option) => String(option.value) === toText(value));
 

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 export interface SelectOption {
   value: string | number;
   label: string;
+  is_current?: boolean;
 }
 
 export interface BaseFieldConfig {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@eis/i18n";
 import { ApiError, apiFetch } from "@/lib/api";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicOptions } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
 import {
@@ -75,6 +76,7 @@ function NewStudentForm() {
 
   const [enroll, setEnroll] = useState(false);
   const [academicYearId, setAcademicYearId] = useState("");
+  useAcademicYearDefault(options.academic_years, academicYearId, setAcademicYearId);
   const [classRoomId, setClassRoomId] = useState("");
   const [sectionId, setSectionId] = useState("");
   const [rollNumber, setRollNumber] = useState("");

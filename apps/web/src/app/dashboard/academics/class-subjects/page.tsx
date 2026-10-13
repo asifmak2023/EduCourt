@@ -1,5 +1,6 @@
 "use client";
 
+import { academicYearSelectOptions } from "@/lib/academicYear";
 import {
   useAcademicYears,
   useClassRooms,
@@ -39,10 +40,7 @@ function ClassSubjectsTable() {
         {
           param: "academic_year_id",
           placeholder: "All academic years",
-          options: years.map((year) => ({
-            value: String(year.id),
-            label: year.name,
-          })),
+          options: academicYearSelectOptions(years),
         },
         {
           param: "class_room_id",

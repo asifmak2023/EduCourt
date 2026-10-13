@@ -72,9 +72,8 @@ export default function EditPayrollAdjustmentPage() {
           {
             name: "period",
             label: "Period",
-            type: "text",
+            type: "month",
             required: true,
-            placeholder: "YYYY-MM",
           },
           { name: "reason", label: "Reason", type: "text", span: 2 },
         ]}

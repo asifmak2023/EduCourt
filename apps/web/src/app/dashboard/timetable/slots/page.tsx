@@ -1,5 +1,6 @@
 "use client";
 
+import { academicYearSelectOptions } from "@/lib/academicYear";
 import { useAcademicYears, useClassRooms } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
 import { MasterList } from "@/components/MasterList";
@@ -42,10 +43,7 @@ function SlotsTable() {
         {
           param: "academic_year_id",
           placeholder: "All academic years",
-          options: years.map((year) => ({
-            value: String(year.id),
-            label: year.name,
-          })),
+          options: academicYearSelectOptions(years),
         },
         {
           param: "class_room_id",

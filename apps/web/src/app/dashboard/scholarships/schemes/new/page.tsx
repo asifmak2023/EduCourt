@@ -1,5 +1,6 @@
 "use client";
 
+import { academicYearSelectOptions } from "@/lib/academicYear";
 import { useAcademicYears } from "@/lib/useLookups";
 import { MasterForm } from "@/components/MasterForm";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -60,10 +61,7 @@ export default function NewScholarshipPage() {
             label: "Academic year",
             type: "select",
             placeholder: "Optional",
-            options: years.map((year) => ({
-              value: String(year.id),
-              label: year.name,
-            })),
+            options: academicYearSelectOptions(years),
           },
           { name: "sponsor", label: "Sponsor", type: "text" },
           {

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicYears, useScholarships, useStudents } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
 import {
@@ -33,6 +34,7 @@ function AwardForm() {
   const [scholarshipId, setScholarshipId] = useState("");
   const [studentId, setStudentId] = useState("");
   const [academicYearId, setAcademicYearId] = useState("");
+  useAcademicYearDefault(years, academicYearId, setAcademicYearId);
   const [awardedOn, setAwardedOn] = useState("");
   const [valueOverride, setValueOverride] = useState("");
   const [notes, setNotes] = useState("");

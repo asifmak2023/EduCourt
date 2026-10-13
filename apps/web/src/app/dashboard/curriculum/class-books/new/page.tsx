@@ -1,5 +1,6 @@
 "use client";
 
+import { academicYearSelectOptions } from "@/lib/academicYear";
 import { useAcademicYears, useClassRooms, useSubjects } from "@/lib/useLookups";
 import { MasterForm } from "@/components/MasterForm";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -26,10 +27,7 @@ export default function NewClassBookPage() {
             label: "Academic year",
             type: "select",
             required: true,
-            options: years.map((year) => ({
-              value: String(year.id),
-              label: year.name,
-            })),
+            options: academicYearSelectOptions(years),
           },
           {
             name: "class_room_id",

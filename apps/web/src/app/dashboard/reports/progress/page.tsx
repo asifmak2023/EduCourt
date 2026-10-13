@@ -13,6 +13,7 @@ import {
   StatCard,
 } from "@/components/ui";
 import { formatCurrency, formatNumber } from "@/lib/format";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicYears } from "@/lib/useLookups";
 import { useReport } from "@/lib/useReport";
 import type { ReportProgress } from "@/lib/types";
@@ -28,6 +29,7 @@ export default function ProgressReportPage() {
 function ProgressReport() {
   const { items: academicYears } = useAcademicYears();
   const [academicYearId, setAcademicYearId] = useState("");
+  useAcademicYearDefault(academicYears, academicYearId, setAcademicYearId);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 

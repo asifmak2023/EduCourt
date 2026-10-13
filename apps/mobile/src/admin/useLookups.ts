@@ -139,6 +139,7 @@ export function useLookup(
           label: String(
             item[def.labelKey ?? "name"] ?? item.name ?? item.id ?? ""
           ),
+          is_current: Boolean(item.is_current),
         }));
         cache.set(key, mapped);
         setFetched({ key, options: mapped });

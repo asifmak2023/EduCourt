@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { academicYearSelectOptions } from "@/lib/academicYear";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
 import {
@@ -62,10 +63,7 @@ function EditSlotLoader() {
       label: "Academic year",
       type: "select",
       required: true,
-      options: years.map((year) => ({
-        value: String(year.id),
-        label: year.name,
-      })),
+      options: academicYearSelectOptions(years),
     },
     {
       name: "term_id",

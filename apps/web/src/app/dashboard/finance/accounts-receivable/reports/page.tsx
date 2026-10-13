@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import {
   useAcademicYears,
   useClassRooms,
@@ -57,6 +58,7 @@ function ArReports() {
   const { items: sections } = useSections();
 
   const [academicYearId, setAcademicYearId] = useState("");
+  useAcademicYearDefault(years, academicYearId, setAcademicYearId);
   const [classId, setClassId] = useState("");
   const [sectionId, setSectionId] = useState("");
   const [billingKind, setBillingKind] = useState("");

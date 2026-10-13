@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useList } from "@/lib/useList";
 import { useResource } from "@/lib/useResource";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicYears, useClassRooms, useSections } from "@/lib/useLookups";
 import { Button, Field, Select, TextInput } from "@/components/Form";
 import {
@@ -15,7 +16,7 @@ import {
   SuccessNotice,
 } from "@/components/ui";
 import { FeeStructureQuickCreateDialog } from "@/components/FeeStructureQuickCreateDialog";
-import { formatCurrency } from "@/lib/format";
+import { currentMonthValue, formatCurrency } from "@/lib/format";
 import type {
   BillingKind,
   CounterDues,
@@ -107,6 +108,7 @@ export function FeeVoucherGenerator({
   const { items: years } = useAcademicYears();
   const { items: classes } = useClassRooms();
   const { items: sections } = useSections();
+  useAcademicYearDefault(years, yearId, setYearId);
 
   const studentParams = useMemo(() => {
     const params: Record<string, string | number> = {};
@@ -146,10 +148,7 @@ export function FeeVoucherGenerator({
   } = useResource<CounterDues>(duesPath);
 
   const [receiveType, setReceiveType] = useState<ReceiveType>("monthly");
-  const [monthKey, setMonthKey] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  });
+  const [monthKey, setMonthKey] = useState(() => currentMonthValue());
   const [monthAmount, setMonthAmount] = useState("");
   const [examItemId, setExamItemId] = useState("");
   const [otherTitle, setOtherTitle] = useState("");
@@ -173,7 +172,7 @@ export function FeeVoucherGenerator({
   const monthOptions = useMemo(() => {
     const now = new Date();
     const currentMonth = {
-      value: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+      value: currentMonthValue(now),
       label: `${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`,
       amount: Number(dues?.structure?.monthly_amount ?? 0),
       period_year: now.getFullYear(),
@@ -216,8 +215,7 @@ export function FeeVoucherGenerator({
   const netTotal = Math.max(subtotal - discountValue, 0);
 
   const resetEntry = () => {
-    const now = new Date();
-    setMonthKey(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+    setMonthKey(currentMonthValue());
     setMonthAmount("");
     setExamItemId("");
     setOtherTitle("");

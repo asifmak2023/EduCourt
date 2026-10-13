@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicYears } from "@/lib/useLookups";
 import {
   Button,
@@ -32,6 +33,7 @@ export function TermForm({
       ? String(term.academic_year_id)
       : defaultAcademicYearId
   );
+  useAcademicYearDefault(years, academicYearId, setAcademicYearId);
   const [name, setName] = useState(term?.name ?? "");
   const [sequence, setSequence] = useState(
     term?.sequence ? String(term.sequence) : "1"

@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useResource } from "@/lib/useResource";
+import { academicYearSelectOptions } from "@/lib/academicYear";
 import {
   useAcademicYears,
   useClassRooms,
@@ -46,10 +47,7 @@ function EditClassSubjectLoader() {
           label: "Academic year",
           type: "select",
           required: true,
-          options: years.map((year) => ({
-            value: String(year.id),
-            label: year.name,
-          })),
+          options: academicYearSelectOptions(years),
         },
         {
           name: "class_room_id",

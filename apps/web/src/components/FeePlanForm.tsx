@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import {
   useAcademicYears,
   useClassRooms,
@@ -52,6 +53,7 @@ export function FeePlanForm({ feePlan }: { feePlan?: FeePlan }) {
   const [academicYearId, setAcademicYearId] = useState(
     feePlan?.academic_year_id ? String(feePlan.academic_year_id) : ""
   );
+  useAcademicYearDefault(years, academicYearId, setAcademicYearId);
   const [classRoomId, setClassRoomId] = useState(
     feePlan?.class_room_id ? String(feePlan.class_room_id) : ""
   );

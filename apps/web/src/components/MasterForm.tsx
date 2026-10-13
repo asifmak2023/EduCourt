@@ -14,13 +14,15 @@ import {
   TextInput,
 } from "@/components/Form";
 import { Card, ErrorNotice, PageHeader } from "@/components/ui";
+import { currentAcademicYearId } from "@/lib/academicYear";
+import { currentMonthValue } from "@/lib/format";
 
 export interface MasterField {
   name: string;
   label: string;
-  type?: "text" | "number" | "date" | "time" | "select" | "checkbox" | "textarea";
+  type?: "text" | "number" | "date" | "time" | "month" | "select" | "checkbox" | "textarea";
   required?: boolean;
-  options?: { value: string; label: string }[];
+  options?: { value: string; label: string; is_current?: boolean }[];
   placeholder?: string;
   step?: string;
   min?: string;
@@ -56,7 +58,29 @@ export function MasterForm({
   const router = useRouter();
   const isEdit = recordId !== undefined;
 
-  const [values, setValues] = useState<MasterValues>(initial);
+  const [values, setValues] = useState<MasterValues>(() => {
+    const next = { ...initial };
+    for (const field of fields) {
+      const empty = String(next[field.name] ?? "").trim() === "";
+      if (!empty) continue;
+      if (field.type === "month") {
+        next[field.name] = currentMonthValue();
+        continue;
+      }
+      if (field.name === "academic_year_id" && field.type === "select") {
+        const yearId = currentAcademicYearId(
+          (field.options ?? []).map((option) => ({
+            id: option.value,
+            is_current: option.is_current,
+          }))
+        );
+        if (yearId) {
+          next[field.name] = yearId;
+        }
+      }
+    }
+    return next;
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});

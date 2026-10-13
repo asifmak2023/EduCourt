@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { useState } from "react";
 import { Table } from "@heroui/react";
+import { currentAcademicYearId } from "@/lib/academicYear";
 import { useList } from "@/lib/useList";
 import { useAuth } from "@/lib/auth";
 import { Pagination } from "@/components/Pagination";
@@ -25,7 +26,7 @@ export interface MasterListColumn<T> {
 export interface MasterListFilter {
   param: string;
   placeholder: string;
-  options: { value: string; label: string }[];
+  options: { value: string; label: string; is_current?: boolean }[];
 }
 
 export function MasterList<T extends { id: number }>({
@@ -56,9 +57,27 @@ export function MasterList<T extends { id: number }>({
   const { can } = useAuth();
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
 
+  const yearFilter = filters.find(
+    (filter) => filter.param === "academic_year_id"
+  );
+  const defaultYearId =
+    yearFilter && yearFilter.options.length > 0
+      ? currentAcademicYearId(
+          yearFilter.options.map((option) => ({
+            id: option.value,
+            is_current: option.is_current,
+          }))
+        )
+      : "";
+
+  const effectiveFilterValues: Record<string, string> = { ...filterValues };
+  if (defaultYearId && !effectiveFilterValues.academic_year_id) {
+    effectiveFilterValues.academic_year_id = defaultYearId;
+  }
+
   const params: Record<string, string | number> = {};
   for (const filter of filters) {
-    const value = filterValues[filter.param];
+    const value = effectiveFilterValues[filter.param];
     if (value) params[filter.param] = value;
   }
 
@@ -101,7 +120,7 @@ export function MasterList<T extends { id: number }>({
           {filters.map((filter) => (
             <div key={filter.param} className="w-52">
               <Select
-                value={filterValues[filter.param] ?? ""}
+                value={effectiveFilterValues[filter.param] ?? ""}
                 onChange={(event) => {
                   setPage(1);
                   setFilterValues((current) => ({

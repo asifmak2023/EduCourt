@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicYears, useClassRooms, useFeeHeads } from "@/lib/useLookups";
 import {
   Button,
@@ -62,6 +63,7 @@ export function FeeStructureForm({ feeStructure }: { feeStructure?: FeeStructure
   const [academicYearId, setAcademicYearId] = useState(
     feeStructure?.academic_year_id ? String(feeStructure.academic_year_id) : ""
   );
+  useAcademicYearDefault(years, academicYearId, setAcademicYearId);
   const [classRoomId, setClassRoomId] = useState(
     feeStructure?.class_room_id ? String(feeStructure.class_room_id) : ""
   );

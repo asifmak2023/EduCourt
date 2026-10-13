@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import {
   useAcademicYears,
   useExamTypes,
@@ -28,11 +29,10 @@ export function ExamForm({ exam }: { exam?: Exam }) {
   const { items: terms, loading: termsLoading } = useTerms();
   const { items: types, loading: typesLoading } = useExamTypes();
 
-  const currentYear = years.find((year) => year.is_current) ?? years[0];
-
   const [yearId, setYearId] = useState(
     exam ? String(exam.academic_year_id) : ""
   );
+  useAcademicYearDefault(years, yearId, setYearId);
   const [termId, setTermId] = useState(
     exam?.term_id ? String(exam.term_id) : ""
   );
@@ -49,7 +49,7 @@ export function ExamForm({ exam }: { exam?: Exam }) {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
-  const effectiveYear = yearId || (currentYear ? String(currentYear.id) : "");
+  const effectiveYear = yearId;
 
   const filteredTerms = terms.filter(
     (term) => !effectiveYear || String(term.academic_year_id) === effectiveYear

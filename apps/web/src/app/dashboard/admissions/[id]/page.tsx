@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicOptions } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -393,6 +394,7 @@ function EnrollForm({
   const [academicYearId, setAcademicYearId] = useState(
     admission.academic_year_id ? String(admission.academic_year_id) : ""
   );
+  useAcademicYearDefault(options.academic_years, academicYearId, setAcademicYearId);
   const [classRoomId, setClassRoomId] = useState(
     admission.class_room_id ? String(admission.class_room_id) : ""
   );

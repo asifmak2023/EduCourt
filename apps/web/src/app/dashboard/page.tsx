@@ -7,6 +7,7 @@ import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth, type AuthUser } from "@/lib/auth";
 import { Icon } from "@/components/Icons";
+import { AttendanceOverview } from "@/components/AttendanceOverview";
 import {
   Card,
   EmptyState,
@@ -208,6 +209,10 @@ export default function DashboardPage() {
       ) : null}
 
       {!loading && mode === "general" ? <GeneralView user={user} /> : null}
+
+      {!loading && mode !== "platform" && user.permissions.includes("attendance.view") ? (
+        <AttendanceOverview />
+      ) : null}
     </div>
   );
 }

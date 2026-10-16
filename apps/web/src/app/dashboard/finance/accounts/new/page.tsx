@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -30,13 +30,50 @@ function NewAccountForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const codeTouched = useRef(false);
 
   const set = <K extends keyof AccountProfile>(
     key: K,
     value: AccountProfile[K]
   ) => {
+    if (key === "code") {
+      codeTouched.current = true;
+    }
     setProfile((current) => ({ ...current, [key]: value }));
   };
+
+  const accountType = profile.account_type;
+
+  useEffect(() => {
+    if (codeTouched.current) {
+      return;
+    }
+
+    const controller = new AbortController();
+    let active = true;
+
+    const run = async () => {
+      try {
+        const response = await apiFetch<{ data: { code: string } }>(
+          `/v1/chart-of-accounts/next-code?account_type=${encodeURIComponent(accountType)}`,
+          { signal: controller.signal }
+        );
+
+        if (active && !codeTouched.current) {
+          setProfile((current) => ({ ...current, code: response.data.code }));
+        }
+      } catch {
+        // A code is optional; the API generates one when it is left blank.
+      }
+    };
+
+    void run();
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [accountType]);
 
   const errText = (name: string) => fieldErrors[name]?.[0] ?? null;
 

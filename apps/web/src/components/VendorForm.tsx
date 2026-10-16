@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -38,6 +38,37 @@ export function VendorForm({ vendor }: { vendor?: Vendor }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
+  useEffect(() => {
+    if (isEdit) {
+      return;
+    }
+
+    const controller = new AbortController();
+    let active = true;
+
+    const run = async () => {
+      try {
+        const response = await apiFetch<{ data: { code: string } }>(
+          "/v1/vendors/next-code",
+          { signal: controller.signal }
+        );
+
+        if (active) {
+          setCode((current) => current || response.data.code);
+        }
+      } catch {
+        // A code is optional; the API generates one when it is left blank.
+      }
+    };
+
+    void run();
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [isEdit]);
 
   const payableAccounts = accounts.filter(
     (account) =>
@@ -117,7 +148,12 @@ export function VendorForm({ vendor }: { vendor?: Vendor }) {
           }}
         >
           <div className="grid gap-4 px-6 py-5 sm:grid-cols-2 lg:grid-cols-3">
-            <Field label="Code" htmlFor="vendor_code" required error={errText("code")}>
+            <Field
+              label="Code"
+              htmlFor="vendor_code"
+              hint="Generated automatically. Edit to override."
+              error={errText("code")}
+            >
               <TextInput
                 id="vendor_code"
                 value={code}

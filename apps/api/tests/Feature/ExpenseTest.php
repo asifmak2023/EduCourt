@@ -110,6 +110,23 @@ class ExpenseTest extends TestCase
         ])->assertStatus(422)->assertJsonValidationErrors('code');
     }
 
+    public function test_vendor_code_is_auto_generated_when_omitted(): void
+    {
+        $created = $this->as($this->admin)->postJson('/api/v1/vendors', [
+            'name' => 'Auto Vendor',
+        ])->assertStatus(201);
+
+        $code = $created->json('data.code');
+
+        $this->assertMatchesRegularExpression('/^VND-\d{4}$/', (string) $code);
+        $this->assertSame('VND-0002', $code);
+
+        $this->as($this->admin)
+            ->getJson('/api/v1/vendors/next-code')
+            ->assertOk()
+            ->assertJsonPath('data.code', 'VND-0003');
+    }
+
     public function test_category_rejects_non_expense_account(): void
     {
         $this->as($this->admin)->postJson('/api/v1/expense-categories', [

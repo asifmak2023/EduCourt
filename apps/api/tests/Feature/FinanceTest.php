@@ -82,6 +82,37 @@ class FinanceTest extends TestCase
         $this->assertFalse($this->fiscalYear->fresh()->is_current);
     }
 
+    public function test_account_code_is_auto_generated_when_omitted(): void
+    {
+        $response = $this->as($this->admin)->postJson('/api/v1/chart-of-accounts', [
+            'name' => 'Library Fund',
+            'account_type' => 'expense',
+        ])->assertStatus(201);
+
+        $code = $response->json('data.code');
+
+        $this->assertMatchesRegularExpression('/^5\d{3,}$/', (string) $code);
+        $this->assertSame('debit', $response->json('data.normal_balance'));
+    }
+
+    public function test_account_next_code_is_type_scoped(): void
+    {
+        $income = $this->as($this->admin)
+            ->getJson('/api/v1/chart-of-accounts/next-code?account_type=income')
+            ->assertOk()
+            ->json('data.code');
+
+        $expense = $this->as($this->admin)
+            ->getJson('/api/v1/chart-of-accounts/next-code?account_type=expense')
+            ->assertOk()
+            ->json('data.code');
+
+        $this->assertMatchesRegularExpression('/^4\d{3,}$/', (string) $income);
+        $this->assertMatchesRegularExpression('/^5\d{3,}$/', (string) $expense);
+        $this->assertGreaterThan(4095, (int) $income);
+        $this->assertGreaterThan(5060, (int) $expense);
+    }
+
     public function test_balanced_entry_can_be_posted(): void
     {
         $entry = $this->createEntry([

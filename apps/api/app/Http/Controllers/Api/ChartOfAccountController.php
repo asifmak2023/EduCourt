@@ -40,12 +40,38 @@ class ChartOfAccountController extends Controller
         $tenant = $this->academicTenantAttributes();
 
         $data = $request->validate($this->rules($tenant['campus_id']));
+
+        if (empty($data['code'])) {
+            $data['code'] = $this->nextCodeFor(
+                $tenant['campus_id'],
+                AccountType::from($data['account_type'])
+            );
+        }
+
         $data += $tenant;
         $data['normal_balance'] = $this->resolveNormalBalance($data);
 
         $account = ChartOfAccount::create($data);
 
         return (new ChartOfAccountResource($account))->response()->setStatusCode(201);
+    }
+
+    public function nextCode(Request $request): JsonResponse
+    {
+        $tenant = $this->academicTenantAttributes();
+
+        $validated = $request->validate([
+            'account_type' => ['required', Rule::enum(AccountType::class)],
+        ]);
+
+        return response()->json([
+            'data' => [
+                'code' => $this->nextCodeFor(
+                    $tenant['campus_id'],
+                    AccountType::from($validated['account_type'])
+                ),
+            ],
+        ]);
     }
 
     public function show(ChartOfAccount $chartOfAccount): ChartOfAccountResource
@@ -56,6 +82,10 @@ class ChartOfAccountController extends Controller
     public function update(Request $request, ChartOfAccount $chartOfAccount): ChartOfAccountResource
     {
         $data = $request->validate($this->rules($chartOfAccount->campus_id, $chartOfAccount->id, false));
+
+        if (array_key_exists('code', $data) && empty($data['code'])) {
+            unset($data['code']);
+        }
 
         if (isset($data['account_type'])) {
             $data['normal_balance'] = $this->resolveNormalBalance($data);
@@ -91,6 +121,41 @@ class ChartOfAccountController extends Controller
         return AccountType::from($data['account_type'])->normalBalance()->value;
     }
 
+    private function nextCodeFor(int $campusId, AccountType $type): string
+    {
+        $base = match ($type) {
+            AccountType::Asset => 1000,
+            AccountType::Liability => 2000,
+            AccountType::Equity => 3000,
+            AccountType::Income => 4000,
+            AccountType::Expense => 5000,
+        };
+
+        $highest = ChartOfAccount::withTrashed()
+            ->where('campus_id', $campusId)
+            ->where('account_type', $type)
+            ->pluck('code')
+            ->reduce(function (int $carry, mixed $code): int {
+                $value = ctype_digit((string) $code) ? (int) $code : 0;
+
+                return max($carry, $value);
+            }, $base);
+
+        $sequence = $highest + 10;
+
+        do {
+            $code = (string) $sequence;
+            $sequence += 10;
+        } while (
+            ChartOfAccount::withTrashed()
+                ->where('campus_id', $campusId)
+                ->where('code', $code)
+                ->exists()
+        );
+
+        return $code;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -100,7 +165,7 @@ class ChartOfAccountController extends Controller
 
         return [
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('chart_of_accounts', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'name' => [$presence, 'string', 'max:191'],

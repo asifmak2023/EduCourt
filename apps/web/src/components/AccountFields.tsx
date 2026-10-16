@@ -58,8 +58,7 @@ export function AccountFields({
       <Field
         label="Code"
         htmlFor="code"
-        required
-        hint="Unique within the campus, e.g. 5010."
+        hint="Generated automatically. Edit to override."
         error={errors("code")}
       >
         <TextInput

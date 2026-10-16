@@ -61,7 +61,6 @@ use App\Http\Controllers\Api\FeeReportController;
 use App\Http\Controllers\Api\FeeStructureController;
 use App\Http\Controllers\Api\FeeVoucherController;
 use App\Http\Controllers\Api\FinanceReportController;
-use App\Http\Controllers\Api\PayableReportController;
 use App\Http\Controllers\Api\FineRuleController;
 use App\Http\Controllers\Api\FiscalYearController;
 use App\Http\Controllers\Api\GradeScaleController;
@@ -96,6 +95,7 @@ use App\Http\Controllers\Api\MetaController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OnlinePaymentController;
 use App\Http\Controllers\Api\OtherIncomeController;
+use App\Http\Controllers\Api\PayableReportController;
 use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\PayrollAdjustmentController;
 use App\Http\Controllers\Api\PayrollRunController;
@@ -407,6 +407,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('chart-of-accounts', [ChartOfAccountController::class, 'index'])->middleware('permission:finance.view');
             Route::post('chart-of-accounts', [ChartOfAccountController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('chart-of-accounts/next-code', [ChartOfAccountController::class, 'nextCode'])->middleware('permission:finance.view');
             Route::get('chart-of-accounts/{chartOfAccount}', [ChartOfAccountController::class, 'show'])->middleware('permission:finance.view');
             Route::put('chart-of-accounts/{chartOfAccount}', [ChartOfAccountController::class, 'update'])->middleware('permission:finance.edit');
             Route::delete('chart-of-accounts/{chartOfAccount}', [ChartOfAccountController::class, 'destroy'])->middleware('permission:finance.delete');
@@ -437,6 +438,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('vendors', [VendorController::class, 'index'])->middleware('permission:finance.view');
             Route::post('vendors', [VendorController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('vendors/next-code', [VendorController::class, 'nextCode'])->middleware('permission:finance.view');
             Route::get('vendors/{vendor}', [VendorController::class, 'show'])->middleware('permission:finance.view');
             Route::put('vendors/{vendor}', [VendorController::class, 'update'])->middleware('permission:finance.edit');
             Route::delete('vendors/{vendor}', [VendorController::class, 'destroy'])->middleware('permission:finance.delete');

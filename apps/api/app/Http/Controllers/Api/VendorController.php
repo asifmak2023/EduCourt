@@ -39,9 +39,22 @@ class VendorController extends Controller
 
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        if (empty($data['code'])) {
+            $data['code'] = $this->nextCodeFor($tenant['campus_id']);
+        }
+
         $vendor = Vendor::create($data + $tenant);
 
         return (new VendorResource($vendor->load('payableAccount')))->response()->setStatusCode(201);
+    }
+
+    public function nextCode(Request $request): JsonResponse
+    {
+        $tenant = $this->academicTenantAttributes();
+
+        return response()->json([
+            'data' => ['code' => $this->nextCodeFor($tenant['campus_id'])],
+        ]);
     }
 
     public function show(Vendor $vendor): VendorResource
@@ -52,6 +65,10 @@ class VendorController extends Controller
     public function update(Request $request, Vendor $vendor): VendorResource
     {
         $data = $request->validate($this->rules($vendor->campus_id, $vendor->id, false));
+
+        if (array_key_exists('code', $data) && empty($data['code'])) {
+            unset($data['code']);
+        }
 
         $vendor->update($data);
 
@@ -71,6 +88,23 @@ class VendorController extends Controller
         return response()->json(['message' => 'Vendor archived.']);
     }
 
+    private function nextCodeFor(int $campusId): string
+    {
+        $sequence = Vendor::withTrashed()->where('campus_id', $campusId)->count() + 1;
+
+        do {
+            $code = sprintf('VND-%04d', $sequence);
+            $sequence++;
+        } while (
+            Vendor::withTrashed()
+                ->where('campus_id', $campusId)
+                ->where('code', $code)
+                ->exists()
+        );
+
+        return $code;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -80,7 +114,7 @@ class VendorController extends Controller
 
         return [
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('vendors', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'name' => [$presence, 'string', 'max:191'],

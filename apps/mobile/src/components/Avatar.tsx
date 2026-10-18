@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet } from "react-native";
 import { useTheme } from "../theme/ThemeProvider";
 
 const SIZES = {
@@ -7,14 +7,7 @@ const SIZES = {
   lg: 96,
 } as const;
 
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
+const DEFAULT_AVATAR = require("../../assets/default-avatar.png");
 
 export function Avatar({
   name,
@@ -28,57 +21,27 @@ export function Avatar({
   const { colors } = useTheme();
   const dimension = SIZES[size];
 
-  if (photoUrl) {
-    return (
-      <Image
-        source={{ uri: photoUrl }}
-        accessibilityLabel={name}
-        style={[
-          styles.base,
-          {
-            width: dimension,
-            height: dimension,
-            borderRadius: dimension / 2,
-            borderColor: colors.border,
-          },
-        ]}
-      />
-    );
-  }
+  const source = photoUrl ? { uri: photoUrl } : DEFAULT_AVATAR;
 
   return (
-    <View
+    <Image
+      source={source}
+      accessibilityLabel={name}
       style={[
         styles.base,
-        styles.fallback,
         {
           width: dimension,
           height: dimension,
           borderRadius: dimension / 2,
-          backgroundColor: colors.accentSoft,
+          borderColor: colors.border,
         },
       ]}
-    >
-      <Text
-        style={{
-          color: colors.accent,
-          fontWeight: "700",
-          fontSize: dimension * 0.36,
-        }}
-      >
-        {initials(name)}
-      </Text>
-    </View>
+    />
   );
 }
 
 const styles = StyleSheet.create({
   base: {
     borderWidth: 1,
-  },
-  fallback: {
-    alignItems: "center",
-    justifyContent: "center",
-    borderColor: "transparent",
   },
 });

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Exo_2, Noto_Naskh_Arabic } from "next/font/google";
 import { ACCENTS } from "@eis/appearance";
 import { AuthProvider } from "@/lib/auth";
@@ -29,9 +29,17 @@ const urdu = Noto_Naskh_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "Education Information System",
+  applicationName: "EduCourt",
+  title: {
+    default: "EduCourt",
+    template: "%s | EduCourt",
+  },
   description:
     "Multi-campus school, college and university information system.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#4F46E5",
 };
 
 const accentMap = Object.fromEntries(

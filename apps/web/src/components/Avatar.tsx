@@ -1,16 +1,15 @@
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
+import Image from "next/image";
 
 const SIZES = {
-  sm: "h-9 w-9 text-xs",
-  md: "h-12 w-12 text-sm",
-  lg: "h-24 w-24 text-2xl",
+  sm: "h-9 w-9",
+  md: "h-12 w-12",
+  lg: "h-24 w-24",
+} as const;
+
+const PIXELS = {
+  sm: 36,
+  md: 48,
+  lg: 96,
 } as const;
 
 export function Avatar({
@@ -34,10 +33,13 @@ export function Avatar({
   }
 
   return (
-    <div
-      className={`${SIZES[size]} flex shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent-soft-foreground`}
-    >
-      {initials(name)}
-    </div>
+    <Image
+      src="/brand/default-avatar.svg"
+      alt={name}
+      width={PIXELS[size]}
+      height={PIXELS[size]}
+      unoptimized
+      className={`${SIZES[size]} shrink-0 rounded-full ring-1 ring-border`}
+    />
   );
 }

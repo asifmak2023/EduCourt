@@ -10,6 +10,7 @@ import { roleLabel as roleText, isPortalOnly } from "@/lib/roles";
 import { sectionForPath, visibleSections } from "@/lib/nav";
 import { Icon } from "@/components/Icons";
 import { Avatar } from "@/components/Avatar";
+import { BrandMark } from "@/components/BrandMark";
 import { AccountMenu } from "@/components/AccountMenu";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
@@ -345,9 +346,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href="/dashboard"
                 onClick={() => setMenuOpen(false)}
                 aria-label={t("navigation.home")}
-                className="brand-glow shrink-0 font-logo text-xl font-bold tracking-tight text-foreground"
+                className="flex shrink-0 items-center gap-2"
               >
-                EduCourt
+                <BrandMark className="h-7 w-7" priority />
+                <span className="brand-glow font-logo text-xl font-bold tracking-tight text-foreground">
+                  EduCourt
+                </span>
               </Link>
             </div>
             <div className="min-w-0 text-center">

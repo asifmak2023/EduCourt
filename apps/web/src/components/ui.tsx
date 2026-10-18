@@ -109,22 +109,27 @@ export function PageHeader({
   title,
   description,
   actions,
+  leading,
 }: {
   title: string;
   description?: string;
   actions?: ReactNode;
+  leading?: ReactNode;
 }) {
   const tr = useTr();
 
   return (
     <div className="page-header flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          {tr(title)}
-        </h1>
-        {description ? (
-          <p className="mt-1 text-md">{tr(description)}</p>
-        ) : null}
+      <div className="flex min-w-0 items-start gap-3">
+        {leading ? <div className="mt-0.5 shrink-0">{leading}</div> : null}
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            {tr(title)}
+          </h1>
+          {description ? (
+            <p className="mt-1 text-md">{tr(description)}</p>
+          ) : null}
+        </div>
       </div>
       {actions ? (
         <div className="flex flex-wrap items-center justify-end gap-2">{actions}</div>

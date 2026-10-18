@@ -6,6 +6,7 @@ import { useTranslation } from "@eis/i18n";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Icon } from "@/components/Icons";
+import { BrandMark } from "@/components/BrandMark";
 
 export default function LoginPage() {
   const { user, loading, login, verifyTwoFactor } = useAuth();
@@ -78,6 +79,7 @@ export default function LoginPage() {
   return (
     <main className="flex flex-1 items-center justify-center p-6">
       <div className="w-full max-w-md rounded-2xl border border-border-secondary bg-surface p-8 shadow-sm">
+        <BrandMark className="mb-5 h-12 w-12" priority />
         <h1 className="text-2xl font-semibold tracking-tight">
           {t("auth.brand")}
         </h1>

@@ -7,6 +7,7 @@ import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth, type AuthUser } from "@/lib/auth";
 import { Icon } from "@/components/Icons";
+import { BrandMark } from "@/components/BrandMark";
 import { AttendanceOverview } from "@/components/AttendanceOverview";
 import {
   Card,
@@ -183,6 +184,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        leading={<BrandMark className="h-6 w-6" priority />}
         title={`${t(greetingKey())}، \u2068${user.name.split(" ")[0]}\u2069`}
         description={`${user.campus?.name ?? t("dashboard.allCampuses")} - ${roleSummary(user.roles, t)}`}
         actions={

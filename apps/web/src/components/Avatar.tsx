@@ -34,7 +34,7 @@ export function Avatar({
 
   return (
     <Image
-      src="/default-avatar.svg"
+      src="/brand/default-avatar.svg"
       alt={name}
       width={PIXELS[size]}
       height={PIXELS[size]}

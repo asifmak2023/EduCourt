@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { AR_VIEW } from "@/lib/permissions";
 import { useJson } from "@/lib/useJson";
+import { useStudents } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
-import { Button, buttonClasses, Field, TextInput } from "@/components/Form";
+import { Button, buttonClasses, Field, Select, TextInput } from "@/components/Form";
 import { Pagination } from "@/components/Pagination";
 import {
   Card,
@@ -28,7 +29,9 @@ export default function FeeReceiptsPage() {
 
 function FeeReceipts() {
   const { canAny } = useAuth();
+  const { items: students } = useStudents();
   const [search, setSearch] = useState("");
+  const [studentId, setStudentId] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [page, setPage] = useState(1);
@@ -36,12 +39,13 @@ function FeeReceipts() {
   const params = useMemo(() => {
     const query = new URLSearchParams();
     if (search.trim()) query.set("search", search.trim());
+    if (studentId) query.set("student_id", studentId);
     if (from) query.set("from", from);
     if (to) query.set("to", to);
     query.set("page", String(page));
     query.set("per_page", "50");
     return query.toString();
-  }, [search, from, to, page]);
+  }, [search, studentId, from, to, page]);
 
   const { data, loading, error } = useJson<Paginated<FeeReceipt>>(
     `/v1/fee-receipts?${params}`
@@ -111,8 +115,22 @@ function FeeReceipts() {
               id="receipt_search"
               value={search}
               onChange={(event) => update(setSearch)(event.target.value)}
-              placeholder="Receipt no"
+              placeholder="Receipt no, student or admission no"
             />
+          </Field>
+          <Field label="Student" htmlFor="receipt_student">
+            <Select
+              id="receipt_student"
+              value={studentId}
+              onChange={(event) => update(setStudentId)(event.target.value)}
+            >
+              <option value="">All students</option>
+              {students.map((student) => (
+                <option key={student.id} value={String(student.id)}>
+                  {student.full_name} ({student.admission_no})
+                </option>
+              ))}
+            </Select>
           </Field>
           <Field label="From" htmlFor="receipt_from">
             <TextInput

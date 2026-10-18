@@ -175,6 +175,39 @@ class FeeReceiptPaymentTest extends TestCase
             ->assertJsonValidationErrors('amount');
     }
 
+    public function test_receipts_can_be_searched_by_student_name_or_admission_no(): void
+    {
+        $admin = $this->actor(RoleName::CampusAdmin);
+        $chargeId = $this->generateCharge($this->ali, 12000)['charges'][0]['id'];
+
+        $this->as($admin)
+            ->postJson('/api/v1/fee-receipts', [
+                'student_id' => $this->ali->id,
+                'fee_charge_id' => $chargeId,
+                'academic_year_id' => $this->year->id,
+                'payment_date' => '2026-07-15',
+                'amount' => 1000,
+                'method' => 'cash',
+            ])
+            ->assertStatus(201);
+
+        $this->as($admin)
+            ->getJson('/api/v1/fee-receipts?search=Ali')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.student_id', $this->ali->id);
+
+        $this->as($admin)
+            ->getJson('/api/v1/fee-receipts?search=ADM-1')
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
+
+        $this->as($admin)
+            ->getJson("/api/v1/fee-receipts?student_id={$this->ali->id}")
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
+    }
+
     public function test_payment_method_must_be_valid(): void
     {
         $admin = $this->actor(RoleName::CampusAdmin);

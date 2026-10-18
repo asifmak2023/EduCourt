@@ -28,7 +28,13 @@ class FeeReceiptController extends Controller
 
         $receipts = FeeReceipt::query()
             ->with(['student', 'allocations.charge.lines.feeHead'])
-            ->when($search !== '', fn ($q) => $q->where('receipt_no', 'like', "%{$search}%"))
+            ->when($search !== '', fn ($q) => $q->where(function ($inner) use ($search) {
+                $inner->where('receipt_no', 'like', "%{$search}%")
+                    ->orWhereHas('student', fn ($student) => $student
+                        ->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('admission_no', 'like', "%{$search}%"));
+            }))
             ->when($request->filled('student_id'), fn ($q) => $q->where('student_id', $request->integer('student_id')))
             ->when($request->filled('from'), fn ($q) => $q->whereDate('payment_date', '>=', $request->date('from')))
             ->when($request->filled('to'), fn ($q) => $q->whereDate('payment_date', '<=', $request->date('to')))

@@ -99,7 +99,7 @@ class FeeHeadController extends Controller
                 Rule::exists('chart_of_accounts', 'id')
                     ->where('campus_id', $campusId)
                     ->where('account_type', 'income')
-                    ->where('is_group', false)
+                    ->where('is_group', 0)
                     ->whereNull('deleted_at'),
             ],
             'sort_order' => ['sometimes', 'integer', 'min:0', 'max:65535'],

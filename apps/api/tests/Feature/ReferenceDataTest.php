@@ -104,9 +104,9 @@ class ReferenceDataTest extends TestCase
 
     public function test_role_without_admission_or_student_view_is_forbidden(): void
     {
-        $librarian = $this->actor(RoleName::Librarian);
+        $storeKeeper = $this->actor(RoleName::StoreIncharge);
 
-        $this->as($librarian)
+        $this->as($storeKeeper)
             ->getJson('/api/v1/reference/academic-options')
             ->assertStatus(403);
     }

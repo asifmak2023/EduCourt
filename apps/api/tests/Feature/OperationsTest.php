@@ -125,13 +125,15 @@ class OperationsTest extends TestCase
             'name' => 'Bunsen Burner', 'quantity' => 4, 'condition' => 'under_repair',
         ])->assertStatus(201);
 
+        $sessionDate = now()->addWeek()->toDateString();
+
         $this->api($this->admin)->postJson('/api/v1/lab-bookings', [
-            'lab_id' => $lab['id'], 'session_date' => '2026-10-01',
+            'lab_id' => $lab['id'], 'session_date' => $sessionDate,
             'start_time' => '09:00', 'end_time' => '10:00', 'purpose' => 'Practical',
         ])->assertStatus(201);
 
         $this->api($this->admin)->postJson('/api/v1/lab-bookings', [
-            'lab_id' => $lab['id'], 'session_date' => '2026-10-01',
+            'lab_id' => $lab['id'], 'session_date' => $sessionDate,
             'start_time' => '09:30', 'end_time' => '10:30',
         ])->assertStatus(422);
 

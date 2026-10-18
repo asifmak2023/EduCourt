@@ -88,7 +88,7 @@ class TaxRuleController extends Controller
             'rate' => [$presence, 'numeric', 'min:0', 'max:100'],
             'tax_account_id' => [
                 'nullable', 'integer',
-                Rule::exists('chart_of_accounts', 'id')->where('campus_id', $campusId)->where('is_group', false),
+                Rule::exists('chart_of_accounts', 'id')->where('campus_id', $campusId)->where('is_group', 0),
             ],
             'effective_from' => ['nullable', 'date'],
             'effective_to' => ['nullable', 'date', 'after_or_equal:effective_from'],

@@ -84,7 +84,7 @@ class IncomeSourceController extends Controller
             'category' => [$presence, Rule::enum(IncomeCategory::class)],
             'income_account_id' => [
                 'nullable', 'integer',
-                Rule::exists('chart_of_accounts', 'id')->where('campus_id', $campusId)->where('is_group', false),
+                Rule::exists('chart_of_accounts', 'id')->where('campus_id', $campusId)->where('is_group', 0),
             ],
             'description' => ['nullable', 'string'],
             'is_active' => ['sometimes', 'boolean'],

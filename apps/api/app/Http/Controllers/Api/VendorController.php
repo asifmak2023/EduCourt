@@ -129,7 +129,7 @@ class VendorController extends Controller
                 Rule::exists('chart_of_accounts', 'id')
                     ->where('campus_id', $campusId)
                     ->where('account_type', 'liability')
-                    ->where('is_group', false)
+                    ->where('is_group', 0)
                     ->whereNull('deleted_at'),
             ],
             'is_active' => ['sometimes', 'boolean'],

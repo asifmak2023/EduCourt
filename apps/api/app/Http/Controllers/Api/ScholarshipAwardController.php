@@ -56,6 +56,22 @@ class ScholarshipAwardController extends Controller
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
+        $duplicate = ScholarshipAward::query()
+            ->where('scholarship_id', $data['scholarship_id'])
+            ->where('student_id', $data['student_id'])
+            ->when(
+                $data['academic_year_id'] ?? null,
+                fn ($query, $yearId) => $query->where('academic_year_id', $yearId),
+                fn ($query) => $query->whereNull('academic_year_id'),
+            )
+            ->exists();
+
+        if ($duplicate) {
+            throw ValidationException::withMessages([
+                'student_id' => ['This student already holds this scholarship for the academic year.'],
+            ]);
+        }
+
         try {
             $award = ScholarshipAward::create($data + $tenant + [
                 'awarded_on' => $data['awarded_on'] ?? now()->toDateString(),
@@ -63,7 +79,10 @@ class ScholarshipAwardController extends Controller
                 'approved_by' => $request->user()->id,
             ]);
         } catch (QueryException $exception) {
-            if (str_contains($exception->getMessage(), 'scholarship_award_unique')) {
+            if (
+                str_contains($exception->getMessage(), 'scholarship_award_unique')
+                || str_contains($exception->getMessage(), 'scholarship_awards.scholarship_id')
+            ) {
                 throw ValidationException::withMessages([
                     'student_id' => ['This student already holds this scholarship for the academic year.'],
                 ]);

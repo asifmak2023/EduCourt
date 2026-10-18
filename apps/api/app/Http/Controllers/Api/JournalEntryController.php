@@ -186,7 +186,7 @@ class JournalEntryController extends Controller
                 'required', 'integer',
                 Rule::exists('chart_of_accounts', 'id')
                     ->where('campus_id', $campusId)
-                    ->where('is_group', false)
+                    ->where('is_group', 0)
                     ->where('is_active', true)
                     ->whereNull('deleted_at'),
             ],

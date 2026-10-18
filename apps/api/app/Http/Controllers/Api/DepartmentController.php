@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DepartmentResource;
@@ -13,7 +14,10 @@ use Illuminate\Validation\Rule;
 
 class DepartmentController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'departments';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -32,6 +36,8 @@ class DepartmentController extends Controller
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $department = Department::create($data + $tenant);
 
         return (new DepartmentResource($department->load('head')))->response()->setStatusCode(201);
@@ -47,6 +53,8 @@ class DepartmentController extends Controller
     public function update(Request $request, Department $department): DepartmentResource
     {
         $data = $request->validate($this->rules($department->campus_id, $department->id, false));
+
+        $this->stripBlankCode($data);
 
         $department->update($data);
 
@@ -70,7 +78,7 @@ class DepartmentController extends Controller
         return [
             'name' => [$presence, 'string', 'max:255'],
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('departments', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'head_user_id' => ['nullable', 'integer', Rule::exists('users', 'id')],

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\LabEquipmentResource;
@@ -14,7 +15,10 @@ use Illuminate\Validation\Rule;
 
 class LabEquipmentController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'lab-equipment';
 
     public function index(Request $request, Lab $lab): AnonymousResourceCollection
     {
@@ -31,6 +35,11 @@ class LabEquipmentController extends Controller
     {
         $data = $request->validate($this->rules());
 
+        $this->applyGeneratedCode($data, [
+            'institution_id' => $lab->institution_id,
+            'campus_id' => $lab->campus_id,
+        ]);
+
         $equipment = $lab->equipment()->create($data + [
             'institution_id' => $lab->institution_id,
             'campus_id' => $lab->campus_id,
@@ -46,7 +55,11 @@ class LabEquipmentController extends Controller
 
     public function update(Request $request, LabEquipment $equipment): LabEquipmentResource
     {
-        $equipment->update($request->validate($this->rules(false)));
+        $data = $request->validate($this->rules(false));
+
+        $this->stripBlankCode($data);
+
+        $equipment->update($data);
 
         return new LabEquipmentResource($equipment->refresh());
     }
@@ -67,7 +80,7 @@ class LabEquipmentController extends Controller
 
         return [
             'name' => [$presence, 'string', 'max:255'],
-            'code' => ['nullable', 'string', 'max:64'],
+            'code' => ['sometimes', 'nullable', 'string', 'max:64'],
             'quantity' => ['sometimes', 'integer', 'min:0'],
             'condition' => ['sometimes', Rule::in(['working', 'under_repair', 'damaged', 'retired'])],
             'purchased_on' => ['nullable', 'date'],

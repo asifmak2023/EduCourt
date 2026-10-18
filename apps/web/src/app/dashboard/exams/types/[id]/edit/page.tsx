@@ -34,7 +34,7 @@ function EditExamTypeLoader() {
       redirectTo="/dashboard/exams/types"
       fields={[
         { name: "name", label: "Name", required: true },
-        { name: "code", label: "Code", required: true },
+        { name: "code", label: "Code" },
         {
           name: "weightage",
           label: "Weightage (%)",

@@ -41,7 +41,7 @@ export default function EditTransportRoutePage() {
         }}
         fields={[
           { name: "name", label: "Name", type: "text", required: true },
-          { name: "code", label: "Code", type: "text", required: true },
+          { name: "code", label: "Code", type: "text" },
           { name: "start_point", label: "Start point", type: "text" },
           { name: "end_point", label: "End point", type: "text" },
           {

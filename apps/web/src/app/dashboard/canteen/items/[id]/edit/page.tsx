@@ -45,7 +45,7 @@ export default function EditCanteenItemPage() {
           }}
           fields={[
             { name: "name", label: "Name", type: "text", required: true },
-            { name: "code", label: "Code", type: "text", required: true },
+            { name: "code", label: "Code", type: "text" },
             { name: "category", label: "Category", type: "text" },
             { name: "unit", label: "Unit", type: "text" },
             {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CanteenItemResource;
@@ -15,7 +16,10 @@ use Illuminate\Validation\Rule;
 
 class CanteenItemController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'canteen-items';
 
     public function __construct(private readonly CanteenService $canteen) {}
 
@@ -39,6 +43,8 @@ class CanteenItemController extends Controller
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $item = CanteenItem::create($data + $tenant);
 
         return (new CanteenItemResource($item))->response()->setStatusCode(201);
@@ -51,7 +57,11 @@ class CanteenItemController extends Controller
 
     public function update(Request $request, CanteenItem $item): CanteenItemResource
     {
-        $item->update($request->validate($this->rules($item->campus_id, $item->id, false)));
+        $data = $request->validate($this->rules($item->campus_id, $item->id, false));
+
+        $this->stripBlankCode($data);
+
+        $item->update($data);
 
         return new CanteenItemResource($item);
     }
@@ -96,7 +106,7 @@ class CanteenItemController extends Controller
         return [
             'name' => [$presence, 'string', 'max:255'],
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('canteen_items', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'category' => ['nullable', 'string', 'max:64'],

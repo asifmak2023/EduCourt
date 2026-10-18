@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CampusResource;
 use App\Models\Campus;
+use App\Support\Codes\CodeGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -36,7 +37,7 @@ class CampusController extends Controller
             'institution_id' => ['required', 'integer', 'exists:institutions,id'],
             'name' => ['required', 'string', 'max:255'],
             'code' => [
-                'required', 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('campuses', 'code')->where('institution_id', $request->input('institution_id')),
             ],
             'type' => ['required', Rule::in(['school', 'college', 'university'])],
@@ -48,11 +49,26 @@ class CampusController extends Controller
             'is_active' => ['sometimes', 'boolean'],
         ]);
 
+        if (blank($data['code'] ?? null)) {
+            $data['code'] = app(CodeGenerator::class)->next('campuses', (int) $data['institution_id']);
+        }
+
         $campus = Campus::create($data);
 
         return (new CampusResource($campus->load('institution')))
             ->response()
             ->setStatusCode(201);
+    }
+
+    public function nextCode(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'institution_id' => ['required', 'integer', 'exists:institutions,id'],
+        ]);
+
+        return response()->json([
+            'data' => ['code' => app(CodeGenerator::class)->next('campuses', (int) $data['institution_id'])],
+        ]);
     }
 
     public function show(Campus $campus): CampusResource
@@ -65,7 +81,7 @@ class CampusController extends Controller
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
             'code' => [
-                'sometimes', 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('campuses', 'code')
                     ->where('institution_id', $campus->institution_id)
                     ->ignore($campus->id),
@@ -78,6 +94,10 @@ class CampusController extends Controller
             'address' => ['nullable', 'string', 'max:1000'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
+
+        if (array_key_exists('code', $data) && blank($data['code'])) {
+            unset($data['code']);
+        }
 
         $campus->update($data);
 

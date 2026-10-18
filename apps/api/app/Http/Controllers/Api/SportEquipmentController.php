@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\SportEquipmentMovementResource;
@@ -15,7 +16,10 @@ use Illuminate\Validation\Rule;
 
 class SportEquipmentController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'sport-equipment';
 
     public function __construct(private readonly SportsService $sports) {}
 
@@ -37,6 +41,8 @@ class SportEquipmentController extends Controller
     {
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
+
+        $this->applyGeneratedCode($data, $tenant);
         $data['available_quantity'] = $data['available_quantity'] ?? $data['quantity'] ?? 0;
 
         $equipment = SportEquipment::create($data + $tenant + [
@@ -54,7 +60,11 @@ class SportEquipmentController extends Controller
 
     public function update(Request $request, SportEquipment $equipment): SportEquipmentResource
     {
-        $equipment->update($request->validate($this->rules($equipment->campus_id, $equipment->id, false, false)));
+        $data = $request->validate($this->rules($equipment->campus_id, $equipment->id, false, false));
+
+        $this->stripBlankCode($data);
+
+        $equipment->update($data);
 
         return new SportEquipmentResource($equipment->load('sport'));
     }
@@ -104,7 +114,7 @@ class SportEquipmentController extends Controller
             'sport_id' => ['nullable', 'integer', Rule::exists('sports', 'id')->where('campus_id', $campusId)],
             'name' => [$presence, 'string', 'max:255'],
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('sport_equipment', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'unit' => ['nullable', 'string', 'max:24'],

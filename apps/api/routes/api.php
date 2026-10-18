@@ -233,6 +233,8 @@ Route::prefix('v1')->group(function () {
 
         Route::get('institutions', [InstitutionController::class, 'index'])
             ->middleware('permission:institution.view');
+        Route::get('institutions/next-code', [InstitutionController::class, 'nextCode'])
+            ->middleware('permission:institution.view');
         Route::post('institutions', [InstitutionController::class, 'store'])
             ->middleware('permission:institution.create');
         Route::get('institutions/{institution}', [InstitutionController::class, 'show'])
@@ -243,6 +245,8 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:institution.delete');
 
         Route::get('campuses', [CampusController::class, 'index'])
+            ->middleware('permission:campus.view');
+        Route::get('campuses/next-code', [CampusController::class, 'nextCode'])
             ->middleware('permission:campus.view');
         Route::post('campuses', [CampusController::class, 'store'])
             ->middleware('permission:campus.create');
@@ -279,9 +283,12 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:report.view');
 
         Route::middleware('campus')->group(function () {
-            $academic = function (string $uri, string $controller, string $param): void {
+            $academic = function (string $uri, string $controller, string $param, bool $withCode = false): void {
                 Route::get($uri, [$controller, 'index'])->middleware('permission:academic.view');
                 Route::post($uri, [$controller, 'store'])->middleware('permission:academic.create');
+                if ($withCode) {
+                    Route::get("{$uri}/next-code", [$controller, 'nextCode'])->middleware('permission:academic.view');
+                }
                 Route::get("{$uri}/{".$param.'}', [$controller, 'show'])->middleware('permission:academic.view');
                 Route::put("{$uri}/{".$param.'}', [$controller, 'update'])->middleware('permission:academic.edit');
                 Route::delete("{$uri}/{".$param.'}', [$controller, 'destroy'])->middleware('permission:academic.delete');
@@ -295,17 +302,17 @@ Route::prefix('v1')->group(function () {
                 Route::delete("{$uri}/{".$param.'}', [$controller, 'destroy'])->middleware('permission:curriculum.delete');
             };
 
-            $academic('academic-years', AcademicYearController::class, 'academicYear');
+            $academic('academic-years', AcademicYearController::class, 'academicYear', true);
             $academic('terms', TermController::class, 'term');
-            $academic('stages', StageController::class, 'stage');
-            $academic('classes', ClassRoomController::class, 'classRoom');
+            $academic('stages', StageController::class, 'stage', true);
+            $academic('classes', ClassRoomController::class, 'classRoom', true);
             $academic('sections', SectionController::class, 'section');
-            $academic('subjects', SubjectController::class, 'subject');
+            $academic('subjects', SubjectController::class, 'subject', true);
             $academic('class-subjects', ClassSubjectController::class, 'classSubject');
             $academic('teaching-assignments', TeachingAssignmentController::class, 'teachingAssignment');
             $academic('academic-events', AcademicEventController::class, 'academicEvent');
             $academic('periods', PeriodController::class, 'period');
-            $academic('rooms', RoomController::class, 'room');
+            $academic('rooms', RoomController::class, 'room', true);
             $academic('timetable-slots', TimetableSlotController::class, 'timetableSlot');
 
             $curriculum('syllabus-units', SyllabusUnitController::class, 'syllabusUnit');
@@ -338,16 +345,19 @@ Route::prefix('v1')->group(function () {
             Route::post('substitute-assignments/{substituteAssignment}/cancel', [SubstituteAssignmentController::class, 'cancel'])->middleware('permission:timetable.edit');
             Route::delete('substitute-assignments/{substituteAssignment}', [SubstituteAssignmentController::class, 'destroy'])->middleware('permission:timetable.delete');
 
-            $exam = function (string $uri, string $controller, string $param): void {
+            $exam = function (string $uri, string $controller, string $param, bool $withCode = false): void {
                 Route::get($uri, [$controller, 'index'])->middleware('permission:exam.view');
                 Route::post($uri, [$controller, 'store'])->middleware('permission:exam.create');
+                if ($withCode) {
+                    Route::get("{$uri}/next-code", [$controller, 'nextCode'])->middleware('permission:exam.view');
+                }
                 Route::get("{$uri}/{".$param.'}', [$controller, 'show'])->middleware('permission:exam.view');
                 Route::put("{$uri}/{".$param.'}', [$controller, 'update'])->middleware('permission:exam.edit');
                 Route::delete("{$uri}/{".$param.'}', [$controller, 'destroy'])->middleware('permission:exam.delete');
             };
 
-            $exam('exam-types', ExamTypeController::class, 'examType');
-            $exam('grade-scales', GradeScaleController::class, 'gradeScale');
+            $exam('exam-types', ExamTypeController::class, 'examType', true);
+            $exam('grade-scales', GradeScaleController::class, 'gradeScale', true);
             $exam('exams', ExamController::class, 'exam');
             $exam('exam-papers', ExamPaperController::class, 'examPaper');
 
@@ -401,6 +411,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('fiscal-years', [FiscalYearController::class, 'index'])->middleware('permission:finance.view');
             Route::post('fiscal-years', [FiscalYearController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('fiscal-years/next-code', [FiscalYearController::class, 'nextCode'])->middleware('permission:finance.view');
             Route::get('fiscal-years/{fiscalYear}', [FiscalYearController::class, 'show'])->middleware('permission:finance.view');
             Route::put('fiscal-years/{fiscalYear}', [FiscalYearController::class, 'update'])->middleware('permission:finance.edit');
             Route::delete('fiscal-years/{fiscalYear}', [FiscalYearController::class, 'destroy'])->middleware('permission:finance.delete');
@@ -445,6 +456,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('expense-categories', [ExpenseCategoryController::class, 'index'])->middleware('permission:finance.view');
             Route::post('expense-categories', [ExpenseCategoryController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('expense-categories/next-code', [ExpenseCategoryController::class, 'nextCode'])->middleware('permission:finance.view');
             Route::get('expense-categories/{expenseCategory}', [ExpenseCategoryController::class, 'show'])->middleware('permission:finance.view');
             Route::put('expense-categories/{expenseCategory}', [ExpenseCategoryController::class, 'update'])->middleware('permission:finance.edit');
             Route::delete('expense-categories/{expenseCategory}', [ExpenseCategoryController::class, 'destroy'])->middleware('permission:finance.delete');
@@ -466,6 +478,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('income-sources', [IncomeSourceController::class, 'index'])->middleware('permission:finance.view');
             Route::post('income-sources', [IncomeSourceController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('income-sources/next-code', [IncomeSourceController::class, 'nextCode'])->middleware('permission:finance.view');
             Route::get('income-sources/{incomeSource}', [IncomeSourceController::class, 'show'])->middleware('permission:finance.view');
             Route::put('income-sources/{incomeSource}', [IncomeSourceController::class, 'update'])->middleware('permission:finance.edit');
             Route::delete('income-sources/{incomeSource}', [IncomeSourceController::class, 'destroy'])->middleware('permission:finance.delete');
@@ -477,6 +490,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('tax-rules', [TaxRuleController::class, 'index'])->middleware('permission:finance.view');
             Route::post('tax-rules', [TaxRuleController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('tax-rules/next-code', [TaxRuleController::class, 'nextCode'])->middleware('permission:finance.view');
             Route::get('tax-rules/{taxRule}', [TaxRuleController::class, 'show'])->middleware('permission:finance.view');
             Route::put('tax-rules/{taxRule}', [TaxRuleController::class, 'update'])->middleware('permission:finance.edit');
             Route::delete('tax-rules/{taxRule}', [TaxRuleController::class, 'destroy'])->middleware('permission:finance.delete');
@@ -493,6 +507,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('approval-workflows', [ApprovalWorkflowController::class, 'index'])->middleware('permission:finance.view');
             Route::post('approval-workflows', [ApprovalWorkflowController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('approval-workflows/next-code', [ApprovalWorkflowController::class, 'nextCode'])->middleware('permission:finance.view');
             Route::get('approval-workflows/{approvalWorkflow}', [ApprovalWorkflowController::class, 'show'])->middleware('permission:finance.view');
             Route::put('approval-workflows/{approvalWorkflow}', [ApprovalWorkflowController::class, 'update'])->middleware('permission:finance.edit');
             Route::delete('approval-workflows/{approvalWorkflow}', [ApprovalWorkflowController::class, 'destroy'])->middleware('permission:finance.delete');
@@ -506,6 +521,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('bank-accounts', [BankAccountController::class, 'index'])->middleware('permission:finance.view');
             Route::post('bank-accounts', [BankAccountController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('bank-accounts/next-code', [BankAccountController::class, 'nextCode'])->middleware('permission:finance.view');
             Route::get('bank-accounts/{bankAccount}', [BankAccountController::class, 'show'])->middleware('permission:finance.view');
             Route::put('bank-accounts/{bankAccount}', [BankAccountController::class, 'update'])->middleware('permission:finance.edit');
             Route::delete('bank-accounts/{bankAccount}', [BankAccountController::class, 'destroy'])->middleware('permission:finance.delete');
@@ -524,6 +540,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('assets', [AssetController::class, 'index'])->middleware('permission:finance.view');
             Route::post('assets', [AssetController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('assets/next-code', [AssetController::class, 'nextCode'])->middleware('permission:finance.view');
             Route::get('assets/{asset}', [AssetController::class, 'show'])->middleware('permission:finance.view');
             Route::put('assets/{asset}', [AssetController::class, 'update'])->middleware('permission:finance.edit');
             Route::delete('assets/{asset}', [AssetController::class, 'destroy'])->middleware('permission:finance.delete');
@@ -531,6 +548,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('liabilities', [LiabilityController::class, 'index'])->middleware('permission:finance.view');
             Route::post('liabilities', [LiabilityController::class, 'store'])->middleware('permission:finance.create');
+            Route::get('liabilities/next-code', [LiabilityController::class, 'nextCode'])->middleware('permission:finance.view');
             Route::get('liabilities/{liability}', [LiabilityController::class, 'show'])->middleware('permission:finance.view');
             Route::put('liabilities/{liability}', [LiabilityController::class, 'update'])->middleware('permission:finance.edit');
             Route::delete('liabilities/{liability}', [LiabilityController::class, 'destroy'])->middleware('permission:finance.delete');
@@ -548,6 +566,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('fee-heads', [FeeHeadController::class, 'index'])->middleware('permission:fee.view');
             Route::post('fee-heads', [FeeHeadController::class, 'store'])->middleware('permission:fee.create');
+            Route::get('fee-heads/next-code', [FeeHeadController::class, 'nextCode'])->middleware('permission:fee.view');
             Route::get('fee-heads/{feeHead}', [FeeHeadController::class, 'show'])->middleware('permission:fee.view');
             Route::put('fee-heads/{feeHead}', [FeeHeadController::class, 'update'])->middleware('permission:fee.edit');
             Route::delete('fee-heads/{feeHead}', [FeeHeadController::class, 'destroy'])->middleware('permission:fee.delete');
@@ -606,6 +625,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('fine-rules', [FineRuleController::class, 'index'])->middleware('permission:fine.view');
             Route::post('fine-rules', [FineRuleController::class, 'store'])->middleware('permission:fine.create');
+            Route::get('fine-rules/next-code', [FineRuleController::class, 'nextCode'])->middleware('permission:fine.view');
             Route::get('fine-rules/{fineRule}', [FineRuleController::class, 'show'])->middleware('permission:fine.view');
             Route::put('fine-rules/{fineRule}', [FineRuleController::class, 'update'])->middleware('permission:fine.edit');
             Route::delete('fine-rules/{fineRule}', [FineRuleController::class, 'destroy'])->middleware('permission:fine.delete');
@@ -738,16 +758,19 @@ Route::prefix('v1')->group(function () {
             Route::post('notifications/{notification}/send', [NotificationController::class, 'send'])->middleware('permission:notification.send');
             Route::post('notifications/{notification}/cancel', [NotificationController::class, 'cancel'])->middleware('permission:notification.send');
 
-            $hr = function (string $uri, string $controller, string $param, string $indexPermission = 'hr.view'): void {
+            $hr = function (string $uri, string $controller, string $param, string $indexPermission = 'hr.view', bool $withCode = false): void {
                 Route::get($uri, [$controller, 'index'])->middleware('permission:'.$indexPermission);
                 Route::post($uri, [$controller, 'store'])->middleware('permission:hr.create');
+                if ($withCode) {
+                    Route::get("{$uri}/next-code", [$controller, 'nextCode'])->middleware('permission:hr.view');
+                }
                 Route::get("{$uri}/{".$param.'}', [$controller, 'show'])->middleware('permission:hr.view');
                 Route::put("{$uri}/{".$param.'}', [$controller, 'update'])->middleware('permission:hr.edit');
                 Route::delete("{$uri}/{".$param.'}', [$controller, 'destroy'])->middleware('permission:hr.delete');
             };
 
-            $hr('departments', DepartmentController::class, 'department');
-            $hr('designations', DesignationController::class, 'designation');
+            $hr('departments', DepartmentController::class, 'department', 'hr.view', true);
+            $hr('designations', DesignationController::class, 'designation', 'hr.view', true);
             $hr('staff', StaffMemberController::class, 'staffMember', 'hr.view|payroll.view');
 
             Route::post('staff/{staffMember}/terminate', [StaffMemberController::class, 'terminate'])->middleware('permission:hr.approve');
@@ -761,15 +784,18 @@ Route::prefix('v1')->group(function () {
             Route::get('staff/{staffMember}/documents/{document}/download', [StaffDocumentController::class, 'download'])->middleware('permission:hr.view');
             Route::delete('staff/{staffMember}/documents/{document}', [StaffDocumentController::class, 'destroy'])->middleware('permission:hr.delete');
 
-            $payroll = function (string $uri, string $controller, string $param): void {
+            $payroll = function (string $uri, string $controller, string $param, bool $withCode = false): void {
                 Route::get($uri, [$controller, 'index'])->middleware('permission:payroll.view');
                 Route::post($uri, [$controller, 'store'])->middleware('permission:payroll.create');
+                if ($withCode) {
+                    Route::get("{$uri}/next-code", [$controller, 'nextCode'])->middleware('permission:payroll.view');
+                }
                 Route::get("{$uri}/{".$param.'}', [$controller, 'show'])->middleware('permission:payroll.view');
                 Route::put("{$uri}/{".$param.'}', [$controller, 'update'])->middleware('permission:payroll.edit');
                 Route::delete("{$uri}/{".$param.'}', [$controller, 'destroy'])->middleware('permission:payroll.delete');
             };
 
-            $payroll('salary-components', SalaryComponentController::class, 'salaryComponent');
+            $payroll('salary-components', SalaryComponentController::class, 'salaryComponent', true);
             $payroll('staff-salaries', StaffSalaryController::class, 'staffSalary');
             $payroll('payroll-adjustments', PayrollAdjustmentController::class, 'payrollAdjustment');
 
@@ -800,6 +826,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('canteen/items', [CanteenItemController::class, 'index'])->middleware('permission:canteen.view');
             Route::post('canteen/items', [CanteenItemController::class, 'store'])->middleware('permission:canteen.create');
+            Route::get('canteen/items/next-code', [CanteenItemController::class, 'nextCode'])->middleware('permission:canteen.view');
             Route::get('canteen/items/{item}', [CanteenItemController::class, 'show'])->middleware('permission:canteen.view');
             Route::put('canteen/items/{item}', [CanteenItemController::class, 'update'])->middleware('permission:canteen.edit');
             Route::delete('canteen/items/{item}', [CanteenItemController::class, 'destroy'])->middleware('permission:canteen.delete');
@@ -844,6 +871,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('student-affairs/clubs', [StudentClubController::class, 'index'])->middleware('permission:student_affairs.view');
             Route::post('student-affairs/clubs', [StudentClubController::class, 'store'])->middleware('permission:student_affairs.create');
+            Route::get('student-affairs/clubs/next-code', [StudentClubController::class, 'nextCode'])->middleware('permission:student_affairs.view');
             Route::get('student-affairs/clubs/{club}', [StudentClubController::class, 'show'])->middleware('permission:student_affairs.view');
             Route::put('student-affairs/clubs/{club}', [StudentClubController::class, 'update'])->middleware('permission:student_affairs.edit');
             Route::delete('student-affairs/clubs/{club}', [StudentClubController::class, 'destroy'])->middleware('permission:student_affairs.delete');
@@ -931,6 +959,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('sports/equipment', [SportEquipmentController::class, 'index'])->middleware('permission:sports.view');
             Route::post('sports/equipment', [SportEquipmentController::class, 'store'])->middleware('permission:sports.create');
+            Route::get('sports/equipment/next-code', [SportEquipmentController::class, 'nextCode'])->middleware('permission:sports.view');
             Route::get('sports/equipment/{equipment}', [SportEquipmentController::class, 'show'])->middleware('permission:sports.view');
             Route::put('sports/equipment/{equipment}', [SportEquipmentController::class, 'update'])->middleware('permission:sports.edit');
             Route::delete('sports/equipment/{equipment}', [SportEquipmentController::class, 'destroy'])->middleware('permission:sports.delete');
@@ -941,6 +970,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('sports', [SportController::class, 'index'])->middleware('permission:sports.view');
             Route::post('sports', [SportController::class, 'store'])->middleware('permission:sports.create');
+            Route::get('sports/next-code', [SportController::class, 'nextCode'])->middleware('permission:sports.view');
             Route::get('sports/{sport}/students/{student}/eligibility', [SportController::class, 'eligibility'])->middleware('permission:sports.view');
             Route::get('sports/{sport}', [SportController::class, 'show'])->middleware('permission:sports.view');
             Route::put('sports/{sport}', [SportController::class, 'update'])->middleware('permission:sports.edit');
@@ -948,6 +978,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('it/assets', [ItAssetController::class, 'index'])->middleware('permission:it.view');
             Route::post('it/assets', [ItAssetController::class, 'store'])->middleware('permission:it.create');
+            Route::get('it/assets/next-code', [ItAssetController::class, 'nextCode'])->middleware('permission:it.view');
             Route::get('it/assets/{asset}', [ItAssetController::class, 'show'])->middleware('permission:it.view');
             Route::put('it/assets/{asset}', [ItAssetController::class, 'update'])->middleware('permission:it.edit');
             Route::delete('it/assets/{asset}', [ItAssetController::class, 'destroy'])->middleware('permission:it.delete');
@@ -1020,12 +1051,14 @@ Route::prefix('v1')->group(function () {
 
             Route::get('inventory/categories', [InventoryCategoryController::class, 'index'])->middleware('permission:inventory.view');
             Route::post('inventory/categories', [InventoryCategoryController::class, 'store'])->middleware('permission:inventory.create');
+            Route::get('inventory/categories/next-code', [InventoryCategoryController::class, 'nextCode'])->middleware('permission:inventory.view');
             Route::get('inventory/categories/{inventoryCategory}', [InventoryCategoryController::class, 'show'])->middleware('permission:inventory.view');
             Route::put('inventory/categories/{inventoryCategory}', [InventoryCategoryController::class, 'update'])->middleware('permission:inventory.edit');
             Route::delete('inventory/categories/{inventoryCategory}', [InventoryCategoryController::class, 'destroy'])->middleware('permission:inventory.delete');
 
             Route::get('inventory/items', [InventoryItemController::class, 'index'])->middleware('permission:inventory.view');
             Route::post('inventory/items', [InventoryItemController::class, 'store'])->middleware('permission:inventory.create');
+            Route::get('inventory/items/next-code', [InventoryItemController::class, 'nextCode'])->middleware('permission:inventory.view');
             Route::get('inventory/items/{inventoryItem}', [InventoryItemController::class, 'show'])->middleware('permission:inventory.view');
             Route::put('inventory/items/{inventoryItem}', [InventoryItemController::class, 'update'])->middleware('permission:inventory.edit');
             Route::delete('inventory/items/{inventoryItem}', [InventoryItemController::class, 'destroy'])->middleware('permission:inventory.delete');
@@ -1046,8 +1079,10 @@ Route::prefix('v1')->group(function () {
 
             Route::get('labs', [LabController::class, 'index'])->middleware('permission:lab.view');
             Route::post('labs', [LabController::class, 'store'])->middleware('permission:lab.create');
+            Route::get('labs/next-code', [LabController::class, 'nextCode'])->middleware('permission:lab.view');
             Route::get('labs/{lab}/equipment', [LabEquipmentController::class, 'index'])->middleware('permission:lab.view');
             Route::post('labs/{lab}/equipment', [LabEquipmentController::class, 'store'])->middleware('permission:lab.edit');
+            Route::get('lab-equipment/next-code', [LabEquipmentController::class, 'nextCode'])->middleware('permission:lab.view');
             Route::get('labs/{lab}/reports/summary', [LabReportController::class, 'summary'])->middleware('permission:lab.view');
             Route::get('labs/{lab}', [LabController::class, 'show'])->middleware('permission:lab.view');
             Route::put('labs/{lab}', [LabController::class, 'update'])->middleware('permission:lab.edit');
@@ -1071,6 +1106,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('transport/routes', [TransportRouteController::class, 'index'])->middleware('permission:transport.view');
             Route::post('transport/routes', [TransportRouteController::class, 'store'])->middleware('permission:transport.create');
+            Route::get('transport/routes/next-code', [TransportRouteController::class, 'nextCode'])->middleware('permission:transport.view');
             Route::get('transport/routes/{route}', [TransportRouteController::class, 'show'])->middleware('permission:transport.view');
             Route::put('transport/routes/{route}', [TransportRouteController::class, 'update'])->middleware('permission:transport.edit');
             Route::delete('transport/routes/{route}', [TransportRouteController::class, 'destroy'])->middleware('permission:transport.delete');
@@ -1088,6 +1124,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('hostels', [HostelController::class, 'index'])->middleware('permission:hostel.view');
             Route::post('hostels', [HostelController::class, 'store'])->middleware('permission:hostel.create');
+            Route::get('hostels/next-code', [HostelController::class, 'nextCode'])->middleware('permission:hostel.view');
             Route::get('hostels/{hostel}/rooms', [HostelRoomController::class, 'index'])->middleware('permission:hostel.view');
             Route::post('hostels/{hostel}/rooms', [HostelRoomController::class, 'store'])->middleware('permission:hostel.edit');
             Route::get('hostels/{hostel}/reports/summary', [HostelReportController::class, 'summary'])->middleware('permission:hostel.export');

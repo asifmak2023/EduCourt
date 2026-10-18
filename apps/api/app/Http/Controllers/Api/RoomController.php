@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\RoomResource;
@@ -13,7 +14,10 @@ use Illuminate\Validation\Rule;
 
 class RoomController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'rooms';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -37,6 +41,8 @@ class RoomController extends Controller
         $tenant = $this->academicTenantAttributes();
 
         $data = $request->validate($this->rules($tenant['campus_id']));
+
+        $this->applyGeneratedCode($data, $tenant);
         $data += $tenant;
 
         $room = Room::create($data);
@@ -52,6 +58,8 @@ class RoomController extends Controller
     public function update(Request $request, Room $room): RoomResource
     {
         $data = $request->validate($this->rules($room->campus_id, $room->id, false));
+
+        $this->stripBlankCode($data);
 
         $room->update($data);
 
@@ -75,7 +83,7 @@ class RoomController extends Controller
         return [
             'name' => [$presence, 'string', 'max:128'],
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('rooms', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'block' => ['nullable', 'string', 'max:64'],

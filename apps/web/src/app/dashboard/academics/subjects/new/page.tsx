@@ -14,7 +14,7 @@ export default function NewSubjectPage() {
         submitLabel="Create subject"
         fields={[
           { name: "name", label: "Name", required: true, placeholder: "Mathematics" },
-          { name: "code", label: "Code", required: true, placeholder: "MATH" },
+          { name: "code", label: "Code", placeholder: "MATH" },
           {
             name: "type",
             label: "Type",

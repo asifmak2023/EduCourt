@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ItAssetAssignmentResource;
@@ -15,7 +16,12 @@ use Illuminate\Validation\Rule;
 
 class ItAssetController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'it-assets';
+
+    protected string $codeColumn = 'asset_tag';
 
     public function __construct(private readonly ItService $it) {}
 
@@ -41,6 +47,8 @@ class ItAssetController extends Controller
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $asset = ItAsset::create($data + $tenant + [
             'category' => $data['category'] ?? 'laptop',
             'status' => $data['status'] ?? 'available',
@@ -56,7 +64,11 @@ class ItAssetController extends Controller
 
     public function update(Request $request, ItAsset $asset): ItAssetResource
     {
-        $asset->update($request->validate($this->rules($asset->campus_id, $asset->id, false)));
+        $data = $request->validate($this->rules($asset->campus_id, $asset->id, false));
+
+        $this->stripBlankCode($data);
+
+        $asset->update($data);
 
         return new ItAssetResource($asset->load('assignedUser'));
     }
@@ -114,7 +126,7 @@ class ItAssetController extends Controller
         return [
             'name' => [$presence, 'string', 'max:255'],
             'asset_tag' => [
-                $presence, 'string', 'max:64',
+                'sometimes', 'nullable', 'string', 'max:64',
                 Rule::unique('it_assets', 'asset_tag')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'category' => ['sometimes', Rule::in(['laptop', 'desktop', 'printer', 'network', 'server', 'projector', 'phone', 'software', 'other'])],

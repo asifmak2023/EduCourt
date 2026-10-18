@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\BankAccountType;
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\BankAccountResource;
@@ -14,7 +15,10 @@ use Illuminate\Validation\Rule;
 
 class BankAccountController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'bank-accounts';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -41,6 +45,8 @@ class BankAccountController extends Controller
 
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $account = BankAccount::create($data + $tenant);
 
         return (new BankAccountResource($account->load('chartOfAccount')))->response()->setStatusCode(201);
@@ -54,6 +60,8 @@ class BankAccountController extends Controller
     public function update(Request $request, BankAccount $bankAccount): BankAccountResource
     {
         $data = $request->validate($this->rules($bankAccount->campus_id, $bankAccount->id, false));
+
+        $this->stripBlankCode($data);
 
         $bankAccount->update($data);
 
@@ -82,7 +90,7 @@ class BankAccountController extends Controller
 
         return [
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('bank_accounts', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'name' => [$presence, 'string', 'max:191'],

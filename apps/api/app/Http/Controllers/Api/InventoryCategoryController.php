@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\InventoryCategoryResource;
@@ -12,7 +13,10 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class InventoryCategoryController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'inventory-categories';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -30,6 +34,8 @@ class InventoryCategoryController extends Controller
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $category = InventoryCategory::create($data + $tenant);
 
         return (new InventoryCategoryResource($category))->response()->setStatusCode(201);
@@ -42,7 +48,11 @@ class InventoryCategoryController extends Controller
 
     public function update(Request $request, InventoryCategory $inventoryCategory): InventoryCategoryResource
     {
-        $inventoryCategory->update($request->validate($this->rules($inventoryCategory->campus_id, false)));
+        $data = $request->validate($this->rules($inventoryCategory->campus_id, false));
+
+        $this->stripBlankCode($data);
+
+        $inventoryCategory->update($data);
 
         return new InventoryCategoryResource($inventoryCategory->refresh()->loadCount('items'));
     }
@@ -63,7 +73,7 @@ class InventoryCategoryController extends Controller
 
         return [
             'name' => [$presence, 'string', 'max:255'],
-            'code' => ['nullable', 'string', 'max:32'],
+            'code' => ['sometimes', 'nullable', 'string', 'max:32'],
             'description' => ['nullable', 'string'],
         ];
     }

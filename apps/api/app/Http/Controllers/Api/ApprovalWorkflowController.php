@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApprovalWorkflowResource;
@@ -14,7 +15,10 @@ use Illuminate\Validation\Rule;
 
 class ApprovalWorkflowController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'approval-workflows';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -33,6 +37,8 @@ class ApprovalWorkflowController extends Controller
         $tenant = $this->academicTenantAttributes();
 
         $data = $request->validate($this->rules($tenant['campus_id']));
+
+        $this->applyGeneratedCode($data, $tenant);
 
         $workflow = DB::transaction(function () use ($data, $tenant) {
             $steps = $data['steps'];
@@ -55,6 +61,8 @@ class ApprovalWorkflowController extends Controller
     public function update(Request $request, ApprovalWorkflow $approvalWorkflow): ApprovalWorkflowResource
     {
         $data = $request->validate($this->rules($approvalWorkflow->campus_id, $approvalWorkflow->id, false));
+
+        $this->stripBlankCode($data);
 
         DB::transaction(function () use ($data, $approvalWorkflow) {
             if (array_key_exists('steps', $data)) {
@@ -88,7 +96,7 @@ class ApprovalWorkflowController extends Controller
         return [
             'name' => [$presence, 'string', 'max:255'],
             'code' => [
-                $presence, 'string', 'max:48',
+                'sometimes', 'nullable', 'string', 'max:48',
                 Rule::unique('approval_workflows', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'entity_type' => [$presence, Rule::in(array_keys(config('approvals.entities')))],

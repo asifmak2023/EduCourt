@@ -38,7 +38,7 @@ export default function EditDepartmentPage() {
         }}
         fields={[
           { name: "name", label: "Name", type: "text", required: true },
-          { name: "code", label: "Code", type: "text", required: true },
+          { name: "code", label: "Code", type: "text" },
           {
             name: "head_user_id",
             label: "Head",

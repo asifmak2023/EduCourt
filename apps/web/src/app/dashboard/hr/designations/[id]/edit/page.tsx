@@ -40,7 +40,7 @@ export default function EditDesignationPage() {
         }}
         fields={[
           { name: "name", label: "Name", type: "text", required: true },
-          { name: "code", label: "Code", type: "text", required: true },
+          { name: "code", label: "Code", type: "text" },
           {
             name: "department_id",
             label: "Department",

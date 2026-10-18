@@ -53,7 +53,7 @@ export default function EditScholarshipPage() {
         }}
         fields={[
           { name: "name", label: "Name", type: "text", required: true, span: 2 },
-          { name: "code", label: "Code", type: "text", required: true },
+          { name: "code", label: "Code", type: "text" },
           {
             name: "type",
             label: "Type",

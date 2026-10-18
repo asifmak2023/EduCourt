@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\StageResource;
@@ -13,7 +14,10 @@ use Illuminate\Validation\Rule;
 
 class StageController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'stages';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -39,12 +43,14 @@ class StageController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:128'],
             'code' => [
-                'required', 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('stages', 'code')->where('campus_id', $tenant['campus_id']),
             ],
             'sequence' => ['sometimes', 'integer', 'min:1', 'max:255'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
+
+        $this->applyGeneratedCode($data, $tenant);
 
         $data += $tenant;
 
@@ -63,12 +69,14 @@ class StageController extends Controller
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:128'],
             'code' => [
-                'sometimes', 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('stages', 'code')->where('campus_id', $stage->campus_id)->ignore($stage->id),
             ],
             'sequence' => ['sometimes', 'integer', 'min:1', 'max:255'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
+
+        $this->stripBlankCode($data);
 
         $stage->update($data);
 

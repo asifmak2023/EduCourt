@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\IncomeCategory;
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\IncomeSourceResource;
@@ -14,7 +15,10 @@ use Illuminate\Validation\Rule;
 
 class IncomeSourceController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'income-sources';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -34,6 +38,8 @@ class IncomeSourceController extends Controller
 
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $source = IncomeSource::create($data + $tenant);
 
         return (new IncomeSourceResource($source->load('incomeAccount')))->response()->setStatusCode(201);
@@ -47,6 +53,8 @@ class IncomeSourceController extends Controller
     public function update(Request $request, IncomeSource $incomeSource): IncomeSourceResource
     {
         $data = $request->validate($this->rules($incomeSource->campus_id, $incomeSource->id, false));
+
+        $this->stripBlankCode($data);
 
         $incomeSource->update($data);
 
@@ -70,7 +78,7 @@ class IncomeSourceController extends Controller
         return [
             'name' => [$presence, 'string', 'max:255'],
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('income_sources', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'category' => [$presence, Rule::enum(IncomeCategory::class)],

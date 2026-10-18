@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\ConcessionType;
 use App\Enums\DiscountType;
 use App\Enums\Gender;
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ConcessionPolicyResource;
@@ -16,7 +17,10 @@ use Illuminate\Validation\Rule;
 
 class ConcessionPolicyController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'concession-policies';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -44,6 +48,8 @@ class ConcessionPolicyController extends Controller
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $policy = ConcessionPolicy::create($data + $tenant);
 
         return (new ConcessionPolicyResource($policy->load(['academicYear', 'classRoom'])))
@@ -62,6 +68,8 @@ class ConcessionPolicyController extends Controller
     public function update(Request $request, ConcessionPolicy $concessionPolicy): ConcessionPolicyResource
     {
         $data = $request->validate($this->rules($concessionPolicy->campus_id, $concessionPolicy->id, false));
+
+        $this->stripBlankCode($data);
 
         $concessionPolicy->update($data);
 
@@ -85,7 +93,7 @@ class ConcessionPolicyController extends Controller
         return [
             'name' => [$presence, 'string', 'max:191'],
             'code' => [
-                $presence, 'string', 'max:50',
+                'sometimes', 'nullable', 'string', 'max:50',
                 Rule::unique('concession_policies', 'code')
                     ->where('campus_id', $campusId)
                     ->whereNull('deleted_at')

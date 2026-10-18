@@ -31,7 +31,7 @@ export default function NewSportEquipmentPage() {
               })),
             },
             { name: "name", label: "Name", type: "text", required: true },
-            { name: "code", label: "Code", type: "text", required: true },
+            { name: "code", label: "Code", type: "text" },
             { name: "unit", label: "Unit", type: "text" },
             {
               name: "quantity",

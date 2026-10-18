@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
+import { useSuggestedCode } from "@/lib/useSuggestedCode";
 import {
   Button,
   buttonClasses,
@@ -39,7 +40,11 @@ export function GradeScaleForm({ scale }: { scale?: GradeScale }) {
   const isEdit = Boolean(scale);
 
   const [name, setName] = useState(scale?.name ?? "");
-  const [code, setCode] = useState(scale?.code ?? "");
+  const [code, setCode] = useSuggestedCode({
+    endpoint: "/v1/grade-scales",
+    enabled: !isEdit,
+    initialValue: scale?.code ?? "",
+  });
   const [isDefault, setIsDefault] = useState(scale?.is_default ?? false);
   const [isActive, setIsActive] = useState(scale?.is_active ?? true);
   const [items, setItems] = useState<ItemDraft[]>(

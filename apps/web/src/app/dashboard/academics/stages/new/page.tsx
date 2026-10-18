@@ -14,7 +14,7 @@ export default function NewStagePage() {
         submitLabel="Create stage"
         fields={[
           { name: "name", label: "Name", required: true, placeholder: "Primary" },
-          { name: "code", label: "Code", required: true, placeholder: "PRI" },
+          { name: "code", label: "Code", placeholder: "PRI" },
           { name: "sequence", label: "Sequence", type: "number", min: "1" },
           { name: "is_active", label: "Active", type: "checkbox" },
         ]}

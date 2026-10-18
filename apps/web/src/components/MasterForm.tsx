@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -44,6 +44,7 @@ export function MasterForm({
   redirectTo,
   submitLabel,
   cancelHref,
+  nextCodeQueryFields,
 }: {
   title: string;
   description?: string;
@@ -54,6 +55,7 @@ export function MasterForm({
   redirectTo: string;
   submitLabel?: string;
   cancelHref?: string;
+  nextCodeQueryFields?: string[];
 }) {
   const router = useRouter();
   const isEdit = recordId !== undefined;
@@ -84,6 +86,54 @@ export function MasterForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
+  const codeField = fields.find(
+    (field) => field.name === "code" || field.name === "asset_tag"
+  )?.name;
+  const codeValue = codeField ? String(values[codeField] ?? "").trim() : "";
+  const suggestedCodeRef = useRef<string | null>(null);
+
+  const queryEntries = (nextCodeQueryFields ?? [])
+    .map((field) => [field, String(values[field] ?? "").trim()] as const)
+    .filter(([, value]) => value !== "");
+  const queryString = queryEntries
+    .map(([field, value]) => `${field}=${encodeURIComponent(value)}`)
+    .join("&");
+  const hasQueryValues =
+    queryEntries.length === (nextCodeQueryFields ?? []).length;
+
+  useEffect(() => {
+    if (isEdit || !codeField || !hasQueryValues) return;
+    if (codeValue !== "" && codeValue !== suggestedCodeRef.current) return;
+
+    const controller = new AbortController();
+    let active = true;
+
+    void apiFetch<{ data: Record<string, string> }>(
+      `${endpoint}/next-code${queryString ? `?${queryString}` : ""}`,
+      { signal: controller.signal }
+    )
+      .then((payload) => {
+        const suggested = payload.data?.[codeField];
+        if (!active || !suggested) return;
+        const previousSuggestion = suggestedCodeRef.current;
+        suggestedCodeRef.current = suggested;
+        setValues((current) => {
+          const existing = String(current[codeField] ?? "").trim();
+          const canReplace =
+            existing === "" || existing === previousSuggestion;
+          return canReplace ? { ...current, [codeField]: suggested } : current;
+        });
+      })
+      .catch(() => {
+        // A suggested code is a convenience; the API still generates one on save.
+      });
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [codeField, codeValue, endpoint, hasQueryValues, isEdit, queryString]);
 
   const setValue = (name: string, value: string | boolean) => {
     setValues((current) => ({ ...current, [name]: value }));

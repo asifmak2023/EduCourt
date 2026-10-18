@@ -21,7 +21,7 @@ export default function NewSportPage() {
           initial={{ category: "outdoor", is_active: true }}
           fields={[
             { name: "name", label: "Name", type: "text", required: true },
-            { name: "code", label: "Code", type: "text", required: true },
+            { name: "code", label: "Code", type: "text" },
             {
               name: "category",
               label: "Category",

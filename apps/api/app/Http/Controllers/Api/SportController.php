@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\SportResource;
@@ -16,7 +17,10 @@ use Illuminate\Validation\ValidationException;
 
 class SportController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'sports';
 
     public function __construct(private readonly SportsService $sports) {}
 
@@ -38,6 +42,8 @@ class SportController extends Controller
     {
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
+
+        $this->applyGeneratedCode($data, $tenant);
         $this->assertAgeRange($data);
 
         $sport = Sport::create($data + $tenant + [
@@ -56,6 +62,8 @@ class SportController extends Controller
     public function update(Request $request, Sport $sport): SportResource
     {
         $data = $request->validate($this->rules($sport->campus_id, $sport->id, false));
+
+        $this->stripBlankCode($data);
         $this->assertAgeRange($data, $sport);
 
         $sport->update($data);
@@ -85,7 +93,7 @@ class SportController extends Controller
         return [
             'name' => [$presence, 'string', 'max:255'],
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('sports', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'category' => ['sometimes', Rule::in(['indoor', 'outdoor', 'athletics'])],

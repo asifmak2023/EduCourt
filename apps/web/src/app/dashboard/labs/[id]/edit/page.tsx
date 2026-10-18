@@ -48,7 +48,7 @@ export default function EditLabPage() {
         }}
         fields={[
           { name: "name", label: "Name", type: "text", required: true },
-          { name: "code", label: "Code", type: "text", required: true },
+          { name: "code", label: "Code", type: "text" },
           { name: "type", label: "Type", type: "select", options: TYPES },
           { name: "location", label: "Location", type: "text" },
           { name: "capacity", label: "Capacity", type: "number", min: "0" },

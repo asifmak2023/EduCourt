@@ -1227,7 +1227,7 @@ export const MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       {
         name: "type",
         label: "Type",
@@ -1325,7 +1325,7 @@ export const MODULES: ModuleConfig[] = [
       { key: "is_active", label: "Active", format: "badge" },
     ],
     fields: [
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "name", label: "Name", type: "text", required: true },
       { name: "description", label: "Description", type: "textarea" },
       { name: "income_account_id", label: "Income account ID", type: "number", min: 0 },
@@ -1636,7 +1636,7 @@ export const MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "category", label: "Category", type: "select", options: FINE_CATEGORY, required: true },
       { name: "amount", label: "Amount", type: "number", required: true, min: 0, step: 0.01 },
       { name: "fee_head_id", label: "Fee head", type: "lookup", lookup: "feeHeads" },
@@ -1799,7 +1799,7 @@ export const MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "type", label: "Type", type: "select", options: CONCESSION_TYPE, required: true },
       { name: "discount_type", label: "Discount type", type: "select", options: DISCOUNT_TYPE, required: true },
       { name: "value", label: "Value", type: "number", required: true, min: 0, step: 0.01 },
@@ -1902,7 +1902,7 @@ export const MODULES: ModuleConfig[] = [
       { key: "is_active", label: "Active", format: "badge" },
     ],
     fields: [
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "name", label: "Name", type: "text", required: true },
       { name: "account_type", label: "Account type", type: "select", options: ACCOUNT_TYPE, required: true },
       { name: "normal_balance", label: "Normal balance", type: "select", options: NORMAL_BALANCE },
@@ -1929,7 +1929,7 @@ export const MODULES: ModuleConfig[] = [
       { key: "is_active", label: "Active", format: "badge" },
     ],
     fields: [
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "name", label: "Name", type: "text", required: true },
       { name: "description", label: "Description", type: "textarea" },
       { name: "expense_account_id", label: "Expense account", type: "lookup", lookup: "chartOfAccounts" },
@@ -1954,7 +1954,7 @@ export const MODULES: ModuleConfig[] = [
       { key: "is_active", label: "Active", format: "badge" },
     ],
     fields: [
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "name", label: "Name", type: "text", required: true },
       { name: "contact_name", label: "Contact name", type: "text" },
       { name: "phone", label: "Phone", type: "text" },
@@ -2180,7 +2180,7 @@ export const MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "head_user_id", label: "Head", type: "lookup", lookup: "staffUsers" },
       { name: "description", label: "Description", type: "textarea" },
       { name: "is_active", label: "Active", type: "checkbox", defaultValue: true },
@@ -2203,7 +2203,7 @@ export const MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "department_id", label: "Department", type: "lookup", lookup: "departments" },
       { name: "grade", label: "Grade", type: "text" },
       { name: "job_description", label: "Job description", type: "textarea" },
@@ -2301,7 +2301,7 @@ export const MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "type", label: "Type", type: "select", options: SALARY_COMPONENT_TYPE, required: true },
       { name: "calculation", label: "Calculation", type: "select", options: SALARY_CALCULATION },
       { name: "default_amount", label: "Default amount", type: "number", min: 0, step: 0.01 },

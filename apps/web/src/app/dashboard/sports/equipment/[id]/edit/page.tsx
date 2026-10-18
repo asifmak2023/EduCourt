@@ -54,7 +54,7 @@ export default function EditSportEquipmentPage() {
               })),
             },
             { name: "name", label: "Name", type: "text", required: true },
-            { name: "code", label: "Code", type: "text", required: true },
+            { name: "code", label: "Code", type: "text" },
             { name: "unit", label: "Unit", type: "text" },
             {
               name: "unit_cost",

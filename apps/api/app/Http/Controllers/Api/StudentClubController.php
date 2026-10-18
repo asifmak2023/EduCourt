@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ClubMembershipResource;
@@ -15,7 +16,10 @@ use Illuminate\Validation\Rule;
 
 class StudentClubController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'clubs';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -35,6 +39,8 @@ class StudentClubController extends Controller
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $club = StudentClub::create($data + $tenant + [
             'is_active' => $data['is_active'] ?? true,
         ]);
@@ -49,7 +55,11 @@ class StudentClubController extends Controller
 
     public function update(Request $request, StudentClub $club): StudentClubResource
     {
-        $club->update($request->validate($this->rules($club->campus_id, $club->id, false)));
+        $data = $request->validate($this->rules($club->campus_id, $club->id, false));
+
+        $this->stripBlankCode($data);
+
+        $club->update($data);
 
         return new StudentClubResource($club->load('patron'));
     }
@@ -111,7 +121,7 @@ class StudentClubController extends Controller
         return [
             'name' => [$presence, 'string', 'max:255'],
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('student_clubs', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'category' => ['nullable', 'string', 'max:64'],

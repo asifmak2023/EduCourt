@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\SubjectResource;
@@ -13,7 +14,10 @@ use Illuminate\Validation\Rule;
 
 class SubjectController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'subjects';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -37,6 +41,8 @@ class SubjectController extends Controller
         $tenant = $this->academicTenantAttributes();
 
         $data = $request->validate($this->rules($tenant['campus_id']));
+
+        $this->applyGeneratedCode($data, $tenant);
         $data += $tenant;
 
         $subject = Subject::create($data);
@@ -52,6 +58,8 @@ class SubjectController extends Controller
     public function update(Request $request, Subject $subject): SubjectResource
     {
         $data = $request->validate($this->rules($subject->campus_id, $subject->id, false));
+
+        $this->stripBlankCode($data);
 
         $subject->update($data);
 
@@ -75,7 +83,7 @@ class SubjectController extends Controller
         return [
             'name' => [$presence, 'string', 'max:128'],
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('subjects', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'type' => ['sometimes', Rule::in(['core', 'elective', 'optional'])],

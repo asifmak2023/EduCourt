@@ -24,6 +24,7 @@ export default function NewCampusPage() {
           endpoint="/v1/campuses"
           redirectTo="/dashboard/institutions/campuses"
           initial={{ type: "school", is_active: true }}
+          nextCodeQueryFields={["institution_id"]}
           fields={[
             {
               name: "institution_id",
@@ -36,7 +37,7 @@ export default function NewCampusPage() {
               })),
             },
             { name: "name", label: "Name", type: "text", required: true },
-            { name: "code", label: "Code", type: "text", required: true },
+            { name: "code", label: "Code", type: "text" },
             {
               name: "type",
               label: "Type",

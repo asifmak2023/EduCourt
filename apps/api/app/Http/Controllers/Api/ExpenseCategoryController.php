@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ExpenseCategoryResource;
@@ -13,7 +14,10 @@ use Illuminate\Validation\Rule;
 
 class ExpenseCategoryController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'expense-categories';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -39,6 +43,8 @@ class ExpenseCategoryController extends Controller
 
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $category = ExpenseCategory::create($data + $tenant);
 
         return (new ExpenseCategoryResource($category->load('expenseAccount')))->response()->setStatusCode(201);
@@ -52,6 +58,8 @@ class ExpenseCategoryController extends Controller
     public function update(Request $request, ExpenseCategory $expenseCategory): ExpenseCategoryResource
     {
         $data = $request->validate($this->rules($expenseCategory->campus_id, $expenseCategory->id, false));
+
+        $this->stripBlankCode($data);
 
         $expenseCategory->update($data);
 
@@ -80,7 +88,7 @@ class ExpenseCategoryController extends Controller
 
         return [
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('expense_categories', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'name' => [$presence, 'string', 'max:191'],

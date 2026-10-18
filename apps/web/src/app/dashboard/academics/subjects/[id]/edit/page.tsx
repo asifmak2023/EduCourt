@@ -34,7 +34,7 @@ function EditSubjectLoader() {
       redirectTo="/dashboard/academics/subjects"
       fields={[
         { name: "name", label: "Name", required: true },
-        { name: "code", label: "Code", required: true },
+        { name: "code", label: "Code" },
         {
           name: "type",
           label: "Type",

@@ -124,7 +124,7 @@ export const ACADEMICS_MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "weightage", label: "Weightage (%)", type: "number", min: 0, max: 100 },
       { name: "is_active", label: "Active", type: "checkbox", defaultValue: true },
       { name: "description", label: "Description", type: "textarea" },
@@ -150,7 +150,7 @@ export const ACADEMICS_MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "is_default", label: "Default scale", type: "checkbox" },
       { name: "is_active", label: "Active", type: "checkbox", defaultValue: true },
       {

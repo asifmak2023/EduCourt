@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\AssetStatus;
 use App\Enums\DepreciationMethod;
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AssetResource;
@@ -16,7 +17,10 @@ use Illuminate\Validation\ValidationException;
 
 class AssetController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'assets';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -43,6 +47,8 @@ class AssetController extends Controller
 
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $asset = Asset::create($data + $tenant);
 
         return (new AssetResource($asset->load('chartOfAccount')))->response()->setStatusCode(201);
@@ -56,6 +62,8 @@ class AssetController extends Controller
     public function update(Request $request, Asset $asset): AssetResource
     {
         $data = $request->validate($this->rules($asset->campus_id, $asset->id, false));
+
+        $this->stripBlankCode($data);
 
         $asset->update($data);
 
@@ -102,7 +110,7 @@ class AssetController extends Controller
 
         return [
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('assets', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'name' => [$presence, 'string', 'max:191'],

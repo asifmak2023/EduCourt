@@ -37,7 +37,7 @@ function NewClassForm() {
           })),
         },
         { name: "name", label: "Name", required: true, placeholder: "Grade 1" },
-        { name: "code", label: "Code", required: true, placeholder: "G1" },
+        { name: "code", label: "Code", placeholder: "G1" },
         { name: "sequence", label: "Sequence", type: "number", min: "1" },
         { name: "capacity", label: "Capacity", type: "number", min: "0" },
         { name: "room", label: "Homeroom", placeholder: "Room 12" },

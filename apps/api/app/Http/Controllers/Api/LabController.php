@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\LabResource;
@@ -13,7 +14,10 @@ use Illuminate\Validation\Rule;
 
 class LabController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'labs';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -32,6 +36,8 @@ class LabController extends Controller
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules());
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $lab = Lab::create($data + $tenant);
 
         return (new LabResource($lab->load('incharge')))->response()->setStatusCode(201);
@@ -44,7 +50,11 @@ class LabController extends Controller
 
     public function update(Request $request, Lab $lab): LabResource
     {
-        $lab->update($request->validate($this->rules(false)));
+        $data = $request->validate($this->rules(false));
+
+        $this->stripBlankCode($data);
+
+        $lab->update($data);
 
         return new LabResource($lab->refresh()->load('incharge'));
     }
@@ -65,7 +75,7 @@ class LabController extends Controller
 
         return [
             'name' => [$presence, 'string', 'max:255'],
-            'code' => [$presence, 'string', 'max:32'],
+            'code' => ['sometimes', 'nullable', 'string', 'max:32'],
             'type' => ['sometimes', Rule::in(['science', 'computer', 'language', 'other'])],
             'location' => ['nullable', 'string', 'max:255'],
             'capacity' => ['sometimes', 'integer', 'min:0'],

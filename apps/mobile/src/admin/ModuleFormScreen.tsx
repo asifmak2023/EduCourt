@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@eis/i18n";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../theme/ThemeProvider";
@@ -69,6 +69,73 @@ export function ModuleFormScreen({
     },
     [values]
   );
+
+  const codeField = useMemo(
+    () =>
+      inputFields.find(
+        (field) => field.name === "code" || field.name === "asset_tag"
+      ),
+    [inputFields]
+  );
+  const suggestedCode = useRef<string | null>(null);
+  const lastSuggestionKey = useRef<string | null>(null);
+  const codeValue = codeField
+    ? String(values[codeField.name] ?? "").trim()
+    : "";
+  const institutionValue = String(values.institution_id ?? "").trim();
+
+  useEffect(() => {
+    if (editing || !codeField) {
+      return;
+    }
+    if (codeValue !== "" && codeValue !== suggestedCode.current) {
+      return;
+    }
+    if (inputFields.some((field) => field.name === "institution_id") && !institutionValue) {
+      return;
+    }
+
+    const key = `${config.endpoint}|${institutionValue}`;
+    if (key === lastSuggestionKey.current) {
+      return;
+    }
+    lastSuggestionKey.current = key;
+
+    let active = true;
+    const query = institutionValue
+      ? `?institution_id=${encodeURIComponent(institutionValue)}`
+      : "";
+
+    apiFetch<{ data: Record<string, string> }>(
+      `${config.endpoint}/next-code${query}`
+    )
+      .then((response) => {
+        if (!active) {
+          return;
+        }
+        const nextCode = response.data?.[codeField.name];
+        if (!nextCode) {
+          return;
+        }
+        const previous = suggestedCode.current;
+        suggestedCode.current = nextCode;
+        setEdited((current) => {
+          const base = current ?? values;
+          const existing = String(base[codeField.name] ?? "").trim();
+          if (existing !== "" && existing !== previous) {
+            return base;
+          }
+          return { ...base, [codeField.name]: nextCode };
+        });
+      })
+      .catch(() => {
+        lastSuggestionKey.current = null;
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [codeField, codeValue, config.endpoint, editing, inputFields, institutionValue, values]);
 
   const submit = useCallback(async () => {
     const nextErrors: Record<string, string[]> = {};

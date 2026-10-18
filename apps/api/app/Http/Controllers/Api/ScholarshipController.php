@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\ScholarshipDiscountType;
 use App\Enums\ScholarshipType;
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ScholarshipResource;
@@ -15,7 +16,10 @@ use Illuminate\Validation\Rule;
 
 class ScholarshipController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'scholarships';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -43,6 +47,8 @@ class ScholarshipController extends Controller
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $scholarship = Scholarship::create($data + $tenant);
 
         return (new ScholarshipResource($scholarship->load('academicYear')))
@@ -60,6 +66,8 @@ class ScholarshipController extends Controller
     public function update(Request $request, Scholarship $scholarship): ScholarshipResource
     {
         $data = $request->validate($this->rules($scholarship->campus_id, $scholarship->id, false));
+
+        $this->stripBlankCode($data);
 
         $scholarship->update($data);
 
@@ -83,7 +91,7 @@ class ScholarshipController extends Controller
         return [
             'name' => [$presence, 'string', 'max:191'],
             'code' => [
-                $presence, 'string', 'max:50',
+                'sometimes', 'nullable', 'string', 'max:50',
                 Rule::unique('scholarships', 'code')
                     ->where('campus_id', $campusId)
                     ->whereNull('deleted_at')

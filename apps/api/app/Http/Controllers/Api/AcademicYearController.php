@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AcademicYearResource;
@@ -13,7 +14,10 @@ use Illuminate\Validation\Rule;
 
 class AcademicYearController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'academic-years';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -38,7 +42,7 @@ class AcademicYearController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:64'],
             'code' => [
-                'required', 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('academic_years', 'code')->where('campus_id', $tenant['campus_id']),
             ],
             'starts_on' => ['required', 'date'],
@@ -47,6 +51,8 @@ class AcademicYearController extends Controller
             'is_current' => ['sometimes', 'boolean'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
+
+        $this->applyGeneratedCode($data, $tenant);
 
         $data += $tenant;
 
@@ -71,7 +77,7 @@ class AcademicYearController extends Controller
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:64'],
             'code' => [
-                'sometimes', 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('academic_years', 'code')
                     ->where('campus_id', $academicYear->campus_id)
                     ->ignore($academicYear->id),
@@ -82,6 +88,8 @@ class AcademicYearController extends Controller
             'is_current' => ['sometimes', 'boolean'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
+
+        $this->stripBlankCode($data);
 
         $academicYear->update($data);
 

@@ -34,7 +34,7 @@ function EditStageLoader() {
       redirectTo="/dashboard/academics/stages"
       fields={[
         { name: "name", label: "Name", required: true },
-        { name: "code", label: "Code", required: true },
+        { name: "code", label: "Code" },
         { name: "sequence", label: "Sequence", type: "number", min: "1" },
         { name: "is_active", label: "Active", type: "checkbox" },
       ]}

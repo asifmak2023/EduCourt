@@ -13,6 +13,7 @@ import {
 } from "@/components/Form";
 import { ErrorNotice } from "@/components/ui";
 import { useChartOfAccounts } from "@/lib/useLookups";
+import { useSuggestedCode } from "@/lib/useSuggestedCode";
 import type { FeeHead } from "@/lib/types";
 
 export function FeeHeadQuickCreateDialog({
@@ -24,7 +25,10 @@ export function FeeHeadQuickCreateDialog({
   onClose: () => void;
   onCreated: (head: FeeHead) => void;
 }) {
-  const [code, setCode] = useState("");
+  const [code, setCode] = useSuggestedCode({
+    endpoint: "/v1/fee-heads",
+    enabled: open,
+  });
   const [name, setName] = useState("");
   const [incomeAccountId, setIncomeAccountId] = useState("");
   const [description, setDescription] = useState("");

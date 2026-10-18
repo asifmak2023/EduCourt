@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ExamTypeResource;
@@ -13,7 +14,10 @@ use Illuminate\Validation\Rule;
 
 class ExamTypeController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'exam-types';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -30,6 +34,8 @@ class ExamTypeController extends Controller
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $type = ExamType::create($data + $tenant);
 
         return (new ExamTypeResource($type))->response()->setStatusCode(201);
@@ -43,6 +49,8 @@ class ExamTypeController extends Controller
     public function update(Request $request, ExamType $examType): ExamTypeResource
     {
         $data = $request->validate($this->rules($examType->campus_id, $examType->id, false));
+
+        $this->stripBlankCode($data);
 
         $examType->update($data);
 
@@ -66,7 +74,7 @@ class ExamTypeController extends Controller
         return [
             'name' => [$presence, 'string', 'max:255'],
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('exam_types', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'weightage' => ['nullable', 'numeric', 'min:0', 'max:100'],

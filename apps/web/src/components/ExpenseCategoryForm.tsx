@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useChartOfAccounts } from "@/lib/useLookups";
+import { useSuggestedCode } from "@/lib/useSuggestedCode";
 import {
   Button,
   buttonClasses,
@@ -26,7 +27,11 @@ export function ExpenseCategoryForm({
   const isEdit = Boolean(category);
   const { items: accounts, loading } = useChartOfAccounts();
 
-  const [code, setCode] = useState(category?.code ?? "");
+  const [code, setCode] = useSuggestedCode({
+    endpoint: "/v1/expense-categories",
+    enabled: !isEdit,
+    initialValue: category?.code ?? "",
+  });
   const [name, setName] = useState(category?.name ?? "");
   const [description, setDescription] = useState(category?.description ?? "");
   const [expenseAccountId, setExpenseAccountId] = useState(

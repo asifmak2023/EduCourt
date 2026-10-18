@@ -51,7 +51,7 @@ export default function EditSportPage() {
           }}
           fields={[
             { name: "name", label: "Name", type: "text", required: true },
-            { name: "code", label: "Code", type: "text", required: true },
+            { name: "code", label: "Code", type: "text" },
             {
               name: "category",
               label: "Category",

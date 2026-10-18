@@ -27,7 +27,7 @@ function NewClubForm() {
         submitLabel="Create club"
         fields={[
           { name: "name", label: "Name", required: true, span: 2 },
-          { name: "code", label: "Code", required: true },
+          { name: "code", label: "Code" },
           { name: "category", label: "Category" },
           {
             name: "patron_user_id",

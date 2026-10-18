@@ -14,7 +14,7 @@ export default function NewExamTypePage() {
         submitLabel="Create type"
         fields={[
           { name: "name", label: "Name", required: true, placeholder: "Mid-term" },
-          { name: "code", label: "Code", required: true, placeholder: "MID" },
+          { name: "code", label: "Code", placeholder: "MID" },
           {
             name: "weightage",
             label: "Weightage (%)",

@@ -43,7 +43,7 @@ export default function EditInventoryItemPage() {
         }}
         fields={[
           { name: "name", label: "Name", type: "text", required: true },
-          { name: "code", label: "Code", type: "text", required: true },
+          { name: "code", label: "Code", type: "text" },
           {
             name: "inventory_category_id",
             label: "Category",

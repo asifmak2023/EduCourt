@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\TaxAppliesTo;
 use App\Enums\TaxType;
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TaxRuleResource;
@@ -15,7 +16,10 @@ use Illuminate\Validation\Rule;
 
 class TaxRuleController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'tax-rules';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -36,6 +40,8 @@ class TaxRuleController extends Controller
 
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $rule = TaxRule::create($data + $tenant);
 
         return (new TaxRuleResource($rule->load('taxAccount')))->response()->setStatusCode(201);
@@ -49,6 +55,8 @@ class TaxRuleController extends Controller
     public function update(Request $request, TaxRule $taxRule): TaxRuleResource
     {
         $data = $request->validate($this->rules($taxRule->campus_id, $taxRule->id, false));
+
+        $this->stripBlankCode($data);
 
         $taxRule->update($data);
 
@@ -72,7 +80,7 @@ class TaxRuleController extends Controller
         return [
             'name' => [$presence, 'string', 'max:255'],
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('tax_rules', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'type' => [$presence, Rule::enum(TaxType::class)],

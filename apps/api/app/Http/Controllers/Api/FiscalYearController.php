@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\FiscalYearResource;
@@ -13,7 +14,10 @@ use Illuminate\Validation\Rule;
 
 class FiscalYearController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'fiscal-years';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -33,7 +37,7 @@ class FiscalYearController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:64'],
             'code' => [
-                'required', 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('fiscal_years', 'code')->where('campus_id', $tenant['campus_id']),
             ],
             'starts_on' => ['required', 'date'],
@@ -41,6 +45,8 @@ class FiscalYearController extends Controller
             'status' => ['sometimes', Rule::in(['open', 'closed'])],
             'is_current' => ['sometimes', 'boolean'],
         ]);
+
+        $this->applyGeneratedCode($data, $tenant);
 
         $data += $tenant;
 
@@ -63,7 +69,7 @@ class FiscalYearController extends Controller
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:64'],
             'code' => [
-                'sometimes', 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('fiscal_years', 'code')
                     ->where('campus_id', $fiscalYear->campus_id)
                     ->ignore($fiscalYear->id),
@@ -73,6 +79,8 @@ class FiscalYearController extends Controller
             'status' => ['sometimes', Rule::in(['open', 'closed'])],
             'is_current' => ['sometimes', 'boolean'],
         ]);
+
+        $this->stripBlankCode($data);
 
         $fiscalYear->update($data);
 

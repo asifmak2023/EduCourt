@@ -34,7 +34,7 @@ function EditRoomLoader() {
       redirectTo="/dashboard/academics/rooms"
       fields={[
         { name: "name", label: "Name", required: true },
-        { name: "code", label: "Code", required: true },
+        { name: "code", label: "Code" },
         { name: "block", label: "Block" },
         { name: "floor", label: "Floor" },
         {

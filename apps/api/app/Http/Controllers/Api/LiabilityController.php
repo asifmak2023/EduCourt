@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\LiabilityStatus;
 use App\Enums\LiabilityType;
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\LiabilityResource;
@@ -16,7 +17,10 @@ use Illuminate\Validation\ValidationException;
 
 class LiabilityController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'liabilities';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -43,6 +47,8 @@ class LiabilityController extends Controller
 
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        $this->applyGeneratedCode($data, $tenant);
+
         if (! array_key_exists('outstanding_amount', $data) || $data['outstanding_amount'] === null) {
             $data['outstanding_amount'] = $data['principal_amount'];
         }
@@ -60,6 +66,8 @@ class LiabilityController extends Controller
     public function update(Request $request, Liability $liability): LiabilityResource
     {
         $data = $request->validate($this->rules($liability->campus_id, $liability->id, false));
+
+        $this->stripBlankCode($data);
 
         $liability->update($data);
 
@@ -105,7 +113,7 @@ class LiabilityController extends Controller
 
         return [
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('liabilities', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'name' => [$presence, 'string', 'max:191'],

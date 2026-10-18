@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
+import { useSuggestedCode } from "@/lib/useSuggestedCode";
 import {
   Button,
   buttonClasses,
@@ -27,7 +28,11 @@ export function AcademicYearForm({ year }: { year?: AcademicYear }) {
   const isEdit = Boolean(year);
 
   const [name, setName] = useState(year?.name ?? "");
-  const [code, setCode] = useState(year?.code ?? "");
+  const [code, setCode] = useSuggestedCode({
+    endpoint: "/v1/academic-years",
+    enabled: !isEdit,
+    initialValue: year?.code ?? "",
+  });
   const [startsOn, setStartsOn] = useState(year?.starts_on ?? "");
   const [endsOn, setEndsOn] = useState(year?.ends_on ?? "");
   const [status, setStatus] = useState(year?.status ?? "draft");

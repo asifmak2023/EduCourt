@@ -114,7 +114,7 @@ export const OPERATIONS_MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       {
         name: "inventory_category_id",
         label: "Category",
@@ -281,7 +281,7 @@ export const OPERATIONS_MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       {
         name: "type",
         label: "Type",
@@ -421,7 +421,7 @@ export const OPERATIONS_MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "start_point", label: "Start point", type: "text" },
       { name: "end_point", label: "End point", type: "text" },
       { name: "distance_km", label: "Distance (km)", type: "number", min: 0 },
@@ -508,7 +508,7 @@ export const OPERATIONS_MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "type", label: "Type", type: "select", options: [
         { value: "boys", label: "Boys" },
         { value: "girls", label: "Girls" },
@@ -632,7 +632,7 @@ export const OPERATIONS_MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "category", label: "Category", type: "text" },
       { name: "unit", label: "Unit", type: "text" },
       { name: "price", label: "Price", type: "number", required: true, min: 0 },
@@ -861,7 +861,7 @@ export const OPERATIONS_MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "category", label: "Category", type: "select", options: [
         { value: "indoor", label: "Indoor" },
         { value: "outdoor", label: "Outdoor" },
@@ -936,7 +936,7 @@ export const OPERATIONS_MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "sport_id", label: "Sport", type: "lookup", lookup: "sports", displayKey: "sport.name" },
       { name: "unit", label: "Unit", type: "text" },
       { name: "unit_cost", label: "Unit cost", type: "number", min: 0 },
@@ -1109,7 +1109,7 @@ export const OPERATIONS_MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "category", label: "Category", type: "text" },
       { name: "description", label: "Description", type: "textarea" },
       { name: "patron_user_id", label: "Patron", type: "lookup", lookup: "staffUsers", displayKey: "patron.name" },

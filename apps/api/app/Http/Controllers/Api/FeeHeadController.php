@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\FeeHeadResource;
@@ -13,7 +14,10 @@ use Illuminate\Validation\Rule;
 
 class FeeHeadController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'fee-heads';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -38,6 +42,8 @@ class FeeHeadController extends Controller
         $tenant = $this->academicTenantAttributes();
 
         $data = $request->validate($this->rules($tenant['campus_id']));
+
+        $this->applyGeneratedCode($data, $tenant);
         $data += $tenant;
 
         $head = FeeHead::create($data);
@@ -53,6 +59,8 @@ class FeeHeadController extends Controller
     public function update(Request $request, FeeHead $feeHead): FeeHeadResource
     {
         $data = $request->validate($this->rules($feeHead->campus_id, $feeHead->id, false));
+
+        $this->stripBlankCode($data);
 
         $feeHead->update($data);
 
@@ -81,7 +89,7 @@ class FeeHeadController extends Controller
 
         return [
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('fee_heads', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'name' => [$presence, 'string', 'max:191'],

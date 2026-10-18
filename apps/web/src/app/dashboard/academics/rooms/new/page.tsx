@@ -14,7 +14,7 @@ export default function NewRoomPage() {
         submitLabel="Create room"
         fields={[
           { name: "name", label: "Name", required: true, placeholder: "Room 101" },
-          { name: "code", label: "Code", required: true, placeholder: "R101" },
+          { name: "code", label: "Code", placeholder: "R101" },
           { name: "block", label: "Block", placeholder: "A" },
           { name: "floor", label: "Floor", placeholder: "1" },
           {

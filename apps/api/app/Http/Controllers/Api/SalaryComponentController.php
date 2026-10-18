@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\SalaryCalculation;
 use App\Enums\SalaryComponentType;
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\SalaryComponentResource;
@@ -15,7 +16,10 @@ use Illuminate\Validation\Rule;
 
 class SalaryComponentController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'salary-components';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -34,6 +38,8 @@ class SalaryComponentController extends Controller
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $component = SalaryComponent::create($data + $tenant);
 
         return (new SalaryComponentResource($component))->response()->setStatusCode(201);
@@ -47,6 +53,8 @@ class SalaryComponentController extends Controller
     public function update(Request $request, SalaryComponent $salaryComponent): SalaryComponentResource
     {
         $data = $request->validate($this->rules($salaryComponent->campus_id, $salaryComponent->id, false));
+
+        $this->stripBlankCode($data);
 
         $salaryComponent->update($data);
 
@@ -70,7 +78,7 @@ class SalaryComponentController extends Controller
         return [
             'name' => [$presence, 'string', 'max:255'],
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('salary_components', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'type' => [$presence, Rule::enum(SalaryComponentType::class)],

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TransportRouteResource;
@@ -15,7 +16,10 @@ use Illuminate\Validation\Rule;
 
 class TransportRouteController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'transport-routes';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -35,6 +39,8 @@ class TransportRouteController extends Controller
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules());
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $route = TransportRoute::create($data + $tenant);
 
         return (new TransportRouteResource($route->load('vehicle')))->response()->setStatusCode(201);
@@ -47,7 +53,11 @@ class TransportRouteController extends Controller
 
     public function update(Request $request, TransportRoute $route): TransportRouteResource
     {
-        $route->update($request->validate($this->rules(false)));
+        $data = $request->validate($this->rules(false));
+
+        $this->stripBlankCode($data);
+
+        $route->update($data);
 
         return new TransportRouteResource($route->refresh()->load('vehicle')->loadCount(['stops', 'allocations']));
     }
@@ -101,7 +111,7 @@ class TransportRouteController extends Controller
 
         return [
             'name' => [$presence, 'string', 'max:255'],
-            'code' => [$presence, 'string', 'max:32'],
+            'code' => ['sometimes', 'nullable', 'string', 'max:32'],
             'start_point' => ['nullable', 'string', 'max:255'],
             'end_point' => ['nullable', 'string', 'max:255'],
             'distance_km' => ['sometimes', 'numeric', 'min:0'],

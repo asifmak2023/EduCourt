@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\InstitutionResource;
 use App\Models\Institution;
+use App\Support\Codes\CodeGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -31,7 +32,7 @@ class InstitutionController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'code' => ['required', 'string', 'max:32', 'unique:institutions,code'],
+            'code' => ['sometimes', 'nullable', 'string', 'max:32', 'unique:institutions,code'],
             'legal_name' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:32'],
@@ -40,11 +41,22 @@ class InstitutionController extends Controller
             'is_active' => ['sometimes', 'boolean'],
         ]);
 
+        if (blank($data['code'] ?? null)) {
+            $data['code'] = app(CodeGenerator::class)->next('institutions');
+        }
+
         $institution = Institution::create($data);
 
         return (new InstitutionResource($institution->loadCount('campuses')))
             ->response()
             ->setStatusCode(201);
+    }
+
+    public function nextCode(): JsonResponse
+    {
+        return response()->json([
+            'data' => ['code' => app(CodeGenerator::class)->next('institutions')],
+        ]);
     }
 
     public function show(Institution $institution): InstitutionResource
@@ -56,7 +68,7 @@ class InstitutionController extends Controller
     {
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
-            'code' => ['sometimes', 'string', 'max:32', 'unique:institutions,code,'.$institution->id],
+            'code' => ['sometimes', 'nullable', 'string', 'max:32', 'unique:institutions,code,'.$institution->id],
             'legal_name' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:32'],
@@ -64,6 +76,10 @@ class InstitutionController extends Controller
             'address' => ['nullable', 'string', 'max:1000'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
+
+        if (array_key_exists('code', $data) && blank($data['code'])) {
+            unset($data['code']);
+        }
 
         $institution->update($data);
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\InventoryItemResource;
@@ -15,7 +16,10 @@ use Illuminate\Validation\Rule;
 
 class InventoryItemController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'inventory-items';
 
     public function __construct(private readonly InventoryService $inventory) {}
 
@@ -41,6 +45,8 @@ class InventoryItemController extends Controller
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules());
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $item = InventoryItem::create($data + $tenant);
 
         return (new InventoryItemResource($item->load('category')))->response()->setStatusCode(201);
@@ -53,7 +59,11 @@ class InventoryItemController extends Controller
 
     public function update(Request $request, InventoryItem $inventoryItem): InventoryItemResource
     {
-        $inventoryItem->update($request->validate($this->rules(false)));
+        $data = $request->validate($this->rules(false));
+
+        $this->stripBlankCode($data);
+
+        $inventoryItem->update($data);
 
         return new InventoryItemResource($inventoryItem->refresh()->load('category'));
     }
@@ -104,7 +114,7 @@ class InventoryItemController extends Controller
         return [
             'inventory_category_id' => ['nullable', 'integer', 'exists:inventory_categories,id'],
             'name' => [$presence, 'string', 'max:255'],
-            'code' => [$presence, 'string', 'max:64'],
+            'code' => ['sometimes', 'nullable', 'string', 'max:64'],
             'unit' => ['sometimes', 'string', 'max:32'],
             'unit_cost' => ['sometimes', 'numeric', 'min:0'],
             'quantity' => ['sometimes', 'numeric'],

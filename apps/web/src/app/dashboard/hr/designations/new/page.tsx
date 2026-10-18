@@ -20,7 +20,7 @@ export default function NewDesignationPage() {
         initial={{ is_active: true }}
         fields={[
           { name: "name", label: "Name", type: "text", required: true },
-          { name: "code", label: "Code", type: "text", required: true },
+          { name: "code", label: "Code", type: "text" },
           {
             name: "department_id",
             label: "Department",

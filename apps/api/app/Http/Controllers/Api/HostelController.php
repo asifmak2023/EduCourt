@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\HostelResource;
@@ -13,7 +14,10 @@ use Illuminate\Validation\Rule;
 
 class HostelController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'hostels';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -33,6 +37,8 @@ class HostelController extends Controller
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules());
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $hostel = Hostel::create($data + $tenant);
 
         return (new HostelResource($hostel->load('warden')))->response()->setStatusCode(201);
@@ -45,7 +51,11 @@ class HostelController extends Controller
 
     public function update(Request $request, Hostel $hostel): HostelResource
     {
-        $hostel->update($request->validate($this->rules(false)));
+        $data = $request->validate($this->rules(false));
+
+        $this->stripBlankCode($data);
+
+        $hostel->update($data);
 
         return new HostelResource($hostel->refresh()->load('warden')->loadCount('rooms'));
     }
@@ -66,7 +76,7 @@ class HostelController extends Controller
 
         return [
             'name' => [$presence, 'string', 'max:255'],
-            'code' => [$presence, 'string', 'max:32'],
+            'code' => ['sometimes', 'nullable', 'string', 'max:32'],
             'type' => ['sometimes', Rule::in(['boys', 'girls', 'mixed'])],
             'warden_user_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
             'warden_name' => ['nullable', 'string', 'max:255'],

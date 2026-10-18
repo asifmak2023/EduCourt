@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\FineCategory;
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\FineRuleResource;
@@ -14,7 +15,10 @@ use Illuminate\Validation\Rule;
 
 class FineRuleController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'fine-rules';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -40,6 +44,8 @@ class FineRuleController extends Controller
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
 
+        $this->applyGeneratedCode($data, $tenant);
+
         $rule = FineRule::create($data + $tenant);
 
         return (new FineRuleResource($rule->load('feeHead')))
@@ -54,6 +60,8 @@ class FineRuleController extends Controller
     public function update(Request $request, FineRule $fineRule): FineRuleResource
     {
         $data = $request->validate($this->rules($fineRule->campus_id, $fineRule->id, false));
+
+        $this->stripBlankCode($data);
 
         $fineRule->update($data);
 
@@ -77,7 +85,7 @@ class FineRuleController extends Controller
         return [
             'name' => [$presence, 'string', 'max:191'],
             'code' => [
-                $presence, 'string', 'max:50',
+                'sometimes', 'nullable', 'string', 'max:50',
                 Rule::unique('fine_rules', 'code')
                     ->where('campus_id', $campusId)
                     ->whereNull('deleted_at')

@@ -30,7 +30,7 @@ export default function NewScholarshipPage() {
         initial={{ type: "merit", discount_type: "percentage", is_active: true }}
         fields={[
           { name: "name", label: "Name", type: "text", required: true, span: 2 },
-          { name: "code", label: "Code", type: "text", required: true },
+          { name: "code", label: "Code", type: "text" },
           {
             name: "type",
             label: "Type",

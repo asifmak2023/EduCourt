@@ -125,7 +125,7 @@ export const ADMINISTRATION_MODULES: ModuleConfig[] = [
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "legal_name", label: "Legal name", type: "text" },
       { name: "email", label: "Email", type: "email" },
       { name: "phone", label: "Phone", type: "text" },
@@ -152,7 +152,7 @@ export const ADMINISTRATION_MODULES: ModuleConfig[] = [
     fields: [
       { name: "institution_id", label: "Institution", type: "lookup", lookup: "institutions", required: true, displayKey: "institution.name" },
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "text" },
       { name: "type", label: "Type", type: "select", required: true, options: CAMPUS_TYPE },
       { name: "email", label: "Email", type: "email" },
       { name: "phone", label: "Phone", type: "text" },

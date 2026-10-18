@@ -42,7 +42,7 @@ export default function EditInstitutionPage() {
           }}
           fields={[
             { name: "name", label: "Name", type: "text", required: true },
-            { name: "code", label: "Code", type: "text", required: true },
+            { name: "code", label: "Code", type: "text" },
             { name: "legal_name", label: "Legal name", type: "text" },
             { name: "email", label: "Email", type: "text" },
             { name: "phone", label: "Phone", type: "text" },

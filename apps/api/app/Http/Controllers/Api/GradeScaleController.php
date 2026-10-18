@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\GeneratesCodes;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\GradeScaleResource;
@@ -14,7 +15,10 @@ use Illuminate\Validation\Rule;
 
 class GradeScaleController extends Controller
 {
+    use GeneratesCodes;
     use StampsAcademicTenant;
+
+    protected string $codeResource = 'grade-scales';
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -32,6 +36,8 @@ class GradeScaleController extends Controller
     {
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
+
+        $this->applyGeneratedCode($data, $tenant);
 
         $scale = DB::transaction(function () use ($data, $tenant) {
             $scale = GradeScale::create(collect($data)->except('items')->all() + $tenant);
@@ -52,6 +58,8 @@ class GradeScaleController extends Controller
     public function update(Request $request, GradeScale $gradeScale): GradeScaleResource
     {
         $data = $request->validate($this->rules($gradeScale->campus_id, $gradeScale->id, false));
+
+        $this->stripBlankCode($data);
 
         DB::transaction(function () use ($gradeScale, $data) {
             $gradeScale->update(collect($data)->except('items')->all());
@@ -114,7 +122,7 @@ class GradeScaleController extends Controller
         return [
             'name' => [$presence, 'string', 'max:255'],
             'code' => [
-                $presence, 'string', 'max:32',
+                'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('grade_scales', 'code')->where('campus_id', $campusId)->ignore($ignoreId),
             ],
             'is_default' => ['sometimes', 'boolean'],

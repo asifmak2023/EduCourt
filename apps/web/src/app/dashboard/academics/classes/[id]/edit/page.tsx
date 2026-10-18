@@ -46,7 +46,7 @@ function EditClassLoader() {
           })),
         },
         { name: "name", label: "Name", required: true },
-        { name: "code", label: "Code", required: true },
+        { name: "code", label: "Code" },
         { name: "sequence", label: "Sequence", type: "number", min: "1" },
         { name: "capacity", label: "Capacity", type: "number", min: "0" },
         { name: "room", label: "Homeroom" },

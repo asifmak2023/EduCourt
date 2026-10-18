@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useChartOfAccounts } from "@/lib/useLookups";
+import { useSuggestedCode } from "@/lib/useSuggestedCode";
 import {
   Button,
   buttonClasses,
@@ -22,7 +23,11 @@ export function FeeHeadForm({ feeHead }: { feeHead?: FeeHead }) {
   const isEdit = Boolean(feeHead);
   const { items: accounts, loading } = useChartOfAccounts();
 
-  const [code, setCode] = useState(feeHead?.code ?? "");
+  const [code, setCode] = useSuggestedCode({
+    endpoint: "/v1/fee-heads",
+    enabled: !isEdit,
+    initialValue: feeHead?.code ?? "",
+  });
   const [name, setName] = useState(feeHead?.name ?? "");
   const [description, setDescription] = useState(feeHead?.description ?? "");
   const [incomeAccountId, setIncomeAccountId] = useState(

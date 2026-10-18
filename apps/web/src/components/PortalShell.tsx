@@ -10,7 +10,6 @@ import { isPortalOnly } from "@/lib/roles";
 import { PortalProvider, usePortal } from "@/lib/portal-context";
 import { Icon } from "@/components/Icons";
 import { Avatar } from "@/components/Avatar";
-import { BrandMark } from "@/components/BrandMark";
 import { AccountMenu } from "@/components/AccountMenu";
 import type { NavIcon } from "@/lib/nav";
 
@@ -73,8 +72,7 @@ function PortalFrame({ children }: { children: ReactNode }) {
     <div className="min-h-screen">
       <header className="app-glass sticky top-0 z-30 border-b border-border-secondary bg-surface/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
-          <Link href="/portal" className="flex items-center gap-2.5">
-            <BrandMark className="h-7 w-7" priority />
+          <Link href="/portal" className="flex items-center gap-3">
             <span className="brand-glow font-logo text-xl font-bold tracking-tight text-foreground">
               EduCourt
             </span>

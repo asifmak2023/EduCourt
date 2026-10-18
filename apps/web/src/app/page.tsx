@@ -8,7 +8,6 @@ import { useAuth } from "@/lib/auth";
 import { useTr } from "@/lib/i18n";
 import { isPortalOnly } from "@/lib/roles";
 import { Icon } from "@/components/Icons";
-import { BrandMark } from "@/components/BrandMark";
 import type { NavIcon } from "@/lib/nav";
 
 const NAV_LINKS = [
@@ -81,8 +80,7 @@ export default function LandingPage() {
     <div className="flex flex-1 flex-col">
       <header className="app-glass sticky top-0 z-40 border-b border-border-secondary bg-surface/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
-          <Link href="/" className="flex items-center gap-2.5">
-            <BrandMark className="h-9 w-9" priority />
+          <Link href="/" className="flex items-center gap-2">
             <span className="brand-glow font-logo text-2xl font-bold tracking-tight text-foreground">
               EduCourt
             </span>
@@ -378,12 +376,9 @@ export default function LandingPage() {
       <footer className="border-t border-border-secondary bg-surface-secondary/60">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-8 sm:px-6">
           <div>
-            <div className="flex items-center gap-2">
-              <BrandMark className="h-7 w-7" />
-              <p className="brand-glow font-logo text-xl font-bold tracking-tight text-foreground">
-                EduCourt
-              </p>
-            </div>
+            <p className="brand-glow font-logo text-xl font-bold tracking-tight text-foreground">
+              EduCourt
+            </p>
             <p className="mt-1 text-xs text-muted">{t("landing.footer.tagline")}</p>
           </div>
           <p className="text-xs text-muted">

@@ -693,6 +693,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('student-enrollments/{studentEnrollment}', [StudentEnrollmentController::class, 'destroy'])->middleware('permission:student.delete');
 
             Route::get('scholarships', [ScholarshipController::class, 'index'])->middleware('permission:scholarship.view');
+            Route::get('scholarships/next-code', [ScholarshipController::class, 'nextCode'])->middleware('permission:scholarship.view');
             Route::post('scholarships', [ScholarshipController::class, 'store'])->middleware('permission:scholarship.create');
             Route::get('scholarships/{scholarship}', [ScholarshipController::class, 'show'])->middleware('permission:scholarship.view');
             Route::put('scholarships/{scholarship}', [ScholarshipController::class, 'update'])->middleware('permission:scholarship.edit');
@@ -705,6 +706,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('scholarship-awards/{scholarshipAward}', [ScholarshipAwardController::class, 'destroy'])->middleware('permission:scholarship.delete');
 
             Route::get('concession-policies', [ConcessionPolicyController::class, 'index'])->middleware('permission:concession.view');
+            Route::get('concession-policies/next-code', [ConcessionPolicyController::class, 'nextCode'])->middleware('permission:concession.view');
             Route::post('concession-policies', [ConcessionPolicyController::class, 'store'])->middleware('permission:concession.create');
             Route::get('concession-policies/{concessionPolicy}', [ConcessionPolicyController::class, 'show'])->middleware('permission:concession.view');
             Route::put('concession-policies/{concessionPolicy}', [ConcessionPolicyController::class, 'update'])->middleware('permission:concession.edit');

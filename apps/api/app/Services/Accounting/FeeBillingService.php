@@ -8,6 +8,7 @@ use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Enums\VoucherStatus;
 use App\Models\ChartOfAccount;
+use App\Models\FeeCharge;
 use App\Models\FeeInstallment;
 use App\Models\FeePayment;
 use App\Models\FeePlan;
@@ -30,6 +31,13 @@ use Illuminate\Validation\ValidationException;
  */
 class FeeBillingService
 {
+    /**
+     * Memoized monthly counter invoices keyed by "student:academic-year".
+     *
+     * @var array<string, array<string, true>>
+     */
+    private array $billedMonthCache = [];
+
     public function __construct(private readonly JournalService $journals) {}
 
     /**
@@ -71,7 +79,7 @@ class FeeBillingService
                     ->where('fee_installment_id', $installment->id)
                     ->exists();
 
-                if ($exists) {
+                if ($exists || $this->monthAlreadyBilled($enrollment, $installment)) {
                     $skipped++;
 
                     continue;
@@ -145,7 +153,7 @@ class FeeBillingService
                     ->where('fee_installment_id', $installment->id)
                     ->exists();
 
-                if ($exists) {
+                if ($exists || $this->monthAlreadyBilled($enrollment, $installment)) {
                     $skipped++;
 
                     continue;
@@ -165,6 +173,33 @@ class FeeBillingService
         }
 
         return ['created' => $created, 'skipped' => $skipped];
+    }
+
+    /**
+     * A monthly counter invoice may already exist for the month covered by this
+     * installment. In that case the legacy plan generator must not create a
+     * second invoice for the same student/month.
+     */
+    private function monthAlreadyBilled(StudentEnrollment $enrollment, FeeInstallment $installment): bool
+    {
+        $key = $enrollment->student_id.':'.$enrollment->academic_year_id;
+
+        if (! array_key_exists($key, $this->billedMonthCache)) {
+            $this->billedMonthCache[$key] = FeeCharge::query()
+                ->where('student_id', $enrollment->student_id)
+                ->where('academic_year_id', $enrollment->academic_year_id)
+                ->where('billing_kind', 'monthly')
+                ->where('status', '!=', VoucherStatus::Void->value)
+                ->get(['period_year', 'period_month'])
+                ->mapWithKeys(fn (FeeCharge $charge) => [
+                    $charge->period_year.'-'.$charge->period_month => true,
+                ])
+                ->all();
+        }
+
+        $dueDate = $installment->due_date;
+
+        return isset($this->billedMonthCache[$key][$dueDate->year.'-'.$dueDate->month]);
     }
 
     /**

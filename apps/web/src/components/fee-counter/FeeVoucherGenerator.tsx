@@ -44,6 +44,8 @@ interface VoucherItem {
 
 export interface GenerateResult {
   message: string;
+  created?: number;
+  existing?: number;
   charges: FeeCharge[];
   receipt: FeeReceipt | null;
 }
@@ -441,7 +443,18 @@ export function FeeVoucherGenerator({
   return (
     <div className="space-y-6">
       {error ? <ErrorNotice message={error} /> : null}
-      {result ? <SuccessNotice message={result.message} /> : null}
+      {result ? (
+        (result.existing ?? 0) > 0 && (result.created ?? 0) === 0 ? (
+          <div className="rounded-xl border border-warning/40 bg-warning/5 px-4 py-3 text-sm text-foreground">
+            <p className="font-medium">{result.message}</p>
+            <p className="mt-0.5 text-muted">
+              No duplicate invoice was created. Use Print to open the existing voucher.
+            </p>
+          </div>
+        ) : (
+          <SuccessNotice message={result.message} />
+        )
+      ) : null}
 
       <div
         className={`grid gap-6 ${
@@ -960,7 +973,9 @@ export function FeeVoucherGenerator({
                   <div className="space-y-4 px-6 py-5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <h2 className="text-sm font-semibold text-foreground">
-                        Generated
+                        {(result.existing ?? 0) > 0 && (result.created ?? 0) === 0
+                          ? "Existing voucher"
+                          : "Generated"}
                       </h2>
                       <Button type="button" variant="secondary" onClick={printReceipt}>
                         Print

@@ -147,10 +147,20 @@ class FeeCounterController extends Controller
             ? (new FeeReceiptResource($result['receipt']->load(['allocations.charge.lines.feeHead'])))->resolve()
             : null;
 
+        $created = (int) ($result['created'] ?? 0);
+        $existing = (int) ($result['existing'] ?? 0);
+
+        $message = match (true) {
+            $created === 0 && $existing > 0 => 'A voucher already exists for this period. Showing the existing voucher.',
+            $created > 0 && $existing > 0 => "{$created} voucher(s) created; {$existing} already existed and were reused.",
+            $receipt !== null => 'Voucher generated and payment recorded.',
+            default => 'Voucher generated.',
+        };
+
         return response()->json([
-            'message' => $receipt
-                ? 'Voucher generated and payment recorded.'
-                : 'Voucher generated.',
+            'message' => $message,
+            'created' => $created,
+            'existing' => $existing,
             'charges' => $charges,
             'receipt' => $receipt,
         ], 201);

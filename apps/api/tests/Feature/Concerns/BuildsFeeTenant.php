@@ -14,6 +14,7 @@ use App\Models\Student;
 use App\Models\StudentEnrollment;
 use App\Models\User;
 use Database\Seeders\RbacSeeder;
+use Illuminate\Support\Carbon;
 
 trait BuildsFeeTenant
 {
@@ -138,14 +139,16 @@ trait BuildsFeeTenant
      */
     protected function generateCharge(Student $student, float $amount = 12000, string $title = 'Tuition Fee', string $dueDate = '2026-07-10'): array
     {
+        $period = Carbon::parse($dueDate);
+
         return $this->as($this->actor(RoleName::CampusAdmin))
             ->postJson('/api/v1/fee-counter/generate', [
                 'student_id' => $student->id,
                 'academic_year_id' => $this->year->id,
                 'items' => [[
                     'billing_kind' => 'monthly',
-                    'period_year' => 2026,
-                    'period_month' => 7,
+                    'period_year' => $period->year,
+                    'period_month' => $period->month,
                     'title' => $title,
                     'amount' => $amount,
                     'due_date' => $dueDate,

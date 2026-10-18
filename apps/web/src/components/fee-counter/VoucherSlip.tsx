@@ -38,12 +38,12 @@ export function VoucherSlip({ charge, breakAfter = false }: VoucherSlipProps) {
 
   return (
     <div
-      className={`voucher-slip-row w-full bg-white text-black${
+      className={`voucher-slip-row w-full overflow-x-auto bg-white text-black print:overflow-visible print:break-inside-avoid${
         breakAfter ? " print:break-after-page" : ""
       }`}
     >
-      {/* Screen: stack vertically with gap; Print: side-by-side, no gap */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:gap-0 print:flex-row print:gap-0">
+      {/* Always render the three copies side by side; narrow screens scroll. */}
+      <div className="flex min-w-[720px] flex-row gap-0 print:min-w-0">
         {COPIES.map((copy, idx) => (
           <SingleCopy
             key={copy.label}
@@ -98,7 +98,7 @@ function SingleCopy({
   return (
     <div
       className={`flex-1 border border-black/70 p-3 text-[11px] leading-snug${
-        isLast ? "" : " border-r-0 sm:border-r-0 print:border-r-0"
+        isLast ? "" : " border-r-0 print:border-r-0"
       }`}
       style={{ minWidth: 0 }}
     >

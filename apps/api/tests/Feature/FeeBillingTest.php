@@ -11,6 +11,7 @@ use App\Models\AcademicYear;
 use App\Models\Campus;
 use App\Models\ChartOfAccount;
 use App\Models\ClassRoom;
+use App\Models\FeeCharge;
 use App\Models\FeeHead;
 use App\Models\FeePayment;
 use App\Models\FeePlan;
@@ -164,6 +165,40 @@ class FeeBillingTest extends TestCase
             ->assertJsonPath('skipped', 6);
 
         $this->assertSame(6, FeeVoucher::query()->count());
+    }
+
+    public function test_generation_skips_installments_already_billed_by_the_counter(): void
+    {
+        $plan = $this->plan();
+
+        $this->as($this->admin)->postJson('/api/v1/fee-counter/generate', [
+            'student_id' => $this->ali->id,
+            'academic_year_id' => $this->year->id,
+            'items' => [[
+                'billing_kind' => 'monthly',
+                'period_year' => 2026,
+                'period_month' => 7,
+                'title' => 'Monthly Fee',
+                'amount' => 12000,
+                'due_date' => '2026-07-10',
+            ]],
+        ])->assertStatus(201);
+
+        $this->as($this->admin)->postJson('/api/v1/fee-vouchers/generate', [
+            'academic_year_id' => $this->year->id,
+            'class_room_id' => $this->class->id,
+            'fee_plan_id' => $plan->id,
+        ])->assertStatus(201)
+            ->assertJsonPath('created', 5)
+            ->assertJsonPath('skipped', 1);
+
+        $this->assertSame(0, FeeVoucher::query()
+            ->where('student_id', $this->ali->id)
+            ->whereDate('due_date', '2026-07-10')
+            ->count());
+
+        $this->assertSame(5, FeeVoucher::query()->count());
+        $this->assertSame(1, FeeCharge::query()->where('student_id', $this->ali->id)->count());
     }
 
     public function test_discounts_are_applied_across_the_schedule(): void

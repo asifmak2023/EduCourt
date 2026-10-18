@@ -6,16 +6,19 @@ use App\Enums\BillingKind;
 use App\Enums\VoucherStatus;
 use App\Models\FeeCharge;
 use App\Models\FeeChargeLine;
+use App\Models\FeePayment;
 use App\Models\FeeReceipt;
 use App\Models\FeeReceiptAllocation;
 use App\Models\FeeStructure;
 use App\Models\FeeStructureItem;
+use App\Models\FeeVoucher;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class FeeCounterService
@@ -83,7 +86,7 @@ class FeeCounterService
                 'roll_number' => $enrollment?->roll_number,
                 'full_name' => $student->full_name,
                 'photo_url' => $student->photo_path
-                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($student->photo_path)
+                    ? Storage::disk('public')->url($student->photo_path)
                     : null,
                 'class_room_id' => $enrollment?->class_room_id,
                 'class' => $enrollment?->classRoom?->name,
@@ -134,6 +137,7 @@ class FeeCounterService
 
         $backfilledMonths = $charges
             ->where('billing_kind', BillingKind::Monthly)
+            ->where('status', '!=', VoucherStatus::Void->value)
             ->map(fn (FeeCharge $charge) => $charge->period_year.'-'.$charge->period_month)
             ->all();
 
@@ -144,7 +148,7 @@ class FeeCounterService
                 'roll_number' => $enrollment->roll_number,
                 'full_name' => $student->full_name,
                 'photo_url' => $student->photo_path
-                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($student->photo_path)
+                    ? Storage::disk('public')->url($student->photo_path)
                     : null,
                 'campus_id' => $student->campus_id,
                 'academic_year_id' => $enrollment->academic_year_id,
@@ -270,25 +274,14 @@ class FeeCounterService
             if ($structure === null || $monthlyTotal <= 0) {
                 $skipped++;
                 $results[] = $base + ['status' => 'skipped', 'message' => 'No monthly fee structure.'];
+
                 continue;
             }
 
             try {
-                // Void any existing unpaid voucher for this period so it can be regenerated.
-                // Charges that already have payments (paid/partial) are left untouched.
-                $existingUnpaid = FeeCharge::query()
-                    ->where('student_id', $student->id)
-                    ->where('billing_kind', BillingKind::Monthly->value)
-                    ->where('period_year', $periodYear)
-                    ->where('period_month', $periodMonth)
-                    ->where('title', 'Monthly Fee')
-                    ->where('status', VoucherStatus::Unpaid->value)
-                    ->first();
-
-                if ($existingUnpaid !== null) {
-                    $existingUnpaid->update(['status' => VoucherStatus::Void->value]);
-                }
-
+                // Never regenerate or void an existing month. If a voucher already
+                // exists for this student + month, return it instead of creating a
+                // duplicate invoice.
                 $item = [
                     'billing_kind' => BillingKind::Monthly->value,
                     'period_year' => $periodYear,
@@ -311,9 +304,15 @@ class FeeCounterService
                     $created++;
                     $results[] = $base + ['status' => 'created', 'voucher_no' => $charge->voucher_no, 'charge_id' => $charge->id];
                 } else {
-                    // Voucher exists and has payments — skip without regenerating.
+                    // Voucher already exists for this month — surface it so the
+                    // caller can print it instead of creating a duplicate.
                     $skipped++;
-                    $results[] = $base + ['status' => 'skipped', 'message' => 'Already billed for this month.', 'charge_id' => $charge?->id];
+                    $results[] = $base + [
+                        'status' => 'existing',
+                        'message' => 'Already billed for this month.',
+                        'voucher_no' => $charge?->voucher_no,
+                        'charge_id' => $charge?->id,
+                    ];
                 }
             } catch (\Throwable $e) {
                 $errors++;
@@ -402,8 +401,12 @@ class FeeCounterService
                 $allocations = $this->allocatePayment($receipt, $paymentAmount, $created, $student->id, $academicYearId);
             }
 
+            $newCount = $created->filter(fn (FeeCharge $charge) => $charge->wasRecentlyCreated)->count();
+
             return [
                 'charges' => $created,
+                'created' => $newCount,
+                'existing' => $created->count() - $newCount,
                 'receipt' => $receipt,
                 'allocations' => $allocations,
             ];
@@ -484,23 +487,30 @@ class FeeCounterService
      */
     private function persistCharge(Student $student, StudentEnrollment $enrollment, array $item, array $overrides, int $userId): FeeCharge
     {
-        $billingKind = $item['billing_kind'];
-        $periodYear = (int) ($item['period_year'] ?? now()->year);
-        $periodMonth = isset($item['period_month']) ? (int) $item['period_month'] : null;
+        $billingKind = (string) $item['billing_kind'];
+        [$periodYear, $periodMonth] = $this->periodParts($item);
         $examTerm = $item['exam_term'] ?? null;
 
-        $existing = FeeCharge::query()
-            ->where('student_id', $student->id)
-            ->where('billing_kind', $billingKind)
-            ->where('period_year', $periodYear)
-            ->where('period_month', $periodMonth)
-            ->where('exam_term', $examTerm)
-            ->where('title', $item['title'] ?? null)
-            ->where('status', '!=', VoucherStatus::Void->value)
-            ->first();
+        $existing = $this->findExistingCharge($student, $enrollment, $item, $periodYear, $periodMonth);
 
         if ($existing !== null) {
             return $existing;
+        }
+
+        if ($billingKind === BillingKind::Monthly->value) {
+            $legacy = FeeVoucher::query()
+                ->where('student_id', $student->id)
+                ->where('academic_year_id', $enrollment->academic_year_id)
+                ->whereYear('due_date', $periodYear)
+                ->whereMonth('due_date', $periodMonth)
+                ->where('status', '!=', VoucherStatus::Void->value)
+                ->first();
+
+            if ($legacy !== null) {
+                throw ValidationException::withMessages([
+                    'items' => ["A voucher ({$legacy->voucher_no}) already exists for {$periodYear}-".str_pad((string) $periodMonth, 2, '0', STR_PAD_LEFT).'.'],
+                ]);
+            }
         }
 
         $charge = FeeCharge::create([
@@ -540,6 +550,78 @@ class FeeCounterService
         }
 
         return $charge;
+    }
+
+    /**
+     * Resolve the billing period for an item, falling back to the due date and
+     * then the current month so monthly charges always carry a period.
+     *
+     * @param  array<string, mixed>  $item
+     * @return array{0: int, 1: int}
+     */
+    private function periodParts(array $item): array
+    {
+        $dueDate = isset($item['due_date']) && $item['due_date']
+            ? Carbon::parse($item['due_date'])
+            : null;
+
+        $year = isset($item['period_year']) && $item['period_year']
+            ? (int) $item['period_year']
+            : ($dueDate?->year ?? now()->year);
+        $month = isset($item['period_month']) && $item['period_month']
+            ? (int) $item['period_month']
+            : ($dueDate?->month ?? now()->month);
+
+        return [$year, $month];
+    }
+
+    /**
+     * Find an existing charge that represents the same invoice. Monthly and
+     * exam charges are scoped to the student + academic year + period, while
+     * ad-hoc charges additionally match their title/structure item so that
+     * distinct one-off charges can still be billed in the same month.
+     *
+     * @param  array<string, mixed>  $item
+     */
+    private function findExistingCharge(
+        Student $student,
+        StudentEnrollment $enrollment,
+        array $item,
+        int $periodYear,
+        int $periodMonth,
+    ): ?FeeCharge {
+        $billingKind = (string) $item['billing_kind'];
+
+        $query = FeeCharge::query()
+            ->where('student_id', $student->id)
+            ->where('academic_year_id', $enrollment->academic_year_id)
+            ->where('billing_kind', $billingKind)
+            ->where('status', '!=', VoucherStatus::Void->value);
+
+        if ($billingKind === BillingKind::Monthly->value) {
+            return $query
+                ->where('period_year', $periodYear)
+                ->where('period_month', $periodMonth)
+                ->first();
+        }
+
+        if ($billingKind === BillingKind::Exam->value) {
+            return $query
+                ->where('exam_term', $item['exam_term'] ?? null)
+                ->first();
+        }
+
+        if (in_array($billingKind, [BillingKind::OneTime->value, BillingKind::Other->value], true)) {
+            return $query
+                ->where('period_year', $periodYear)
+                ->where('period_month', $periodMonth)
+                ->where('title', $item['title'] ?? null)
+                ->first();
+        }
+
+        return $query
+            ->where('fee_structure_item_id', $item['fee_structure_item_id'] ?? null)
+            ->first();
     }
 
     /**
@@ -661,7 +743,7 @@ class FeeCounterService
             $sequence++;
         } while (
             FeeCharge::withTrashed()->where('campus_id', $campusId)->where('voucher_no', $number)->exists()
-            || \App\Models\FeeVoucher::withTrashed()->where('campus_id', $campusId)->where('voucher_no', $number)->exists()
+            || FeeVoucher::withTrashed()->where('campus_id', $campusId)->where('voucher_no', $number)->exists()
         );
 
         return $number;
@@ -676,7 +758,7 @@ class FeeCounterService
             $sequence++;
         } while (
             FeeReceipt::withTrashed()->where('campus_id', $campusId)->where('receipt_no', $number)->exists()
-            || \App\Models\FeePayment::withTrashed()->where('campus_id', $campusId)->where('receipt_no', $number)->exists()
+            || FeePayment::withTrashed()->where('campus_id', $campusId)->where('receipt_no', $number)->exists()
         );
 
         return $number;

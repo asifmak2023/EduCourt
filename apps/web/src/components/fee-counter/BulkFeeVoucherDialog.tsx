@@ -16,7 +16,7 @@ interface BulkResultRow {
   student_id: number;
   student_name: string | null;
   admission_no: string | null;
-  status: "created" | "skipped" | "error";
+  status: "created" | "existing" | "skipped" | "error";
   voucher_no?: string;
   charge_id?: number | null;
   message?: string;
@@ -346,9 +346,23 @@ function BulkDialogFrame({
                       <td className="px-3 py-2 font-mono text-xs text-muted">
                         {row.admission_no ?? "-"}
                       </td>
-                      <td className="px-3 py-2 capitalize text-muted">
-                        {row.status}
-                        {row.message ? ` — ${row.message}` : ""}
+                      <td className="px-3 py-2 capitalize">
+                        <span
+                          className={
+                            row.status === "created"
+                              ? "text-success"
+                              : row.status === "existing"
+                                ? "text-warning"
+                                : row.status === "error"
+                                  ? "text-danger"
+                                  : "text-muted"
+                          }
+                        >
+                          {row.status === "existing" ? "already exists" : row.status}
+                        </span>
+                        {row.message ? (
+                          <span className="text-muted"> — {row.message}</span>
+                        ) : null}
                       </td>
                       <td className="px-3 py-2 font-mono text-xs text-muted">
                         {row.voucher_no ?? "-"}
@@ -377,7 +391,7 @@ function BulkDialogFrame({
         <div className="flex items-center justify-between gap-2 border-t border-border-secondary px-6 py-4">
           <span className="text-xs text-muted">
             {result
-              ? `${result.created} created, ${result.skipped} skipped, ${result.errors} errors`
+              ? `${result.created} created, ${result.skipped} existing/skipped, ${result.errors} errors`
               : ""}
           </span>
           <div className="flex items-center gap-2">

@@ -120,6 +120,32 @@ class CodeGenerationTest extends TestCase
             ->assertJsonPath('data.code', 'STG-0002');
     }
 
+    public function test_scholarship_and_concession_codes_are_generated(): void
+    {
+        $this->api($this->adminA)->postJson('/api/v1/scholarships', [
+            'name' => 'Merit Award',
+            'discount_type' => 'percentage',
+            'value' => 10,
+        ])->assertStatus(201)->assertJsonPath('data.code', 'SCH-0001');
+
+        $this->api($this->adminA)
+            ->getJson('/api/v1/scholarships/next-code')
+            ->assertOk()
+            ->assertJsonPath('data.code', 'SCH-0002');
+
+        $this->api($this->adminA)->postJson('/api/v1/concession-policies', [
+            'name' => 'Sibling Discount',
+            'type' => 'sibling',
+            'discount_type' => 'percentage',
+            'value' => 5,
+        ])->assertStatus(201)->assertJsonPath('data.code', 'CON-0001');
+
+        $this->api($this->adminA)
+            ->getJson('/api/v1/concession-policies/next-code')
+            ->assertOk()
+            ->assertJsonPath('data.code', 'CON-0002');
+    }
+
     public function test_it_asset_tag_is_generated_when_omitted(): void
     {
         $admin = $this->actor($this->campusA, RoleName::ItAdministrator);

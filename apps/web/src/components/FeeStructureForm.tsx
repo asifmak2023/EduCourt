@@ -140,6 +140,12 @@ export function FeeStructureForm({
 
   const errText = (field: string) => fieldErrors[field]?.[0] ?? null;
 
+  const selectedClassName =
+    classes.find((room) => String(room.id) === classRoomId)?.name ?? "";
+  const resolvedName =
+    name.trim() ||
+    (selectedClassName ? `${selectedClassName} fee structure` : "");
+
   const submit = async () => {
     setBusy(true);
     setError(null);
@@ -149,7 +155,7 @@ export function FeeStructureForm({
       const body: Record<string, unknown> = {
         academic_year_id: Number(academicYearId),
         class_room_id: Number(classRoomId),
-        name,
+        name: resolvedName,
         is_active: isActive,
         items: rows
           .filter((row) => row.name.trim() !== "")
@@ -195,7 +201,7 @@ export function FeeStructureForm({
   const invalid =
     !academicYearId ||
     !classRoomId ||
-    !name.trim() ||
+    !resolvedName ||
     rows.every((row) => row.name.trim() === "");
 
   return (
@@ -266,7 +272,11 @@ export function FeeStructureForm({
                 id="fs_name"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="e.g. Class 2 (2026-27)"
+                placeholder={
+                  selectedClassName
+                    ? `${selectedClassName} fee structure`
+                    : "e.g. Class 2 (2026-27)"
+                }
               />
             </Field>
             <div className="sm:col-span-2 lg:col-span-3">

@@ -450,6 +450,26 @@ function BulkDialogFrame({
                         {row.message ? (
                           <span className="text-muted"> — {row.message}</span>
                         ) : null}
+                        {row.status === "skipped" &&
+                        row.message === "No monthly fee structure." ? (
+                          canCreateStructure ? (
+                            <button
+                              type="button"
+                              className="ml-2 text-xs font-medium text-primary underline underline-offset-2"
+                              onClick={() => setStructureDialogOpen(true)}
+                            >
+                              Create one
+                            </button>
+                          ) : (
+                            <Link
+                              href={createStructureHref}
+                              className="ml-2 text-xs font-medium text-primary underline underline-offset-2"
+                              onClick={onClose}
+                            >
+                              Create one
+                            </Link>
+                          )
+                        ) : null}
                       </td>
                       <td className="px-3 py-2 font-mono text-xs text-muted">
                         {row.voucher_no ?? "-"}
@@ -490,7 +510,12 @@ function BulkDialogFrame({
                 Print all ({result.created})
               </Button>
             ) : null}
-            <Button type="button" loading={busy} onClick={() => void submit()}>
+            <Button
+              type="button"
+              loading={busy}
+              disabled={missingStructure}
+              onClick={() => void submit()}
+            >
               Generate
             </Button>
           </div>

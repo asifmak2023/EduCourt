@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Enums\RoleName;
 use App\Enums\VoucherStatus;
 use App\Models\FeeCharge;
+use App\Models\FeePlan;
 use App\Models\FeeStructure;
 use App\Models\FeeStructureItem;
+use App\Models\FeeVoucher;
 use App\Models\Student;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Feature\Concerns\BuildsFeeTenant;
@@ -118,6 +120,53 @@ class FeeVoucherDuplicateTest extends TestCase
 
         $this->assertSame('No monthly fee structure.', $response['results'][0]['message']);
         $this->assertSame(0, FeeCharge::query()->count());
+    }
+
+    public function test_bulk_generation_reuses_legacy_monthly_vouchers_instead_of_erroring(): void
+    {
+        $plan = FeePlan::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'academic_year_id' => $this->year->id,
+            'class_room_id' => $this->classRoom->id,
+            'name' => 'Standard Fee',
+            'is_active' => true,
+        ]);
+
+        FeeVoucher::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'student_id' => $this->ali->id,
+            'academic_year_id' => $this->year->id,
+            'fee_plan_id' => $plan->id,
+            'sequence' => 1,
+            'voucher_no' => 'FV-000402',
+            'due_date' => '2026-10-10',
+            'gross_amount' => 12000,
+            'discount_amount' => 0,
+            'amount' => 12000,
+            'paid_amount' => 0,
+            'status' => VoucherStatus::Unpaid->value,
+        ]);
+
+        $response = $this->asAdmin()
+            ->postJson('/api/v1/fee-counter/generate-bulk', [
+                'academic_year_id' => $this->year->id,
+                'class_room_id' => $this->classRoom->id,
+                'section_id' => $this->section->id,
+                'period_year' => 2026,
+                'period_month' => 10,
+            ])
+            ->assertStatus(201)
+            ->assertJsonPath('errors', 0)
+            ->json();
+
+        $ali = collect($response['results'])->firstWhere('student_id', $this->ali->id);
+
+        $this->assertSame('existing', $ali['status']);
+        $this->assertSame('FV-000402', $ali['voucher_no']);
+        $this->assertNotNull($ali['charge_id']);
+        $this->assertSame(1, FeeCharge::query()->where('voucher_no', 'FV-000402')->count());
     }
 
     public function test_single_generation_reuses_a_voucher_created_by_bulk(): void

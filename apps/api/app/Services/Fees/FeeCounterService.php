@@ -300,7 +300,7 @@ class FeeCounterService
                 $result = $this->generate($student, ['academic_year_id' => $academicYearId], [$item], null, $userId);
                 $charge = collect($result['charges'])->first();
 
-                if ($charge !== null && $charge->wasRecentlyCreated) {
+                if ($charge !== null && $charge->wasRecentlyCreated && $charge->source !== 'legacy') {
                     $created++;
                     $results[] = $base + ['status' => 'created', 'voucher_no' => $charge->voucher_no, 'charge_id' => $charge->id];
                 } else {
@@ -500,6 +500,18 @@ class FeeCounterService
         }
 
         if ($billingKind === BillingKind::Monthly->value) {
+            $legacyCharge = FeeCharge::query()
+                ->where('student_id', $student->id)
+                ->where('academic_year_id', $enrollment->academic_year_id)
+                ->where('period_year', $periodYear)
+                ->where('period_month', $periodMonth)
+                ->where('status', '!=', VoucherStatus::Void->value)
+                ->first();
+
+            if ($legacyCharge !== null) {
+                return $legacyCharge;
+            }
+
             $legacy = FeeVoucher::query()
                 ->where('student_id', $student->id)
                 ->where('academic_year_id', $enrollment->academic_year_id)
@@ -509,9 +521,7 @@ class FeeCounterService
                 ->first();
 
             if ($legacy !== null) {
-                throw ValidationException::withMessages([
-                    'items' => ["A voucher ({$legacy->voucher_no}) already exists for {$periodYear}-".str_pad((string) $periodMonth, 2, '0', STR_PAD_LEFT).'.'],
-                ]);
+                return $this->promoteLegacyVoucher($legacy, $enrollment, $userId);
             }
         }
 
@@ -552,6 +562,48 @@ class FeeCounterService
         }
 
         return $charge;
+    }
+
+    private function promoteLegacyVoucher(
+        FeeVoucher $legacy,
+        StudentEnrollment $enrollment,
+        int $userId,
+    ): FeeCharge {
+        $existing = FeeCharge::query()
+            ->where('campus_id', $legacy->campus_id)
+            ->where('voucher_no', $legacy->voucher_no)
+            ->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        $dueDate = $legacy->due_date ?? now();
+
+        return FeeCharge::create([
+            'institution_id' => $legacy->institution_id,
+            'campus_id' => $legacy->campus_id,
+            'academic_year_id' => $enrollment->academic_year_id,
+            'student_id' => $legacy->student_id,
+            'enrollment_id' => $enrollment->id,
+            'class_room_id' => $enrollment->class_room_id,
+            'section_id' => $enrollment->section_id,
+            'voucher_no' => $legacy->voucher_no,
+            'billing_kind' => BillingKind::LegacyInstallment->value,
+            'period_year' => (int) $dueDate->year,
+            'period_month' => (int) $dueDate->month,
+            'title' => $legacy->voucher_no,
+            'amount' => $legacy->amount,
+            'discount_amount' => $legacy->discount_amount,
+            'paid_amount' => $legacy->paid_amount,
+            'due_date' => $dueDate->toDateString(),
+            'status' => $legacy->status instanceof VoucherStatus
+                ? $legacy->status->value
+                : (string) $legacy->status,
+            'source' => 'legacy',
+            'journal_entry_id' => $legacy->journal_entry_id,
+            'created_by' => $userId,
+        ]);
     }
 
     /**
@@ -601,9 +653,21 @@ class FeeCounterService
             ->where('status', '!=', VoucherStatus::Void->value);
 
         if ($billingKind === BillingKind::Monthly->value) {
-            return $query
+            $monthly = $query
                 ->where('period_year', $periodYear)
                 ->where('period_month', $periodMonth)
+                ->first();
+
+            if ($monthly !== null) {
+                return $monthly;
+            }
+
+            return FeeCharge::query()
+                ->where('student_id', $student->id)
+                ->where('academic_year_id', $enrollment->academic_year_id)
+                ->where('period_year', $periodYear)
+                ->where('period_month', $periodMonth)
+                ->where('status', '!=', VoucherStatus::Void->value)
                 ->first();
         }
 

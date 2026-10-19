@@ -11,7 +11,6 @@ import {
 } from "@/components/Charts";
 import {
   Card,
-  EmptyState,
   ErrorNotice,
   Spinner,
   StatCard,
@@ -131,65 +130,61 @@ export function AttendanceOverview() {
             />
           </div>
 
-          {classes.length === 0 ? (
-            <Card>
-              <EmptyState message="No attendance was recorded this month." />
-            </Card>
-          ) : (
-            <div className="grid gap-4 lg:grid-cols-3">
-              <ChartCard title="Attendance split">
-                <DonutChart
-                  data={[
-                    {
-                      label: "Present",
-                      value: totals?.present ?? 0,
-                      color: colors["--success"],
-                    },
-                    {
-                      label: "Leave",
-                      value: totals?.leave ?? 0,
-                      color: colors["--warning"],
-                    },
-                    {
-                      label: "Absent",
-                      value: totals?.absent ?? 0,
-                      color: colors["--danger"],
-                    },
-                  ]}
-                  centerValue={formatNumber(totals?.total ?? 0)}
-                  centerLabel="Marked"
-                />
-              </ChartCard>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <ChartCard title="Attendance split">
+              <DonutChart
+                emptyAsGraph
+                data={[
+                  {
+                    label: "Present",
+                    value: totals?.present ?? 0,
+                    color: colors["--success"],
+                  },
+                  {
+                    label: "Leave",
+                    value: totals?.leave ?? 0,
+                    color: colors["--warning"],
+                  },
+                  {
+                    label: "Absent",
+                    value: totals?.absent ?? 0,
+                    color: colors["--danger"],
+                  },
+                ]}
+                centerValue={formatNumber(totals?.total ?? 0)}
+                centerLabel="Marked"
+              />
+            </ChartCard>
 
-              <ChartCard title="Attendance by class" className="lg:col-span-2">
-                <GroupedBarsChart
-                  data={classes.map((row) => ({
-                    label: row.class_room ?? "Unassigned",
-                    present: row.present,
-                    leave: row.leave,
-                    absent: row.absent,
-                  }))}
-                  series={[
-                    {
-                      key: "present",
-                      label: "Present",
-                      color: colors["--success"],
-                    },
-                    {
-                      key: "leave",
-                      label: "Leave",
-                      color: colors["--warning"],
-                    },
-                    {
-                      key: "absent",
-                      label: "Absent",
-                      color: colors["--danger"],
-                    },
-                  ]}
-                />
-              </ChartCard>
-            </div>
-          )}
+            <ChartCard title="Attendance by class" className="lg:col-span-2">
+              <GroupedBarsChart
+                emptyAsGraph
+                data={classes.map((row) => ({
+                  label: row.class_room ?? "Unassigned",
+                  present: row.present,
+                  leave: row.leave,
+                  absent: row.absent,
+                }))}
+                series={[
+                  {
+                    key: "present",
+                    label: "Present",
+                    color: colors["--success"],
+                  },
+                  {
+                    key: "leave",
+                    label: "Leave",
+                    color: colors["--warning"],
+                  },
+                  {
+                    key: "absent",
+                    label: "Absent",
+                    color: colors["--danger"],
+                  },
+                ]}
+              />
+            </ChartCard>
+          </div>
         </>
       ) : null}
     </section>

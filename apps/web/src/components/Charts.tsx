@@ -128,17 +128,25 @@ export function DonutChart({
   centerValue,
   centerLabel,
   formatValue = (value) => String(value),
+  emptyAsGraph = false,
 }: {
   data: DonutSlice[];
   centerValue?: string;
   centerLabel?: string;
   formatValue?: (value: number) => string;
+  emptyAsGraph?: boolean;
 }) {
+  const colors = useChartColors();
   const total = data.reduce((sum, slice) => sum + slice.value, 0);
 
-  if (total === 0) {
+  if (total === 0 && !emptyAsGraph) {
     return <ChartPlaceholder />;
   }
+
+  const pieData =
+    total === 0
+      ? [{ label: "empty", value: 1, color: colors["--border"] }]
+      : data;
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -146,24 +154,24 @@ export function DonutChart({
         <ResponsiveContainer width="100%" height={210}>
           <PieChart>
             <Pie
-              data={data}
+              data={pieData}
               dataKey="value"
               nameKey="label"
               innerRadius="68%"
               outerRadius="95%"
-              paddingAngle={3}
+              paddingAngle={total === 0 ? 0 : 3}
               cornerRadius={6}
               strokeWidth={0}
               startAngle={90}
               endAngle={-270}
             >
-              {data.map((slice) => (
+              {pieData.map((slice) => (
                 <Cell key={slice.label} fill={slice.color} />
               ))}
             </Pie>
             <Tooltip
               content={({ active, payload }) =>
-                active && payload?.length ? (
+                active && payload?.length && total > 0 ? (
                   <ChartTooltip
                     rows={[
                       {
@@ -366,22 +374,30 @@ export function GroupedBarsChart({
   series,
   formatValue = (value) => String(value),
   height = 260,
+  emptyAsGraph = false,
 }: {
   data: Record<string, string | number>[];
   series: SeriesKey[];
   formatValue?: (value: number) => string;
   height?: number;
+  emptyAsGraph?: boolean;
 }) {
   const colors = useChartColors();
+  const isEmpty =
+    data.length === 0 ||
+    data.every((row) => series.every((item) => !Number(row[item.key])));
 
-  if (data.every((row) => series.every((item) => !Number(row[item.key])))) {
+  if (isEmpty && !emptyAsGraph) {
     return <ChartPlaceholder />;
   }
+
+  const chartData =
+    data.length === 0 ? [{ label: "—" }] : data;
 
   return (
     <div>
       <ResponsiveContainer width="100%" height={height}>
-        <BarChart data={data} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
+        <BarChart data={chartData} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
           <CartesianGrid
             vertical={false}
             stroke={colors["--border"]}
@@ -399,6 +415,7 @@ export function GroupedBarsChart({
             axisLine={false}
             width={40}
             allowDecimals={false}
+            domain={isEmpty ? [0, 4] : [0, "auto"]}
             tick={{ fontSize: 11, fill: colors["--muted"] }}
             tickFormatter={(value: number) => formatValue(value)}
           />

@@ -214,13 +214,15 @@ function BulkDialogFrame({
     }
   };
 
+  const printableIds = result
+    ? result.results
+        .filter((row) => row.charge_id != null)
+        .map((row) => String(row.charge_id))
+    : [];
+
   const printAll = () => {
-    if (!result) return;
-    const ids = result.results
-      .filter((row) => row.charge_id != null)
-      .map((row) => String(row.charge_id));
-    if (ids.length === 0) return;
-    const url = `/dashboard/finance/accounts-receivable/vouchers/bulk-print?ids=${ids.join(",")}`;
+    if (printableIds.length === 0) return;
+    const url = `/dashboard/finance/accounts-receivable/vouchers/bulk-print?ids=${printableIds.join(",")}`;
     window.open(url, "_blank");
   };
 
@@ -505,9 +507,9 @@ function BulkDialogFrame({
             <Button type="button" variant="secondary" onClick={onClose}>
               Close
             </Button>
-            {result && result.created > 0 ? (
+            {printableIds.length > 0 ? (
               <Button type="button" variant="secondary" onClick={printAll}>
-                Print all ({result.created})
+                Print all ({printableIds.length})
               </Button>
             ) : null}
             <Button

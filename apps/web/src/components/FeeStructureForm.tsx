@@ -52,7 +52,15 @@ function formatMoney(value: number): string {
   });
 }
 
-export function FeeStructureForm({ feeStructure }: { feeStructure?: FeeStructure }) {
+export function FeeStructureForm({
+  feeStructure,
+  defaultAcademicYearId,
+  defaultClassRoomId,
+}: {
+  feeStructure?: FeeStructure;
+  defaultAcademicYearId?: string;
+  defaultClassRoomId?: string;
+}) {
   const router = useRouter();
   const isEdit = Boolean(feeStructure);
 
@@ -61,11 +69,15 @@ export function FeeStructureForm({ feeStructure }: { feeStructure?: FeeStructure
   const { items: feeHeads, loading: headsLoading } = useFeeHeads();
 
   const [academicYearId, setAcademicYearId] = useState(
-    feeStructure?.academic_year_id ? String(feeStructure.academic_year_id) : ""
+    feeStructure?.academic_year_id
+      ? String(feeStructure.academic_year_id)
+      : defaultAcademicYearId ?? ""
   );
   useAcademicYearDefault(years, academicYearId, setAcademicYearId);
   const [classRoomId, setClassRoomId] = useState(
-    feeStructure?.class_room_id ? String(feeStructure.class_room_id) : ""
+    feeStructure?.class_room_id
+      ? String(feeStructure.class_room_id)
+      : defaultClassRoomId ?? ""
   );
   const [name, setName] = useState(feeStructure?.name ?? "");
   const [isActive, setIsActive] = useState(feeStructure?.is_active ?? true);

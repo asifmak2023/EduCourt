@@ -325,6 +325,8 @@ class FeeCounterService
             'skipped' => $skipped,
             'errors' => $errors,
             'results' => $results,
+            'missing_structure' => $structure === null || $monthlyTotal <= 0,
+            'fee_structure_id' => $structure?->id,
         ];
     }
 

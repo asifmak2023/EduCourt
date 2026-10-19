@@ -90,6 +90,8 @@ class FeeCounterController extends Controller
             'skipped' => $summary['skipped'],
             'errors' => $summary['errors'],
             'results' => $summary['results'],
+            'missing_structure' => $summary['missing_structure'],
+            'fee_structure_id' => $summary['fee_structure_id'],
         ], 201);
     }
 

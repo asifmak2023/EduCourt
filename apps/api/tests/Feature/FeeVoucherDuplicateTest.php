@@ -98,6 +98,28 @@ class FeeVoucherDuplicateTest extends TestCase
         $this->assertSame(0, FeeCharge::query()->where('status', VoucherStatus::Void->value)->count());
     }
 
+    public function test_bulk_generation_flags_missing_monthly_structure(): void
+    {
+        FeeStructure::query()->delete();
+
+        $response = $this->asAdmin()
+            ->postJson('/api/v1/fee-counter/generate-bulk', [
+                'academic_year_id' => $this->year->id,
+                'class_room_id' => $this->classRoom->id,
+                'section_id' => $this->section->id,
+                'period_year' => 2026,
+                'period_month' => 7,
+            ])
+            ->assertStatus(201)
+            ->assertJsonPath('created', 0)
+            ->assertJsonPath('skipped', 2)
+            ->assertJsonPath('missing_structure', true)
+            ->json();
+
+        $this->assertSame('No monthly fee structure.', $response['results'][0]['message']);
+        $this->assertSame(0, FeeCharge::query()->count());
+    }
+
     public function test_single_generation_reuses_a_voucher_created_by_bulk(): void
     {
         $this->asAdmin()

@@ -93,7 +93,7 @@ function StructureDialogBody({
 
   const submit = async () => {
     if (!academicYearId || !classRoomId) {
-      setError("Student has no academic year or class. Cannot create a structure.");
+      setError("Select an academic year and class first.");
       return;
     }
 

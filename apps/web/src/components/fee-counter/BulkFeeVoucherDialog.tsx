@@ -9,8 +9,10 @@ import { AR_VIEW } from "@/lib/permissions";
 import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicYears, useClassRooms, useSections } from "@/lib/useLookups";
 import { Button, Field, Select, TextInput } from "@/components/Form";
+import { FeeStructureQuickCreateDialog } from "@/components/FeeStructureQuickCreateDialog";
 import { ErrorNotice, SuccessNotice } from "@/components/ui";
 import { currentMonthValue } from "@/lib/format";
+import type { FeeStructure } from "@/lib/types";
 
 interface BulkResultRow {
   student_id: number;
@@ -28,6 +30,8 @@ interface BulkResult {
   skipped: number;
   errors: number;
   results: BulkResultRow[];
+  missing_structure?: boolean;
+  fee_structure_id?: number | null;
 }
 
 export interface BulkFeeVoucherDialogProps {
@@ -81,6 +85,7 @@ function BulkDialogFrame({
   initialAcademicYearId?: string | number;
   initialSectionId?: string | number;
 }) {
+  const { can } = useAuth();
   const { items: years } = useAcademicYears();
   const { items: classes, loading: classesLoading } = useClassRooms();
   const { items: sections, loading: sectionsLoading } = useSections();
@@ -98,6 +103,11 @@ function BulkDialogFrame({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BulkResult | null>(null);
+  const [structure, setStructure] = useState<FeeStructure | null>(null);
+  const [resolvedFor, setResolvedFor] = useState("");
+  const [structureDialogOpen, setStructureDialogOpen] = useState(false);
+  const structureKey =
+    academicYearId && classId ? `${academicYearId}:${classId}` : "";
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -113,6 +123,42 @@ function BulkDialogFrame({
     };
   }, [onClose]);
 
+  useEffect(() => {
+    if (!structureKey) {
+      return;
+    }
+
+    const controller = new AbortController();
+    let active = true;
+    const [yearId, roomId] = structureKey.split(":");
+
+    const run = async () => {
+      try {
+        const response = await apiFetch<{ data: FeeStructure | null }>(
+          `/v1/fee-structures/resolve?academic_year_id=${yearId}&class_room_id=${roomId}`,
+          { signal: controller.signal }
+        );
+
+        if (active) {
+          setStructure(response.data);
+          setResolvedFor(structureKey);
+        }
+      } catch {
+        if (active) {
+          setStructure(null);
+          setResolvedFor(structureKey);
+        }
+      }
+    };
+
+    void run();
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [structureKey]);
+
   const filteredSections = useMemo(
     () =>
       sections.filter(
@@ -120,6 +166,17 @@ function BulkDialogFrame({
       ),
     [sections, classId]
   );
+
+  const selectedClass = classes.find((room) => String(room.id) === classId);
+  const structureChecked = resolvedFor === structureKey && structureKey !== "";
+  const monthlyTotal = Number(structure?.monthly_total ?? 0);
+  const missingStructure =
+    (structureChecked && (!structure || monthlyTotal <= 0)) ||
+    Boolean(result?.missing_structure);
+  const createStructureHref = academicYearId && classId
+    ? `/dashboard/finance/accounts-receivable/fee-structure/new?academic_year_id=${academicYearId}&class_room_id=${classId}`
+    : "/dashboard/finance/accounts-receivable/fee-structure/new";
+  const canCreateStructure = can("fee.create");
 
   const submit = async () => {
     if (!academicYearId || !classId || !month) {
@@ -246,12 +303,41 @@ function BulkDialogFrame({
             </div>
           ) : null}
 
+          {missingStructure ? (
+            <div className="mb-4 rounded-xl border border-warning/40 bg-warning/5 px-4 py-3 text-sm text-foreground">
+              <p className="font-medium">No monthly fee structure</p>
+              <p className="mt-0.5 text-muted">
+                This class has no monthly fee structure, so vouchers cannot be generated.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {canCreateStructure ? (
+                  <Button
+                    type="button"
+                    onClick={() => setStructureDialogOpen(true)}
+                  >
+                    Create fee structure
+                  </Button>
+                ) : null}
+                <Link
+                  href={createStructureHref}
+                  className="text-sm font-medium text-primary underline underline-offset-2"
+                  onClick={onClose}
+                >
+                  Open fee structure page →
+                </Link>
+              </div>
+            </div>
+          ) : null}
+
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Academic year" htmlFor="bulk_year" required>
               <Select
                 id="bulk_year"
                 value={academicYearId}
-                onChange={(event) => setAcademicYearId(event.target.value)}
+                onChange={(event) => {
+                  setAcademicYearId(event.target.value);
+                  setResult(null);
+                }}
               >
                 <option value="">Select year</option>
                 {years.map((year) => (
@@ -268,6 +354,7 @@ function BulkDialogFrame({
                 onChange={(event) => {
                   setClassId(event.target.value);
                   setSectionId("");
+                  setResult(null);
                 }}
               >
                 <option value="">Select class</option>
@@ -409,6 +496,21 @@ function BulkDialogFrame({
           </div>
         </div>
       </div>
+
+      <FeeStructureQuickCreateDialog
+        open={structureDialogOpen}
+        academicYearId={academicYearId ? Number(academicYearId) : null}
+        classRoomId={classId ? Number(classId) : null}
+        defaultName={
+          selectedClass ? `${selectedClass.name} fee structure` : ""
+        }
+        onClose={() => setStructureDialogOpen(false)}
+        onCreated={(created) => {
+          setStructure(created);
+          setResolvedFor(structureKey);
+          setResult(null);
+        }}
+      />
     </div>
   );
 }

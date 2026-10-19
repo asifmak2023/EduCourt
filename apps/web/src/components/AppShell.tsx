@@ -128,6 +128,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   function renderSidebar(isCollapsed: boolean) {
     return (
     <div className="app-glass app-sidebar flex h-full flex-col bg-surface-secondary text-foreground">
+      <div
+        className={`shrink-0 border-b border-border-secondary ${
+          isCollapsed ? "px-2 py-3" : "px-3 py-3"
+        }`}
+      >
+        <Link
+          href="/dashboard"
+          onClick={() => setMenuOpen(false)}
+          aria-label={t("navigation.home")}
+          title="EduCourt"
+          className={`flex items-center rounded-lg text-xl font-bold tracking-tight text-foreground ${
+            isCollapsed ? "justify-center py-1" : "gap-2 px-2.5 py-1"
+          }`}
+        >
+          <BrandMark className="h-[1em] w-[1em]" priority />
+          {isCollapsed ? null : (
+            <span className="brand-glow font-logo">EduCourt</span>
+          )}
+        </Link>
+      </div>
       <nav
         aria-label={t("navigation.primary")}
         tabIndex={0}
@@ -346,12 +366,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href="/dashboard"
                 onClick={() => setMenuOpen(false)}
                 aria-label={t("navigation.home")}
-                className="flex shrink-0 items-center gap-2"
+                className="brand-glow shrink-0 font-logo text-xl font-bold tracking-tight text-foreground lg:hidden"
               >
-                <BrandMark className="h-7 w-7" priority />
-                <span className="brand-glow font-logo text-xl font-bold tracking-tight text-foreground">
-                  EduCourt
-                </span>
+                EduCourt
               </Link>
             </div>
             <div className="min-w-0 text-center">

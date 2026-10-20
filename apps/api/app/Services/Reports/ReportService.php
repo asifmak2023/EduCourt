@@ -606,6 +606,79 @@ class ReportService
     }
 
     /**
+     * Cross-campus roll-up for an Institution Head.
+     *
+     * @return array<string, mixed>
+     */
+    public function institutionOverview(): array
+    {
+        $today = CarbonImmutable::today();
+        $campuses = Campus::query()->orderBy('name')->get();
+
+        $studentsByCampus = Student::query()
+            ->select('campus_id', DB::raw('count(*) as total'))
+            ->groupBy('campus_id')
+            ->pluck('total', 'campus_id');
+
+        $staffByCampus = StaffMember::query()
+            ->select('campus_id', DB::raw('count(*) as total'))
+            ->groupBy('campus_id')
+            ->pluck('total', 'campus_id');
+
+        $unpaid = FeeVoucher::query()
+            ->whereNotIn('status', [VoucherStatus::Void->value])
+            ->whereColumn('paid_amount', '<', 'amount');
+
+        $outstandingByCampus = (clone $unpaid)
+            ->select('campus_id', DB::raw('sum(amount - paid_amount) as total'))
+            ->groupBy('campus_id')
+            ->pluck('total', 'campus_id');
+
+        $collectedByCampus = FeePayment::query()
+            ->where('status', PaymentStatus::Posted->value)
+            ->whereBetween('payment_date', [
+                $today->startOfMonth()->toDateString(),
+                $today->endOfMonth()->toDateString(),
+            ])
+            ->select('campus_id', DB::raw('sum(amount) as total'))
+            ->groupBy('campus_id')
+            ->pluck('total', 'campus_id');
+
+        $collectedThisMonth = FeePayment::query()
+            ->where('status', PaymentStatus::Posted->value)
+            ->whereBetween('payment_date', [
+                $today->startOfMonth()->toDateString(),
+                $today->endOfMonth()->toDateString(),
+            ])
+            ->sum('amount');
+
+        return [
+            'as_on' => $today->toDateString(),
+            'totals' => [
+                'campuses' => $campuses->count(),
+                'students' => (int) Student::query()->count(),
+                'staff' => (int) StaffMember::query()->count(),
+                'active_enrollments' => (int) StudentEnrollment::query()->where('status', 'active')->count(),
+                'unpaid_vouchers' => (int) (clone $unpaid)->count(),
+                'outstanding_fees' => round(
+                    (float) (clone $unpaid)->sum('amount') - (float) (clone $unpaid)->sum('paid_amount'),
+                    2
+                ),
+                'fees_collected_this_month' => round((float) $collectedThisMonth, 2),
+            ],
+            'campuses' => $campuses->map(fn (Campus $campus) => [
+                'id' => $campus->id,
+                'name' => $campus->name,
+                'code' => $campus->code,
+                'students' => (int) ($studentsByCampus[$campus->id] ?? 0),
+                'staff' => (int) ($staffByCampus[$campus->id] ?? 0),
+                'outstanding_fees' => round((float) ($outstandingByCampus[$campus->id] ?? 0), 2),
+                'fees_collected_this_month' => round((float) ($collectedByCampus[$campus->id] ?? 0), 2),
+            ])->values(),
+        ];
+    }
+
+    /**
      * Cross-campus roll-up for the Super User / product owner.
      *
      * @return array<string, mixed>

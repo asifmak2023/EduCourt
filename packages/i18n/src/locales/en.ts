@@ -49,6 +49,7 @@ export const en = {
 
   "role.platformAdmin": "Platform Admin",
   "role.campusAdmin": "Campus Admin",
+  "role.institutionHead": "Institution Head",
   "role.principal": "Principal",
   "role.financeHead": "Finance Head",
   "role.accountant": "Accountant",
@@ -533,6 +534,10 @@ export const en = {
   "dashboard.admissionsPipeline": "Admissions pipeline",
   "dashboard.institutionsCompare": "Institutions compared",
   "dashboard.institutionsCompareHint": "Students and staff per institution",
+  "dashboard.campusesCompare": "Campuses compared",
+  "dashboard.campusesCompareHint": "Students and staff per campus",
+  "dashboard.noCampuses": "No campuses have been created yet.",
+  "dashboard.campus": "Campus",
   "dashboard.noChartData": "No data to chart yet.",
   "dashboard.totalVouchers": "Total vouchers",
   "dashboard.totalAdmissions": "Total admissions",

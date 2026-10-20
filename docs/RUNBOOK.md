@@ -45,6 +45,7 @@ php artisan test
 Seed credentials (development only):
 
 - Super User / product owner: superadmin@demo-eis.test / password
+- Institution head: institutionhead@demo-eis.test / password
 - Campus admin: campusadmin@demo-eis.test / password
 - Teacher: teacher@demo-eis.test / password
 

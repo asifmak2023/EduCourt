@@ -18,6 +18,12 @@ class RequireCampusContext
     public function handle(Request $request, Closure $next): Response
     {
         if ($this->context->campusId() === null) {
+            $user = $request->user();
+
+            if ($user?->isInstitutionHead() && $this->context->shouldEnforceInstitution()) {
+                return $next($request);
+            }
+
             abort(403, 'Select a campus (X-Campus-Id header) to access this resource.');
         }
 

@@ -9,6 +9,7 @@ const ACTIVE: SelectOption[] = [
 export const ROLE_OPTIONS: SelectOption[] = [
   { value: "platform_admin", label: "Super User (Product Owner)" },
   { value: "campus_admin", label: "Campus Admin" },
+  { value: "institution_head", label: "Institution Head" },
   { value: "principal", label: "Principal / Head" },
   { value: "finance_head", label: "Finance Head" },
   { value: "accountant", label: "Accountant" },

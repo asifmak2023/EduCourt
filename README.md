@@ -332,6 +332,7 @@ student readers so front-office staff can complete forms without holding the
 academic structure permission.
 
 Demo accounts (password `password`): `superadmin@demo-eis.test` (Super User),
+`institutionhead@demo-eis.test` (institution head, view-only across campuses),
 `campusadmin@demo-eis.test` (campus admin) and `teacher@demo-eis.test`. The
 demo seed also lays down a completed terminal exam (grade scale, exam type,
 papers and marks) so the exam and reporting screens have data out of the box;

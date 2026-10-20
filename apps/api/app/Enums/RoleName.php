@@ -15,6 +15,11 @@ enum RoleName: string
      */
     case CampusAdmin = 'campus_admin';
 
+    /**
+     * View-only oversight of every campus in one institution.
+     */
+    case InstitutionHead = 'institution_head';
+
     case Principal = 'principal';
     case FinanceHead = 'finance_head';
     case Accountant = 'accountant';
@@ -39,6 +44,7 @@ enum RoleName: string
         return match ($this) {
             self::PlatformAdmin => 'Super User (Product Owner)',
             self::CampusAdmin => 'Campus Admin',
+            self::InstitutionHead => 'Institution Head',
             self::Principal => 'Principal / Head',
             self::FinanceHead => 'Finance Head',
             self::Accountant => 'Accountant',
@@ -65,6 +71,7 @@ enum RoleName: string
         return match ($this) {
             self::PlatformAdmin => 'Owns the product. Creates institutions and the campus admin for each campus.',
             self::CampusAdmin => 'Runs one campus. Invokes and revokes staff roles and campus-wide access.',
+            self::InstitutionHead => 'View-only access across every campus of one institution. Cannot create, edit or delete records.',
             self::Principal => 'Campus-wide academic and operational oversight, with approval rights.',
             self::FinanceHead => 'Full finance, fees, payroll, scholarships and financial reports.',
             self::Accountant => 'Day-to-day fees, receipts, bookkeeping and reminders.',
@@ -89,7 +96,7 @@ enum RoleName: string
     public function department(): string
     {
         return match ($this) {
-            self::PlatformAdmin, self::CampusAdmin, self::Principal => 'administration',
+            self::PlatformAdmin, self::CampusAdmin, self::InstitutionHead, self::Principal => 'administration',
             self::FinanceHead, self::Accountant => 'finance',
             self::AdmissionsOfficer => 'admissions',
             self::HrOfficer => 'people',
@@ -130,6 +137,7 @@ enum RoleName: string
         return [
             self::PlatformAdmin,
             self::CampusAdmin,
+            self::InstitutionHead,
             self::FinanceHead,
             self::Accountant,
             self::HrOfficer,
@@ -144,7 +152,11 @@ enum RoleName: string
      */
     public static function restrictedToProductOwner(): array
     {
-        return [self::PlatformAdmin->value, self::CampusAdmin->value];
+        return [
+            self::PlatformAdmin->value,
+            self::CampusAdmin->value,
+            self::InstitutionHead->value,
+        ];
     }
 
     /**

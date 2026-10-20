@@ -29,7 +29,7 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function AttendanceOverview() {
+export function AttendanceOverview({ campusId }: { campusId?: number | null }) {
   const colors = useChartColors();
   const [report, setReport] = useState<AttendanceReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,7 +48,7 @@ export function AttendanceOverview() {
       try {
         const response = await apiFetch<{ data: AttendanceReport }>(
           `/v1/attendance/students/report?${query.toString()}`,
-          { signal: controller.signal }
+          { signal: controller.signal, campusId }
         );
 
         if (active) {
@@ -76,7 +76,7 @@ export function AttendanceOverview() {
       active = false;
       controller.abort();
     };
-  }, []);
+  }, [campusId]);
 
   const totals = report?.totals;
   const classes = report?.classes ?? [];

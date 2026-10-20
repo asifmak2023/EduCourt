@@ -29,7 +29,11 @@ export function roleSummary(
 }
 
 export const PORTAL_ROLES = new Set(["student", "parent_guardian"]);
-export const RESTRICTED_ROLES = new Set(["platform_admin", "campus_admin"]);
+export const RESTRICTED_ROLES = new Set([
+  "platform_admin",
+  "campus_admin",
+  "institution_head",
+]);
 
 export function formatAction(action: string): string {
   return action.replace(/_/g, " ");

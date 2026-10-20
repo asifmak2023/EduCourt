@@ -90,6 +90,52 @@ class TenantIsolationTest extends TestCase
         $this->assertTrue($ids->contains($userC->id));
     }
 
+    public function test_institution_head_sees_users_across_own_institution(): void
+    {
+        $head = $this->institutionHead($this->institutionA);
+        $userA = User::factory()->create(['institution_id' => $this->institutionA->id, 'campus_id' => $this->campusA->id]);
+        $userB = User::factory()->create(['institution_id' => $this->institutionA->id, 'campus_id' => $this->campusB->id]);
+        $userC = User::factory()->create(['institution_id' => $this->institutionB->id, 'campus_id' => $this->campusC->id]);
+
+        $ids = $this->visibleUserIds($head);
+
+        $this->assertTrue($ids->contains($userA->id));
+        $this->assertTrue($ids->contains($userB->id));
+        $this->assertFalse($ids->contains($userC->id));
+    }
+
+    public function test_institution_head_can_filter_to_one_campus(): void
+    {
+        $head = $this->institutionHead($this->institutionA);
+        $userA = User::factory()->create(['institution_id' => $this->institutionA->id, 'campus_id' => $this->campusA->id]);
+        $userB = User::factory()->create(['institution_id' => $this->institutionA->id, 'campus_id' => $this->campusB->id]);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer '.$head->createToken('t')->plainTextToken,
+            'X-Campus-Id' => (string) $this->campusA->id,
+        ])->getJson('/api/v1/users')->assertOk();
+
+        $ids = collect($response->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($userA->id));
+        $this->assertFalse($ids->contains($userB->id));
+    }
+
+    public function test_institution_head_cannot_select_a_campus_from_another_institution(): void
+    {
+        $head = $this->institutionHead($this->institutionA);
+        $foreignUser = User::factory()->create(['institution_id' => $this->institutionB->id, 'campus_id' => $this->campusC->id]);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer '.$head->createToken('t')->plainTextToken,
+            'X-Campus-Id' => (string) $this->campusC->id,
+        ])->getJson('/api/v1/users')->assertOk();
+
+        $ids = collect($response->json('data'))->pluck('id');
+
+        $this->assertFalse($ids->contains($foreignUser->id));
+    }
+
     public function test_product_owner_can_filter_to_one_campus(): void
     {
         $productOwner = User::factory()->create();
@@ -116,6 +162,17 @@ class TenantIsolationTest extends TestCase
             'campus_id' => $campus->id,
         ]);
         $user->syncRoles([RoleName::CampusAdmin->value]);
+
+        return $user;
+    }
+
+    private function institutionHead(Institution $institution): User
+    {
+        $user = User::factory()->create([
+            'institution_id' => $institution->id,
+            'campus_id' => null,
+        ]);
+        $user->syncRoles([RoleName::InstitutionHead->value]);
 
         return $user;
     }

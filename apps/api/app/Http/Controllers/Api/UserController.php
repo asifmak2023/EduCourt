@@ -102,6 +102,14 @@ class UserController extends Controller
         $this->authorizeRoleAssignment($request, $roles);
         $this->applyTenantScope($request, $data);
 
+        if (in_array(RoleName::InstitutionHead->value, $roles, true)) {
+            if (empty($data['institution_id'])) {
+                abort(422, 'An institution is required for an institution head.');
+            }
+
+            $data['campus_id'] = null;
+        }
+
         $user = User::create($data);
         $user->syncRoles($roles);
         $this->writeScopeAssignments($user, $roles, $request);
@@ -191,7 +199,7 @@ class UserController extends Controller
         $restricted = RoleName::restrictedToProductOwner();
 
         if (array_intersect($roles, $restricted) !== [] && ! $request->user()->isPlatformAdmin()) {
-            abort(403, 'Only the Super User (product owner) may create campus admin accounts.');
+            abort(403, 'Only the Super User (product owner) may create campus admin or institution head accounts.');
         }
     }
 
@@ -224,13 +232,15 @@ class UserController extends Controller
         $user->scopeAssignments()->delete();
 
         foreach ($roles as $role) {
+            $campusId = $role === RoleName::InstitutionHead->value ? null : $user->campus_id;
+
             ScopeAssignment::create([
                 'user_id' => $user->id,
                 'role' => $role,
                 'institution_id' => $user->institution_id,
-                'campus_id' => $user->campus_id,
-                'scope_type' => $user->campus_id !== null ? ScopeType::Campus : ScopeType::Institution,
-                'scope_id' => $user->campus_id,
+                'campus_id' => $campusId,
+                'scope_type' => $campusId !== null ? ScopeType::Campus : ScopeType::Institution,
+                'scope_id' => $campusId ?? $user->institution_id,
                 'granted_by' => $request->user()->id,
                 'is_active' => true,
             ]);

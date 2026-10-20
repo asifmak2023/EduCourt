@@ -33,12 +33,14 @@ import {
   useChartColors,
 } from "@/components/Charts";
 import type {
+  Campus,
   CampusDashboard,
+  InstitutionOverview,
   PlatformOverview,
   TimetableSlot,
 } from "@/lib/types";
 
-type Mode = "platform" | "campus" | "teacher" | "general";
+type Mode = "platform" | "institution" | "campus" | "teacher" | "general";
 
 const STATUS_KEYS: Record<string, MessageKey> = {
   enquiry: "status.enquiry",
@@ -71,6 +73,10 @@ function compactCurrency(value: number): string {
 function modeFor(user: AuthUser): Mode {
   if (user.roles.includes("platform_admin")) {
     return "platform";
+  }
+
+  if (user.roles.includes("institution_head")) {
+    return "institution";
   }
 
   if (user.permissions.includes("report.view")) {
@@ -109,11 +115,45 @@ export default function DashboardPage() {
   const { t } = useTranslation();
   const [campus, setCampus] = useState<CampusDashboard | null>(null);
   const [platform, setPlatform] = useState<PlatformOverview | null>(null);
+  const [institution, setInstitution] = useState<InstitutionOverview | null>(null);
+  const [campuses, setCampuses] = useState<Campus[]>([]);
+  const [campusFilter, setCampusFilter] = useState<number | null>(null);
   const [slots, setSlots] = useState<TimetableSlot[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const mode = user ? modeFor(user) : null;
+  const selectedCampus = campuses.find((item) => item.id === campusFilter) ?? null;
+
+  useEffect(() => {
+    if (!user || modeFor(user) !== "institution") {
+      return;
+    }
+
+    let active = true;
+
+    const loadCampuses = async () => {
+      try {
+        const response = await apiFetch<{ data: Campus[] }>(
+          "/v1/campuses?per_page=200"
+        );
+
+        if (active) {
+          setCampuses(response.data);
+        }
+      } catch {
+        if (active) {
+          setCampuses([]);
+        }
+      }
+    };
+
+    void loadCampuses();
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   useEffect(() => {
     if (!user) {
@@ -136,6 +176,27 @@ export default function DashboardPage() {
 
           if (active) {
             setPlatform(response.data);
+          }
+        } else if (resolved === "institution") {
+          if (campusFilter) {
+            const response = await apiFetch<{ data: CampusDashboard }>(
+              "/v1/reports/campus-dashboard",
+              { campusId: campusFilter }
+            );
+
+            if (active) {
+              setCampus(response.data);
+              setInstitution(null);
+            }
+          } else {
+            const response = await apiFetch<{ data: InstitutionOverview }>(
+              "/v1/reports/institution-overview"
+            );
+
+            if (active) {
+              setInstitution(response.data);
+              setCampus(null);
+            }
           }
         } else if (resolved === "campus") {
           const response = await apiFetch<{ data: CampusDashboard }>(
@@ -174,7 +235,7 @@ export default function DashboardPage() {
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [user, campusFilter]);
 
   if (!user) {
     return null;
@@ -184,11 +245,31 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <PageHeader
         title={`${t(greetingKey())}، \u2068${user.name.split(" ")[0]}\u2069`}
-        description={`${user.campus?.name ?? t("dashboard.allCampuses")} - ${roleSummary(user.roles, t)}`}
+        description={`${selectedCampus?.name ?? user.campus?.name ?? t("dashboard.allCampuses")} - ${roleSummary(user.roles, t)}`}
         actions={
-          <span dir="ltr" className="rounded-full bg-surface px-3 py-1 text-xs font-medium text-muted ring-1 ring-border-secondary">
-            {formatDate(new Date().toISOString())}
-          </span>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {mode === "institution" && campuses.length > 0 ? (
+              <select
+                value={campusFilter ?? ""}
+                onChange={(event) =>
+                  setCampusFilter(
+                    event.target.value === "" ? null : Number(event.target.value)
+                  )
+                }
+                className="rounded-lg border border-border-secondary bg-surface px-2.5 py-1.5 text-sm text-foreground"
+              >
+                <option value="">{t("dashboard.allCampuses")}</option>
+                {campuses.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+            <span dir="ltr" className="rounded-full bg-surface px-3 py-1 text-xs font-medium text-muted ring-1 ring-border-secondary">
+              {formatDate(new Date().toISOString())}
+            </span>
+          </div>
         }
       />
 
@@ -200,7 +281,11 @@ export default function DashboardPage() {
         <PlatformView overview={platform} />
       ) : null}
 
-      {!loading && mode === "campus" && campus ? (
+      {!loading && mode === "institution" && institution && !campusFilter ? (
+        <InstitutionView overview={institution} />
+      ) : null}
+
+      {!loading && (mode === "campus" || (mode === "institution" && campusFilter)) && campus ? (
         <CampusView dashboard={campus} />
       ) : null}
 
@@ -211,7 +296,7 @@ export default function DashboardPage() {
       {!loading && mode === "general" ? <GeneralView user={user} /> : null}
 
       {!loading && mode !== "platform" && user.permissions.includes("attendance.view") ? (
-        <AttendanceOverview />
+        <AttendanceOverview campusId={mode === "institution" ? campusFilter : undefined} />
       ) : null}
     </div>
   );
@@ -288,6 +373,99 @@ function PlatformView({ overview }: { overview: PlatformOverview }) {
                     <Table.Cell className="text-right">{institution.campuses}</Table.Cell>
                     <Table.Cell className="text-right">{institution.students}</Table.Cell>
                     <Table.Cell className="text-right">{institution.staff}</Table.Cell>
+                  </Table.Row>
+                ))}
+                </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function InstitutionView({ overview }: { overview: InstitutionOverview }) {
+  const { t } = useTranslation();
+  const colors = useChartColors();
+
+  const compared = [...overview.campuses]
+    .sort((a, b) => b.students - a.students)
+    .slice(0, 8)
+    .map((campus) => ({
+      label: campus.code || campus.name,
+      students: campus.students,
+      staff: campus.staff,
+    }));
+
+  return (
+    <div className="space-y-6">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="dashboard.campuses" value={formatNumber(overview.totals.campuses)} />
+        <StatCard label="dashboard.students" value={formatNumber(overview.totals.students)} />
+        <StatCard label="dashboard.staff" value={formatNumber(overview.totals.staff)} />
+        <StatCard
+          label="dashboard.activeEnrollments"
+          value={formatNumber(overview.totals.active_enrollments)}
+        />
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-2">
+        <StatCard
+          label="dashboard.outstandingFees"
+          value={formatCurrency(overview.totals.outstanding_fees)}
+          tone="danger"
+          hint={t("dashboard.unpaidVouchers", { count: overview.totals.unpaid_vouchers })}
+        />
+        <StatCard
+          label="dashboard.collectedThisMonth"
+          value={formatCurrency(overview.totals.fees_collected_this_month)}
+          tone="positive"
+        />
+      </section>
+
+      <ChartCard
+        title="dashboard.campusesCompare"
+        description="dashboard.campusesCompareHint"
+      >
+        <GroupedBarsChart
+          data={compared}
+          series={[
+            { key: "students", label: t("dashboard.students"), color: colors["--accent"] },
+            { key: "staff", label: t("dashboard.staff"), color: colors["--success"] },
+          ]}
+        />
+      </ChartCard>
+
+      <Card>
+        <div className="flex items-center justify-between border-b border-border-secondary px-5 py-4">
+          <h2 className="text-sm font-semibold text-foreground">{t("dashboard.campuses")}</h2>
+        </div>
+        {overview.campuses.length === 0 ? (
+          <EmptyState message="dashboard.noCampuses" />
+        ) : (
+          <div className="overflow-x-auto">
+            <Table variant="secondary">
+              <Table.ScrollContainer>
+                <Table.Content aria-label={t("dashboard.campuses")}>
+                <Table.Header>
+                  <Table.Column isRowHeader>{t("dashboard.campus")}</Table.Column>
+                  <Table.Column>{t("dashboard.code")}</Table.Column>
+                  <Table.Column className="text-right">{t("dashboard.students")}</Table.Column>
+                  <Table.Column className="text-right">{t("dashboard.staff")}</Table.Column>
+                  <Table.Column className="text-right">{t("dashboard.outstandingFees")}</Table.Column>
+                  <Table.Column className="text-right">{t("dashboard.collectedThisMonth")}</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                {overview.campuses.map((campus) => (
+                  <Table.Row key={campus.id} className="hover:bg-surface-secondary" id={campus.id}>
+                    <Table.Cell className="text-foreground">{campus.name}</Table.Cell>
+                    <Table.Cell className="text-muted">{campus.code ?? "-"}</Table.Cell>
+                    <Table.Cell className="text-right">{campus.students}</Table.Cell>
+                    <Table.Cell className="text-right">{campus.staff}</Table.Cell>
+                    <Table.Cell className="text-right">{formatCurrency(campus.outstanding_fees)}</Table.Cell>
+                    <Table.Cell className="text-right">{formatCurrency(campus.fees_collected_this_month)}</Table.Cell>
                   </Table.Row>
                 ))}
                 </Table.Body>

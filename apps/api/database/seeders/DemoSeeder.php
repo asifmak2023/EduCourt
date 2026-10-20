@@ -32,6 +32,7 @@ use App\Enums\RoleName;
 use App\Enums\ScholarshipAwardStatus;
 use App\Enums\ScholarshipDiscountType;
 use App\Enums\ScholarshipType;
+use App\Enums\ScopeType;
 use App\Enums\StudentStatus;
 use App\Enums\SubjectType;
 use App\Enums\SubstituteStatus;
@@ -180,6 +181,46 @@ class DemoSeeder extends Seeder
             ]
         );
 
+        Campus::firstOrCreate(
+            ['institution_id' => $institution->id, 'code' => 'NORTH'],
+            [
+                'name' => 'North Campus',
+                'type' => CampusType::School,
+                'academic_model' => 'school',
+                'term_system' => 'terms',
+                'grading_system' => 'percentage',
+                'credit_hours_enabled' => false,
+                'email' => 'north@demo-eis.test',
+                'is_active' => true,
+            ]
+        );
+
+        $institutionHead = User::firstOrCreate(
+            ['email' => 'institutionhead@demo-eis.test'],
+            [
+                'name' => 'Institution Head',
+                'password' => 'password',
+                'institution_id' => $institution->id,
+                'campus_id' => null,
+                'job_title' => 'Institution Head',
+                'is_active' => true,
+            ]
+        );
+        $institutionHead->syncRoles([RoleName::InstitutionHead->value]);
+        $institutionHead->scopeAssignments()->firstOrCreate(
+            [
+                'role' => RoleName::InstitutionHead->value,
+                'institution_id' => $institution->id,
+            ],
+            [
+                'campus_id' => null,
+                'scope_type' => ScopeType::Institution,
+                'scope_id' => $institution->id,
+                'granted_by' => $platformAdmin->id,
+                'is_active' => true,
+            ]
+        );
+
         $teacher = User::firstOrCreate(
             ['email' => 'teacher@demo-eis.test'],
             [
@@ -214,9 +255,10 @@ class DemoSeeder extends Seeder
         $this->seedLiabilities($institution, $campus);
 
         $this->command?->info('Demo users (password: password):');
-        $this->command?->info('  superadmin@demo-eis.test  Super User / product owner (all institutions)');
-        $this->command?->info('  campusadmin@demo-eis.test Campus admin (Main Campus)');
-        $this->command?->info('  teacher@demo-eis.test     Teacher (Main Campus)');
+        $this->command?->info('  superadmin@demo-eis.test       Super User / product owner (all institutions)');
+        $this->command?->info('  institutionhead@demo-eis.test  Institution head (all campuses, view only)');
+        $this->command?->info('  campusadmin@demo-eis.test      Campus admin (Main Campus)');
+        $this->command?->info('  teacher@demo-eis.test          Teacher (Main Campus)');
     }
 
     private function seedAcademics(Institution $institution, Campus $campus, User $teacher): void

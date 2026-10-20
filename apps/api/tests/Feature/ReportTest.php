@@ -267,6 +267,94 @@ class ReportTest extends TestCase
         $this->assertArrayHasKey('surplus', $financial);
     }
 
+    public function test_institution_overview_is_available_to_institution_head(): void
+    {
+        $otherCampus = Campus::create([
+            'institution_id' => $this->institution->id,
+            'name' => 'Campus B', 'code' => 'B', 'type' => CampusType::School->value,
+        ]);
+        Student::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $otherCampus->id,
+            'admission_no' => 'B-1',
+            'first_name' => 'Noor', 'last_name' => 'Khan', 'gender' => 'female',
+            'status' => 'active',
+        ]);
+
+        $head = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => null,
+        ]);
+        $head->syncRoles([RoleName::InstitutionHead->value]);
+
+        $data = $this->api($head)
+            ->getJson('/api/v1/reports/institution-overview')
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame(2, $data['totals']['campuses']);
+        $this->assertSame(3, $data['totals']['students']);
+        $this->assertCount(2, $data['campuses']);
+        $this->assertEqualsCanonicalizing(
+            [$this->campus->id, $otherCampus->id],
+            array_column($data['campuses'], 'id')
+        );
+    }
+
+    public function test_institution_head_can_filter_campus_dashboard(): void
+    {
+        $otherCampus = Campus::create([
+            'institution_id' => $this->institution->id,
+            'name' => 'Campus B', 'code' => 'B', 'type' => CampusType::School->value,
+        ]);
+        Student::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $otherCampus->id,
+            'admission_no' => 'B-1',
+            'first_name' => 'Noor', 'last_name' => 'Khan', 'gender' => 'female',
+            'status' => 'active',
+        ]);
+
+        $head = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => null,
+        ]);
+        $head->syncRoles([RoleName::InstitutionHead->value]);
+
+        $all = $this->api($head)
+            ->getJson('/api/v1/reports/campus-dashboard')
+            ->assertOk()
+            ->json('data');
+        $this->assertSame(3, $all['students_active']);
+
+        $filtered = $this->api($head)
+            ->withHeaders(['X-Campus-Id' => (string) $this->campus->id])
+            ->getJson('/api/v1/reports/campus-dashboard')
+            ->assertOk()
+            ->json('data');
+        $this->assertSame(2, $filtered['students_active']);
+    }
+
+    public function test_campus_admin_cannot_access_institution_overview(): void
+    {
+        $this->api($this->admin)
+            ->getJson('/api/v1/reports/institution-overview')
+            ->assertStatus(403);
+    }
+
+    public function test_institution_head_cannot_access_platform_overview(): void
+    {
+        $head = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => null,
+        ]);
+        $head->syncRoles([RoleName::InstitutionHead->value]);
+
+        $this->api($head)
+            ->getJson('/api/v1/reports/platform-overview')
+            ->assertStatus(403);
+    }
+
     public function test_platform_overview_is_available_to_super_user(): void
     {
         $super = User::factory()->create([

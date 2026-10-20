@@ -631,6 +631,28 @@ export interface PlatformOverview {
   }[];
 }
 
+export interface InstitutionOverview {
+  as_on: string;
+  totals: {
+    campuses: number;
+    students: number;
+    staff: number;
+    active_enrollments: number;
+    unpaid_vouchers: number;
+    outstanding_fees: number;
+    fees_collected_this_month: number;
+  };
+  campuses: {
+    id: number;
+    name: string;
+    code: string | null;
+    students: number;
+    staff: number;
+    outstanding_fees: number;
+    fees_collected_this_month: number;
+  }[];
+}
+
 export interface ChartOfAccount {
   id: number;
   parent_id: number | null;

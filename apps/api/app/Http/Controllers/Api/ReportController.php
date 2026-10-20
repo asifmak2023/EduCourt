@@ -18,6 +18,16 @@ class ReportController extends Controller
         return response()->json(['data' => $this->reports->campusDashboard()]);
     }
 
+    public function institutionOverview(Request $request): JsonResponse
+    {
+        abort_unless(
+            $request->user()?->isInstitutionHead() || $request->user()?->isPlatformAdmin(),
+            403
+        );
+
+        return response()->json(['data' => $this->reports->institutionOverview()]);
+    }
+
     public function progress(Request $request): JsonResponse
     {
         $filters = $request->validate([

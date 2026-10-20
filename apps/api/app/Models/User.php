@@ -84,6 +84,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasRole(RoleName::PlatformAdmin->value);
     }
 
+    public function isInstitutionHead(): bool
+    {
+        return $this->hasRole(RoleName::InstitutionHead->value);
+    }
+
     public function hasTwoFactorEnabled(): bool
     {
         return $this->two_factor_confirmed_at !== null;
@@ -116,6 +121,14 @@ class User extends Authenticatable implements MustVerifyEmail
             return [];
         }
 
+        if ($this->isInstitutionHead() && $this->institution_id !== null) {
+            return Campus::withoutGlobalScopes()
+                ->where('institution_id', $this->institution_id)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+        }
+
         $ids = ScopeAssignment::withoutGlobalScopes()
             ->where('user_id', $this->id)
             ->where('is_active', true)
@@ -134,6 +147,17 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         if ($this->isPlatformAdmin()) {
             return true;
+        }
+
+        if ($this->isInstitutionHead()) {
+            if ($this->institution_id === null) {
+                return false;
+            }
+
+            return Campus::withoutGlobalScopes()
+                ->whereKey($campusId)
+                ->where('institution_id', $this->institution_id)
+                ->exists();
         }
 
         $allowed = $this->allowedCampusIds();

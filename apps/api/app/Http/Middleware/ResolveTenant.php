@@ -13,6 +13,8 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * - The Super User (product owner) bypasses isolation and may optionally filter
  *   to a single campus with the X-Campus-Id header.
+ * - An Institution Head is isolated to their institution and may optionally
+ *   filter to one of its campuses with the X-Campus-Id header.
  * - Every other user is isolated to their institution and to a permitted
  *   campus.
  */
@@ -35,6 +37,18 @@ class ResolveTenant
 
         if ($user->isPlatformAdmin()) {
             $this->context->set(null, $requested, false, $requested !== null);
+
+            return $next($request);
+        }
+
+        if ($user->isInstitutionHead()) {
+            $campusId = null;
+
+            if ($requested !== null && $user->canAccessCampus($requested)) {
+                $campusId = $requested;
+            }
+
+            $this->context->set($user->institution_id, $campusId, true, $campusId !== null);
 
             return $next($request);
         }

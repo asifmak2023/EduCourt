@@ -164,7 +164,8 @@ class RbacTest extends TestCase
                 'modules',
             ])
             ->assertJsonFragment(['value' => RoleName::Teacher->value])
-            ->assertJsonFragment(['grantable_by_campus_admin' => false, 'value' => RoleName::CampusAdmin->value]);
+            ->assertJsonFragment(['grantable_by_campus_admin' => false, 'value' => RoleName::CampusAdmin->value])
+            ->assertJsonFragment(['grantable_by_campus_admin' => false, 'value' => RoleName::InstitutionHead->value]);
     }
 
     public function test_campus_admin_can_grant_and_revoke_a_local_role(): void
@@ -299,6 +300,71 @@ class RbacTest extends TestCase
                 'email' => 'rogue@example.test',
                 'password' => 'secret-password',
                 'roles' => [RoleName::CampusAdmin->value],
+            ])
+            ->assertStatus(403);
+    }
+
+    public function test_campus_admin_cannot_grant_institution_head_role(): void
+    {
+        $admin = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $admin->syncRoles([RoleName::CampusAdmin->value]);
+
+        $this->withToken($admin->createToken('t')->plainTextToken)
+            ->postJson('/api/v1/users', [
+                'name' => 'Sneaky Head',
+                'email' => 'sneaky-head@example.test',
+                'password' => 'secret-password',
+                'roles' => [RoleName::InstitutionHead->value],
+            ])
+            ->assertStatus(403);
+    }
+
+    public function test_product_owner_can_create_institution_head(): void
+    {
+        $owner = User::factory()->create();
+        $owner->syncRoles([RoleName::PlatformAdmin->value]);
+
+        $this->withToken($owner->createToken('t')->plainTextToken)
+            ->postJson('/api/v1/users', [
+                'name' => 'Trust Head',
+                'email' => 'head@example.test',
+                'password' => 'secret-password',
+                'institution_id' => $this->institution->id,
+                'campus_id' => $this->campus->id,
+                'roles' => [RoleName::InstitutionHead->value],
+            ])
+            ->assertStatus(201)
+            ->assertJsonPath('data.institution_id', $this->institution->id)
+            ->assertJsonPath('data.campus_id', null)
+            ->assertJsonPath('data.roles.0', RoleName::InstitutionHead->value);
+    }
+
+    public function test_institution_head_is_view_only(): void
+    {
+        $head = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => null,
+        ]);
+        $head->syncRoles([RoleName::InstitutionHead->value]);
+
+        $this->assertTrue($head->hasPermissionTo('student.view'));
+        $this->assertTrue($head->hasPermissionTo('report.view'));
+        $this->assertTrue($head->hasPermissionTo('fee.view'));
+        $this->assertFalse($head->hasPermissionTo('student.create'));
+        $this->assertFalse($head->hasPermissionTo('student.edit'));
+        $this->assertFalse($head->hasPermissionTo('student.delete'));
+        $this->assertFalse($head->hasPermissionTo('fee.create'));
+        $this->assertFalse($head->hasPermissionTo('user.create'));
+
+        $this->withToken($head->createToken('t')->plainTextToken)
+            ->postJson('/api/v1/users', [
+                'name' => 'Unauthorized Staff',
+                'email' => 'staff@example.test',
+                'password' => 'secret-password',
+                'roles' => [RoleName::Teacher->value],
             ])
             ->assertStatus(403);
     }

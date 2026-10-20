@@ -159,7 +159,7 @@ class ScopeAssignmentController extends Controller
         $restricted = RoleName::restrictedToProductOwner();
 
         if (in_array($role, $restricted, true) && ! $actor->isPlatformAdmin()) {
-            abort(403, 'Only the Super User (product owner) may grant or revoke campus admin accounts.');
+            abort(403, 'Only the Super User (product owner) may grant or revoke campus admin or institution head accounts.');
         }
 
         if (! $actor->isPlatformAdmin() && $target->hasAnyRole($restricted)) {

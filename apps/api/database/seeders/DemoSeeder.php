@@ -265,16 +265,30 @@ class DemoSeeder extends Seeder
     {
         $tenant = ['institution_id' => $institution->id, 'campus_id' => $campus->id];
 
-        $year = AcademicYear::firstOrCreate(
-            ['campus_id' => $campus->id, 'name' => '2026-2027'],
-            $tenant + [
-                'code' => 'AY-2026',
-                'starts_on' => '2026-04-01',
-                'ends_on' => '2027-03-31',
-                'status' => 'active',
-                'is_current' => true,
-            ]
-        );
+        foreach ([
+            ['2023-2024', 'AY-2023', '2023-04-01', '2024-03-31', 'closed', false],
+            ['2024-2025', 'AY-2024', '2024-04-01', '2025-03-31', 'closed', false],
+            ['2025-2026', 'AY-2025', '2025-04-01', '2026-03-31', 'active', false],
+            ['2026-2027', 'AY-2026', '2026-04-01', '2027-03-31', 'active', true],
+            ['2027-2028', 'AY-2027', '2027-04-01', '2028-03-31', 'draft', false],
+            ['2028-2029', 'AY-2028', '2028-04-01', '2029-03-31', 'draft', false],
+        ] as [$name, $code, $startsOn, $endsOn, $status, $isCurrent]) {
+            AcademicYear::firstOrCreate(
+                ['campus_id' => $campus->id, 'name' => $name],
+                $tenant + [
+                    'code' => $code,
+                    'starts_on' => $startsOn,
+                    'ends_on' => $endsOn,
+                    'status' => $status,
+                    'is_current' => $isCurrent,
+                ]
+            );
+        }
+
+        $year = AcademicYear::query()
+            ->where('campus_id', $campus->id)
+            ->where('name', '2026-2027')
+            ->firstOrFail();
 
         foreach ([
             ['Term 1', 1, '2026-04-01', '2026-08-31'],

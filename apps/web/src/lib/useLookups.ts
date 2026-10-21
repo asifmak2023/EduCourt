@@ -130,6 +130,71 @@ interface ListLookupState<T> {
   error: string | null;
 }
 
+function useAllPages<T>(path: string, enabled = true): ListLookupState<T> {
+  const [items, setItems] = useState<T[]>([]);
+  const [loading, setLoading] = useState(enabled);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
+    const controller = new AbortController();
+    let active = true;
+
+    const run = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const collected: T[] = [];
+        let page = 1;
+        let lastPage = 1;
+
+        do {
+          const separator = path.includes("?") ? "&" : "?";
+          const response = await apiFetch<Paginated<T>>(
+            `${path}${separator}page=${page}`,
+            { signal: controller.signal }
+          );
+
+          if (!active) {
+            return;
+          }
+
+          collected.push(...response.data);
+          lastPage = response.meta?.last_page ?? 1;
+          page += 1;
+        } while (page <= lastPage);
+
+        setItems(collected);
+      } catch (err: unknown) {
+        if (!active || (err instanceof DOMException && err.name === "AbortError")) {
+          return;
+        }
+
+        setError(
+          err instanceof ApiError ? err.message : "Unable to load options."
+        );
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void run();
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [path, enabled]);
+
+  return { items, loading, error };
+}
+
 function useCollection<T>(path: string | null): ListLookupState<T> {
   const [items, setItems] = useState<T[]>([]);
   const [loading, setLoading] = useState(path !== null);
@@ -231,7 +296,7 @@ function useAcademicCollection<T>(
 export function useAcademicYears(
   enabled = true
 ): ListLookupState<AcademicYear> {
-  return useAcademicCollection<AcademicYear>(
+  return useAllPages<AcademicYear>(
     "/v1/academic-years?per_page=100",
     enabled
   );

@@ -13,6 +13,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/Form";
+import { AcademicYearSelect } from "@/components/AcademicYearSelect";
 import { Card, ErrorNotice, PageHeader } from "@/components/ui";
 import { currentAcademicYearId } from "@/lib/academicYear";
 import { currentMonthValue } from "@/lib/format";
@@ -239,19 +240,32 @@ export function MasterForm({
                   className={spanClass}
                 >
                   {field.type === "select" ? (
-                    <Select
-                      id={id}
-                      value={String(values[field.name] ?? "")}
-                      disabled={isEdit && field.readOnlyOnEdit}
-                      onChange={(event) => setValue(field.name, event.target.value)}
-                    >
-                      <option value="">{field.placeholder ?? "Select"}</option>
-                      {(field.options ?? []).map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </Select>
+                    field.name === "academic_year_id" ? (
+                      <AcademicYearSelect
+                        id={id}
+                        value={String(values[field.name] ?? "")}
+                        disabled={isEdit && field.readOnlyOnEdit}
+                        placeholder={field.placeholder ?? "Select"}
+                        options={field.options ?? []}
+                        onChange={(event) =>
+                          setValue(field.name, event.target.value)
+                        }
+                      />
+                    ) : (
+                      <Select
+                        id={id}
+                        value={String(values[field.name] ?? "")}
+                        disabled={isEdit && field.readOnlyOnEdit}
+                        onChange={(event) => setValue(field.name, event.target.value)}
+                      >
+                        <option value="">{field.placeholder ?? "Select"}</option>
+                        {(field.options ?? []).map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </Select>
+                    )
                   ) : field.type === "textarea" ? (
                     <TextArea
                       id={id}

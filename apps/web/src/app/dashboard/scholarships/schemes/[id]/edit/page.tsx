@@ -81,9 +81,9 @@ export default function EditScholarshipPage() {
           },
           {
             name: "academic_year_id",
-            label: "Academic year",
+            label: "Session",
             type: "select",
-            placeholder: "Optional",
+            placeholder: "Any session",
             options: academicYearSelectOptions(years),
           },
           { name: "sponsor", label: "Sponsor", type: "text" },

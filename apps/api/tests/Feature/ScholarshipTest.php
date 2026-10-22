@@ -251,6 +251,35 @@ class ScholarshipTest extends TestCase
         $this->assertSame(24000.0, (float) FeeVoucher::query()->where('student_id', $this->ali->id)->sum('amount'));
     }
 
+    public function test_scholarship_can_be_archived_by_deactivating(): void
+    {
+        $scholarship = $this->scholarship();
+
+        $this->as($this->admin)->putJson("/api/v1/scholarships/{$scholarship->id}", [
+            'is_active' => false,
+        ])->assertOk()->assertJsonPath('data.is_active', false);
+
+        $this->as($this->admin)->getJson('/api/v1/scholarships?is_active=1')
+            ->assertOk()
+            ->assertJsonMissing(['id' => $scholarship->id]);
+
+        $this->as($this->admin)->getJson('/api/v1/scholarships?is_active=0')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $scholarship->id);
+    }
+
+    public function test_inactive_scholarship_cannot_be_awarded(): void
+    {
+        $scholarship = $this->scholarship();
+        $scholarship->update(['is_active' => false]);
+
+        $this->as($this->admin)->postJson('/api/v1/scholarship-awards', [
+            'scholarship_id' => $scholarship->id,
+            'student_id' => $this->ali->id,
+            'academic_year_id' => $this->year->id,
+        ])->assertStatus(422)->assertJsonValidationErrors('scholarship_id');
+    }
+
     public function test_teacher_cannot_manage_scholarships(): void
     {
         $this->as($this->teacher)->getJson('/api/v1/scholarships')->assertStatus(403);

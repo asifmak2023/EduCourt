@@ -27,7 +27,7 @@ export default function NewScholarshipAwardPage() {
 
 function AwardForm() {
   const router = useRouter();
-  const { items: scholarships, loading } = useScholarships();
+  const { items: scholarships, loading } = useScholarships(true, true);
   const { items: students } = useStudents();
   const { items: years } = useAcademicYears();
 

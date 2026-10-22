@@ -303,9 +303,13 @@ export function useSyllabusUnits(enabled = true): ListLookupState<SyllabusUnit> 
   );
 }
 
-export function useScholarships(enabled = true): ListLookupState<Scholarship> {
+export function useScholarships(
+  enabled = true,
+  activeOnly = false
+): ListLookupState<Scholarship> {
+  const query = activeOnly ? "&is_active=1" : "";
   return useCollection<Scholarship>(
-    enabled ? "/v1/scholarships?per_page=200" : null
+    enabled ? `/v1/scholarships?per_page=200${query}` : null
   );
 }
 

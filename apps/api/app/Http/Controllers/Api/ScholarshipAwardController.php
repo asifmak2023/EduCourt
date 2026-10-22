@@ -40,7 +40,10 @@ class ScholarshipAwardController extends Controller
         $data = $request->validate([
             'scholarship_id' => [
                 'required', 'integer',
-                Rule::exists('scholarships', 'id')->where('campus_id', $tenant['campus_id'])->whereNull('deleted_at'),
+                Rule::exists('scholarships', 'id')
+                    ->where('campus_id', $tenant['campus_id'])
+                    ->where('is_active', true)
+                    ->whereNull('deleted_at'),
             ],
             'student_id' => [
                 'required', 'integer',

@@ -41,6 +41,8 @@ export function MasterList<T extends { id: number }>({
   createPermission,
   createLabel = "New",
   editHref,
+  defaultFilters,
+  rowActions,
 }: {
   title: string;
   description?: string;
@@ -53,9 +55,13 @@ export function MasterList<T extends { id: number }>({
   createPermission?: string;
   createLabel?: string;
   editHref?: (item: T) => string;
+  defaultFilters?: Record<string, string>;
+  rowActions?: (item: T, helpers: { reload: () => void }) => ReactNode;
 }) {
   const { can } = useAuth();
-  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const [filterValues, setFilterValues] = useState<Record<string, string>>(
+    () => ({ ...defaultFilters })
+  );
 
   const yearFilter = filters.find(
     (filter) => filter.param === "academic_year_id"
@@ -81,7 +87,7 @@ export function MasterList<T extends { id: number }>({
     if (value) params[filter.param] = value;
   }
 
-  const { items, meta, loading, error, page, setPage, search, setSearch } =
+  const { items, meta, loading, error, page, setPage, search, setSearch, reload } =
     useList<T>(endpoint, params);
 
   const canCreate = createHref && (!createPermission || can(createPermission));
@@ -162,6 +168,11 @@ export function MasterList<T extends { id: number }>({
                       {column.header}
                     </Table.Column>
                   ))}
+                  {rowActions ? (
+                    <Table.Column key="actions" className="text-right">
+                      Actions
+                    </Table.Column>
+                  ) : null}
                 </Table.Header>
                 <Table.Body>
                   {items.map((item) => (
@@ -185,6 +196,11 @@ export function MasterList<T extends { id: number }>({
                           )}
                         </Table.Cell>
                       ))}
+                      {rowActions ? (
+                        <Table.Cell key="actions" className="text-right">
+                          {rowActions(item, { reload })}
+                        </Table.Cell>
+                      ) : null}
                     </Table.Row>
                   ))}
                 </Table.Body>

@@ -314,6 +314,15 @@ class ScholarshipTest extends TestCase
         $this->as($this->admin)->getJson('/api/v1/scholarship-awards')
             ->assertOk()
             ->assertJsonPath('summary.total_awarded', '8000.00');
+
+        $this->as($this->admin)->getJson('/api/v1/scholarship-awards?from=2026-04-01&to=2027-03-31')
+            ->assertOk()
+            ->assertJsonPath('summary.total_awarded', '8000.00');
+
+        $this->as($this->admin)->getJson('/api/v1/scholarship-awards?from=2028-04-01&to=2029-03-31')
+            ->assertOk()
+            ->assertJsonPath('summary.total_awarded', '0.00')
+            ->assertJsonPath('meta.total', 0);
     }
 
     public function test_teacher_cannot_manage_scholarships(): void

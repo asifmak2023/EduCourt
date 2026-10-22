@@ -50,6 +50,8 @@ export default function ScholarshipAwardsPage() {
             { value: "revoked", label: "Revoked" },
           ],
         },
+        { param: "from", placeholder: "From date", type: "date" },
+        { param: "to", placeholder: "To date", type: "date" },
       ]}
       columns={[
         {

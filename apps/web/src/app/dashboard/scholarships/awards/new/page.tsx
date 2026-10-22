@@ -128,7 +128,7 @@ function AwardForm() {
               ))}
             </Select>
           </Field>
-          <Field label="Academic year" htmlFor="award_year">
+          <Field label="Academic year" htmlFor="award_year" required>
             <Select
               id="award_year"
               value={academicYearId}
@@ -137,7 +137,7 @@ function AwardForm() {
                 setDatesTouched(false);
               }}
             >
-              <option value="">Optional</option>
+              <option value="">Select session</option>
               {years.map((year) => (
                 <option key={year.id} value={year.id}>
                   {year.name}
@@ -203,7 +203,7 @@ function AwardForm() {
           <Button
             type="button"
             loading={busy}
-            disabled={!scholarshipId || !studentId || !durationStart || !durationEnd}
+            disabled={!scholarshipId || !studentId || !academicYearId || !durationStart || !durationEnd}
             onClick={submit}
           >
             Award

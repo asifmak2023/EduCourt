@@ -26,7 +26,25 @@ class ScholarshipAwardController extends Controller
             ->when($request->filled('scholarship_id'), fn ($q) => $q->where('scholarship_id', $request->integer('scholarship_id')))
             ->when($request->filled('student_id'), fn ($q) => $q->where('student_id', $request->integer('student_id')))
             ->when($request->filled('academic_year_id'), fn ($q) => $q->where('academic_year_id', $request->integer('academic_year_id')))
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()));
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))
+            ->when($request->filled('from'), function ($query) use ($request) {
+                $from = $request->date('from')->toDateString();
+                $query->where(function ($inner) use ($from) {
+                    $inner->whereDate('ends_on', '>=', $from)
+                        ->orWhere(function ($missing) use ($from) {
+                            $missing->whereNull('ends_on')->whereDate('awarded_on', '>=', $from);
+                        });
+                });
+            })
+            ->when($request->filled('to'), function ($query) use ($request) {
+                $to = $request->date('to')->toDateString();
+                $query->where(function ($inner) use ($to) {
+                    $inner->whereDate('starts_on', '<=', $to)
+                        ->orWhere(function ($missing) use ($to) {
+                            $missing->whereNull('starts_on')->whereDate('awarded_on', '<=', $to);
+                        });
+                });
+            });
 
         $totalAwarded = (clone $query)->get()->sum(
             fn (ScholarshipAward $award) => $scholarships->awardedAmountFor($award)
@@ -63,7 +81,7 @@ class ScholarshipAwardController extends Controller
                 Rule::exists('students', 'id')->where('campus_id', $tenant['campus_id'])->whereNull('deleted_at'),
             ],
             'academic_year_id' => [
-                'nullable', 'integer',
+                'required', 'integer',
                 Rule::exists('academic_years', 'id')->where('campus_id', $tenant['campus_id'])->whereNull('deleted_at'),
             ],
             'awarded_on' => ['nullable', 'date'],

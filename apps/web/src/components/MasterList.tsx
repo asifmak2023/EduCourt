@@ -30,7 +30,8 @@ export interface MasterListColumn<T> {
 export interface MasterListFilter {
   param: string;
   placeholder: string;
-  options: { value: string; label: string; is_current?: boolean }[];
+  type?: "select" | "date";
+  options?: { value: string; label: string; is_current?: boolean }[];
 }
 
 export function MasterList<T extends { id: number }>({
@@ -70,10 +71,11 @@ export function MasterList<T extends { id: number }>({
   const yearFilter = filters.find(
     (filter) => filter.param === "academic_year_id"
   );
+  const yearOptions = yearFilter?.options ?? [];
   const defaultYearId =
-    yearFilter && yearFilter.options.length > 0
+    yearOptions.length > 0
       ? currentAcademicYearId(
-          yearFilter.options.map((option) => ({
+          yearOptions.map((option) => ({
             id: option.value,
             is_current: option.is_current,
           }))
@@ -141,23 +143,38 @@ export function MasterList<T extends { id: number }>({
         <div className="flex flex-wrap gap-3">
           {filters.map((filter) => (
             <div key={filter.param} className="w-52">
-              <Select
-                value={effectiveFilterValues[filter.param] ?? ""}
-                onChange={(event) => {
-                  setPage(1);
-                  setFilterValues((current) => ({
-                    ...current,
-                    [filter.param]: event.target.value,
-                  }));
-                }}
-              >
-                <option value="">{filter.placeholder}</option>
-                {filter.options.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
+              {filter.type === "date" ? (
+                <TextInput
+                  type="date"
+                  value={effectiveFilterValues[filter.param] ?? ""}
+                  aria-label={filter.placeholder}
+                  onChange={(event) => {
+                    setPage(1);
+                    setFilterValues((current) => ({
+                      ...current,
+                      [filter.param]: event.target.value,
+                    }));
+                  }}
+                />
+              ) : (
+                <Select
+                  value={effectiveFilterValues[filter.param] ?? ""}
+                  onChange={(event) => {
+                    setPage(1);
+                    setFilterValues((current) => ({
+                      ...current,
+                      [filter.param]: event.target.value,
+                    }));
+                  }}
+                >
+                  <option value="">{filter.placeholder}</option>
+                  {(filter.options ?? []).map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+              )}
             </div>
           ))}
         </div>

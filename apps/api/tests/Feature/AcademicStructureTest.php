@@ -76,6 +76,17 @@ class AcademicStructureTest extends TestCase
         ])->assertStatus(422)->assertJsonValidationErrors('stage_id');
     }
 
+    public function test_academic_year_name_is_unique_per_campus(): void
+    {
+        $this->year($this->campusA, '2026-2027', 'AY-A');
+
+        $this->apiPost('/api/v1/academic-years', [
+            'name' => '2026-2027',
+            'starts_on' => '2026-04-01',
+            'ends_on' => '2027-03-31',
+        ])->assertStatus(422)->assertJsonValidationErrors('name');
+    }
+
     public function test_academic_year_and_term_can_be_created(): void
     {
         $year = $this->apiPost('/api/v1/academic-years', [

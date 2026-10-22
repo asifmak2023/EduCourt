@@ -40,7 +40,10 @@ class AcademicYearController extends Controller
         $tenant = $this->academicTenantAttributes();
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:64'],
+            'name' => [
+                'required', 'string', 'max:64',
+                Rule::unique('academic_years', 'name')->where('campus_id', $tenant['campus_id']),
+            ],
             'code' => [
                 'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('academic_years', 'code')->where('campus_id', $tenant['campus_id']),
@@ -75,7 +78,12 @@ class AcademicYearController extends Controller
     public function update(Request $request, AcademicYear $academicYear): AcademicYearResource
     {
         $data = $request->validate([
-            'name' => ['sometimes', 'string', 'max:64'],
+            'name' => [
+                'sometimes', 'string', 'max:64',
+                Rule::unique('academic_years', 'name')
+                    ->where('campus_id', $academicYear->campus_id)
+                    ->ignore($academicYear->id),
+            ],
             'code' => [
                 'sometimes', 'nullable', 'string', 'max:32',
                 Rule::unique('academic_years', 'code')

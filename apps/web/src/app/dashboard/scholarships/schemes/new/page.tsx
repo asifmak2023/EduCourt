@@ -1,6 +1,5 @@
 "use client";
 
-import { academicYearSelectOptions } from "@/lib/academicYear";
 import { useAcademicYears } from "@/lib/useLookups";
 import { MasterForm } from "@/components/MasterForm";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -27,6 +26,7 @@ export default function NewScholarshipPage() {
         description="Define a fee concession scheme."
         endpoint="/v1/scholarships"
         redirectTo="/dashboard/scholarships/schemes"
+        academicYears={years}
         initial={{ type: "merit", discount_type: "percentage", is_active: true }}
         fields={[
           { name: "name", label: "Name", type: "text", required: true, span: 2 },
@@ -58,10 +58,9 @@ export default function NewScholarshipPage() {
           },
           {
             name: "academic_year_id",
-            label: "Academic year",
+            label: "Session",
             type: "select",
             placeholder: "Optional",
-            options: academicYearSelectOptions(years),
           },
           { name: "sponsor", label: "Sponsor", type: "text" },
           {

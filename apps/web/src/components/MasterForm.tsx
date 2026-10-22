@@ -13,9 +13,11 @@ import {
   TextArea,
   TextInput,
 } from "@/components/Form";
+import { AcademicYearSelect } from "@/components/AcademicYearSelect";
 import { Card, ErrorNotice, PageHeader } from "@/components/ui";
 import { currentAcademicYearId } from "@/lib/academicYear";
 import { currentMonthValue } from "@/lib/format";
+import type { AcademicYear } from "@/lib/types";
 
 export interface MasterField {
   name: string;
@@ -45,6 +47,7 @@ export function MasterForm({
   submitLabel,
   cancelHref,
   nextCodeQueryFields,
+  academicYears,
 }: {
   title: string;
   description?: string;
@@ -56,6 +59,7 @@ export function MasterForm({
   submitLabel?: string;
   cancelHref?: string;
   nextCodeQueryFields?: string[];
+  academicYears?: readonly AcademicYear[];
 }) {
   const router = useRouter();
   const isEdit = recordId !== undefined;
@@ -71,10 +75,11 @@ export function MasterForm({
       }
       if (field.name === "academic_year_id" && field.type === "select") {
         const yearId = currentAcademicYearId(
-          (field.options ?? []).map((option) => ({
-            id: option.value,
-            is_current: option.is_current,
-          }))
+          academicYears ??
+            (field.options ?? []).map((option) => ({
+              id: option.value,
+              is_current: option.is_current,
+            }))
         );
         if (yearId) {
           next[field.name] = yearId;
@@ -83,6 +88,7 @@ export function MasterForm({
     }
     return next;
   });
+  const [createdYears, setCreatedYears] = useState<AcademicYear[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -239,19 +245,40 @@ export function MasterForm({
                   className={spanClass}
                 >
                   {field.type === "select" ? (
-                    <Select
-                      id={id}
-                      value={String(values[field.name] ?? "")}
-                      disabled={isEdit && field.readOnlyOnEdit}
-                      onChange={(event) => setValue(field.name, event.target.value)}
-                    >
-                      <option value="">{field.placeholder ?? "Select"}</option>
-                      {(field.options ?? []).map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </Select>
+                    field.name === "academic_year_id" && academicYears ? (
+                      <AcademicYearSelect
+                        id={id}
+                        value={String(values[field.name] ?? "")}
+                        years={academicYears}
+                        extraYears={createdYears}
+                        disabled={isEdit && field.readOnlyOnEdit}
+                        placeholder={field.placeholder ?? "Select"}
+                        onChange={(event) =>
+                          setValue(field.name, event.target.value)
+                        }
+                        onCreated={(year) =>
+                          setCreatedYears((current) =>
+                            current.some((item) => item.id === year.id)
+                              ? current
+                              : [...current, year]
+                          )
+                        }
+                      />
+                    ) : (
+                      <Select
+                        id={id}
+                        value={String(values[field.name] ?? "")}
+                        disabled={isEdit && field.readOnlyOnEdit}
+                        onChange={(event) => setValue(field.name, event.target.value)}
+                      >
+                        <option value="">{field.placeholder ?? "Select"}</option>
+                        {(field.options ?? []).map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </Select>
+                    )
                   ) : field.type === "textarea" ? (
                     <TextArea
                       id={id}

@@ -1,7 +1,6 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { academicYearSelectOptions } from "@/lib/academicYear";
 import { useAcademicYears } from "@/lib/useLookups";
 import { useResource } from "@/lib/useResource";
 import { MasterForm } from "@/components/MasterForm";
@@ -39,6 +38,7 @@ export default function EditScholarshipPage() {
         endpoint="/v1/scholarships"
         recordId={data.id}
         redirectTo="/dashboard/scholarships/schemes"
+        academicYears={years}
         initial={{
           name: data.name,
           code: data.code,
@@ -81,10 +81,9 @@ export default function EditScholarshipPage() {
           },
           {
             name: "academic_year_id",
-            label: "Academic year",
+            label: "Session",
             type: "select",
             placeholder: "Optional",
-            options: academicYearSelectOptions(years),
           },
           { name: "sponsor", label: "Sponsor", type: "text" },
           {

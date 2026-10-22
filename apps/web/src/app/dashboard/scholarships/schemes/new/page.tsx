@@ -58,9 +58,9 @@ export default function NewScholarshipPage() {
           },
           {
             name: "academic_year_id",
-            label: "Session",
+            label: "Academic year",
             type: "select",
-            placeholder: "Any session",
+            placeholder: "Optional",
             options: academicYearSelectOptions(years),
           },
           { name: "sponsor", label: "Sponsor", type: "text" },

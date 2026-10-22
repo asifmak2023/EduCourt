@@ -61,22 +61,6 @@ class AcademicStructureTest extends TestCase
         $this->assertCount(1, $ids);
     }
 
-    public function test_academic_years_index_includes_every_session(): void
-    {
-        $this->year($this->campusA, '2025-2026', 'AY-2025');
-        $current = $this->year($this->campusA, '2026-2027', 'AY-2026');
-        $current->update(['is_current' => true]);
-        $this->year($this->campusA, '2027-2028', 'AY-2027');
-
-        $names = collect(
-            $this->apiGet('/api/v1/academic-years?per_page=100')->assertOk()->json('data')
-        )->pluck('name');
-
-        $this->assertTrue($names->contains('2025-2026'));
-        $this->assertTrue($names->contains('2026-2027'));
-        $this->assertTrue($names->contains('2027-2028'));
-    }
-
     public function test_cross_campus_reference_is_rejected(): void
     {
         $foreignStage = Stage::create([

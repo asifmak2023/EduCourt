@@ -15,13 +15,11 @@ export function currentAcademicYearId(
 export function academicYearSelectOptions(
   years: readonly { id: number | string; name: string; is_current?: boolean }[]
 ): { value: string; label: string; is_current: boolean }[] {
-  return [...years]
-    .sort((left, right) => Number(Boolean(right.is_current)) - Number(Boolean(left.is_current)))
-    .map((year) => ({
-      value: String(year.id),
-      label: year.name,
-      is_current: Boolean(year.is_current),
-    }));
+  return years.map((year) => ({
+    value: String(year.id),
+    label: year.name,
+    is_current: Boolean(year.is_current),
+  }));
 }
 
 export function useAcademicYearDefault(

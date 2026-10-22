@@ -4,7 +4,7 @@ import { academicYearSelectOptions } from "@/lib/academicYear";
 import { useAcademicYears } from "@/lib/useLookups";
 import { MasterForm } from "@/components/MasterForm";
 import { PermissionGate } from "@/components/PermissionGate";
-import { ErrorNotice, Spinner } from "@/components/ui";
+import { Spinner } from "@/components/ui";
 
 const TYPE_OPTIONS = [
   { value: "merit", label: "Merit" },
@@ -16,10 +16,9 @@ const TYPE_OPTIONS = [
 ];
 
 export default function NewScholarshipPage() {
-  const { items: years, loading, error } = useAcademicYears();
+  const { items: years, loading } = useAcademicYears();
 
   if (loading) return <Spinner />;
-  if (error) return <ErrorNotice message={error} />;
 
   return (
     <PermissionGate permission="scholarship.create">

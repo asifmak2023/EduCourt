@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useScholarships, useStudents } from "@/lib/useLookups";
 import { MasterList } from "@/components/MasterList";
 import { Badge } from "@/components/ui";
-import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type { ScholarshipAward } from "@/lib/types";
 
 export default function ScholarshipAwardsPage() {
@@ -55,22 +55,25 @@ export default function ScholarshipAwardsPage() {
         {
           header: "Student",
           render: (award) => award.student?.name ?? `#${award.student_id}`,
+          footer: () => "Grand total",
         },
         {
           header: "Scholarship",
           render: (award) => award.scholarship?.name ?? "-",
         },
         {
-          header: "Awarded",
-          render: (award) => formatDate(award.awarded_on),
+          header: "Duration",
+          render: (award) =>
+            award.starts_on && award.ends_on
+              ? `${formatDate(award.starts_on)} – ${formatDate(award.ends_on)}`
+              : formatDate(award.awarded_on),
         },
         {
           header: "Value",
           align: "right",
-          render: (award) =>
-            award.scholarship?.discount_type === "fixed"
-              ? formatCurrency(award.effective_value ?? null)
-              : `${formatNumber(award.effective_value ?? null)}%`,
+          render: (award) => formatCurrency(award.awarded_amount ?? null),
+          footer: ({ summary }) =>
+            formatCurrency(summary?.total_awarded ?? 0),
         },
         {
           header: "Status",

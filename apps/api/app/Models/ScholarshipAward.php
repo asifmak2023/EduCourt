@@ -18,8 +18,8 @@ class ScholarshipAward extends Model
 
     protected $fillable = [
         'institution_id', 'campus_id', 'scholarship_id', 'student_id',
-        'academic_year_id', 'awarded_on', 'status', 'value_override', 'notes',
-        'approved_by', 'revoked_on',
+        'academic_year_id', 'awarded_on', 'starts_on', 'ends_on', 'status',
+        'value_override', 'notes', 'approved_by', 'revoked_on',
     ];
 
     protected function casts(): array
@@ -27,6 +27,8 @@ class ScholarshipAward extends Model
         return [
             'status' => ScholarshipAwardStatus::class,
             'awarded_on' => 'date',
+            'starts_on' => 'date',
+            'ends_on' => 'date',
             'revoked_on' => 'date',
             'value_override' => 'decimal:2',
         ];

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ScholarshipAwardResource;
 use App\Models\ScholarshipAward;
+use App\Services\Scholarships\ScholarshipService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,22 +19,34 @@ class ScholarshipAwardController extends Controller
 {
     use StampsAcademicTenant;
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, ScholarshipService $scholarships): AnonymousResourceCollection
     {
-        $awards = ScholarshipAward::query()
-            ->with(['scholarship', 'student'])
+        $query = ScholarshipAward::query()
+            ->with(['scholarship', 'student', 'academicYear'])
             ->when($request->filled('scholarship_id'), fn ($q) => $q->where('scholarship_id', $request->integer('scholarship_id')))
             ->when($request->filled('student_id'), fn ($q) => $q->where('student_id', $request->integer('student_id')))
             ->when($request->filled('academic_year_id'), fn ($q) => $q->where('academic_year_id', $request->integer('academic_year_id')))
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()));
+
+        $totalAwarded = (clone $query)->get()->sum(
+            fn (ScholarshipAward $award) => $scholarships->awardedAmountFor($award)
+        );
+
+        $awards = $query
             ->orderByDesc('awarded_on')
             ->orderByDesc('id')
             ->paginate($request->integer('per_page', 25));
 
-        return ScholarshipAwardResource::collection($awards);
+        $scholarships->attachAwardedAmounts($awards->getCollection());
+
+        return ScholarshipAwardResource::collection($awards)->additional([
+            'summary' => [
+                'total_awarded' => number_format((float) $totalAwarded, 2, '.', ''),
+            ],
+        ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, ScholarshipService $scholarships): JsonResponse
     {
         $tenant = $this->academicTenantAttributes();
 
@@ -54,6 +67,8 @@ class ScholarshipAwardController extends Controller
                 Rule::exists('academic_years', 'id')->where('campus_id', $tenant['campus_id'])->whereNull('deleted_at'),
             ],
             'awarded_on' => ['nullable', 'date'],
+            'starts_on' => ['required', 'date'],
+            'ends_on' => ['required', 'date', 'after_or_equal:starts_on'],
             'status' => ['sometimes', Rule::enum(ScholarshipAwardStatus::class)],
             'value_override' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string', 'max:2000'],
@@ -77,7 +92,7 @@ class ScholarshipAwardController extends Controller
 
         try {
             $award = ScholarshipAward::create($data + $tenant + [
-                'awarded_on' => $data['awarded_on'] ?? now()->toDateString(),
+                'awarded_on' => $data['awarded_on'] ?? $data['starts_on'],
                 'status' => $data['status'] ?? ScholarshipAwardStatus::Active,
                 'approved_by' => $request->user()->id,
             ]);
@@ -94,13 +109,19 @@ class ScholarshipAwardController extends Controller
             throw $exception;
         }
 
-        return (new ScholarshipAwardResource($award->load(['scholarship', 'student'])))
+        $award->load(['scholarship', 'student', 'academicYear']);
+        $award->setAttribute('awarded_amount', $scholarships->awardedAmountFor($award));
+
+        return (new ScholarshipAwardResource($award))
             ->response()->setStatusCode(201);
     }
 
-    public function show(ScholarshipAward $scholarshipAward): ScholarshipAwardResource
+    public function show(ScholarshipAward $scholarshipAward, ScholarshipService $scholarships): ScholarshipAwardResource
     {
-        return new ScholarshipAwardResource($scholarshipAward->load(['scholarship', 'student', 'approvedBy']));
+        $scholarshipAward->load(['scholarship', 'student', 'approvedBy', 'academicYear']);
+        $scholarshipAward->setAttribute('awarded_amount', $scholarships->awardedAmountFor($scholarshipAward));
+
+        return new ScholarshipAwardResource($scholarshipAward);
     }
 
     public function revoke(Request $request, ScholarshipAward $scholarshipAward): ScholarshipAwardResource
@@ -119,7 +140,13 @@ class ScholarshipAwardController extends Controller
             'notes' => $data['notes'] ?? $scholarshipAward->notes,
         ])->save();
 
-        return new ScholarshipAwardResource($scholarshipAward->refresh()->load(['scholarship', 'student']));
+        $scholarshipAward = $scholarshipAward->refresh()->load(['scholarship', 'student', 'academicYear']);
+        $scholarshipAward->setAttribute(
+            'awarded_amount',
+            app(ScholarshipService::class)->awardedAmountFor($scholarshipAward)
+        );
+
+        return new ScholarshipAwardResource($scholarshipAward);
     }
 
     public function destroy(ScholarshipAward $scholarshipAward): JsonResponse

@@ -21,6 +21,10 @@ export interface MasterListColumn<T> {
   header: string;
   align?: "left" | "right";
   render: (item: T) => ReactNode;
+  footer?: (helpers: {
+    items: T[];
+    summary: Record<string, string | number> | null;
+  }) => ReactNode;
 }
 
 export interface MasterListFilter {
@@ -87,8 +91,20 @@ export function MasterList<T extends { id: number }>({
     if (value) params[filter.param] = value;
   }
 
-  const { items, meta, loading, error, page, setPage, search, setSearch, reload } =
-    useList<T>(endpoint, params);
+  const {
+    items,
+    meta,
+    summary,
+    loading,
+    error,
+    page,
+    setPage,
+    search,
+    setSearch,
+    reload,
+  } = useList<T>(endpoint, params);
+
+  const hasFooter = columns.some((column) => column.footer);
 
   const canCreate = createHref && (!createPermission || can(createPermission));
 
@@ -204,6 +220,27 @@ export function MasterList<T extends { id: number }>({
                     </Table.Row>
                   ))}
                 </Table.Body>
+                {hasFooter ? (
+                  <Table.Footer>
+                    <Table.Row id="list-total">
+                      {columns.map((column) => (
+                        <Table.Cell
+                          key={column.header}
+                          className={
+                            column.align === "right"
+                              ? "text-right font-semibold"
+                              : "font-semibold"
+                          }
+                        >
+                          {column.footer
+                            ? column.footer({ items, summary: summary ?? null })
+                            : null}
+                        </Table.Cell>
+                      ))}
+                      {rowActions ? <Table.Cell /> : null}
+                    </Table.Row>
+                  </Table.Footer>
+                ) : null}
               </Table.Content>
             </Table.ScrollContainer>
           </Table>

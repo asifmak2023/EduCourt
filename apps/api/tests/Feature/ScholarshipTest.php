@@ -159,12 +159,7 @@ class ScholarshipTest extends TestCase
     {
         $scholarship = $this->scholarship();
 
-        $payload = [
-            'scholarship_id' => $scholarship->id,
-            'student_id' => $this->ali->id,
-            'academic_year_id' => $this->year->id,
-            'awarded_on' => '2026-09-01',
-        ];
+        $payload = $this->awardPayload($scholarship->id, $this->ali->id);
 
         $this->as($this->admin)->postJson('/api/v1/scholarship-awards', $payload)
             ->assertStatus(201)
@@ -178,11 +173,10 @@ class ScholarshipTest extends TestCase
     {
         $scholarship = $this->scholarship();
 
-        $awardId = $this->as($this->admin)->postJson('/api/v1/scholarship-awards', [
-            'scholarship_id' => $scholarship->id,
-            'student_id' => $this->ali->id,
-            'academic_year_id' => $this->year->id,
-        ])->assertStatus(201)->json('data.id');
+        $awardId = $this->as($this->admin)->postJson(
+            '/api/v1/scholarship-awards',
+            $this->awardPayload($scholarship->id, $this->ali->id)
+        )->assertStatus(201)->json('data.id');
 
         $this->as($this->admin)->postJson("/api/v1/scholarship-awards/{$awardId}/revoke")
             ->assertOk()
@@ -202,11 +196,10 @@ class ScholarshipTest extends TestCase
 
         $scholarship = $this->scholarship(ScholarshipDiscountType::Percentage, 10);
 
-        $this->as($this->admin)->postJson('/api/v1/scholarship-awards', [
-            'scholarship_id' => $scholarship->id,
-            'student_id' => $this->ali->id,
-            'academic_year_id' => $this->year->id,
-        ])->assertStatus(201);
+        $this->as($this->admin)->postJson(
+            '/api/v1/scholarship-awards',
+            $this->awardPayload($scholarship->id, $this->ali->id)
+        )->assertStatus(201);
 
         $this->as($this->admin)->postJson('/api/v1/fee-vouchers/generate', [
             'academic_year_id' => $this->year->id,
@@ -235,11 +228,10 @@ class ScholarshipTest extends TestCase
 
         $scholarship = $this->scholarship(ScholarshipDiscountType::Percentage, 10);
 
-        $this->as($this->admin)->postJson('/api/v1/scholarship-awards', [
-            'scholarship_id' => $scholarship->id,
-            'student_id' => $this->ali->id,
-            'academic_year_id' => $this->year->id,
-        ])->assertStatus(201);
+        $this->as($this->admin)->postJson(
+            '/api/v1/scholarship-awards',
+            $this->awardPayload($scholarship->id, $this->ali->id)
+        )->assertStatus(201);
 
         $this->as($this->admin)->postJson('/api/v1/fee-vouchers/generate', [
             'academic_year_id' => $this->year->id,
@@ -273,11 +265,55 @@ class ScholarshipTest extends TestCase
         $scholarship = $this->scholarship();
         $scholarship->update(['is_active' => false]);
 
+        $this->as($this->admin)->postJson(
+            '/api/v1/scholarship-awards',
+            $this->awardPayload($scholarship->id, $this->ali->id)
+        )->assertStatus(422)->assertJsonValidationErrors('scholarship_id');
+    }
+
+    public function test_award_requires_from_and_to_dates(): void
+    {
+        $scholarship = $this->scholarship();
+
         $this->as($this->admin)->postJson('/api/v1/scholarship-awards', [
             'scholarship_id' => $scholarship->id,
             'student_id' => $this->ali->id,
             'academic_year_id' => $this->year->id,
-        ])->assertStatus(422)->assertJsonValidationErrors('scholarship_id');
+        ])->assertStatus(422)->assertJsonValidationErrors(['starts_on', 'ends_on']);
+
+        $this->as($this->admin)->postJson('/api/v1/scholarship-awards', [
+            'scholarship_id' => $scholarship->id,
+            'student_id' => $this->ali->id,
+            'academic_year_id' => $this->year->id,
+            'starts_on' => '2026-09-01',
+            'ends_on' => '2026-08-01',
+        ])->assertStatus(422)->assertJsonValidationErrors('ends_on');
+    }
+
+    public function test_award_list_converts_percentage_to_money_and_totals_value(): void
+    {
+        $this->plan();
+
+        $percent = $this->scholarship(ScholarshipDiscountType::Percentage, 10);
+        $fixed = $this->scholarship(ScholarshipDiscountType::Fixed, 5000);
+
+        $this->as($this->admin)->postJson(
+            '/api/v1/scholarship-awards',
+            $this->awardPayload($percent->id, $this->ali->id)
+        )->assertStatus(201)
+            ->assertJsonPath('data.starts_on', '2026-04-01')
+            ->assertJsonPath('data.ends_on', '2027-03-31')
+            ->assertJsonPath('data.awarded_amount', '3000.00');
+
+        $this->as($this->admin)->postJson(
+            '/api/v1/scholarship-awards',
+            $this->awardPayload($fixed->id, $this->sara->id)
+        )->assertStatus(201)
+            ->assertJsonPath('data.awarded_amount', '5000.00');
+
+        $this->as($this->admin)->getJson('/api/v1/scholarship-awards')
+            ->assertOk()
+            ->assertJsonPath('summary.total_awarded', '8000.00');
     }
 
     public function test_teacher_cannot_manage_scholarships(): void
@@ -287,6 +323,17 @@ class ScholarshipTest extends TestCase
             'name' => 'Nope', 'code' => 'NOPE',
             'discount_type' => 'fixed', 'value' => 100,
         ])->assertStatus(403);
+    }
+
+    private function awardPayload(int $scholarshipId, int $studentId): array
+    {
+        return [
+            'scholarship_id' => $scholarshipId,
+            'student_id' => $studentId,
+            'academic_year_id' => $this->year->id,
+            'starts_on' => $this->year->starts_on->toDateString(),
+            'ends_on' => $this->year->ends_on->toDateString(),
+        ];
     }
 
     private function scholarship(

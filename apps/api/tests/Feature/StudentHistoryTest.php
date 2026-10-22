@@ -171,6 +171,8 @@ class StudentHistoryTest extends TestCase
             'student_id' => $this->student->id,
             'academic_year_id' => $this->year->id,
             'awarded_on' => '2026-09-01',
+            'starts_on' => '2026-04-01',
+            'ends_on' => '2027-03-31',
             'status' => ScholarshipAwardStatus::Active,
         ]);
 

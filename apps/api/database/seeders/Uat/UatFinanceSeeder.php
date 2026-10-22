@@ -280,7 +280,9 @@ class UatFinanceSeeder extends UatSeederBase
                     ['scholarship_id' => $scholarship->id, 'student_id' => $student->id],
                     $tenant + [
                         'academic_year_id' => $ctx->year->id,
-                        'awarded_on' => '2026-08-15',
+                        'awarded_on' => $ctx->year->starts_on?->toDateString() ?? '2026-04-01',
+                        'starts_on' => $ctx->year->starts_on?->toDateString() ?? '2026-04-01',
+                        'ends_on' => $ctx->year->ends_on?->toDateString() ?? '2027-03-31',
                         'status' => ScholarshipAwardStatus::Active,
                         'approved_by' => $ctx->role('principal')?->id,
                         'notes' => 'Awarded after committee review.',

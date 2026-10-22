@@ -35,11 +35,17 @@ function AwardForm() {
   const [studentId, setStudentId] = useState("");
   const [academicYearId, setAcademicYearId] = useState("");
   useAcademicYearDefault(years, academicYearId, setAcademicYearId);
-  const [awardedOn, setAwardedOn] = useState("");
+  const [startsOn, setStartsOn] = useState("");
+  const [endsOn, setEndsOn] = useState("");
+  const [datesTouched, setDatesTouched] = useState(false);
   const [valueOverride, setValueOverride] = useState("");
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const selectedYear = years.find((item) => String(item.id) === academicYearId);
+  const durationStart = datesTouched ? startsOn : selectedYear?.starts_on ?? "";
+  const durationEnd = datesTouched ? endsOn : selectedYear?.ends_on ?? "";
 
   const submit = async () => {
     setBusy(true);
@@ -56,7 +62,9 @@ function AwardForm() {
             ...(academicYearId
               ? { academic_year_id: Number(academicYearId) }
               : {}),
-            ...(awardedOn ? { awarded_on: awardedOn } : {}),
+            starts_on: durationStart,
+            ends_on: durationEnd,
+            awarded_on: durationStart,
             ...(valueOverride !== ""
               ? { value_override: Number(valueOverride) }
               : {}),
@@ -124,7 +132,10 @@ function AwardForm() {
             <Select
               id="award_year"
               value={academicYearId}
-              onChange={(event) => setAcademicYearId(event.target.value)}
+              onChange={(event) => {
+                setAcademicYearId(event.target.value);
+                setDatesTouched(false);
+              }}
             >
               <option value="">Optional</option>
               {years.map((year) => (
@@ -134,12 +145,28 @@ function AwardForm() {
               ))}
             </Select>
           </Field>
-          <Field label="Awarded on" htmlFor="award_date">
+          <Field label="From date" htmlFor="award_from" required>
             <TextInput
-              id="award_date"
+              id="award_from"
               type="date"
-              value={awardedOn}
-              onChange={(event) => setAwardedOn(event.target.value)}
+              value={durationStart}
+              onChange={(event) => {
+                setDatesTouched(true);
+                setStartsOn(event.target.value);
+                setEndsOn(durationEnd);
+              }}
+            />
+          </Field>
+          <Field label="To date" htmlFor="award_to" required>
+            <TextInput
+              id="award_to"
+              type="date"
+              value={durationEnd}
+              onChange={(event) => {
+                setDatesTouched(true);
+                setStartsOn(durationStart);
+                setEndsOn(event.target.value);
+              }}
             />
           </Field>
           <Field
@@ -176,7 +203,7 @@ function AwardForm() {
           <Button
             type="button"
             loading={busy}
-            disabled={!scholarshipId || !studentId}
+            disabled={!scholarshipId || !studentId || !durationStart || !durationEnd}
             onClick={submit}
           >
             Award

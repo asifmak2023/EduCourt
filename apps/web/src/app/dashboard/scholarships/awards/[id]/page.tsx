@@ -18,7 +18,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type { ScholarshipAward } from "@/lib/types";
 
 export default function ScholarshipAwardDetailPage() {
@@ -41,13 +41,10 @@ function AwardDetailView() {
   if (error) return <ErrorNotice message={error} />;
   if (!data) return <EmptyState message="Award not found." />;
 
-  const isFixed = data.scholarship?.discount_type === "fixed";
-  const valueLabel =
-    data.effective_value === null || data.effective_value === undefined
-      ? "-"
-      : isFixed
-        ? formatCurrency(data.effective_value)
-        : `${formatNumber(data.effective_value)}%`;
+  const durationLabel =
+    data.starts_on && data.ends_on
+      ? `${formatDate(data.starts_on)} – ${formatDate(data.ends_on)}`
+      : formatDate(data.awarded_on);
 
   return (
     <div className="space-y-6">
@@ -79,8 +76,11 @@ function AwardDetailView() {
             }
           />
           <DataItem label="Scholarship" value={data.scholarship?.name ?? "-"} />
-          <DataItem label="Awarded on" value={formatDate(data.awarded_on)} />
-          <DataItem label="Value" value={valueLabel} />
+          <DataItem label="Duration" value={durationLabel} />
+          <DataItem
+            label="Value"
+            value={formatCurrency(data.awarded_amount ?? null)}
+          />
           <DataItem label="Approved by" value={data.approved_by ?? "-"} />
           <DataItem label="Revoked on" value={formatDate(data.revoked_on)} />
         </DataList>

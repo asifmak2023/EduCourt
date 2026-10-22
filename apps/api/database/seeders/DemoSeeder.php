@@ -1222,7 +1222,9 @@ class DemoSeeder extends Seeder
                     'academic_year_id' => $year?->id,
                 ],
                 $tenant + [
-                    'awarded_on' => '2026-09-01',
+                    'awarded_on' => $year?->starts_on?->toDateString() ?? '2026-04-01',
+                    'starts_on' => $year?->starts_on?->toDateString() ?? '2026-04-01',
+                    'ends_on' => $year?->ends_on?->toDateString() ?? '2027-03-31',
                     'status' => ScholarshipAwardStatus::Active,
                     'value_override' => $definition['value_override'],
                     'approved_by' => $campusAdmin->id,

@@ -7,6 +7,7 @@ import type { Paginated } from "./types";
 export interface ListState<T> {
   items: T[];
   meta: Paginated<T>["meta"] | null;
+  summary: Paginated<T>["summary"] | null;
   loading: boolean;
   error: string | null;
   page: number;
@@ -22,6 +23,7 @@ export function useList<T>(
 ): ListState<T> {
   const [items, setItems] = useState<T[]>([]);
   const [meta, setMeta] = useState<Paginated<T>["meta"] | null>(null);
+  const [summary, setSummary] = useState<Paginated<T>["summary"] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -63,6 +65,7 @@ export function useList<T>(
 
         setItems(response.data);
         setMeta(response.meta);
+        setSummary(response.summary ?? null);
       } catch (err: unknown) {
         if (!active || (err instanceof DOMException && err.name === "AbortError")) {
           return;
@@ -93,6 +96,7 @@ export function useList<T>(
   return {
     items,
     meta,
+    summary,
     loading,
     error,
     page,

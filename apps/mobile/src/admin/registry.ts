@@ -1266,8 +1266,9 @@ export const MODULES: ModuleConfig[] = [
     columns: [
       { key: "student.name", label: "Student" },
       { key: "scholarship.name", label: "Scholarship" },
-      { key: "awarded_on", label: "Awarded", format: "date" },
-      { key: "effective_value", label: "Value", align: "right" },
+      { key: "starts_on", label: "From", format: "date" },
+      { key: "ends_on", label: "To", format: "date" },
+      { key: "awarded_amount", label: "Value", align: "right", format: "money" },
       { key: "status", label: "Status", format: "badge" },
     ],
     fields: [
@@ -1293,7 +1294,8 @@ export const MODULES: ModuleConfig[] = [
         type: "lookup",
         lookup: "academicYears",
       },
-      { name: "awarded_on", label: "Awarded on", type: "date" },
+      { name: "starts_on", label: "From date", type: "date", required: true },
+      { name: "ends_on", label: "To date", type: "date", required: true },
       { name: "value_override", label: "Value override", type: "number", min: 0, step: 0.01 },
       { name: "status", label: "Status", type: "select", options: AWARD_STATUS },
       { name: "notes", label: "Notes", type: "textarea" },

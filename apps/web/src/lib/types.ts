@@ -6,6 +6,7 @@ export interface Paginated<T> {
     per_page: number;
     total: number;
   };
+  summary?: Record<string, string | number>;
   links?: {
     first?: string | null;
     last?: string | null;
@@ -1578,10 +1579,13 @@ export interface ScholarshipAward {
   student?: ScholarshipAwardStudent | null;
   academic_year_id: number | null;
   awarded_on: string | null;
+  starts_on: string | null;
+  ends_on: string | null;
   status: string | null;
   status_label?: string | null;
   value_override: string | null;
   effective_value?: string | null;
+  awarded_amount?: string | null;
   notes: string | null;
   approved_by?: string | null;
   revoked_on: string | null;

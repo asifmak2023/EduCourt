@@ -384,6 +384,8 @@ export type MessageKey =
   | "admin.promotions.loadFailed"
   | "admin.promotions.selectTarget"
   | "admin.promotions.selectStudents"
+  | "admin.promotions.creating"
+  | "admin.promotions.createSessionFailed"
   | "admin.promotions.promotedLabel"
   | "admin.promotions.promoteFailed"
   | "admin.promotions.promoted"

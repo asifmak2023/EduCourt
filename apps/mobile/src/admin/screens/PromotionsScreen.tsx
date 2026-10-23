@@ -9,7 +9,12 @@ import {
 } from "react-native";
 import { Card, EmptyState, ErrorText, GhostButton, PrimaryButton, SectionLabel } from "../../components/ui";
 import { ApiError, apiFetch } from "../../lib/api";
-import { relativeAcademicYears } from "../../lib/academicYear";
+import {
+  academicYearDates,
+  academicYearName,
+  nearbyAcademicYearOptions,
+  pendingAcademicYearStart,
+} from "../../lib/academicYear";
 import { useCampusId } from "../../lib/campus";
 import { useTheme } from "../../theme/ThemeProvider";
 import { LookupField } from "../fields/LookupField";
@@ -22,34 +27,116 @@ interface Candidate {
   status?: string | null;
 }
 
-export function PromotionsScreen() {
+export function PromotionsScreen({ permissions }: { permissions: string[] }) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const campusId = useCampusId();
+  const canCreate = permissions.includes("academic.create");
 
   const [fromYear, setFromYear] = useState<unknown>("");
   const [fromClass, setFromClass] = useState<unknown>("");
   const [toYear, setToYear] = useState<unknown>("");
   const [toClass, setToClass] = useState<unknown>("");
   const [toSection, setToSection] = useState<unknown>("");
+  const [createdYears, setCreatedYears] = useState<SelectOption[]>([]);
 
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [promoting, setPromoting] = useState(false);
+  const [creating, setCreating] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const canLoad = Boolean(fromYear) && Boolean(fromClass);
+  const canLoad =
+    Boolean(fromYear) &&
+    Boolean(fromClass) &&
+    pendingAcademicYearStart(fromYear) === null;
+  const mergeCreated = useCallback(
+    (options: SelectOption[]) => {
+      const map = new Map<string, SelectOption>();
+      for (const option of options) {
+        map.set(String(option.value), option);
+      }
+      for (const option of createdYears) {
+        map.set(String(option.value), option);
+      }
+      return [...map.values()];
+    },
+    [createdYears]
+  );
   const fromYearOptions = useCallback(
-    (options: SelectOption[]) => relativeAcademicYears(options, 2, 0),
-    []
+    (options: SelectOption[]) =>
+      nearbyAcademicYearOptions(mergeCreated(options), 2, 0, canCreate) as SelectOption[],
+    [mergeCreated, canCreate]
   );
   const toYearOptions = useCallback(
-    (options: SelectOption[]) => relativeAcademicYears(options, 0, 1),
-    []
+    (options: SelectOption[]) =>
+      nearbyAcademicYearOptions(mergeCreated(options), 0, 1, canCreate) as SelectOption[],
+    [mergeCreated, canCreate]
   );
+
+  const rememberYear = (year: { id: number; name: string; is_current?: boolean }) => {
+    setCreatedYears((current) =>
+      current.some((item) => String(item.value) === String(year.id))
+        ? current
+        : [...current, { value: year.id, label: year.name, is_current: Boolean(year.is_current) }]
+    );
+  };
+
+  const createYear = async (start: number, apply: (id: number) => void) => {
+    const label = academicYearName(start);
+    setCreating(label);
+    setError(null);
+    try {
+      const response = await apiFetch<{ data: { id: number; name: string; is_current?: boolean } }>(
+        "/v1/academic-years",
+        {
+          method: "POST",
+          campusId,
+          body: {
+            name: label,
+            ...academicYearDates(start),
+            status: "draft",
+            is_current: false,
+          },
+        }
+      );
+      rememberYear(response.data);
+      apply(response.data.id);
+    } catch (caught) {
+      setError(
+        caught instanceof ApiError ? caught.message : t("admin.promotions.createSessionFailed")
+      );
+    } finally {
+      setCreating(null);
+    }
+  };
+
+  const handleFromYear = (value: unknown) => {
+    const start = pendingAcademicYearStart(value);
+    if (start !== null) {
+      void createYear(start, (id) => {
+        setFromYear(id);
+        setCandidates([]);
+        setLoaded(false);
+      });
+      return;
+    }
+    setFromYear(value);
+    setCandidates([]);
+    setLoaded(false);
+  };
+
+  const handleToYear = (value: unknown) => {
+    const start = pendingAcademicYearStart(value);
+    if (start !== null) {
+      void createYear(start, (id) => setToYear(id));
+      return;
+    }
+    setToYear(value);
+  };
 
   const loadStudents = useCallback(async () => {
     if (!canLoad) {
@@ -80,7 +167,7 @@ export function PromotionsScreen() {
   };
 
   const promote = async () => {
-    if (!toYear || !toClass) {
+    if (!toYear || !toClass || pendingAcademicYearStart(toYear) !== null) {
       setError(t("admin.promotions.selectTarget"));
       return;
     }
@@ -120,6 +207,11 @@ export function PromotionsScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {error ? <ErrorText message={error} /> : null}
+      {creating ? (
+        <Text style={{ color: colors.muted, fontSize: 13, marginBottom: 8 }}>
+          {t("admin.promotions.creating", { name: creating })}
+        </Text>
+      ) : null}
       {message ? (
         <Text style={{ color: colors.accent, fontWeight: "600", fontSize: 14, marginBottom: 8 }}>
           {message}
@@ -132,7 +224,7 @@ export function PromotionsScreen() {
           label="Academic year"
           lookup="academicYears"
           value={fromYear}
-          onChange={setFromYear}
+          onChange={handleFromYear}
           required
           filterOptions={fromYearOptions}
         />
@@ -201,9 +293,8 @@ export function PromotionsScreen() {
           label="Academic year"
           lookup="academicYears"
           value={toYear}
-          onChange={setToYear}
+          onChange={handleToYear}
           required
-          autoDefault={false}
           filterOptions={toYearOptions}
         />
         <LookupField

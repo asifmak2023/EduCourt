@@ -4,14 +4,16 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
-import { relativeAcademicYears, useAcademicYearDefault } from "@/lib/academicYear";
+import { useAcademicYearDefault } from "@/lib/academicYear";
 import {
   useAcademicYears,
   useClassRooms,
   useSections,
 } from "@/lib/useLookups";
+import { AcademicYearSelect } from "@/components/AcademicYearSelect";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Button, Field, Select, buttonClasses } from "@/components/Form";
+import type { AcademicYear, Paginated, Student } from "@/lib/types";
 import {
   Card,
   EmptyState,
@@ -20,7 +22,6 @@ import {
   Spinner,
   SuccessNotice,
 } from "@/components/ui";
-import type { Paginated, Student } from "@/lib/types";
 
 export default function PromotionsPage() {
   return (
@@ -35,10 +36,23 @@ function PromotionView() {
   const { items: classes } = useClassRooms();
   const { items: sections } = useSections();
 
+  const [createdYears, setCreatedYears] = useState<AcademicYear[]>([]);
+  const knownYears = useMemo(() => {
+    const map = new Map<number, AcademicYear>();
+    for (const year of years) {
+      map.set(year.id, year);
+    }
+    for (const year of createdYears) {
+      map.set(year.id, year);
+    }
+    return [...map.values()];
+  }, [years, createdYears]);
+
   const [fromYear, setFromYear] = useState("");
-  useAcademicYearDefault(years, fromYear, setFromYear);
+  useAcademicYearDefault(knownYears, fromYear, setFromYear);
   const [fromClass, setFromClass] = useState("");
   const [toYear, setToYear] = useState("");
+  useAcademicYearDefault(knownYears, toYear, setToYear);
   const [toClass, setToClass] = useState("");
   const [toSection, setToSection] = useState("");
 
@@ -49,8 +63,6 @@ function PromotionView() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
 
-  const fromYears = useMemo(() => relativeAcademicYears(years, 2, 0), [years]);
-  const toYears = useMemo(() => relativeAcademicYears(years, 0, 1), [years]);
   const classSections = sections.filter(
     (section) => String(section.class_room_id) === toClass
   );
@@ -137,21 +149,26 @@ function PromotionView() {
         <h2 className="text-sm font-semibold text-foreground">From</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <Field label="Academic year" htmlFor="prom_from_year" required>
-            <Select
+            <AcademicYearSelect
               id="prom_from_year"
               value={fromYear}
+              years={knownYears}
+              nearby={{ before: 2, after: 0 }}
+              showNewSession={false}
+              required
+              placeholder="Select academic year"
               onChange={(event) => {
                 setFromYear(event.target.value);
                 setStudents([]);
               }}
-            >
-              <option value="">Select academic year</option>
-              {fromYears.map((year) => (
-                <option key={year.id} value={year.id}>
-                  {year.name}
-                </option>
-              ))}
-            </Select>
+              onCreated={(year) =>
+                setCreatedYears((current) =>
+                  current.some((item) => item.id === year.id)
+                    ? current
+                    : [...current, year]
+                )
+              }
+            />
           </Field>
           <Field label="Class" htmlFor="prom_from_class" required>
             <Select
@@ -186,18 +203,23 @@ function PromotionView() {
         <h2 className="mt-8 text-sm font-semibold text-foreground">To</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <Field label="Academic year" htmlFor="prom_to_year" required>
-            <Select
+            <AcademicYearSelect
               id="prom_to_year"
               value={toYear}
+              years={knownYears}
+              nearby={{ before: 0, after: 1 }}
+              showNewSession={false}
+              required
+              placeholder="Select academic year"
               onChange={(event) => setToYear(event.target.value)}
-            >
-              <option value="">Select academic year</option>
-              {toYears.map((year) => (
-                <option key={year.id} value={year.id}>
-                  {year.name}
-                </option>
-              ))}
-            </Select>
+              onCreated={(year) =>
+                setCreatedYears((current) =>
+                  current.some((item) => item.id === year.id)
+                    ? current
+                    : [...current, year]
+                )
+              }
+            />
           </Field>
           <Field label="Class" htmlFor="prom_to_class" required>
             <Select

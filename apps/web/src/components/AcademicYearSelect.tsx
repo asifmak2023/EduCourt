@@ -9,6 +9,8 @@ import {
   academicYearDates,
   academicYearName,
   nextAcademicYearStarts,
+  parseAcademicYearStart,
+  relativeAcademicYearStarts,
   sortAcademicYears,
 } from "@/lib/academicYear";
 import type { AcademicYear } from "@/lib/types";
@@ -25,6 +27,8 @@ export function AcademicYearSelect({
   placeholder = "Optional",
   disabled,
   required,
+  nearby,
+  showNewSession = true,
   onChange,
   onCreated,
 }: {
@@ -36,6 +40,8 @@ export function AcademicYearSelect({
   placeholder?: string;
   disabled?: boolean;
   required?: boolean;
+  nearby?: { before: number; after: number };
+  showNewSession?: boolean;
   onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
   onCreated?: (year: AcademicYear) => void;
 }) {
@@ -56,10 +62,43 @@ export function AcademicYearSelect({
     return sortAcademicYears([...map.values()]);
   }, [years, extraYears]);
 
-  const pendingStarts = useMemo(
-    () => (canCreate ? nextAcademicYearStarts(known) : []),
-    [canCreate, known]
+  const nearbyBefore = nearby?.before;
+  const nearbyAfter = nearby?.after;
+  const windowStarts = useMemo(
+    () =>
+      nearbyBefore === undefined || nearbyAfter === undefined
+        ? null
+        : relativeAcademicYearStarts(known, nearbyBefore, nearbyAfter),
+    [known, nearbyBefore, nearbyAfter]
   );
+
+  const displayed = useMemo(() => {
+    if (!windowStarts) {
+      return known;
+    }
+
+    return known.filter((year) => {
+      const start = parseAcademicYearStart(year);
+      return start !== null && windowStarts.includes(start);
+    });
+  }, [known, windowStarts]);
+
+  const pendingStarts = useMemo(() => {
+    if (!canCreate) {
+      return [];
+    }
+
+    if (windowStarts) {
+      const existing = new Set(
+        known
+          .map((year) => parseAcademicYearStart(year))
+          .filter((start): start is number => start !== null)
+      );
+      return windowStarts.filter((start) => !existing.has(start));
+    }
+
+    return nextAcademicYearStarts(known);
+  }, [canCreate, known, windowStarts]);
 
   const emit = (next: string) => {
     onChange({
@@ -118,17 +157,23 @@ export function AcademicYearSelect({
         }}
       >
         <option value="">{placeholder}</option>
-        {known.map((year) => (
-          <option key={year.id} value={String(year.id)}>
-            {year.name}
+        {sortAcademicYears([
+          ...displayed.map((year) => ({
+            id: String(year.id),
+            name: year.name,
+            starts_on: year.starts_on,
+          })),
+          ...pendingStarts.map((start) => ({
+            id: `${PENDING_PREFIX}${start}`,
+            name: academicYearName(start),
+            starts_on: academicYearDates(start).starts_on,
+          })),
+        ]).map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.name}
           </option>
         ))}
-        {pendingStarts.map((start) => (
-          <option key={`${PENDING_PREFIX}${start}`} value={`${PENDING_PREFIX}${start}`}>
-            {academicYearName(start)}
-          </option>
-        ))}
-        {canCreate ? (
+        {canCreate && showNewSession ? (
           <option value={NEW_SESSION_VALUE}>New session</option>
         ) : null}
       </Select>

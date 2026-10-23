@@ -111,6 +111,21 @@ export function nextAcademicYearStarts(
   return result;
 }
 
+export function relativeAcademicYearStarts(
+  years: readonly AcademicYearLike[],
+  before: number,
+  after: number
+): number[] {
+  const current = currentAcademicYearStart(years);
+  const starts: number[] = [];
+
+  for (let year = current - before; year <= current + after; year += 1) {
+    starts.push(year);
+  }
+
+  return starts;
+}
+
 export function nextUnusedAcademicYearStart(
   years: readonly AcademicYearLike[],
   reserved: readonly number[] = []

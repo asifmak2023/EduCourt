@@ -389,6 +389,8 @@ export const en = {
   "admin.promotions.loadFailed": "Unable to load students.",
   "admin.promotions.selectTarget": "Select the target academic year and class.",
   "admin.promotions.selectStudents": "Select at least one student to promote.",
+  "admin.promotions.creating": "Creating {{name}}...",
+  "admin.promotions.createSessionFailed": "Unable to create session.",
   "admin.promotions.promotedLabel": "Promoted",
   "admin.promotions.promoteFailed": "Unable to promote students.",
   "admin.promotions.promoted": "Promoted {{count}} student(s).",

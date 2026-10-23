@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
-import { useScholarships, useStudents } from "@/lib/useLookups";
+import { useScholarships } from "@/lib/useLookups";
 import { MasterList } from "@/components/MasterList";
 import { Badge, Spinner } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -21,7 +21,6 @@ function ScholarshipAwardsList() {
   const { can } = useAuth();
   const searchParams = useSearchParams();
   const { items: scholarships } = useScholarships();
-  const { items: students } = useStudents();
   const scholarshipId = searchParams.get("scholarship_id") ?? "";
 
   return (
@@ -48,12 +47,10 @@ function ScholarshipAwardsList() {
           })),
         },
         {
-          param: "student_id",
-          placeholder: "All students",
-          options: students.map((student) => ({
-            value: String(student.id),
-            label: student.full_name,
-          })),
+          param: "search",
+          placeholder: "Search student name",
+          type: "search",
+          label: "Student name",
         },
         {
           param: "status",
@@ -63,8 +60,18 @@ function ScholarshipAwardsList() {
             { value: "revoked", label: "Revoked" },
           ],
         },
-        { param: "from", placeholder: "From date", type: "date" },
-        { param: "to", placeholder: "To date", type: "date" },
+        {
+          param: "from",
+          placeholder: "Grant from",
+          type: "date",
+          label: "Grant from",
+        },
+        {
+          param: "to",
+          placeholder: "Grant to",
+          type: "date",
+          label: "Grant to",
+        },
       ]}
       columns={[
         {

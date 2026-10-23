@@ -21,8 +21,14 @@ class ScholarshipAwardController extends Controller
 
     public function index(Request $request, ScholarshipService $scholarships): AnonymousResourceCollection
     {
+        $search = $request->string('search')->toString();
+
         $query = ScholarshipAward::query()
             ->with(['scholarship', 'student', 'academicYear'])
+            ->when($search !== '', fn ($q) => $q->whereHas('student', function ($student) use ($search) {
+                $student->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%");
+            }))
             ->when($request->filled('scholarship_id'), fn ($q) => $q->where('scholarship_id', $request->integer('scholarship_id')))
             ->when($request->filled('student_id'), fn ($q) => $q->where('student_id', $request->integer('student_id')))
             ->when($request->filled('academic_year_id'), fn ($q) => $q->where('academic_year_id', $request->integer('academic_year_id')))

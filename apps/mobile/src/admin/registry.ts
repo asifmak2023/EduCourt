@@ -1262,6 +1262,7 @@ export const MODULES: ModuleConfig[] = [
     label: "Scholarship awards",
     endpoint: "/v1/scholarship-awards",
     permissions: SCHOLARSHIP,
+    searchable: true,
     filters: [{ param: "status", label: "Status", options: AWARD_STATUS }],
     columns: [
       { key: "student.name", label: "Student" },

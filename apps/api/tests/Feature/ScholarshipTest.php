@@ -335,6 +335,32 @@ class ScholarshipTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_award_list_filters_by_student_name(): void
+    {
+        $merit = $this->scholarship();
+        $need = $this->scholarship(ScholarshipDiscountType::Fixed, 5000);
+
+        $this->as($this->admin)->postJson(
+            '/api/v1/scholarship-awards',
+            $this->awardPayload($merit->id, $this->ali->id)
+        )->assertStatus(201);
+
+        $this->as($this->admin)->postJson(
+            '/api/v1/scholarship-awards',
+            $this->awardPayload($need->id, $this->sara->id)
+        )->assertStatus(201);
+
+        $this->as($this->admin)->getJson('/api/v1/scholarship-awards?search=Ali')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.student.name', 'Ali Raza');
+
+        $this->as($this->admin)->getJson('/api/v1/scholarship-awards?search=Khan')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.student.name', 'Sara Khan');
+    }
+
     public function test_teacher_cannot_manage_scholarships(): void
     {
         $this->as($this->teacher)->getJson('/api/v1/scholarships')->assertStatus(403);

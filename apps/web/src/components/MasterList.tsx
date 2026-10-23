@@ -30,7 +30,8 @@ export interface MasterListColumn<T> {
 export interface MasterListFilter {
   param: string;
   placeholder: string;
-  type?: "select" | "date";
+  type?: "select" | "date" | "search";
+  label?: string;
   options?: { value: string; label: string; is_current?: boolean }[];
 }
 
@@ -143,11 +144,35 @@ export function MasterList<T extends { id: number }>({
         <div className="flex flex-wrap gap-3">
           {filters.map((filter) => (
             <div key={filter.param} className="w-52">
+              {filter.label ? (
+                <label
+                  htmlFor={`filter-${filter.param}`}
+                  className="mb-1 block text-xs font-medium text-muted"
+                >
+                  {filter.label}
+                </label>
+              ) : null}
               {filter.type === "date" ? (
                 <TextInput
+                  id={`filter-${filter.param}`}
                   type="date"
                   value={effectiveFilterValues[filter.param] ?? ""}
-                  aria-label={filter.placeholder}
+                  aria-label={filter.label ?? filter.placeholder}
+                  onChange={(event) => {
+                    setPage(1);
+                    setFilterValues((current) => ({
+                      ...current,
+                      [filter.param]: event.target.value,
+                    }));
+                  }}
+                />
+              ) : filter.type === "search" ? (
+                <TextInput
+                  id={`filter-${filter.param}`}
+                  type="search"
+                  value={effectiveFilterValues[filter.param] ?? ""}
+                  placeholder={filter.placeholder}
+                  aria-label={filter.label ?? filter.placeholder}
                   onChange={(event) => {
                     setPage(1);
                     setFilterValues((current) => ({
@@ -158,7 +183,9 @@ export function MasterList<T extends { id: number }>({
                 />
               ) : (
                 <Select
+                  id={`filter-${filter.param}`}
                   value={effectiveFilterValues[filter.param] ?? ""}
+                  aria-label={filter.label ?? filter.placeholder}
                   onChange={(event) => {
                     setPage(1);
                     setFilterValues((current) => ({

@@ -76,9 +76,19 @@ function AwardDetailView() {
             }
           />
           <DataItem label="Scholarship" value={data.scholarship?.name ?? "-"} />
+          <DataItem label="From" value={formatDate(data.starts_on ?? data.awarded_on)} />
+          <DataItem label="To" value={formatDate(data.ends_on)} />
           <DataItem label="Duration" value={durationLabel} />
           <DataItem
-            label="Value"
+            label="Monthly"
+            value={formatCurrency(data.monthly_amount ?? null)}
+          />
+          <DataItem
+            label="Obtained"
+            value={formatCurrency(data.obtained_amount ?? null)}
+          />
+          <DataItem
+            label="Awarded"
             value={formatCurrency(data.awarded_amount ?? null)}
           />
           <DataItem label="Approved by" value={data.approved_by ?? "-"} />

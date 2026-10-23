@@ -26,6 +26,7 @@ use App\Models\User;
 use App\Services\Accounting\DefaultChartOfAccounts;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
 
@@ -292,6 +293,7 @@ class ScholarshipTest extends TestCase
 
     public function test_award_list_converts_percentage_to_money_and_totals_value(): void
     {
+        Carbon::setTestNow('2026-10-15');
         $this->plan();
 
         $percent = $this->scholarship(ScholarshipDiscountType::Percentage, 10);
@@ -303,17 +305,23 @@ class ScholarshipTest extends TestCase
         )->assertStatus(201)
             ->assertJsonPath('data.starts_on', '2026-04-01')
             ->assertJsonPath('data.ends_on', '2027-03-31')
-            ->assertJsonPath('data.awarded_amount', '3000.00');
+            ->assertJsonPath('data.awarded_amount', '3000.00')
+            ->assertJsonPath('data.monthly_amount', '250.00')
+            ->assertJsonPath('data.obtained_amount', '1750.00');
 
         $this->as($this->admin)->postJson(
             '/api/v1/scholarship-awards',
             $this->awardPayload($fixed->id, $this->sara->id)
         )->assertStatus(201)
-            ->assertJsonPath('data.awarded_amount', '5000.00');
+            ->assertJsonPath('data.awarded_amount', '5000.00')
+            ->assertJsonPath('data.monthly_amount', '416.67')
+            ->assertJsonPath('data.obtained_amount', '2916.69');
 
         $this->as($this->admin)->getJson('/api/v1/scholarship-awards')
             ->assertOk()
-            ->assertJsonPath('summary.total_awarded', '8000.00');
+            ->assertJsonPath('summary.total_awarded', '8000.00')
+            ->assertJsonPath('summary.total_monthly', '666.67')
+            ->assertJsonPath('summary.total_obtained', '4666.69');
 
         $this->as($this->admin)->getJson('/api/v1/scholarship-awards?from=2026-04-01&to=2027-03-31')
             ->assertOk()
@@ -323,6 +331,8 @@ class ScholarshipTest extends TestCase
             ->assertOk()
             ->assertJsonPath('summary.total_awarded', '0.00')
             ->assertJsonPath('meta.total', 0);
+
+        Carbon::setTestNow();
     }
 
     public function test_teacher_cannot_manage_scholarships(): void

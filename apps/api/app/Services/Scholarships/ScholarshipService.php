@@ -113,15 +113,51 @@ class ScholarshipService
         return round(max($gross * $value / 100, 0), 2);
     }
 
+    public function monthlyAmountFor(ScholarshipAward $award): float
+    {
+        $months = $this->coveredMonths($award);
+
+        if ($months <= 0) {
+            return 0.0;
+        }
+
+        $award->loadMissing(['scholarship', 'academicYear']);
+        $scholarship = $award->scholarship;
+
+        if ($scholarship?->discount_type === ScholarshipDiscountType::Percentage) {
+            $monthlyFees = $this->monthlyFeeGrossFor($award);
+
+            if ($monthlyFees > 0) {
+                $value = $award->value_override !== null
+                    ? (float) $award->value_override
+                    : (float) $scholarship->value;
+
+                return round(max($monthlyFees * $value / 100, 0), 2);
+            }
+        }
+
+        return round($this->awardedAmountFor($award) / $months, 2);
+    }
+
+    public function obtainedAmountFor(ScholarshipAward $award): float
+    {
+        $monthly = $this->monthlyAmountFor($award);
+        $obtained = round($monthly * $this->elapsedMonths($award), 2);
+        $total = $this->awardedAmountFor($award);
+
+        return min($obtained, $total);
+    }
+
     /**
      * @param  Collection<int, ScholarshipAward>  $awards
      */
     public function attachAwardedAmounts(Collection $awards): void
     {
-        $awards->loadMissing(['scholarship', 'academicYear']);
-
         foreach ($awards as $award) {
+            $award->loadMissing(['scholarship', 'academicYear']);
             $award->setAttribute('awarded_amount', $this->awardedAmountFor($award));
+            $award->setAttribute('monthly_amount', $this->monthlyAmountFor($award));
+            $award->setAttribute('obtained_amount', $this->obtainedAmountFor($award));
         }
     }
 
@@ -173,6 +209,39 @@ class ScholarshipService
         return round((float) $plan->items()->where('is_optional', false)->sum('amount'), 2);
     }
 
+    private function monthlyFeeGrossFor(ScholarshipAward $award): float
+    {
+        $yearId = $award->academic_year_id;
+
+        $enrollment = StudentEnrollment::query()
+            ->where('student_id', $award->student_id)
+            ->when($yearId, fn ($query) => $query->where('academic_year_id', $yearId))
+            ->where('status', 'active')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($enrollment === null) {
+            return 0.0;
+        }
+
+        $structure = FeeStructure::query()
+            ->with('items')
+            ->where('academic_year_id', $enrollment->academic_year_id)
+            ->where('class_room_id', $enrollment->class_room_id)
+            ->where('is_active', true)
+            ->first();
+
+        if ($structure === null) {
+            return 0.0;
+        }
+
+        return round((float) $structure->items
+            ->where('billing_kind', BillingKind::Monthly)
+            ->where('is_active', true)
+            ->where('is_optional', false)
+            ->sum('amount'), 2);
+    }
+
     private function coveredMonths(ScholarshipAward $award): int
     {
         $start = $award->starts_on
@@ -193,5 +262,29 @@ class ScholarshipService
         }
 
         return $from->diffInMonths($to) + 1;
+    }
+
+    private function elapsedMonths(ScholarshipAward $award): int
+    {
+        $start = $award->starts_on
+            ?? $award->awarded_on
+            ?? $award->academicYear?->starts_on;
+
+        if ($start === null) {
+            return 0;
+        }
+
+        $from = Carbon::parse($start)->startOfMonth();
+        $today = Carbon::now()->startOfMonth();
+        $end = $award->ends_on ?? $award->academicYear?->ends_on;
+        $last = $end !== null ? Carbon::parse($end)->startOfMonth() : $today;
+
+        if ($today->lt($from)) {
+            return 0;
+        }
+
+        $until = $today->lt($last) ? $today : $last;
+
+        return $from->diffInMonths($until) + 1;
     }
 }

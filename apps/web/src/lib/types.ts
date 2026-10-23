@@ -1586,6 +1586,8 @@ export interface ScholarshipAward {
   value_override: string | null;
   effective_value?: string | null;
   awarded_amount?: string | null;
+  monthly_amount?: string | null;
+  obtained_amount?: string | null;
   notes: string | null;
   approved_by?: string | null;
   revoked_on: string | null;

@@ -46,9 +46,8 @@ class ScholarshipAwardController extends Controller
                 });
             });
 
-        $totalAwarded = (clone $query)->get()->sum(
-            fn (ScholarshipAward $award) => $scholarships->awardedAmountFor($award)
-        );
+        $matched = (clone $query)->get();
+        $scholarships->attachAwardedAmounts($matched);
 
         $awards = $query
             ->orderByDesc('awarded_on')
@@ -59,7 +58,9 @@ class ScholarshipAwardController extends Controller
 
         return ScholarshipAwardResource::collection($awards)->additional([
             'summary' => [
-                'total_awarded' => number_format((float) $totalAwarded, 2, '.', ''),
+                'total_awarded' => number_format((float) $matched->sum('awarded_amount'), 2, '.', ''),
+                'total_monthly' => number_format((float) $matched->sum('monthly_amount'), 2, '.', ''),
+                'total_obtained' => number_format((float) $matched->sum('obtained_amount'), 2, '.', ''),
             ],
         ]);
     }
@@ -128,7 +129,7 @@ class ScholarshipAwardController extends Controller
         }
 
         $award->load(['scholarship', 'student', 'academicYear']);
-        $award->setAttribute('awarded_amount', $scholarships->awardedAmountFor($award));
+        $scholarships->attachAwardedAmounts(collect([$award]));
 
         return (new ScholarshipAwardResource($award))
             ->response()->setStatusCode(201);
@@ -137,7 +138,7 @@ class ScholarshipAwardController extends Controller
     public function show(ScholarshipAward $scholarshipAward, ScholarshipService $scholarships): ScholarshipAwardResource
     {
         $scholarshipAward->load(['scholarship', 'student', 'approvedBy', 'academicYear']);
-        $scholarshipAward->setAttribute('awarded_amount', $scholarships->awardedAmountFor($scholarshipAward));
+        $scholarships->attachAwardedAmounts(collect([$scholarshipAward]));
 
         return new ScholarshipAwardResource($scholarshipAward);
     }
@@ -159,10 +160,7 @@ class ScholarshipAwardController extends Controller
         ])->save();
 
         $scholarshipAward = $scholarshipAward->refresh()->load(['scholarship', 'student', 'academicYear']);
-        $scholarshipAward->setAttribute(
-            'awarded_amount',
-            app(ScholarshipService::class)->awardedAmountFor($scholarshipAward)
-        );
+        app(ScholarshipService::class)->attachAwardedAmounts(collect([$scholarshipAward]));
 
         return new ScholarshipAwardResource($scholarshipAward);
     }

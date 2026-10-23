@@ -1268,7 +1268,9 @@ export const MODULES: ModuleConfig[] = [
       { key: "scholarship.name", label: "Scholarship" },
       { key: "starts_on", label: "From", format: "date" },
       { key: "ends_on", label: "To", format: "date" },
-      { key: "awarded_amount", label: "Value", align: "right", format: "money" },
+      { key: "monthly_amount", label: "Monthly", align: "right", format: "money" },
+      { key: "obtained_amount", label: "Obtained", align: "right", format: "money" },
+      { key: "awarded_amount", label: "Awarded", align: "right", format: "money" },
       { key: "status", label: "Status", format: "badge" },
     ],
     fields: [

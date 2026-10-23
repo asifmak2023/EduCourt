@@ -35,6 +35,8 @@ class ScholarshipAwardResource extends JsonResource
             'value_override' => $this->value_override,
             'effective_value' => $this->value_override ?? $this->scholarship?->value,
             'awarded_amount' => number_format((float) ($this->awarded_amount ?? 0), 2, '.', ''),
+            'monthly_amount' => number_format((float) ($this->monthly_amount ?? 0), 2, '.', ''),
+            'obtained_amount' => number_format((float) ($this->obtained_amount ?? 0), 2, '.', ''),
             'notes' => $this->notes,
             'approved_by' => $this->whenLoaded('approvedBy', fn () => $this->approvedBy?->name),
             'revoked_on' => $this->revoked_on?->toDateString(),

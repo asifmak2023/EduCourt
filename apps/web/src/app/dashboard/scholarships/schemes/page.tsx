@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/Form";
@@ -61,12 +62,19 @@ export default function ScholarshipSchemesPage() {
           render: (item) => item.type_label ?? item.type ?? "-",
         },
         { header: "Discount", render: (item) => discountLabel(item) },
-        { header: "Sponsor", render: (item) => item.sponsor ?? "-" },
         {
-          header: "Awards",
+          header: "Students",
           align: "right",
-          render: (item) => item.awards_count ?? 0,
+          render: (item) => (
+            <Link
+              href={`/dashboard/scholarships/awards?scholarship_id=${item.id}`}
+              className="font-medium text-foreground hover:underline"
+            >
+              {item.awards_count ?? 0}
+            </Link>
+          ),
         },
+        { header: "Sponsor", render: (item) => item.sponsor ?? "-" },
         {
           header: "Active",
           render: (item) => (

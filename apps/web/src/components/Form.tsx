@@ -20,6 +20,7 @@ import {
 import {
   Button as HeroButton,
   Checkbox as HeroCheckbox,
+  ComboBox,
   Input,
   ListBox,
   Select as HeroSelect,
@@ -285,6 +286,68 @@ export function Select({
         </ListBox>
       </HeroSelect.Popover>
     </HeroSelect>
+  );
+}
+
+export function SearchableSelect({
+  className = "",
+  children,
+  value,
+  onChange,
+  disabled,
+  required,
+  name,
+  id,
+  placeholder,
+  "aria-label": ariaLabel,
+}: SelectHTMLAttributes<HTMLSelectElement> & { placeholder?: string }) {
+  const field = useContext(FieldContext);
+  const tr = useTr();
+  const options: OptionEntry[] = [];
+  collectOptions(children, options);
+  const selectable = options.filter((option) => option.value !== "");
+  const selectedKey = value ? String(value) : null;
+  const accessibleLabel = tr(
+    ariaLabel ?? field?.label ?? placeholder ?? name
+  );
+
+  return (
+    <ComboBox
+      fullWidth
+      className={className}
+      name={name}
+      aria-label={accessibleLabel}
+      isDisabled={disabled}
+      isRequired={required}
+      selectedKey={selectedKey}
+      onSelectionChange={(key) => {
+        const next = key == null ? "" : String(key);
+        onChange?.({
+          target: { value: next, name },
+        } as unknown as ChangeEvent<HTMLSelectElement>);
+      }}
+    >
+      <ComboBox.InputGroup>
+        <Input
+          id={id}
+          placeholder={placeholder ? tr(placeholder) : undefined}
+        />
+        <ComboBox.Trigger />
+      </ComboBox.InputGroup>
+      <ComboBox.Popover>
+        <ListBox>
+          {selectable.map((option) => (
+            <ListBox.Item
+              key={option.value}
+              id={option.value}
+              textValue={tr(option.textValue)}
+            >
+              {typeof option.label === "string" ? tr(option.label) : option.label}
+            </ListBox.Item>
+          ))}
+        </ListBox>
+      </ComboBox.Popover>
+    </ComboBox>
   );
 }
 

@@ -359,6 +359,11 @@ class ScholarshipTest extends TestCase
             ->assertOk()
             ->assertJsonPath('meta.total', 1)
             ->assertJsonPath('data.0.student.name', 'Sara Khan');
+
+        $this->as($this->admin)->getJson('/api/v1/scholarship-awards?search=Ali%20Raza')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.student.name', 'Ali Raza');
     }
 
     public function test_teacher_cannot_manage_scholarships(): void

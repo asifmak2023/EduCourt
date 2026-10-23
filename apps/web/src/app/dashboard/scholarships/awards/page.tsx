@@ -1,9 +1,9 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
-import { useScholarships } from "@/lib/useLookups";
+import { useScholarships, useStudents } from "@/lib/useLookups";
 import { MasterList } from "@/components/MasterList";
 import { Badge, Spinner } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -21,7 +21,22 @@ function ScholarshipAwardsList() {
   const { can } = useAuth();
   const searchParams = useSearchParams();
   const { items: scholarships } = useScholarships();
+  const { items: students } = useStudents();
   const scholarshipId = searchParams.get("scholarship_id") ?? "";
+  const studentOptions = useMemo(() => {
+    const names = new Map<string, string>();
+
+    for (const student of students) {
+      const name = student.full_name.trim();
+      if (name !== "" && !names.has(name)) {
+        names.set(name, name);
+      }
+    }
+
+    return Array.from(names.values())
+      .sort((left, right) => left.localeCompare(right))
+      .map((name) => ({ value: name, label: name }));
+  }, [students]);
 
   return (
     <MasterList<ScholarshipAward>
@@ -48,9 +63,10 @@ function ScholarshipAwardsList() {
         },
         {
           param: "search",
-          placeholder: "Search student name",
-          type: "search",
-          label: "Student name",
+          placeholder: "Search student",
+          type: "searchable",
+          label: "Student",
+          options: studentOptions,
         },
         {
           param: "status",
@@ -62,15 +78,17 @@ function ScholarshipAwardsList() {
         },
         {
           param: "from",
-          placeholder: "Grant from",
+          placeholder: "From",
           type: "date",
-          label: "Grant from",
+          label: "From",
+          group: "Grant",
         },
         {
           param: "to",
-          placeholder: "Grant to",
+          placeholder: "To",
           type: "date",
-          label: "Grant to",
+          label: "To",
+          group: "Grant",
         },
       ]}
       columns={[

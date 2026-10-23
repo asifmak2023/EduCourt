@@ -26,8 +26,12 @@ class ScholarshipAwardController extends Controller
         $query = ScholarshipAward::query()
             ->with(['scholarship', 'student', 'academicYear'])
             ->when($search !== '', fn ($q) => $q->whereHas('student', function ($student) use ($search) {
-                $student->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%");
+                foreach (preg_split('/\s+/', $search, -1, PREG_SPLIT_NO_EMPTY) as $term) {
+                    $student->where(function ($inner) use ($term) {
+                        $inner->where('first_name', 'like', "%{$term}%")
+                            ->orWhere('last_name', 'like', "%{$term}%");
+                    });
+                }
             }))
             ->when($request->filled('scholarship_id'), fn ($q) => $q->where('scholarship_id', $request->integer('scholarship_id')))
             ->when($request->filled('student_id'), fn ($q) => $q->where('student_id', $request->integer('student_id')))

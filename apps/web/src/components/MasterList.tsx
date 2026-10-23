@@ -8,7 +8,7 @@ import { currentAcademicYearId } from "@/lib/academicYear";
 import { useList } from "@/lib/useList";
 import { useAuth } from "@/lib/auth";
 import { Pagination } from "@/components/Pagination";
-import { Select, TextInput, buttonClasses } from "@/components/Form";
+import { SearchableSelect, Select, TextInput, buttonClasses } from "@/components/Form";
 import {
   Card,
   EmptyState,
@@ -30,8 +30,9 @@ export interface MasterListColumn<T> {
 export interface MasterListFilter {
   param: string;
   placeholder: string;
-  type?: "select" | "date" | "search";
+  type?: "select" | "date" | "search" | "searchable";
   label?: string;
+  group?: string;
   options?: { value: string; label: string; is_current?: boolean }[];
 }
 
@@ -141,69 +142,46 @@ export function MasterList<T extends { id: number }>({
       />
 
       {filters.length > 0 ? (
-        <div className="flex flex-wrap gap-3">
-          {filters.map((filter) => (
-            <div key={filter.param} className="w-52">
-              {filter.label ? (
-                <label
-                  htmlFor={`filter-${filter.param}`}
-                  className="mb-1 block text-xs font-medium text-muted"
-                >
-                  {filter.label}
-                </label>
-              ) : null}
-              {filter.type === "date" ? (
-                <TextInput
-                  id={`filter-${filter.param}`}
-                  type="date"
-                  value={effectiveFilterValues[filter.param] ?? ""}
-                  aria-label={filter.label ?? filter.placeholder}
-                  onChange={(event) => {
-                    setPage(1);
-                    setFilterValues((current) => ({
-                      ...current,
-                      [filter.param]: event.target.value,
-                    }));
-                  }}
-                />
-              ) : filter.type === "search" ? (
-                <TextInput
-                  id={`filter-${filter.param}`}
-                  type="search"
-                  value={effectiveFilterValues[filter.param] ?? ""}
-                  placeholder={filter.placeholder}
-                  aria-label={filter.label ?? filter.placeholder}
-                  onChange={(event) => {
-                    setPage(1);
-                    setFilterValues((current) => ({
-                      ...current,
-                      [filter.param]: event.target.value,
-                    }));
-                  }}
-                />
-              ) : (
-                <Select
-                  id={`filter-${filter.param}`}
-                  value={effectiveFilterValues[filter.param] ?? ""}
-                  aria-label={filter.label ?? filter.placeholder}
-                  onChange={(event) => {
-                    setPage(1);
-                    setFilterValues((current) => ({
-                      ...current,
-                      [filter.param]: event.target.value,
-                    }));
-                  }}
-                >
-                  <option value="">{filter.placeholder}</option>
-                  {(filter.options ?? []).map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
+        <div className="flex flex-wrap items-end gap-3">
+          {groupFilters(filters).map((group) =>
+            group.label ? (
+              <div
+                key={group.key}
+                className="rounded-xl border border-border-secondary px-3 py-2"
+              >
+                <p className="mb-1 text-xs font-medium text-muted">{group.label}</p>
+                <div className="flex flex-wrap gap-3">
+                  {group.items.map((filter) => (
+                    <FilterControl
+                      key={filter.param}
+                      filter={filter}
+                      value={effectiveFilterValues[filter.param] ?? ""}
+                      onChange={(next) => {
+                        setPage(1);
+                        setFilterValues((current) => ({
+                          ...current,
+                          [filter.param]: next,
+                        }));
+                      }}
+                    />
                   ))}
-                </Select>
-              )}
-            </div>
-          ))}
+                </div>
+              </div>
+            ) : (
+              <FilterControl
+                key={group.key}
+                filter={group.items[0]}
+                value={effectiveFilterValues[group.items[0].param] ?? ""}
+                onChange={(next) => {
+                  setPage(1);
+                  setFilterValues((current) => ({
+                    ...current,
+                    [group.items[0].param]: next,
+                  }));
+                }}
+              />
+            )
+          )}
         </div>
       ) : null}
 
@@ -299,6 +277,99 @@ export function MasterList<T extends { id: number }>({
           />
         ) : null}
       </Card>
+    </div>
+  );
+}
+
+function groupFilters(filters: MasterListFilter[]) {
+  const groups: { key: string; label?: string; items: MasterListFilter[] }[] = [];
+
+  for (const filter of filters) {
+    if (filter.group) {
+      const existing = groups.find((group) => group.label === filter.group);
+      if (existing) {
+        existing.items.push(filter);
+      } else {
+        groups.push({
+          key: `group-${filter.group}`,
+          label: filter.group,
+          items: [filter],
+        });
+      }
+    } else {
+      groups.push({ key: filter.param, items: [filter] });
+    }
+  }
+
+  return groups;
+}
+
+function FilterControl({
+  filter,
+  value,
+  onChange,
+}: {
+  filter: MasterListFilter;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="w-52">
+      {filter.label ? (
+        <label
+          htmlFor={`filter-${filter.param}`}
+          className="mb-1 block text-xs font-medium text-muted"
+        >
+          {filter.label}
+        </label>
+      ) : null}
+      {filter.type === "date" ? (
+        <TextInput
+          id={`filter-${filter.param}`}
+          type="date"
+          value={value}
+          aria-label={filter.label ?? filter.placeholder}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      ) : filter.type === "search" ? (
+        <TextInput
+          id={`filter-${filter.param}`}
+          type="search"
+          value={value}
+          placeholder={filter.placeholder}
+          aria-label={filter.label ?? filter.placeholder}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      ) : filter.type === "searchable" ? (
+        <SearchableSelect
+          id={`filter-${filter.param}`}
+          value={value}
+          placeholder={filter.placeholder}
+          aria-label={filter.label ?? filter.placeholder}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{filter.placeholder}</option>
+          {(filter.options ?? []).map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </SearchableSelect>
+      ) : (
+        <Select
+          id={`filter-${filter.param}`}
+          value={value}
+          aria-label={filter.label ?? filter.placeholder}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{filter.placeholder}</option>
+          {(filter.options ?? []).map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
+      )}
     </div>
   );
 }

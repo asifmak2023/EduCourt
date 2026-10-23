@@ -383,6 +383,8 @@ export type MessageKey =
   | "admin.financeReports.expenseCount"
   | "admin.promotions.loadFailed"
   | "admin.promotions.selectTarget"
+  | "admin.promotions.selectStudents"
+  | "admin.promotions.promotedLabel"
   | "admin.promotions.promoteFailed"
   | "admin.promotions.promoted"
   | "admin.promotions.from"

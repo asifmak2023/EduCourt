@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
-import { useAcademicYearDefault } from "@/lib/academicYear";
+import { relativeAcademicYears, useAcademicYearDefault } from "@/lib/academicYear";
 import {
   useAcademicYears,
   useClassRooms,
@@ -43,15 +43,20 @@ function PromotionView() {
   const [toSection, setToSection] = useState("");
 
   const [students, setStudents] = useState<Student[]>([]);
-  const [repeat, setRepeat] = useState<Record<number, boolean>>({});
+  const [selected, setSelected] = useState<Record<number, boolean>>({});
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
 
+  const fromYears = useMemo(() => relativeAcademicYears(years, 2, 0), [years]);
+  const toYears = useMemo(() => relativeAcademicYears(years, 0, 1), [years]);
   const classSections = sections.filter(
     (section) => String(section.class_room_id) === toClass
   );
+  const selectedIds = students
+    .filter((student) => selected[student.id])
+    .map((student) => student.id);
 
   const loadStudents = async () => {
     setLoadingStudents(true);
@@ -63,7 +68,7 @@ function PromotionView() {
         `/v1/students?academic_year_id=${fromYear}&class_room_id=${fromClass}&per_page=200`
       );
       setStudents(response.data);
-      setRepeat(
+      setSelected(
         Object.fromEntries(response.data.map((student) => [student.id, false]))
       );
     } catch (err: unknown) {
@@ -81,10 +86,6 @@ function PromotionView() {
     setError(null);
     setDone(null);
 
-    const repeatIds = students
-      .filter((student) => repeat[student.id])
-      .map((student) => student.id);
-
     try {
       const response = await apiFetch<{ message: string; promoted: number }>(
         "/v1/students/promote",
@@ -96,13 +97,13 @@ function PromotionView() {
             from_class_room_id: Number(fromClass),
             to_class_room_id: Number(toClass),
             ...(toSection ? { section_id: Number(toSection) } : {}),
-            repeat_student_ids: repeatIds,
+            student_ids: selectedIds,
           },
         }
       );
       setDone(response.message);
       setStudents([]);
-      setRepeat({});
+      setSelected({});
     } catch (err: unknown) {
       setError(err instanceof ApiError ? err.message : "Unable to promote.");
     } finally {
@@ -145,7 +146,7 @@ function PromotionView() {
               }}
             >
               <option value="">Select academic year</option>
-              {years.map((year) => (
+              {fromYears.map((year) => (
                 <option key={year.id} value={year.id}>
                   {year.name}
                 </option>
@@ -191,7 +192,7 @@ function PromotionView() {
               onChange={(event) => setToYear(event.target.value)}
             >
               <option value="">Select academic year</option>
-              {years.map((year) => (
+              {toYears.map((year) => (
                 <option key={year.id} value={year.id}>
                   {year.name}
                 </option>
@@ -242,7 +243,7 @@ function PromotionView() {
               Candidates ({students.length})
             </h2>
             <p className="mt-0.5 text-xs text-muted">
-              Tick repeat to hold a student back in the same year.
+              Tick Promoted to move a student to the selected session, class and section.
             </p>
           </div>
           <div className="overflow-x-auto">
@@ -253,7 +254,7 @@ function PromotionView() {
                   <Table.Column isRowHeader>Student</Table.Column>
                   <Table.Column>Admission no</Table.Column>
                   <Table.Column>Status</Table.Column>
-                  <Table.Column>Repeat</Table.Column>
+                  <Table.Column>Promoted</Table.Column>
                 </Table.Header>
                 <Table.Body>
                 {students.map((student) => (
@@ -263,9 +264,9 @@ function PromotionView() {
                     <Table.Cell className="text-muted">{student.status ?? "-"}</Table.Cell>
                     <Table.Cell><input
                         type="checkbox"
-                        checked={Boolean(repeat[student.id])}
+                        checked={Boolean(selected[student.id])}
                         onChange={(event) =>
-                          setRepeat((current) => ({
+                          setSelected((current) => ({
                             ...current,
                             [student.id]: event.target.checked,
                           }))
@@ -282,11 +283,11 @@ function PromotionView() {
             <Button
               type="button"
               loading={busy}
-              disabled={!toYear || !toClass}
+              disabled={!toYear || !toClass || selectedIds.length === 0}
               onClick={promote}
             >
-              Promote {students.length} student
-              {students.length === 1 ? "" : "s"}
+              Promote {selectedIds.length} student
+              {selectedIds.length === 1 ? "" : "s"}
             </Button>
           </div>
         </Card>

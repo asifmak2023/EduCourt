@@ -153,7 +153,7 @@ class StudentController extends Controller
                 Rule::exists('academic_years', 'id')->where('campus_id', $tenant['campus_id'])->whereNull('deleted_at'),
             ],
             'to_academic_year_id' => [
-                'required', 'integer', 'different:from_academic_year_id',
+                'required', 'integer',
                 Rule::exists('academic_years', 'id')->where('campus_id', $tenant['campus_id'])->whereNull('deleted_at'),
             ],
             'from_class_room_id' => [
@@ -168,17 +168,18 @@ class StudentController extends Controller
                 'nullable', 'integer',
                 Rule::exists('sections', 'id')->where('class_room_id', $request->integer('to_class_room_id'))->whereNull('deleted_at'),
             ],
-            'repeat_student_ids' => ['sometimes', 'array'],
-            'repeat_student_ids.*' => ['integer'],
+            'student_ids' => ['required', 'array', 'min:1'],
+            'student_ids.*' => ['integer'],
         ]);
 
-        $repeatIds = $data['repeat_student_ids'] ?? [];
+        $studentIds = array_values(array_unique(array_map('intval', $data['student_ids'])));
 
-        $promoted = DB::transaction(function () use ($data, $tenant, $repeatIds) {
+        $promoted = DB::transaction(function () use ($data, $tenant, $studentIds) {
             $enrollments = StudentEnrollment::query()
                 ->where('academic_year_id', $data['from_academic_year_id'])
                 ->where('class_room_id', $data['from_class_room_id'])
                 ->where('status', EnrollmentStatus::Active->value)
+                ->whereIn('student_id', $studentIds)
                 ->with('student')
                 ->get();
 
@@ -189,9 +190,7 @@ class StudentController extends Controller
                     continue;
                 }
 
-                $repeat = in_array($enrollment->student_id, $repeatIds, true);
-
-                $enrollment->update(['status' => $repeat ? EnrollmentStatus::Repeated->value : EnrollmentStatus::Promoted->value]);
+                $enrollment->update(['status' => EnrollmentStatus::Promoted->value]);
 
                 StudentEnrollment::updateOrCreate(
                     [

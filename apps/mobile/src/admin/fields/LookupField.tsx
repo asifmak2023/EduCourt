@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useTr } from "../../lib/i18n";
 import { useTheme } from "../../theme/ThemeProvider";
+import type { SelectOption } from "../types";
 import { lookupDependsOn, useLookup } from "../useLookups";
 import { toText } from "./common";
 
@@ -25,6 +26,7 @@ export function LookupField({
   required,
   dependsValue,
   autoDefault = true,
+  filterOptions,
 }: {
   label: string;
   lookup: string;
@@ -34,6 +36,7 @@ export function LookupField({
   required?: boolean;
   dependsValue?: unknown;
   autoDefault?: boolean;
+  filterOptions?: (options: SelectOption[]) => SelectOption[];
 }) {
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -43,7 +46,14 @@ export function LookupField({
 
   const depParam = lookupDependsOn(lookup);
   const blocked = Boolean(depParam) && (dependsValue === null || dependsValue === undefined || dependsValue === "");
-  const { options, loading, error: loadError } = useLookup(lookup, blocked ? null : (dependsValue as string | number | null));
+  const { options: loadedOptions, loading, error: loadError } = useLookup(
+    lookup,
+    blocked ? null : (dependsValue as string | number | null)
+  );
+  const options = useMemo(
+    () => (filterOptions ? filterOptions(loadedOptions) : loadedOptions),
+    [filterOptions, loadedOptions]
+  );
   useAcademicYearDefault(
     autoDefault && lookup === "academicYears" ? options : emptyAcademicYears,
     toText(value),

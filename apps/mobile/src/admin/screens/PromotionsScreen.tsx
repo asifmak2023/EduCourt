@@ -9,9 +9,11 @@ import {
 } from "react-native";
 import { Card, EmptyState, ErrorText, GhostButton, PrimaryButton, SectionLabel } from "../../components/ui";
 import { ApiError, apiFetch } from "../../lib/api";
+import { relativeAcademicYears } from "../../lib/academicYear";
 import { useCampusId } from "../../lib/campus";
 import { useTheme } from "../../theme/ThemeProvider";
 import { LookupField } from "../fields/LookupField";
+import type { SelectOption } from "../types";
 
 interface Candidate {
   id: number;
@@ -32,7 +34,7 @@ export function PromotionsScreen() {
   const [toSection, setToSection] = useState<unknown>("");
 
   const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [repeatIds, setRepeatIds] = useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [promoting, setPromoting] = useState(false);
@@ -40,6 +42,14 @@ export function PromotionsScreen() {
   const [message, setMessage] = useState<string | null>(null);
 
   const canLoad = Boolean(fromYear) && Boolean(fromClass);
+  const fromYearOptions = useCallback(
+    (options: SelectOption[]) => relativeAcademicYears(options, 2, 0),
+    []
+  );
+  const toYearOptions = useCallback(
+    (options: SelectOption[]) => relativeAcademicYears(options, 0, 1),
+    []
+  );
 
   const loadStudents = useCallback(async () => {
     if (!canLoad) {
@@ -48,7 +58,7 @@ export function PromotionsScreen() {
     setLoading(true);
     setError(null);
     setMessage(null);
-    setRepeatIds([]);
+    setSelectedIds([]);
     try {
       const query = `?academic_year_id=${fromYear}&class_room_id=${fromClass}&per_page=200`;
       const response = await apiFetch<{ data: Candidate[] }>(`/v1/students${query}`, {
@@ -63,8 +73,8 @@ export function PromotionsScreen() {
     }
   }, [canLoad, fromYear, fromClass, campusId, t]);
 
-  const toggleRepeat = (id: number) => {
-    setRepeatIds((previous) =>
+  const toggleSelected = (id: number) => {
+    setSelectedIds((previous) =>
       previous.includes(id) ? previous.filter((value) => value !== id) : [...previous, id]
     );
   };
@@ -72,6 +82,10 @@ export function PromotionsScreen() {
   const promote = async () => {
     if (!toYear || !toClass) {
       setError(t("admin.promotions.selectTarget"));
+      return;
+    }
+    if (selectedIds.length === 0) {
+      setError(t("admin.promotions.selectStudents"));
       return;
     }
     setPromoting(true);
@@ -83,7 +97,7 @@ export function PromotionsScreen() {
         to_academic_year_id: Number(toYear),
         from_class_room_id: Number(fromClass),
         to_class_room_id: Number(toClass),
-        repeat_student_ids: repeatIds,
+        student_ids: selectedIds,
       };
       if (toSection) {
         payload.section_id = Number(toSection);
@@ -95,7 +109,7 @@ export function PromotionsScreen() {
       setMessage(response.message ?? t("admin.promotions.promoted", { count: response.promoted }));
       setLoaded(false);
       setCandidates([]);
-      setRepeatIds([]);
+      setSelectedIds([]);
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : t("admin.promotions.promoteFailed"));
     } finally {
@@ -120,6 +134,7 @@ export function PromotionsScreen() {
           value={fromYear}
           onChange={setFromYear}
           required
+          filterOptions={fromYearOptions}
         />
         <LookupField
           label="Class"
@@ -142,13 +157,14 @@ export function PromotionsScreen() {
             <EmptyState message={t("admin.promotions.empty")} />
           ) : (
             candidates.map((candidate) => {
-              const repeat = repeatIds.includes(candidate.id);
+              const selected = selectedIds.includes(candidate.id);
               return (
                 <Pressable
                   key={candidate.id}
-                  onPress={() => toggleRepeat(candidate.id)}
+                  onPress={() => toggleSelected(candidate.id)}
                   accessibilityRole="checkbox"
-                  accessibilityState={{ checked: repeat }}
+                  accessibilityLabel={t("admin.promotions.promotedLabel")}
+                  accessibilityState={{ checked: selected }}
                   style={[styles.row, { borderColor: colors.border, backgroundColor: colors.surface }]}
                 >
                   <View>
@@ -163,12 +179,12 @@ export function PromotionsScreen() {
                     style={[
                       styles.checkbox,
                       {
-                        borderColor: repeat ? colors.accent : colors.border,
-                        backgroundColor: repeat ? colors.accent : "transparent",
+                        borderColor: selected ? colors.accent : colors.border,
+                        backgroundColor: selected ? colors.accent : "transparent",
                       },
                     ]}
                   >
-                    {repeat ? (
+                    {selected ? (
                       <Text style={{ color: colors.accentForeground, fontSize: 12, fontWeight: "700" }}>x</Text>
                     ) : null}
                   </View>
@@ -188,6 +204,7 @@ export function PromotionsScreen() {
           onChange={setToYear}
           required
           autoDefault={false}
+          filterOptions={toYearOptions}
         />
         <LookupField
           label="Class"
@@ -214,7 +231,7 @@ export function PromotionsScreen() {
         label={t("common.reset")}
         onPress={() => {
           setCandidates([]);
-          setRepeatIds([]);
+          setSelectedIds([]);
           setLoaded(false);
           setMessage(null);
           setError(null);

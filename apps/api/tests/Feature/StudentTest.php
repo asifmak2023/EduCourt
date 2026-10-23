@@ -203,6 +203,7 @@ class StudentTest extends TestCase
             'from_class_room_id' => $this->classOne->id,
             'to_class_room_id' => $this->classTwo->id,
             'section_id' => $this->sectionTwo->id,
+            'student_ids' => [$student->id],
         ])->assertOk()->assertJsonPath('promoted', 1);
 
         $this->assertDatabaseHas('student_enrollments', [
@@ -216,6 +217,47 @@ class StudentTest extends TestCase
             'academic_year_id' => $nextYear->id,
             'class_room_id' => $this->classTwo->id,
             'status' => 'active',
+        ]);
+    }
+
+    public function test_promotion_moves_only_selected_students(): void
+    {
+        $ali = $this->student('ADM-1', 'Ali', 'Raza');
+        $sara = $this->student('ADM-2', 'Sara', 'Khan');
+        $this->enroll($ali, $this->classOne, $this->sectionOne);
+        $this->enroll($sara, $this->classOne, $this->sectionOne);
+
+        $nextYear = AcademicYear::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'name' => '2027-2028', 'code' => 'AY2',
+            'starts_on' => '2027-04-01', 'ends_on' => '2028-03-31', 'status' => 'active',
+        ]);
+
+        $this->as($this->admin)->postJson('/api/v1/students/promote', [
+            'from_academic_year_id' => $this->year->id,
+            'to_academic_year_id' => $nextYear->id,
+            'from_class_room_id' => $this->classOne->id,
+            'to_class_room_id' => $this->classTwo->id,
+            'section_id' => $this->sectionTwo->id,
+            'student_ids' => [$ali->id],
+        ])->assertOk()->assertJsonPath('promoted', 1);
+
+        $this->assertDatabaseHas('student_enrollments', [
+            'student_id' => $ali->id,
+            'academic_year_id' => $this->year->id,
+            'status' => 'promoted',
+        ]);
+
+        $this->assertDatabaseHas('student_enrollments', [
+            'student_id' => $sara->id,
+            'academic_year_id' => $this->year->id,
+            'status' => 'active',
+        ]);
+
+        $this->assertDatabaseMissing('student_enrollments', [
+            'student_id' => $sara->id,
+            'academic_year_id' => $nextYear->id,
         ]);
     }
 

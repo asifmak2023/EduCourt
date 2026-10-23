@@ -388,6 +388,8 @@ export const en = {
 
   "admin.promotions.loadFailed": "Unable to load students.",
   "admin.promotions.selectTarget": "Select the target academic year and class.",
+  "admin.promotions.selectStudents": "Select at least one student to promote.",
+  "admin.promotions.promotedLabel": "Promoted",
   "admin.promotions.promoteFailed": "Unable to promote students.",
   "admin.promotions.promoted": "Promoted {{count}} student(s).",
   "admin.promotions.from": "From",
@@ -397,7 +399,7 @@ export const en = {
   "admin.promotions.empty": "No students found for this selection.",
   "admin.promotions.studentHash": "Student #{{id}}",
   "admin.promotions.promote": "Promote",
-  "admin.promotions.hint": "Checked students repeat the same class; the rest move to the target class.",
+  "admin.promotions.hint": "Checked students move to the selected session, class and section.",
 
   "admin.report.run": "Run report",
   "admin.report.rows.one": "{{count}} row",

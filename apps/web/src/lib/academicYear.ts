@@ -140,6 +140,29 @@ export function sortAcademicYears<T extends AcademicYearLike>(years: readonly T[
   });
 }
 
+export function relativeAcademicYears<T extends AcademicYearLike>(
+  years: readonly T[],
+  before: number,
+  after: number
+): T[] {
+  const sorted = sortAcademicYears(years);
+
+  if (sorted.length === 0) {
+    return [];
+  }
+
+  let currentIndex = sorted.findIndex((year) => year.is_current);
+
+  if (currentIndex < 0) {
+    currentIndex = sorted.length - 1;
+  }
+
+  const start = Math.max(0, currentIndex - before);
+  const end = Math.min(sorted.length, currentIndex + after + 1);
+
+  return sorted.slice(start, end);
+}
+
 export function useAcademicYearDefault(
   years: readonly { id: number | string; is_current?: boolean }[],
   value: string,

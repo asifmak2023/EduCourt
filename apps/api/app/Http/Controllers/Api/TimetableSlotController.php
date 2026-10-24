@@ -32,6 +32,7 @@ class TimetableSlotController extends Controller
             ->when($request->filled('section_id'), fn ($q) => $q->where('section_id', $request->integer('section_id')))
             ->when($request->filled('teacher_user_id'), fn ($q) => $q->where('teacher_user_id', $request->integer('teacher_user_id')))
             ->when($request->filled('day_of_week'), fn ($q) => $q->where('day_of_week', $request->integer('day_of_week')))
+            ->when($request->filled('period_id'), fn ($q) => $q->where('period_id', $request->integer('period_id')))
             ->orderBy('day_of_week')
             ->orderBy('period_id');
 

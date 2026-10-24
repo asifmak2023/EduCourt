@@ -1,7 +1,7 @@
 "use client";
 
 import { academicYearSelectOptions } from "@/lib/academicYear";
-import { useAcademicYears, useClassRooms } from "@/lib/useLookups";
+import { useAcademicYears, useClassRooms, usePeriods } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
 import { MasterList } from "@/components/MasterList";
 import { Badge } from "@/components/ui";
@@ -28,6 +28,7 @@ export default function TimetableSlotsPage() {
 function SlotsTable() {
   const { items: years } = useAcademicYears();
   const { items: classes } = useClassRooms();
+  const { items: periods } = usePeriods();
 
   return (
     <MasterList<TimetableSlot>
@@ -60,6 +61,16 @@ function SlotsTable() {
             value,
             label,
           })),
+        },
+        {
+          param: "period_id",
+          placeholder: "All periods",
+          options: [...periods]
+            .sort((a, b) => a.sequence - b.sequence)
+            .map((period) => ({
+              value: String(period.id),
+              label: `${period.sequence}. ${period.name}`,
+            })),
         },
       ]}
       columns={[

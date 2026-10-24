@@ -157,6 +157,25 @@ class TimetableTest extends TestCase
         ]))->assertStatus(409);
     }
 
+    public function test_slots_can_be_filtered_by_period(): void
+    {
+        $this->apiPost('/api/v1/timetable-slots', $this->slot([
+            'teacher_user_id' => $this->teacherOne->id,
+        ]))->assertStatus(201);
+
+        $this->apiPost('/api/v1/timetable-slots', $this->slot([
+            'period_id' => $this->periodTwo->id,
+            'teacher_user_id' => $this->teacherOne->id,
+            'room_id' => $this->roomTwo->id,
+        ]))->assertStatus(201);
+
+        $this->as($this->admin)
+            ->getJson("/api/v1/timetable-slots?period_id={$this->periodOne->id}")
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.period_id', $this->periodOne->id);
+    }
+
     public function test_slot_requires_a_subject_mapped_to_the_class(): void
     {
         $unmapped = $this->subject('SCI');

@@ -10,6 +10,8 @@ export function BreakdownCard({
   title: string;
   rows: (string | number)[][];
 }) {
+  const columns = rows.reduce((max, row) => Math.max(max, row.length), 0);
+
   return (
     <SectionCard title={title}>
       {rows.length === 0 ? (
@@ -18,10 +20,21 @@ export function BreakdownCard({
         <Table variant="secondary">
           <Table.ScrollContainer>
             <Table.Content aria-label={title}>
+              <Table.Header>
+                {Array.from({ length: columns }, (_, index) => (
+                  <Table.Column
+                    key={index}
+                    isRowHeader={index === 0}
+                    className={index === 0 ? "sr-only" : "sr-only text-right"}
+                  >
+                    {index === 0 ? "Label" : index === 1 ? "Value" : `Value ${index}`}
+                  </Table.Column>
+                ))}
+              </Table.Header>
               <Table.Body>
                 {rows.map((row, index) => (
-                  <Table.Row key={index} id={index}>
-                    {row.map((cell, cellIndex) => (
+                  <Table.Row key={index} id={`row-${index}`}>
+                    {Array.from({ length: columns }, (_, cellIndex) => (
                       <Table.Cell
                         key={cellIndex}
                         className={
@@ -30,7 +43,7 @@ export function BreakdownCard({
                             : "text-right text-muted"
                         }
                       >
-                        {cell}
+                        {row[cellIndex] ?? ""}
                       </Table.Cell>
                     ))}
                   </Table.Row>

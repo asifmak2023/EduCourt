@@ -4,6 +4,9 @@ namespace Tests\Feature;
 
 use App\Enums\CampusType;
 use App\Enums\RoleName;
+use App\Enums\ScholarshipAwardStatus;
+use App\Enums\ScholarshipDiscountType;
+use App\Enums\ScholarshipType;
 use App\Models\AcademicYear;
 use App\Models\Campus;
 use App\Models\ClassRoom;
@@ -13,6 +16,8 @@ use App\Models\ExamPaper;
 use App\Models\ExamType;
 use App\Models\Institution;
 use App\Models\PayrollRun;
+use App\Models\Scholarship;
+use App\Models\ScholarshipAward;
 use App\Models\Section;
 use App\Models\StaffMember;
 use App\Models\Stage;
@@ -152,6 +157,30 @@ class ReportTest extends TestCase
         $this->assertIsArray($dashboard['vouchers_by_status']);
         $this->assertIsArray($dashboard['admissions_by_status']);
 
+        $scholarship = Scholarship::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'name' => 'Merit Award',
+            'code' => 'MERIT',
+            'type' => ScholarshipType::Merit,
+            'discount_type' => ScholarshipDiscountType::Percentage,
+            'value' => 10,
+            'academic_year_id' => $this->year->id,
+            'is_active' => true,
+        ]);
+
+        ScholarshipAward::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'scholarship_id' => $scholarship->id,
+            'student_id' => $this->ali->id,
+            'academic_year_id' => $this->year->id,
+            'awarded_on' => '2026-09-01',
+            'starts_on' => '2026-04-01',
+            'ends_on' => '2027-03-31',
+            'status' => ScholarshipAwardStatus::Active,
+        ]);
+
         $progress = $this->api($this->admin)
             ->getJson('/api/v1/reports/progress?academic_year_id='.$this->year->id)
             ->assertOk()
@@ -159,6 +188,12 @@ class ReportTest extends TestCase
 
         $this->assertSame(2, $progress['students']['total']);
         $this->assertSame(2, $progress['enrollments']['total']);
+        $this->assertSame('active', $progress['students']['by_status'][0]['status']);
+        $this->assertSame('male', $progress['students']['by_gender'][0]['gender']);
+        $this->assertSame('active', $progress['enrollments']['by_status'][0]['status']);
+        $this->assertSame(1, $progress['scholarships']['active_awards']);
+        $this->assertSame('merit', $progress['scholarships']['by_type'][0]['type']);
+        $this->assertSame(1, $progress['scholarships']['by_type'][0]['awards']);
     }
 
     public function test_attendance_summary_computes_rate(): void

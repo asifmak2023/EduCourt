@@ -10,6 +10,7 @@ use App\Enums\JournalStatus;
 use App\Enums\LeaveStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\PayrollRunStatus;
+use App\Enums\ScholarshipAwardStatus;
 use App\Enums\StaffStatus;
 use App\Enums\StudentStatus;
 use App\Enums\VoucherStatus;
@@ -152,7 +153,7 @@ class ReportService
 
         $awards = ScholarshipAward::query()
             ->with('scholarship')
-            ->where('status', 'active')
+            ->where('status', ScholarshipAwardStatus::Active->value)
             ->when($filters['academic_year_id'] ?? null, fn (Builder $q, $year) => $q->where('academic_year_id', $year))
             ->get();
 
@@ -174,25 +175,29 @@ class ReportService
                 'by_status' => (clone $students)
                     ->select('status', DB::raw('count(*) as total'))
                     ->groupBy('status')
-                    ->pluck('total', 'status')
-                    ->map(fn ($count, $status) => ['status' => $status, 'total' => (int) $count])
-                    ->values(),
+                    ->get()
+                    ->map(fn ($row) => [
+                        'status' => $this->enumValue($row->status),
+                        'total' => (int) $row->total,
+                    ])->values(),
                 'by_gender' => (clone $students)
                     ->select('gender', DB::raw('count(*) as total'))
                     ->groupBy('gender')
-                    ->pluck('total', 'gender')
-                    ->map(fn ($count, $gender) => ['gender' => $gender, 'total' => (int) $count])
-                    ->values(),
+                    ->get()
+                    ->map(fn ($row) => [
+                        'gender' => $this->enumValue($row->gender),
+                        'total' => (int) $row->total,
+                    ])->values(),
             ],
             'admissions' => [
                 'total' => (int) (clone $admissions)->count(),
                 'by_status' => (clone $admissions)
                     ->select('status', DB::raw('count(*) as total'))
                     ->groupBy('status')
-                    ->pluck('total', 'status')
-                    ->map(fn ($count, $status) => [
-                        'status' => $status instanceof AdmissionStatus ? $status->value : $status,
-                        'total' => (int) $count,
+                    ->get()
+                    ->map(fn ($row) => [
+                        'status' => $this->enumValue($row->status),
+                        'total' => (int) $row->total,
                     ])->values(),
             ],
             'enrollments' => [
@@ -200,9 +205,11 @@ class ReportService
                 'by_status' => (clone $enrollments)
                     ->select('status', DB::raw('count(*) as total'))
                     ->groupBy('status')
-                    ->pluck('total', 'status')
-                    ->map(fn ($count, $status) => ['status' => $status, 'total' => (int) $count])
-                    ->values(),
+                    ->get()
+                    ->map(fn ($row) => [
+                        'status' => $this->enumValue($row->status),
+                        'total' => (int) $row->total,
+                    ])->values(),
             ],
             'scholarships' => [
                 'active_awards' => $awards->count(),
@@ -730,5 +737,18 @@ class ReportService
     private function percentage(int $part, int $total): ?float
     {
         return $total > 0 ? round($part / $total * 100, 2) : null;
+    }
+
+    private function enumValue(mixed $value): ?string
+    {
+        if ($value instanceof \BackedEnum) {
+            return (string) $value->value;
+        }
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (string) $value;
     }
 }

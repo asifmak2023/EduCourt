@@ -115,35 +115,35 @@ function ProgressReport() {
           <div className="grid gap-6 lg:grid-cols-2">
             <BreakdownCard
               title="Students by status"
-              rows={data.students.by_status.map((row) => [
+              rows={(data.students.by_status ?? []).map((row) => [
                 row.status,
                 formatNumber(row.total),
               ])}
             />
             <BreakdownCard
               title="Students by gender"
-              rows={data.students.by_gender.map((row) => [
+              rows={(data.students.by_gender ?? []).map((row) => [
                 row.gender ?? "Unspecified",
                 formatNumber(row.total),
               ])}
             />
             <BreakdownCard
               title="Admissions by status"
-              rows={data.admissions.by_status.map((row) => [
+              rows={(data.admissions.by_status ?? []).map((row) => [
                 row.status,
                 formatNumber(row.total),
               ])}
             />
             <BreakdownCard
               title="Enrollments by status"
-              rows={data.enrollments.by_status.map((row) => [
+              rows={(data.enrollments.by_status ?? []).map((row) => [
                 row.status,
                 formatNumber(row.total),
               ])}
             />
             <BreakdownCard
               title="Scholarships by type"
-              rows={data.scholarships.by_type.map((row) => [
+              rows={(data.scholarships.by_type ?? []).map((row) => [
                 row.type,
                 `${formatNumber(row.awards)} awards`,
                 formatCurrency(row.value),

@@ -865,6 +865,7 @@ Route::prefix('v1')->group(function () {
             Route::get('canteen/reports/wallet-summary', [CanteenReportController::class, 'walletSummary'])->middleware('permission:canteen.export');
 
             Route::get('reports/campus-dashboard', [ReportController::class, 'campusDashboard'])->middleware('permission:report.view');
+            Route::get('reports/campus-comparison', [ReportController::class, 'campusComparison'])->middleware('permission:report.view');
             Route::get('reports/progress', [ReportController::class, 'progress'])->middleware('permission:report.view');
             Route::get('reports/attendance', [ReportController::class, 'attendance'])->middleware('permission:report.view');
             Route::get('reports/results/{exam}', [ReportController::class, 'results'])->middleware('permission:report.view');

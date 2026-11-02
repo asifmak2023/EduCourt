@@ -1,22 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import { Table } from "@heroui/react";
+import { useMemo, useState } from "react";
 import { PermissionGate } from "@/components/PermissionGate";
-import { ReportsTabs } from "@/components/ReportsTabs";
+import {
+  GroupedBarsChart,
+  useChartColors,
+} from "@/components/Charts";
+import {
+  ReportScaffold,
+  ReportSection,
+  ReportStatGrid,
+  ReportTable,
+} from "@/components/reports";
 import { Field, Select } from "@/components/Form";
 import { FeeVoucherAction } from "@/components/fee-counter/FeeVoucherAction";
-import {
-  Card,
-  EmptyState,
-  ErrorNotice,
-  PageHeader,
-  Spinner,
-  StatCard,
-} from "@/components/ui";
 import { formatNumber } from "@/lib/format";
+import { downloadCsv, reportSlug } from "@/lib/csv";
 import { useStudents } from "@/lib/useLookups";
 import { useReport } from "@/lib/useReport";
+import type { ReportFilterState } from "@/lib/reportPeriod";
 import type { ReportStudentYearly } from "@/lib/types";
 
 export default function StudentYearlyReportPage() {
@@ -28,8 +30,14 @@ export default function StudentYearlyReportPage() {
 }
 
 function StudentYearlyReport() {
+  const colors = useChartColors();
   const { items: students } = useStudents();
   const [studentId, setStudentId] = useState("");
+  const [filters] = useState<ReportFilterState>({
+    granularity: "all",
+    from: "",
+    to: "",
+  });
 
   const { data, loading, error } = useReport<ReportStudentYearly>(
     studentId ? `/v1/reports/students/${studentId}/yearly` : null
@@ -39,17 +47,51 @@ function StudentYearlyReport() {
     (student) => String(student.id) === studentId
   );
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Student yearly report"
-        description="A student's attendance, academics and conduct by academic year."
-      />
-      <ReportsTabs active="students" />
+  const yearRows = useMemo(
+    () =>
+      (data?.years ?? []).map((year) => [
+        year.academic_year ?? `Year #${year.academic_year_id}`,
+        `${year.class_room ?? "-"}${year.section ? ` / ${year.section}` : ""}`,
+        `${year.attendance.attendance_percentage}%`,
+        year.academics.percentage === null
+          ? "-"
+          : `${year.academics.percentage}%`,
+        year.conduct_records,
+      ]),
+    [data]
+  );
 
-      <Card className="p-4">
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="w-full max-w-md">
+  const series = data?.series ?? [];
+
+  return (
+    <ReportScaffold
+      title="Student yearly report"
+      description="A student's attendance, academics and conduct by academic year."
+      active="students"
+      filters={filters}
+      onFiltersChange={() => undefined}
+      supported={["all"]}
+      showDates={false}
+      showPeriods={false}
+      documentTitle="Student yearly report"
+      documentScope={
+        data ? `${data.student.name} (${data.student.admission_no})` : null
+      }
+      loading={loading}
+      error={error}
+      hasData={Boolean(data) && Boolean(studentId)}
+      emptyMessage="Select a student to view their yearly analysis."
+      onExport={() =>
+        downloadCsv(
+          `${reportSlug(`student-${data?.student.admission_no ?? studentId}`)}-yearly`,
+          ["Year", "Class", "Attendance", "Academics", "Conduct"],
+          yearRows
+        )
+      }
+      exportDisabled={yearRows.length === 0}
+      rangeExtras={
+        <div className="flex w-full flex-wrap items-end gap-3 sm:w-auto">
+          <div className="w-full sm:w-64">
             <Field label="Student" htmlFor="yearly_student" required>
               <Select
                 id="yearly_student"
@@ -75,72 +117,69 @@ function StudentYearlyReport() {
             />
           ) : null}
         </div>
-      </Card>
-
-      {error ? <ErrorNotice message={error} /> : null}
-      {!studentId ? (
-        <EmptyState message="Select a student to view their yearly analysis." />
-      ) : loading ? (
-        <Spinner />
-      ) : data ? (
+      }
+    >
+      {data ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <StatCard label="Academic years" value={formatNumber(data.summary.years)} />
-            <StatCard
-              label="Overall attendance"
-              value={`${data.summary.attendance_percentage}%`}
-            />
-            <StatCard
-              label="Conduct records"
-              value={formatNumber(data.summary.conduct_records)}
-              tone={data.summary.conduct_records > 0 ? "danger" : "default"}
-            />
-          </div>
+          <ReportStatGrid
+            items={[
+              {
+                label: "Academic years",
+                value: formatNumber(data.summary.years),
+              },
+              {
+                label: "Overall attendance",
+                value: `${data.summary.attendance_percentage}%`,
+              },
+              {
+                label: "Conduct records",
+                value: formatNumber(data.summary.conduct_records),
+              },
+            ]}
+          />
 
-          <Card>
-            <div className="border-b border-border-secondary px-5 py-4">
-              <h2 className="text-sm font-semibold text-foreground">
-                {data.student.name} ({data.student.admission_no})
-              </h2>
+          <ReportSection
+            title="Year on year"
+            description="Attendance and academic percentage by academic year."
+          >
+            <div className="report-chart rounded border border-black/20 p-3">
+              <GroupedBarsChart
+                data={series.map((point) => ({
+                  label: point.label,
+                  attendance: point.attendance_percentage,
+                  academics: point.academic_percentage,
+                }))}
+                series={[
+                  {
+                    key: "attendance",
+                    label: "Attendance %",
+                    color: colors["--success"],
+                  },
+                  {
+                    key: "academics",
+                    label: "Academics %",
+                    color: colors["--accent"],
+                  },
+                ]}
+                formatValue={(value) => `${value}%`}
+                emptyAsGraph
+              />
             </div>
-            <div className="overflow-x-auto">
-              <Table variant="secondary">
-                <Table.ScrollContainer>
-                  <Table.Content aria-label="Yearly results">
-                  <Table.Header>
-                    <Table.Column isRowHeader>Year</Table.Column>
-                    <Table.Column>Class</Table.Column>
-                    <Table.Column className="text-right">Attendance</Table.Column>
-                    <Table.Column className="text-right">Academics</Table.Column>
-                    <Table.Column className="text-right">Conduct</Table.Column>
-                  </Table.Header>
-                  <Table.Body>
-                  {data.years.length === 0 ? (
-                    <Table.Row id="row-1">
-                      <Table.Cell className="text-muted">No enrollment history for this student.</Table.Cell><Table.Cell /><Table.Cell /><Table.Cell /><Table.Cell />
-                    </Table.Row>
-                  ) : (
-                    data.years.map((year) => (
-                      <Table.Row key={year.academic_year_id} id={year.academic_year_id}>
-                        <Table.Cell className="text-foreground">{year.academic_year ?? `Year #${year.academic_year_id}`}</Table.Cell>
-                        <Table.Cell className="text-muted">{year.class_room ?? "-"}
-                          {year.section ? ` / ${year.section}` : ""}</Table.Cell>
-                        <Table.Cell className="text-right text-muted">{year.attendance.attendance_percentage}%</Table.Cell>
-                        <Table.Cell className="text-right text-muted">{year.academics.percentage === null
-                            ? "-"
-                            : `${year.academics.percentage}%`}</Table.Cell>
-                        <Table.Cell className="text-right text-muted">{formatNumber(year.conduct_records)}</Table.Cell>
-                      </Table.Row>
-                    ))
-                  )}
-                  </Table.Body>
-                  </Table.Content>
-                </Table.ScrollContainer>
-              </Table>
-            </div>
-          </Card>
+          </ReportSection>
+
+          <ReportSection
+            title={`${data.student.name} (${data.student.admission_no})`}
+          >
+            <ReportTable
+              columns={["Year", "Class", "Attendance", "Academics", "Conduct"]}
+              align={["left", "left", "right", "right", "right"]}
+              empty="No enrollment history for this student."
+              rows={yearRows}
+            />
+          </ReportSection>
+
         </>
       ) : null}
-    </div>
+    </ReportScaffold>
   );
 }

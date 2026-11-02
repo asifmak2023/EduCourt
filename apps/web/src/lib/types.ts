@@ -2628,7 +2628,23 @@ export interface CountRow {
   total: number;
 }
 
+export interface ReportPeriodMeta {
+  granularity: string;
+  from: string | null;
+  to: string | null;
+  label: string;
+}
+
+export interface ReportProgressSeriesPoint {
+  key: string;
+  label: string;
+  admissions?: number;
+  enrollments?: number;
+  awards?: number;
+}
+
 export interface ReportProgress {
+  period?: ReportPeriodMeta;
   filters: {
     from: string | null;
     to: string | null;
@@ -2654,9 +2670,23 @@ export interface ReportProgress {
     by_type: { type: string; awards: number; value: number }[];
   };
   events: { total: number };
+  series?: ReportProgressSeriesPoint[];
+}
+
+export interface ReportAttendanceSeriesPoint {
+  key: string;
+  label: string;
+  total: number;
+  attended: number;
+  absent: number;
+  late: number;
+  leave: number;
+  excused: number;
+  attendance_percentage: number | null;
 }
 
 export interface ReportAttendance {
+  period?: ReportPeriodMeta;
   filters: {
     class_room_id: number | null;
     academic_year_id: number | null;
@@ -2680,9 +2710,11 @@ export interface ReportAttendance {
     absent: number;
     attendance_percentage: number;
   }[];
+  series?: ReportAttendanceSeriesPoint[];
 }
 
 export interface ReportResults {
+  period?: ReportPeriodMeta;
   exam: {
     id: number;
     name: string;
@@ -2714,9 +2746,33 @@ export interface ReportResults {
     passed: number;
     failed: number;
   }[];
+  grade_distribution?: {
+    grade: string;
+    min_percentage: number;
+    max_percentage: number;
+    total: number;
+  }[];
+  score_bands?: {
+    band: string;
+    min: number;
+    max: number;
+    total: number;
+  }[];
+}
+
+export interface ReportStaffSeriesPoint {
+  key: string;
+  label: string;
+  total: number;
+  present: number;
+  absent: number;
+  leave: number;
+  leave_requests: number;
+  leave_approved: number;
 }
 
 export interface ReportStaff {
+  period?: ReportPeriodMeta;
   filters: { as_on: string; from: string | null; to: string | null };
   headcount: {
     total: number;
@@ -2736,9 +2792,19 @@ export interface ReportStaff {
     by_status: { status: string | null; total: number }[];
     approved_days: number;
   };
+  series?: ReportStaffSeriesPoint[];
+}
+
+export interface ReportStudentYearlySeriesPoint {
+  key: string;
+  label: string;
+  attendance_percentage: number;
+  academic_percentage: number;
+  conduct_records: number;
 }
 
 export interface ReportStudentYearly {
+  period?: ReportPeriodMeta;
   student: { id: number; admission_no: string; name: string };
   years: {
     academic_year_id: number;
@@ -2765,9 +2831,19 @@ export interface ReportStudentYearly {
     attendance_percentage: number;
     conduct_records: number;
   };
+  series?: ReportStudentYearlySeriesPoint[];
+}
+
+export interface ReportFinancialSeriesPoint {
+  key: string;
+  label: string;
+  income: number;
+  expense: number;
+  surplus: number;
 }
 
 export interface ReportFinancial {
+  period?: ReportPeriodMeta;
   filters: {
     fiscal_year_id: number | null;
     from: string | null;
@@ -2777,9 +2853,19 @@ export interface ReportFinancial {
   expense: number;
   surplus: number;
   surplus_percentage: number | null;
+  series?: ReportFinancialSeriesPoint[];
+}
+
+export interface ReportPayrollSeriesPoint {
+  key: string;
+  label: string;
+  gross: number;
+  deductions: number;
+  net: number;
 }
 
 export interface ReportPayroll {
+  period?: ReportPeriodMeta;
   filters: { from: string | null; to: string | null };
   totals: {
     runs: number;
@@ -2797,4 +2883,41 @@ export interface ReportPayroll {
     deductions: number;
     net: number;
   }[];
+  series?: ReportPayrollSeriesPoint[];
+}
+
+export interface ReportCampusComparisonRow {
+  campus_id: number;
+  campus: string;
+  code: string | null;
+  students: number;
+  active_students: number;
+  staff: number;
+  admissions: number;
+  attendance_percentage: number | null;
+  income: number;
+  expense: number;
+  surplus: number;
+  payroll_net: number;
+}
+
+export interface ReportCampusComparison {
+  period?: ReportPeriodMeta;
+  filters: {
+    from: string | null;
+    to: string | null;
+  };
+  campuses: ReportCampusComparisonRow[];
+  totals: {
+    campuses: number;
+    students: number;
+    active_students: number;
+    staff: number;
+    admissions: number;
+    income: number;
+    expense: number;
+    surplus: number;
+    payroll_net: number;
+  };
+  campus_ids: number[];
 }

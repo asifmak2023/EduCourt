@@ -1,19 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PermissionGate } from "@/components/PermissionGate";
-import { ReportsTabs } from "@/components/ReportsTabs";
-import { Field, Select, TextInput } from "@/components/Form";
 import {
-  Card,
-  ErrorNotice,
-  PageHeader,
-  Spinner,
-  StatCard,
-} from "@/components/ui";
+  GroupedBarsChart,
+  TrendChart,
+  useChartColors,
+} from "@/components/Charts";
+import {
+  ReportScaffold,
+  ReportSection,
+  ReportStatGrid,
+  ReportTable,
+} from "@/components/reports";
+import { ReportYearSelect } from "@/components/reports/ReportRangeBar";
 import { formatCurrency } from "@/lib/format";
+import { downloadCsv, reportSlug } from "@/lib/csv";
 import { useFiscalYears } from "@/lib/useLookups";
 import { useReport } from "@/lib/useReport";
+import { buildReportQuery, type ReportFilterState } from "@/lib/reportPeriod";
 import type { ReportFinancial } from "@/lib/types";
 
 export default function FinancialReportPage() {
@@ -25,91 +30,150 @@ export default function FinancialReportPage() {
 }
 
 function FinancialReport() {
+  const colors = useChartColors();
   const { items: fiscalYears } = useFiscalYears();
   const [fiscalYearId, setFiscalYearId] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [filters, setFilters] = useState<ReportFilterState>({
+    granularity: "all",
+    from: "",
+    to: "",
+  });
 
-  const params = new URLSearchParams();
-  if (fiscalYearId) params.set("fiscal_year_id", fiscalYearId);
-  if (from) params.set("from", from);
-  if (to) params.set("to", to);
-  const query = params.toString();
+  const query = buildReportQuery({
+    ...filters,
+    fiscal_year_id: fiscalYearId,
+  });
 
   const { data, loading, error } = useReport<ReportFinancial>(
-    `/v1/reports/financial${query ? `?${query}` : ""}`
+    `/v1/reports/financial${query}`
+  );
+
+  const series = useMemo(() => data?.series ?? [], [data]);
+
+  const selectedYear = fiscalYears.find(
+    (year) => String(year.id) === fiscalYearId
+  );
+
+  const exportRows = useMemo(
+    () =>
+      series.map((point) => [
+        point.label,
+        point.income,
+        point.expense,
+        point.surplus,
+      ]),
+    [series]
   );
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Financial report"
-        description="Income, expense and surplus from the posted ledger."
-      />
-      <ReportsTabs active="financial" />
+    <ReportScaffold
+      title="Financial report"
+      description="Income, expense and surplus from the posted ledger."
+      active="financial"
+      filters={filters}
+      onFiltersChange={setFilters}
+      documentScope={selectedYear ? `Fiscal year ${selectedYear.name}` : null}
+      periodLabel={data?.period?.label}
+      loading={loading}
+      error={error}
+      hasData={Boolean(data)}
+      onExport={() =>
+        downloadCsv(
+          `${reportSlug("financial")}-${filters.granularity}`,
+          ["Period", "Income", "Expense", "Surplus"],
+          exportRows
+        )
+      }
+      exportDisabled={exportRows.length === 0}
+      rangeExtras={
+        <ReportYearSelect
+          id="fin_year"
+          label="Fiscal year"
+          value={fiscalYearId}
+          onChange={setFiscalYearId}
+          items={fiscalYears.map((year) => ({ id: year.id, name: year.name }))}
+          allLabel="All fiscal years"
+        />
+      }
+    >
+      {data ? (
+        <>
+          <ReportStatGrid
+            items={[
+              { label: "Income", value: formatCurrency(data.income) },
+              { label: "Expense", value: formatCurrency(data.expense) },
+              {
+                label: "Surplus",
+                value: formatCurrency(data.surplus),
+                hint:
+                  data.surplus_percentage === null
+                    ? undefined
+                    : `${data.surplus_percentage}% of income`,
+              },
+            ]}
+          />
 
-      <Card className="p-4">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Field label="Fiscal year" htmlFor="fin_year">
-            <Select
-              id="fin_year"
-              value={fiscalYearId}
-              onChange={(event) => setFiscalYearId(event.target.value)}
-            >
-              <option value="">All fiscal years</option>
-              {fiscalYears.map((year) => (
-                <option key={year.id} value={year.id}>
-                  {year.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="From" htmlFor="fin_from">
-            <TextInput
-              id="fin_from"
-              type="date"
-              value={from}
-              onChange={(event) => setFrom(event.target.value)}
-            />
-          </Field>
-          <Field label="To" htmlFor="fin_to">
-            <TextInput
-              id="fin_to"
-              type="date"
-              value={to}
-              onChange={(event) => setTo(event.target.value)}
-            />
-          </Field>
-        </div>
-      </Card>
+          <ReportSection
+            title="Income vs expense"
+            description="Posted ledger movement per period."
+          >
+            <div className="report-chart rounded border border-black/20 p-3">
+              <GroupedBarsChart
+                data={series.map((point) => ({
+                  label: point.label,
+                  income: point.income,
+                  expense: point.expense,
+                }))}
+                series={[
+                  {
+                    key: "income",
+                    label: "Income",
+                    color: colors["--success"],
+                  },
+                  {
+                    key: "expense",
+                    label: "Expense",
+                    color: colors["--danger"],
+                  },
+                ]}
+                formatValue={(value) => formatCurrency(value)}
+                emptyAsGraph
+              />
+            </div>
+          </ReportSection>
 
-      {error ? <ErrorNotice message={error} /> : null}
-      {loading ? (
-        <Spinner />
-      ) : data ? (
-        <div className="grid gap-4 sm:grid-cols-3">
-          <StatCard
-            label="Income"
-            value={formatCurrency(data.income)}
-            tone="positive"
-          />
-          <StatCard
-            label="Expense"
-            value={formatCurrency(data.expense)}
-            tone="danger"
-          />
-          <StatCard
-            label="Surplus"
-            value={formatCurrency(data.surplus)}
-            tone={data.surplus >= 0 ? "positive" : "danger"}
-            hint={
-              data.surplus_percentage === null
-                ? undefined
-                : `${data.surplus_percentage}% of income`
-            }
-          />
-        </div>
+          <ReportSection
+            title="Surplus trend"
+            description="Income minus expense for each period."
+          >
+            <div className="report-chart rounded border border-black/20 p-3">
+              <TrendChart
+                data={series.map((point) => ({
+                  label: point.label,
+                  value: point.surplus,
+                }))}
+                color={colors["--accent"]}
+                formatValue={(value) => formatCurrency(value)}
+              />
+            </div>
+          </ReportSection>
+
+          <ReportSection title="Period breakdown">
+            <ReportTable
+              columns={["Period", "Income", "Expense", "Surplus"]}
+              align={["left", "right", "right", "right"]}
+              rows={series.map((point) => [
+                point.label,
+                formatCurrency(point.income),
+                formatCurrency(point.expense),
+                formatCurrency(point.surplus),
+              ])}
+            />
+          </ReportSection>
+
+
+        </>
       ) : null}
-    </div>
+    </ReportScaffold>
   );
 }

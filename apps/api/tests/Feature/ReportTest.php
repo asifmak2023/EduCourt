@@ -424,6 +424,101 @@ class ReportTest extends TestCase
             ->assertOk();
     }
 
+    public function test_attendance_series_is_bucketed_by_granularity(): void
+    {
+        $this->attendance($this->ali, '2026-09-02', 'present');
+        $this->attendance($this->ali, '2026-09-08', 'absent');
+
+        $daily = $this->api($this->admin)
+            ->getJson('/api/v1/reports/attendance?from=2026-09-01&to=2026-09-10&granularity=day')
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame('day', $daily['period']['granularity']);
+        $this->assertCount(10, $daily['series']);
+        $this->assertSame('2026-09-01', $daily['series'][0]['key']);
+        $this->assertSame(1, $daily['series'][1]['total']);
+        $this->assertSame(1, $daily['series'][7]['absent']);
+
+        $weekly = $this->api($this->admin)
+            ->getJson('/api/v1/reports/attendance?from=2026-09-01&to=2026-09-30&granularity=week')
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame('week', $weekly['period']['granularity']);
+        $this->assertSame('2026-08-31', $weekly['series'][0]['key']);
+        $this->assertSame(2, array_sum(array_column($weekly['series'], 'total')));
+        $this->assertSame(
+            1,
+            (int) collect($weekly['series'])->where('key', '2026-09-07')->first()['absent']
+        );
+    }
+
+    public function test_progress_series_tracks_admissions_and_enrollments(): void
+    {
+        StudentEnrollment::query()->update(['starts_on' => '2026-04-05']);
+
+        $data = $this->api($this->admin)
+            ->getJson('/api/v1/reports/progress?from=2026-04-01&to=2027-03-31&granularity=year&academic_year_id='.$this->year->id)
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame('year', $data['period']['granularity']);
+        $this->assertCount(2, $data['series']);
+        $this->assertSame('2026-01-01', $data['series'][0]['key']);
+        $this->assertSame(2, $data['series'][0]['enrollments']);
+        $this->assertArrayHasKey('period', $data);
+    }
+
+    public function test_campus_comparison_aggregates_institution_campuses(): void
+    {
+        $otherCampus = Campus::create([
+            'institution_id' => $this->institution->id,
+            'name' => 'Campus B', 'code' => 'B', 'type' => CampusType::School->value,
+        ]);
+        Student::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $otherCampus->id,
+            'admission_no' => 'B-1',
+            'first_name' => 'Noor', 'last_name' => 'Khan', 'gender' => 'female',
+            'status' => 'active',
+        ]);
+        $this->attendance($this->ali, '2026-09-02', 'present');
+
+        $head = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => null,
+        ]);
+        $head->syncRoles([RoleName::InstitutionHead->value]);
+
+        $data = $this->api($head)
+            ->getJson('/api/v1/reports/campus-comparison?from=2026-09-01&to=2026-09-30&granularity=month')
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame(2, $data['totals']['campuses']);
+        $this->assertSame(3, $data['totals']['students']);
+        $this->assertCount(2, $data['campuses']);
+        $this->assertSame('month', $data['period']['granularity']);
+
+        $campusA = collect($data['campuses'])->firstWhere('campus_id', $this->campus->id);
+        $this->assertSame(2, $campusA['students']);
+        $this->assertSame(2, $campusA['active_students']);
+        $this->assertSame(0, $campusA['admissions']);
+        $this->assertSame(100.0, (float) $campusA['attendance_percentage']);
+
+        $this->api($this->admin)
+            ->getJson('/api/v1/reports/campus-comparison')
+            ->assertStatus(403);
+    }
+
+    public function test_reports_reject_invalid_granularity(): void
+    {
+        $this->api($this->admin)
+            ->getJson('/api/v1/reports/progress?granularity=decade')
+            ->assertStatus(422);
+    }
+
     private function attendance(Student $student, string $date, string $status): void
     {
         StudentAttendance::create([

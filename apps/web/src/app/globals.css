@@ -293,3 +293,107 @@ html[dir="ltr"] .brand-glow {
   width: 0;
   height: 0;
 }
+
+/* ---------------------------------------------------------------------------
+   Printable reports
+   A4 sheets shared by the /dashboard/reports printouts. Screen chrome carries
+   `.report-print-hide` (or Tailwind's `print:hidden`) and every report body is
+   wrapped in `.report-document`, which switches to an ink-friendly palette so
+   the printed/PDF output stays legible in light and dark themes.
+--------------------------------------------------------------------------- */
+
+/* Named page so report sheets get A4 margins without changing the voucher
+   printouts, which rely on the browser default page box. */
+@page report {
+  size: A4;
+  margin: 14mm 12mm 16mm;
+}
+
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  html[data-background]:not([data-background="default"]) body {
+    background: #ffffff !important;
+  }
+
+  html[dir="rtl"] .report-document {
+    direction: rtl;
+  }
+
+  .report-print-hide,
+  .report-document .no-print {
+    display: none !important;
+  }
+
+  .report-document {
+    page: report;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    font-size: 11pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .report-document * {
+    color: #000000 !important;
+    text-shadow: none !important;
+  }
+
+  .report-document .report-muted {
+    color: #444444 !important;
+  }
+
+  .report-section,
+  .report-section table,
+  .report-section tr,
+  .report-section img,
+  .report-document .break-inside-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-section thead {
+    display: table-header-group;
+  }
+
+  .report-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 9.5pt;
+  }
+
+  .report-table th,
+  .report-table td {
+    border-color: #999999 !important;
+    padding: 3pt 5pt !important;
+  }
+
+  .report-table tr {
+    background: transparent !important;
+  }
+
+  .report-document a {
+    color: #000000 !important;
+    text-decoration: none !important;
+  }
+
+  .report-document svg {
+    overflow: visible !important;
+  }
+
+  /* Recharts renders into a sized div; keep charts on their own sheet. */
+  .report-chart {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

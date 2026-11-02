@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\Student;
 use App\Services\Reports\ReportService;
+use App\Support\ReportPeriod;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ReportController extends Controller
 {
@@ -28,11 +30,23 @@ class ReportController extends Controller
         return response()->json(['data' => $this->reports->institutionOverview()]);
     }
 
+    public function campusComparison(Request $request): JsonResponse
+    {
+        abort_unless(
+            $request->user()?->isInstitutionHead() || $request->user()?->isPlatformAdmin(),
+            403
+        );
+
+        return response()->json([
+            'data' => $this->reports->campusComparison(
+                $this->validatedFilters($request)
+            ),
+        ]);
+    }
+
     public function progress(Request $request): JsonResponse
     {
-        $filters = $request->validate([
-            'from' => ['nullable', 'date'],
-            'to' => ['nullable', 'date', 'after_or_equal:from'],
+        $filters = $this->validatedFilters($request, [
             'academic_year_id' => ['nullable', 'integer', 'exists:academic_years,id'],
         ]);
 
@@ -41,11 +55,9 @@ class ReportController extends Controller
 
     public function attendance(Request $request): JsonResponse
     {
-        $filters = $request->validate([
+        $filters = $this->validatedFilters($request, [
             'class_room_id' => ['nullable', 'integer', 'exists:class_rooms,id'],
             'academic_year_id' => ['nullable', 'integer', 'exists:academic_years,id'],
-            'from' => ['nullable', 'date'],
-            'to' => ['nullable', 'date', 'after_or_equal:from'],
         ]);
 
         return response()->json(['data' => $this->reports->attendanceSummary($filters)]);
@@ -58,10 +70,8 @@ class ReportController extends Controller
 
     public function staff(Request $request): JsonResponse
     {
-        $filters = $request->validate([
+        $filters = $this->validatedFilters($request, [
             'as_on' => ['nullable', 'date'],
-            'from' => ['nullable', 'date'],
-            'to' => ['nullable', 'date', 'after_or_equal:from'],
         ]);
 
         return response()->json(['data' => $this->reports->staffSummary($filters)]);
@@ -74,10 +84,8 @@ class ReportController extends Controller
 
     public function financial(Request $request): JsonResponse
     {
-        $filters = $request->validate([
+        $filters = $this->validatedFilters($request, [
             'fiscal_year_id' => ['nullable', 'integer', 'exists:fiscal_years,id'],
-            'from' => ['nullable', 'date'],
-            'to' => ['nullable', 'date', 'after_or_equal:from'],
         ]);
 
         return response()->json(['data' => $this->reports->financialSummary($filters)]);
@@ -85,11 +93,23 @@ class ReportController extends Controller
 
     public function payroll(Request $request): JsonResponse
     {
-        $filters = $request->validate([
-            'from' => ['nullable', 'date'],
-            'to' => ['nullable', 'date', 'after_or_equal:from'],
-        ]);
+        $filters = $this->validatedFilters($request);
 
         return response()->json(['data' => $this->reports->payrollSummary($filters)]);
+    }
+
+    /**
+     * Shared date-range + granularity validation for every report.
+     *
+     * @param  array<string, mixed>  $extra
+     * @return array<string, mixed>
+     */
+    private function validatedFilters(Request $request, array $extra = []): array
+    {
+        return $request->validate(array_merge([
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date', 'after_or_equal:from'],
+            'granularity' => ['nullable', Rule::in(ReportPeriod::GRANULARITIES)],
+        ], $extra));
     }
 }

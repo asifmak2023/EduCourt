@@ -25,6 +25,7 @@ use App\Models\ExamMark;
 use App\Models\ExamPaper;
 use App\Models\FeePayment;
 use App\Models\FeeVoucher;
+use App\Models\GradeScale;
 use App\Models\Institution;
 use App\Models\JournalLine;
 use App\Models\LeaveRequest;
@@ -35,6 +36,7 @@ use App\Models\StaffMember;
 use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Models\StudentEnrollment;
+use App\Support\ReportPeriod;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -141,32 +143,40 @@ class ReportService
      */
     public function progressReport(array $filters): array
     {
+        $period = ReportPeriod::fromFilters($filters);
         $students = Student::query();
 
         $admissions = Admission::query()
-            ->when($filters['from'] ?? null, fn (Builder $q, $from) => $q->whereDate('applied_on', '>=', $from))
-            ->when($filters['to'] ?? null, fn (Builder $q, $to) => $q->whereDate('applied_on', '<=', $to))
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('applied_on', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('applied_on', '<=', $to->toDateString()))
             ->when($filters['academic_year_id'] ?? null, fn (Builder $q, $year) => $q->where('academic_year_id', $year));
 
         $enrollments = StudentEnrollment::query()
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('starts_on', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('starts_on', '<=', $to->toDateString()))
             ->when($filters['academic_year_id'] ?? null, fn (Builder $q, $year) => $q->where('academic_year_id', $year));
 
         $awards = ScholarshipAward::query()
             ->with('scholarship')
             ->where('status', ScholarshipAwardStatus::Active->value)
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('awarded_on', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('awarded_on', '<=', $to->toDateString()))
             ->when($filters['academic_year_id'] ?? null, fn (Builder $q, $year) => $q->where('academic_year_id', $year))
             ->get();
 
         $events = AcademicEvent::query()
-            ->when($filters['from'] ?? null, fn (Builder $q, $from) => $q->whereDate('starts_on', '>=', $from))
-            ->when($filters['to'] ?? null, fn (Builder $q, $to) => $q->whereDate('ends_on', '<=', $to));
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('starts_on', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('ends_on', '<=', $to->toDateString()));
 
         $scholarshipValue = $awards->sum(fn (ScholarshipAward $award) => (float) ($award->value_override ?? $award->scholarship?->value ?? 0));
 
+        $series = $this->progressSeries($period, $filters['academic_year_id'] ?? null);
+
         return [
+            'period' => $period->meta(),
             'filters' => [
-                'from' => $filters['from'] ?? null,
-                'to' => $filters['to'] ?? null,
+                'from' => $period->from?->toDateString(),
+                'to' => $period->to?->toDateString(),
                 'academic_year_id' => $filters['academic_year_id'] ?? null,
             ],
             'students' => [
@@ -219,13 +229,87 @@ class ReportService
                     ->map(fn ($group, $type) => [
                         'type' => $type,
                         'awards' => $group->count(),
-                        'value' => round((float) $group->sum(fn (ScholarshipAward $a) => (float) ($a->value_override ?? $a->scholarship?->value ?? 0)), 2),
+                        'value' => round((float) $group->sum(fn ($a) => (float) ($a->value_override ?? $a->scholarship?->value ?? 0)), 2),
                     ])->values(),
             ],
             'events' => [
                 'total' => (int) (clone $events)->count(),
             ],
+            'series' => $series,
         ];
+    }
+
+    /**
+     * Admissions, enrollments and scholarship awards bucketed over the period.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function progressSeries(ReportPeriod $period, mixed $academicYearId): array
+    {
+        $admissions = Admission::query()
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('applied_on', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('applied_on', '<=', $to->toDateString()))
+            ->when($academicYearId, fn (Builder $q, $year) => $q->where('academic_year_id', $year))
+            ->select($period->selectBucket('applied_on'))
+            ->selectRaw('count(*) as admissions')
+            ->groupBy('bucket')
+            ->orderBy('bucket')
+            ->get()
+            ->map(fn ($row) => [
+                'key' => (string) $row->bucket,
+                'label' => $period->labelForKey((string) $row->bucket),
+                'admissions' => (int) $row->admissions,
+            ])->all();
+
+        $enrollments = StudentEnrollment::query()
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('starts_on', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('starts_on', '<=', $to->toDateString()))
+            ->when($academicYearId, fn (Builder $q, $year) => $q->where('academic_year_id', $year))
+            ->select($period->selectBucket('starts_on'))
+            ->selectRaw('count(*) as enrollments')
+            ->groupBy('bucket')
+            ->orderBy('bucket')
+            ->get()
+            ->map(fn ($row) => [
+                'key' => (string) $row->bucket,
+                'label' => $period->labelForKey((string) $row->bucket),
+                'enrollments' => (int) $row->enrollments,
+            ])->all();
+
+        $awards = ScholarshipAward::query()
+            ->where('status', ScholarshipAwardStatus::Active->value)
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('awarded_on', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('awarded_on', '<=', $to->toDateString()))
+            ->when($academicYearId, fn (Builder $q, $year) => $q->where('academic_year_id', $year))
+            ->select($period->selectBucket('awarded_on'))
+            ->selectRaw('count(*) as awards')
+            ->groupBy('bucket')
+            ->orderBy('bucket')
+            ->get()
+            ->map(fn ($row) => [
+                'key' => (string) $row->bucket,
+                'label' => $period->labelForKey((string) $row->bucket),
+                'awards' => (int) $row->awards,
+            ])->all();
+
+        $merged = [];
+
+        foreach ([$admissions, $enrollments, $awards] as $rows) {
+            foreach ($rows as $row) {
+                $merged[$row['key']] = array_merge(
+                    $merged[$row['key']] ?? ['key' => $row['key'], 'label' => $row['label']],
+                    array_diff_key($row, ['key' => true, 'label' => true]),
+                );
+            }
+        }
+
+        ksort($merged);
+
+        return $period->fill(
+            $period->buckets(),
+            array_values($merged),
+            ['admissions' => 0, 'enrollments' => 0, 'awards' => 0],
+        );
     }
 
     /**
@@ -236,11 +320,13 @@ class ReportService
      */
     public function attendanceSummary(array $filters): array
     {
+        $period = ReportPeriod::fromFilters($filters);
+
         $query = StudentAttendance::query()
             ->when($filters['class_room_id'] ?? null, fn (Builder $q, $class) => $q->where('class_room_id', $class))
             ->when($filters['academic_year_id'] ?? null, fn (Builder $q, $year) => $q->where('academic_year_id', $year))
-            ->when($filters['from'] ?? null, fn (Builder $q, $from) => $q->whereDate('attendance_date', '>=', $from))
-            ->when($filters['to'] ?? null, fn (Builder $q, $to) => $q->whereDate('attendance_date', '<=', $to));
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('attendance_date', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('attendance_date', '<=', $to->toDateString()));
 
         $totals = (clone $query)
             ->selectRaw('count(*) as total')
@@ -271,12 +357,46 @@ class ReportService
                 'attendance_percentage' => $this->percentage((int) $row->attended, (int) $row->total),
             ])->values();
 
+        $seriesRows = (clone $query)
+            ->select($period->selectBucket('attendance_date'))
+            ->selectRaw('count(*) as total')
+            ->selectRaw("sum(case when status in ('present','late') then 1 else 0 end) as attended")
+            ->selectRaw("sum(case when status = 'absent' then 1 else 0 end) as absent")
+            ->selectRaw("sum(case when status = 'late' then 1 else 0 end) as late")
+            ->selectRaw("sum(case when status = 'leave' then 1 else 0 end) as `leave`")
+            ->selectRaw("sum(case when status = 'excused' then 1 else 0 end) as excused")
+            ->groupBy('bucket')
+            ->orderBy('bucket')
+            ->get()
+            ->map(fn ($row) => [
+                'key' => (string) $row->bucket,
+                'label' => $period->labelForKey((string) $row->bucket),
+                'total' => (int) $row->total,
+                'attended' => (int) $row->attended,
+                'absent' => (int) $row->absent,
+                'late' => (int) $row->late,
+                'leave' => (int) $row->leave,
+                'excused' => (int) $row->excused,
+                'attendance_percentage' => $this->percentage((int) $row->attended, (int) $row->total),
+            ])->all();
+
+        $series = $period->fill($period->buckets(), $seriesRows, [
+            'total' => 0,
+            'attended' => 0,
+            'absent' => 0,
+            'late' => 0,
+            'leave' => 0,
+            'excused' => 0,
+            'attendance_percentage' => null,
+        ]);
+
         return [
+            'period' => $period->meta(),
             'filters' => [
                 'class_room_id' => $filters['class_room_id'] ?? null,
                 'academic_year_id' => $filters['academic_year_id'] ?? null,
-                'from' => $filters['from'] ?? null,
-                'to' => $filters['to'] ?? null,
+                'from' => $period->from?->toDateString(),
+                'to' => $period->to?->toDateString(),
             ],
             'totals' => [
                 'total' => $total,
@@ -288,6 +408,7 @@ class ReportService
                 'attendance_percentage' => $this->percentage($attended, $total),
             ],
             'by_class' => $byClass,
+            'series' => $series,
         ];
     }
 
@@ -342,7 +463,60 @@ class ReportService
             ];
         })->values();
 
+        $scale = GradeScale::query()
+            ->with('items')
+            ->where('is_active', true)
+            ->orderByDesc('is_default')
+            ->orderBy('id')
+            ->first();
+
+        $gradeDistribution = [];
+
+        if ($scale !== null) {
+            $buckets = $scale->items->map(fn ($item) => [
+                'grade' => $item->grade,
+                'min_percentage' => (float) $item->min_percentage,
+                'max_percentage' => (float) $item->max_percentage,
+                'total' => 0,
+            ])->all();
+
+            foreach ($percentages as $value) {
+                foreach ($buckets as $index => $bucket) {
+                    if ($value >= $bucket['min_percentage'] && $value <= $bucket['max_percentage']) {
+                        $buckets[$index]['total']++;
+                        break;
+                    }
+                }
+            }
+
+            $gradeDistribution = $buckets;
+        }
+
+        $scoreBands = [
+            ['band' => '0-39', 'min' => 0, 'max' => 39.999, 'total' => 0],
+            ['band' => '40-49', 'min' => 40, 'max' => 49.999, 'total' => 0],
+            ['band' => '50-59', 'min' => 50, 'max' => 59.999, 'total' => 0],
+            ['band' => '60-69', 'min' => 60, 'max' => 69.999, 'total' => 0],
+            ['band' => '70-79', 'min' => 70, 'max' => 79.999, 'total' => 0],
+            ['band' => '80+', 'min' => 80, 'max' => 100.001, 'total' => 0],
+        ];
+
+        foreach ($percentages as $value) {
+            foreach ($scoreBands as $index => $band) {
+                if ($value >= $band['min'] && $value <= $band['max']) {
+                    $scoreBands[$index]['total']++;
+                    break;
+                }
+            }
+        }
+
         return [
+            'period' => [
+                'granularity' => 'exam',
+                'from' => $exam->starts_on?->toDateString(),
+                'to' => $exam->ends_on?->toDateString(),
+                'label' => $exam->name,
+            ],
             'exam' => [
                 'id' => $exam->id,
                 'name' => $exam->name,
@@ -362,6 +536,8 @@ class ReportService
                 'lowest_percentage' => $percentages->count() > 0 ? round((float) $percentages->min(), 2) : 0.0,
             ],
             'by_paper' => $byPaper,
+            'grade_distribution' => $gradeDistribution,
+            'score_bands' => $scoreBands,
         ];
     }
 
@@ -373,7 +549,8 @@ class ReportService
      */
     public function staffSummary(array $filters): array
     {
-        $asOn = $filters['as_on'] ?? CarbonImmutable::today()->toDateString();
+        $period = ReportPeriod::fromFilters($filters);
+        $asOn = $filters['as_on'] ?? $period->to?->toDateString() ?? CarbonImmutable::today()->toDateString();
 
         $employed = StaffMember::query()
             ->whereIn('status', $this->employedStatuses())
@@ -381,18 +558,73 @@ class ReportService
             ->where(fn (Builder $q) => $q->whereNull('leaving_date')->orWhereDate('leaving_date', '>=', $asOn));
 
         $attendance = StaffAttendance::query()
-            ->when($filters['from'] ?? null, fn (Builder $q, $from) => $q->whereDate('attendance_date', '>=', $from))
-            ->when($filters['to'] ?? null, fn (Builder $q, $to) => $q->whereDate('attendance_date', '<=', $to));
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('attendance_date', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('attendance_date', '<=', $to->toDateString()));
 
         $leaves = LeaveRequest::query()
-            ->when($filters['from'] ?? null, fn (Builder $q, $from) => $q->whereDate('from_date', '>=', $from))
-            ->when($filters['to'] ?? null, fn (Builder $q, $to) => $q->whereDate('to_date', '<=', $to));
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('from_date', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('to_date', '<=', $to->toDateString()));
+
+        $attendanceRows = (clone $attendance)
+            ->select($period->selectBucket('attendance_date'))
+            ->selectRaw('count(*) as total')
+            ->selectRaw("sum(case when status = 'present' then 1 else 0 end) as present")
+            ->selectRaw("sum(case when status = 'absent' then 1 else 0 end) as absent")
+            ->selectRaw("sum(case when status = 'leave' then 1 else 0 end) as `leave`")
+            ->groupBy('bucket')
+            ->orderBy('bucket')
+            ->get()
+            ->map(fn ($row) => [
+                'key' => (string) $row->bucket,
+                'label' => $period->labelForKey((string) $row->bucket),
+                'total' => (int) $row->total,
+                'present' => (int) $row->present,
+                'absent' => (int) $row->absent,
+                'leave' => (int) $row->leave,
+            ])->all();
+
+        $leaveRows = (clone $leaves)
+            ->select($period->selectBucket('from_date'))
+            ->selectRaw('count(*) as total')
+            ->selectRaw("sum(case when status = 'approved' then 1 else 0 end) as approved")
+            ->groupBy('bucket')
+            ->orderBy('bucket')
+            ->get()
+            ->map(fn ($row) => [
+                'key' => (string) $row->bucket,
+                'label' => $period->labelForKey((string) $row->bucket),
+                'leave_requests' => (int) $row->total,
+                'leave_approved' => (int) $row->approved,
+            ])->all();
+
+        $merged = [];
+
+        foreach ([$attendanceRows, $leaveRows] as $rows) {
+            foreach ($rows as $row) {
+                $merged[$row['key']] = array_merge(
+                    $merged[$row['key']] ?? ['key' => $row['key'], 'label' => $row['label']],
+                    array_diff_key($row, ['key' => true, 'label' => true]),
+                );
+            }
+        }
+
+        ksort($merged);
+
+        $series = $period->fill($period->buckets(), array_values($merged), [
+            'total' => 0,
+            'present' => 0,
+            'absent' => 0,
+            'leave' => 0,
+            'leave_requests' => 0,
+            'leave_approved' => 0,
+        ]);
 
         return [
+            'period' => $period->meta(),
             'filters' => [
                 'as_on' => $asOn,
-                'from' => $filters['from'] ?? null,
-                'to' => $filters['to'] ?? null,
+                'from' => $period->from?->toDateString(),
+                'to' => $period->to?->toDateString(),
             ],
             'headcount' => [
                 'total' => (int) (clone $employed)->count(),
@@ -505,11 +737,24 @@ class ReportService
         });
 
         return [
+            'period' => [
+                'granularity' => 'academic_year',
+                'from' => null,
+                'to' => null,
+                'label' => 'Year by year',
+            ],
             'student' => [
                 'id' => $student->id,
                 'admission_no' => $student->admission_no,
                 'name' => $student->full_name,
             ],
+            'series' => $years->reverse()->map(fn (array $year) => [
+                'key' => (string) $year['academic_year_id'],
+                'label' => $year['academic_year'] ?? (string) $year['academic_year_id'],
+                'attendance_percentage' => $year['attendance']['attendance_percentage'] ?? 0,
+                'academic_percentage' => $year['academics']['percentage'] ?? 0,
+                'conduct_records' => $year['conduct_records'],
+            ])->values(),
             'years' => $years,
             'summary' => [
                 'years' => $years->count(),
@@ -529,14 +774,16 @@ class ReportService
      */
     public function financialSummary(array $filters): array
     {
+        $period = ReportPeriod::fromFilters($filters);
+
         $rows = JournalLine::query()
             ->join('journal_entries', 'journal_entries.id', '=', 'journal_lines.journal_entry_id')
             ->join('chart_of_accounts', 'chart_of_accounts.id', '=', 'journal_lines.chart_of_account_id')
             ->whereIn('journal_entries.status', [JournalStatus::Posted->value, JournalStatus::Reversed->value])
             ->whereIn('chart_of_accounts.account_type', [AccountType::Income->value, AccountType::Expense->value])
             ->when($filters['fiscal_year_id'] ?? null, fn (Builder $q, $year) => $q->where('journal_entries.fiscal_year_id', $year))
-            ->when($filters['from'] ?? null, fn (Builder $q, $from) => $q->whereDate('journal_entries.entry_date', '>=', $from))
-            ->when($filters['to'] ?? null, fn (Builder $q, $to) => $q->whereDate('journal_entries.entry_date', '<=', $to))
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('journal_entries.entry_date', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('journal_entries.entry_date', '<=', $to->toDateString()))
             ->groupBy('chart_of_accounts.account_type')
             ->select([
                 'chart_of_accounts.account_type',
@@ -558,16 +805,46 @@ class ReportService
             }
         }
 
+        $seriesRows = JournalLine::query()
+            ->join('journal_entries', 'journal_entries.id', '=', 'journal_lines.journal_entry_id')
+            ->join('chart_of_accounts', 'chart_of_accounts.id', '=', 'journal_lines.chart_of_account_id')
+            ->whereIn('journal_entries.status', [JournalStatus::Posted->value, JournalStatus::Reversed->value])
+            ->whereIn('chart_of_accounts.account_type', [AccountType::Income->value, AccountType::Expense->value])
+            ->when($filters['fiscal_year_id'] ?? null, fn (Builder $q, $year) => $q->where('journal_entries.fiscal_year_id', $year))
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('journal_entries.entry_date', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('journal_entries.entry_date', '<=', $to->toDateString()))
+            ->select($period->selectBucket('journal_entries.entry_date'))
+            ->selectRaw("SUM(case when chart_of_accounts.account_type = 'income' then journal_lines.credit - journal_lines.debit else 0 end) as income")
+            ->selectRaw("SUM(case when chart_of_accounts.account_type = 'expense' then journal_lines.debit - journal_lines.credit else 0 end) as expense")
+            ->groupBy('bucket')
+            ->orderBy('bucket')
+            ->get()
+            ->map(fn ($row) => [
+                'key' => (string) $row->bucket,
+                'label' => $period->labelForKey((string) $row->bucket),
+                'income' => round((float) $row->income, 2),
+                'expense' => round((float) $row->expense, 2),
+                'surplus' => round((float) $row->income - (float) $row->expense, 2),
+            ])->all();
+
+        $series = $period->fill($period->buckets(), $seriesRows, [
+            'income' => 0.0,
+            'expense' => 0.0,
+            'surplus' => 0.0,
+        ]);
+
         return [
+            'period' => $period->meta(),
             'filters' => [
                 'fiscal_year_id' => $filters['fiscal_year_id'] ?? null,
-                'from' => $filters['from'] ?? null,
-                'to' => $filters['to'] ?? null,
+                'from' => $period->from?->toDateString(),
+                'to' => $period->to?->toDateString(),
             ],
             'income' => round($income, 2),
             'expense' => round($expense, 2),
             'surplus' => round($income - $expense, 2),
             'surplus_percentage' => $income > 0 ? round(($income - $expense) / $income * 100, 2) : null,
+            'series' => $series,
         ];
     }
 
@@ -579,8 +856,9 @@ class ReportService
      */
     public function payrollSummary(array $filters): array
     {
-        $from = isset($filters['from']) ? CarbonImmutable::parse($filters['from'])->format('Y-m') : null;
-        $to = isset($filters['to']) ? CarbonImmutable::parse($filters['to'])->format('Y-m') : null;
+        $period = ReportPeriod::fromFilters($filters);
+        $from = $period->from?->format('Y-m');
+        $to = $period->to?->format('Y-m');
 
         $runs = PayrollRun::query()
             ->when($from, fn (Builder $q, $period) => $q->where('period', '>=', $period))
@@ -588,10 +866,54 @@ class ReportService
             ->orderBy('period')
             ->get();
 
+        $byPeriod = $runs->map(fn (PayrollRun $run) => [
+            'id' => $run->id,
+            'period' => $run->period,
+            'status' => $run->status?->value ?? $run->status,
+            'gross' => round((float) $run->total_gross, 2),
+            'deductions' => round((float) $run->total_deductions, 2),
+            'net' => round((float) $run->total_net, 2),
+        ])->values();
+
+        /*
+         * Payroll is inherently monthly, so the chart series is always keyed by
+         * `Y-m`. Building the skeleton by hand keeps daily/weekly requests from
+         * producing hundreds of empty buckets and keeps `all`/`year` aligned
+         * with the monthly run keys.
+         */
+        $monthly = [];
+
+        foreach ($byPeriod as $run) {
+            $monthly[$run['period']] = $run;
+        }
+
+        $monthKeys = [];
+
+        if ($period->from !== null && $period->to !== null) {
+            $cursor = $period->from->startOfMonth();
+
+            while ($cursor->lessThanOrEqualTo($period->to)) {
+                $monthKeys[] = $cursor->format('Y-m');
+                $cursor = $cursor->addMonth();
+            }
+        } else {
+            $monthKeys = array_keys($monthly);
+            sort($monthKeys);
+        }
+
+        $series = array_map(fn (string $month) => [
+            'key' => $month,
+            'label' => CarbonImmutable::parse($month.'-01')->format('M Y'),
+            'gross' => (float) ($monthly[$month]['gross'] ?? 0),
+            'deductions' => (float) ($monthly[$month]['deductions'] ?? 0),
+            'net' => (float) ($monthly[$month]['net'] ?? 0),
+        ], $monthKeys);
+
         return [
+            'period' => $period->meta(),
             'filters' => [
-                'from' => $filters['from'] ?? null,
-                'to' => $filters['to'] ?? null,
+                'from' => $period->from?->toDateString(),
+                'to' => $period->to?->toDateString(),
             ],
             'totals' => [
                 'runs' => $runs->count(),
@@ -601,14 +923,8 @@ class ReportService
                 'approved' => $runs->where('status', PayrollRunStatus::Approved)->count(),
                 'paid' => $runs->where('status', PayrollRunStatus::Paid)->count(),
             ],
-            'by_period' => $runs->map(fn (PayrollRun $run) => [
-                'id' => $run->id,
-                'period' => $run->period,
-                'status' => $run->status?->value ?? $run->status,
-                'gross' => round((float) $run->total_gross, 2),
-                'deductions' => round((float) $run->total_deductions, 2),
-                'net' => round((float) $run->total_net, 2),
-            ])->values(),
+            'by_period' => $byPeriod,
+            'series' => $series,
         ];
     }
 
@@ -721,6 +1037,138 @@ class ReportService
                 'staff' => (int) ($staffByInstitution[$institution->id] ?? 0),
             ])->values(),
         ];
+    }
+
+    /**
+     * Campus-by-campus comparison for an institution head, combining the core
+     * report totals into one table so an owner can see every campus side by
+     * side over the same period.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    public function campusComparison(array $filters): array
+    {
+        $period = ReportPeriod::fromFilters($filters);
+
+        $campuses = Campus::query()->orderBy('name')->get();
+        $campusIds = $campuses->pluck('id')->all();
+
+        $studentsByCampus = Student::query()
+            ->select('campus_id', DB::raw('count(*) as total'))
+            ->selectRaw("sum(case when status = 'active' then 1 else 0 end) as active")
+            ->groupBy('campus_id')
+            ->get()
+            ->keyBy('campus_id');
+
+        $staffByCampus = StaffMember::query()
+            ->whereIn('status', $this->employedStatuses())
+            ->select('campus_id', DB::raw('count(*) as total'))
+            ->groupBy('campus_id')
+            ->pluck('total', 'campus_id');
+
+        $attendanceByCampus = StudentAttendance::query()
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('attendance_date', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('attendance_date', '<=', $to->toDateString()))
+            ->select('campus_id', DB::raw('count(*) as total'))
+            ->selectRaw("sum(case when status in ('present','late') then 1 else 0 end) as attended")
+            ->groupBy('campus_id')
+            ->get()
+            ->keyBy('campus_id');
+
+        $admissionsByCampus = Admission::query()
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('applied_on', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('applied_on', '<=', $to->toDateString()))
+            ->select('campus_id', DB::raw('count(*) as total'))
+            ->groupBy('campus_id')
+            ->pluck('total', 'campus_id');
+
+        $incomeByCampus = $this->ledgerByCampus(AccountType::Income->value, $period);
+        $expenseByCampus = $this->ledgerByCampus(AccountType::Expense->value, $period);
+
+        $payrollByCampus = PayrollRun::query()
+            ->when($period->from, fn (Builder $q) => $q->where('period', '>=', $period->from?->format('Y-m')))
+            ->when($period->to, fn (Builder $q) => $q->where('period', '<=', $period->to?->format('Y-m')))
+            ->select('campus_id', DB::raw('sum(total_net) as total'))
+            ->groupBy('campus_id')
+            ->pluck('total', 'campus_id');
+
+        $rows = $campuses->map(function (Campus $campus) use (
+            $studentsByCampus,
+            $staffByCampus,
+            $attendanceByCampus,
+            $admissionsByCampus,
+            $incomeByCampus,
+            $expenseByCampus,
+            $payrollByCampus,
+        ) {
+            $students = $studentsByCampus->get($campus->id);
+            $attendance = $attendanceByCampus->get($campus->id);
+            $totalAttendance = (int) ($attendance->total ?? 0);
+            $attended = (int) ($attendance->attended ?? 0);
+            $income = round((float) ($incomeByCampus[$campus->id] ?? 0), 2);
+            $expense = round((float) ($expenseByCampus[$campus->id] ?? 0), 2);
+
+            return [
+                'campus_id' => $campus->id,
+                'campus' => $campus->name,
+                'code' => $campus->code,
+                'students' => (int) ($students->total ?? 0),
+                'active_students' => (int) ($students->active ?? 0),
+                'staff' => (int) ($staffByCampus[$campus->id] ?? 0),
+                'admissions' => (int) ($admissionsByCampus[$campus->id] ?? 0),
+                'attendance_percentage' => $this->percentage($attended, $totalAttendance),
+                'income' => $income,
+                'expense' => $expense,
+                'surplus' => round($income - $expense, 2),
+                'payroll_net' => round((float) ($payrollByCampus[$campus->id] ?? 0), 2),
+            ];
+        })->values();
+
+        return [
+            'period' => $period->meta(),
+            'filters' => [
+                'from' => $period->from?->toDateString(),
+                'to' => $period->to?->toDateString(),
+            ],
+            'campuses' => $rows,
+            'totals' => [
+                'campuses' => $rows->count(),
+                'students' => (int) $rows->sum('students'),
+                'active_students' => (int) $rows->sum('active_students'),
+                'staff' => (int) $rows->sum('staff'),
+                'admissions' => (int) $rows->sum('admissions'),
+                'income' => round((float) $rows->sum('income'), 2),
+                'expense' => round((float) $rows->sum('expense'), 2),
+                'surplus' => round((float) $rows->sum('surplus'), 2),
+                'payroll_net' => round((float) $rows->sum('payroll_net'), 2),
+            ],
+            'campus_ids' => $campusIds,
+        ];
+    }
+
+    /**
+     * @return array<int, float>
+     */
+    private function ledgerByCampus(string $accountType, ReportPeriod $period): array
+    {
+        return JournalLine::query()
+            ->join('journal_entries', 'journal_entries.id', '=', 'journal_lines.journal_entry_id')
+            ->join('chart_of_accounts', 'chart_of_accounts.id', '=', 'journal_lines.chart_of_account_id')
+            ->whereIn('journal_entries.status', [JournalStatus::Posted->value, JournalStatus::Reversed->value])
+            ->where('chart_of_accounts.account_type', $accountType)
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('journal_entries.entry_date', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('journal_entries.entry_date', '<=', $to->toDateString()))
+            ->select('journal_entries.campus_id')
+            ->selectRaw(
+                $accountType === AccountType::Income->value
+                    ? 'SUM(journal_lines.credit - journal_lines.debit) as total'
+                    : 'SUM(journal_lines.debit - journal_lines.credit) as total'
+            )
+            ->groupBy('journal_entries.campus_id')
+            ->pluck('total', 'journal_entries.campus_id')
+            ->map(fn ($value) => (float) $value)
+            ->all();
     }
 
     /**

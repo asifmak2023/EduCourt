@@ -1,20 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { Table } from "@heroui/react";
+import { useMemo, useState } from "react";
 import { PermissionGate } from "@/components/PermissionGate";
-import { ReportsTabs } from "@/components/ReportsTabs";
-import { Field, TextInput } from "@/components/Form";
 import {
-  Badge,
-  Card,
-  ErrorNotice,
-  PageHeader,
-  Spinner,
-  StatCard,
-} from "@/components/ui";
+  GroupedBarsChart,
+  useChartColors,
+} from "@/components/Charts";
+import {
+  ReportScaffold,
+  ReportSection,
+  ReportStatGrid,
+  ReportTable,
+} from "@/components/reports";
 import { formatCurrency } from "@/lib/format";
+import { downloadCsv, reportSlug } from "@/lib/csv";
 import { useReport } from "@/lib/useReport";
+import { buildReportQuery, type ReportFilterState } from "@/lib/reportPeriod";
 import type { ReportPayroll } from "@/lib/types";
 
 export default function PayrollReportPage() {
@@ -26,102 +27,117 @@ export default function PayrollReportPage() {
 }
 
 function PayrollReport() {
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const colors = useChartColors();
+  const [filters, setFilters] = useState<ReportFilterState>({
+    granularity: "all",
+    from: "",
+    to: "",
+  });
 
-  const params = new URLSearchParams();
-  if (from) params.set("from", from);
-  if (to) params.set("to", to);
-  const query = params.toString();
+  const query = buildReportQuery(filters);
 
   const { data, loading, error } = useReport<ReportPayroll>(
-    `/v1/reports/payroll${query ? `?${query}` : ""}`
+    `/v1/reports/payroll${query}`
+  );
+
+  const series = data?.series ?? [];
+
+  const runRows = useMemo(
+    () =>
+      (data?.by_period ?? []).map((run) => [
+        run.period,
+        run.status ?? "unknown",
+        run.gross,
+        run.deductions,
+        run.net,
+      ]),
+    [data]
   );
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Payroll report"
-        description="Payroll cost by period with gross, deductions and net."
-      />
-      <ReportsTabs active="payroll" />
-
-      <Card className="p-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="From" htmlFor="pay_from">
-            <TextInput
-              id="pay_from"
-              type="date"
-              value={from}
-              onChange={(event) => setFrom(event.target.value)}
-            />
-          </Field>
-          <Field label="To" htmlFor="pay_to">
-            <TextInput
-              id="pay_to"
-              type="date"
-              value={to}
-              onChange={(event) => setTo(event.target.value)}
-            />
-          </Field>
-        </div>
-      </Card>
-
-      {error ? <ErrorNotice message={error} /> : null}
-      {loading ? (
-        <Spinner />
-      ) : data ? (
+    <ReportScaffold
+      title="Payroll report"
+      description="Payroll cost by period with gross, deductions and net."
+      active="payroll"
+      filters={filters}
+      onFiltersChange={setFilters}
+      /* Payroll runs are monthly by nature, so only month/year/all apply. */
+      supported={["month", "year", "all"]}
+      periodLabel={data?.period?.label}
+      loading={loading}
+      error={error}
+      hasData={Boolean(data)}
+      onExport={() =>
+        downloadCsv(
+          `${reportSlug("payroll")}-${filters.granularity}`,
+          ["Period", "Status", "Gross", "Deductions", "Net"],
+          runRows
+        )
+      }
+      exportDisabled={runRows.length === 0}
+    >
+      {data ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Payroll runs" value={data.totals.runs} />
-            <StatCard label="Gross" value={formatCurrency(data.totals.gross)} />
-            <StatCard
-              label="Deductions"
-              value={formatCurrency(data.totals.deductions)}
-            />
-            <StatCard
-              label="Net"
-              value={formatCurrency(data.totals.net)}
-              tone="positive"
-            />
-          </div>
+          <ReportStatGrid
+            items={[
+              { label: "Payroll runs", value: String(data.totals.runs) },
+              { label: "Gross", value: formatCurrency(data.totals.gross) },
+              {
+                label: "Deductions",
+                value: formatCurrency(data.totals.deductions),
+              },
+              { label: "Net", value: formatCurrency(data.totals.net) },
+              { label: "Approved", value: String(data.totals.approved) },
+              { label: "Paid", value: String(data.totals.paid) },
+            ]}
+          />
 
-          <Card>
-            <div className="overflow-x-auto">
-              <Table variant="secondary">
-                <Table.ScrollContainer>
-                  <Table.Content aria-label="Payroll runs">
-                  <Table.Header>
-                    <Table.Column isRowHeader>Period</Table.Column>
-                    <Table.Column>Status</Table.Column>
-                    <Table.Column className="text-right">Gross</Table.Column>
-                    <Table.Column className="text-right">Deductions</Table.Column>
-                    <Table.Column className="text-right">Net</Table.Column>
-                  </Table.Header>
-                  <Table.Body>
-                  {data.by_period.length === 0 ? (
-                    <Table.Row id="row-1">
-                      <Table.Cell className="text-muted">No payroll runs for this selection.</Table.Cell><Table.Cell /><Table.Cell /><Table.Cell /><Table.Cell />
-                    </Table.Row>
-                  ) : (
-                    data.by_period.map((run) => (
-                      <Table.Row key={run.id} id={run.id}>
-                        <Table.Cell className="text-foreground">{run.period}</Table.Cell>
-                        <Table.Cell><Badge value={run.status ?? "unknown"} /></Table.Cell>
-                        <Table.Cell className="text-right text-muted">{formatCurrency(run.gross)}</Table.Cell>
-                        <Table.Cell className="text-right text-muted">{formatCurrency(run.deductions)}</Table.Cell>
-                        <Table.Cell className="text-right text-muted">{formatCurrency(run.net)}</Table.Cell>
-                      </Table.Row>
-                    ))
-                  )}
-                  </Table.Body>
-                  </Table.Content>
-                </Table.ScrollContainer>
-              </Table>
+          <ReportSection
+            title="Cost by period"
+            description="Gross, deductions and net for each payroll period."
+          >
+            <div className="report-chart rounded border border-black/20 p-3">
+              <GroupedBarsChart
+                data={series.map((point) => ({
+                  label: point.label,
+                  gross: point.gross,
+                  net: point.net,
+                }))}
+                series={[
+                  {
+                    key: "gross",
+                    label: "Gross",
+                    color: colors["--accent"],
+                  },
+                  {
+                    key: "net",
+                    label: "Net",
+                    color: colors["--success"],
+                  },
+                ]}
+                formatValue={(value) => formatCurrency(value)}
+                emptyAsGraph
+              />
             </div>
-          </Card>
+          </ReportSection>
+
+          <ReportSection title="Payroll runs">
+            <ReportTable
+              columns={["Period", "Status", "Gross", "Deductions", "Net"]}
+              align={["left", "left", "right", "right", "right"]}
+              empty="No payroll runs for this selection."
+              rows={runRows.map((row) => [
+                row[0],
+                row[1],
+                formatCurrency(row[2] as number),
+                formatCurrency(row[3] as number),
+                formatCurrency(row[4] as number),
+              ])}
+            />
+          </ReportSection>
+
         </>
       ) : null}
-    </div>
+    </ReportScaffold>
   );
 }

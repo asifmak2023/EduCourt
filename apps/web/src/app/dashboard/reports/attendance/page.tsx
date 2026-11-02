@@ -1,21 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { Table } from "@heroui/react";
+import { useMemo, useState } from "react";
 import { PermissionGate } from "@/components/PermissionGate";
-import { ReportsTabs } from "@/components/ReportsTabs";
-import { Field, Select, TextInput } from "@/components/Form";
+import { BarStatChart, useChartColors } from "@/components/Charts";
 import {
-  Card,
-  ErrorNotice,
-  PageHeader,
-  Spinner,
-  StatCard,
-} from "@/components/ui";
+  ReportScaffold,
+  ReportSection,
+  ReportStatGrid,
+  ReportTable,
+} from "@/components/reports";
+import { ReportYearSelect } from "@/components/reports/ReportRangeBar";
+import { Field, Select } from "@/components/Form";
 import { formatNumber } from "@/lib/format";
+import { downloadCsv, reportSlug } from "@/lib/csv";
 import { useAcademicYearDefault } from "@/lib/academicYear";
 import { useAcademicYears, useClassRooms } from "@/lib/useLookups";
 import { useReport } from "@/lib/useReport";
+import { buildReportQuery, type ReportFilterState } from "@/lib/reportPeriod";
 import type { ReportAttendance } from "@/lib/types";
 
 export default function AttendanceReportPage() {
@@ -27,139 +28,156 @@ export default function AttendanceReportPage() {
 }
 
 function AttendanceReport() {
+  const colors = useChartColors();
   const { items: classRooms } = useClassRooms();
   const { items: academicYears } = useAcademicYears();
   const [classRoomId, setClassRoomId] = useState("");
   const [academicYearId, setAcademicYearId] = useState("");
   useAcademicYearDefault(academicYears, academicYearId, setAcademicYearId);
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [filters, setFilters] = useState<ReportFilterState>({
+    granularity: "all",
+    from: "",
+    to: "",
+  });
 
-  const params = new URLSearchParams();
-  if (classRoomId) params.set("class_room_id", classRoomId);
-  if (academicYearId) params.set("academic_year_id", academicYearId);
-  if (from) params.set("from", from);
-  if (to) params.set("to", to);
-  const query = params.toString();
+  const query = buildReportQuery({
+    ...filters,
+    class_room_id: classRoomId,
+    academic_year_id: academicYearId,
+  });
 
   const { data, loading, error } = useReport<ReportAttendance>(
-    `/v1/reports/attendance${query ? `?${query}` : ""}`
+    `/v1/reports/attendance${query}`
   );
 
+  const selectedClass = classRooms.find(
+    (classRoom) => String(classRoom.id) === classRoomId
+  );
+  const selectedYear = academicYears.find(
+    (year) => String(year.id) === academicYearId
+  );
+  const scope = [selectedClass?.name, selectedYear?.name]
+    .filter(Boolean)
+    .join(" - ");
+
+  const byClassRows = useMemo(
+    () =>
+      (data?.by_class ?? []).map((row) => [
+        row.class_room ?? (row.class_room_id ? `Class #${row.class_room_id}` : "Unassigned"),
+        row.total,
+        row.attended,
+        row.absent,
+        `${row.attendance_percentage}%`,
+      ]),
+    [data]
+  );
+
+  const series = data?.series ?? [];
+
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Attendance report"
-        description="Attendance rate by campus or class over a period."
-      />
-      <ReportsTabs active="attendance" />
-
-      <Card className="p-4">
-        <div className="grid gap-4 sm:grid-cols-4">
-          <Field label="Class" htmlFor="att_class">
-            <Select
-              id="att_class"
-              value={classRoomId}
-              onChange={(event) => setClassRoomId(event.target.value)}
-            >
-              <option value="">All classes</option>
-              {classRooms.map((classRoom) => (
-                <option key={classRoom.id} value={classRoom.id}>
-                  {classRoom.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Academic year" htmlFor="att_year">
-            <Select
-              id="att_year"
-              value={academicYearId}
-              onChange={(event) => setAcademicYearId(event.target.value)}
-            >
-              <option value="">All years</option>
-              {academicYears.map((year) => (
-                <option key={year.id} value={year.id}>
-                  {year.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="From" htmlFor="att_from">
-            <TextInput
-              id="att_from"
-              type="date"
-              value={from}
-              onChange={(event) => setFrom(event.target.value)}
-            />
-          </Field>
-          <Field label="To" htmlFor="att_to">
-            <TextInput
-              id="att_to"
-              type="date"
-              value={to}
-              onChange={(event) => setTo(event.target.value)}
-            />
-          </Field>
-        </div>
-      </Card>
-
-      {error ? <ErrorNotice message={error} /> : null}
-      {loading ? (
-        <Spinner />
-      ) : data ? (
+    <ReportScaffold
+      title="Attendance report"
+      description="Attendance rate by campus or class over a period."
+      active="attendance"
+      filters={filters}
+      onFiltersChange={setFilters}
+      documentScope={scope || null}
+      periodLabel={data?.period?.label}
+      loading={loading}
+      error={error}
+      hasData={Boolean(data)}
+      onExport={() =>
+        downloadCsv(
+          `${reportSlug("attendance")}-${filters.granularity}`,
+          ["Class", "Records", "Attended", "Absent", "Rate"],
+          byClassRows
+        )
+      }
+      exportDisabled={byClassRows.length === 0}
+      rangeExtras={
         <>
-          <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            <StatCard
-              label="Attendance rate"
-              value={`${data.totals.attendance_percentage}%`}
-              tone="positive"
-            />
-            <StatCard label="Present" value={formatNumber(data.totals.present)} />
-            <StatCard label="Late" value={formatNumber(data.totals.late)} />
-            <StatCard
-              label="Absent"
-              value={formatNumber(data.totals.absent)}
-              tone={data.totals.absent > 0 ? "danger" : "default"}
-            />
-            <StatCard label="Records" value={formatNumber(data.totals.total)} />
+          <div className="w-full sm:w-44">
+            <Field label="Class" htmlFor="att_class">
+              <Select
+                id="att_class"
+                value={classRoomId}
+                onChange={(event) => setClassRoomId(event.target.value)}
+              >
+                <option value="">All classes</option>
+                {classRooms.map((classRoom) => (
+                  <option key={classRoom.id} value={classRoom.id}>
+                    {classRoom.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
           </div>
+          <ReportYearSelect
+            id="att_year"
+            label="Academic year"
+            value={academicYearId}
+            onChange={setAcademicYearId}
+            items={academicYears.map((year) => ({ id: year.id, name: year.name }))}
+            allLabel="All years"
+          />
+        </>
+      }
+    >
+      {data ? (
+        <>
+          <ReportStatGrid
+            items={[
+              {
+                label: "Attendance rate",
+                value: `${data.totals.attendance_percentage}%`,
+              },
+              { label: "Present", value: formatNumber(data.totals.present) },
+              { label: "Late", value: formatNumber(data.totals.late) },
+              { label: "Absent", value: formatNumber(data.totals.absent) },
+              { label: "Leave", value: formatNumber(data.totals.leave) },
+              { label: "Records", value: formatNumber(data.totals.total) },
+            ]}
+          />
 
-          <Card>
-            <div className="overflow-x-auto">
-              <Table variant="secondary">
-                <Table.ScrollContainer>
-                  <Table.Content aria-label="Attendance by class">
-                  <Table.Header>
-                    <Table.Column isRowHeader>Class</Table.Column>
-                    <Table.Column className="text-right">Records</Table.Column>
-                    <Table.Column className="text-right">Attended</Table.Column>
-                    <Table.Column className="text-right">Absent</Table.Column>
-                    <Table.Column className="text-right">Rate</Table.Column>
-                  </Table.Header>
-                  <Table.Body>
-                  {data.by_class.length === 0 ? (
-                    <Table.Row id="row-1">
-                      <Table.Cell className="text-muted">No attendance records for this selection.</Table.Cell><Table.Cell /><Table.Cell /><Table.Cell /><Table.Cell />
-                    </Table.Row>
-                  ) : (
-                    data.by_class.map((row) => (
-                      <Table.Row key={row.class_room_id ?? "unassigned"} id={row.class_room_id ?? "unassigned"}>
-                        <Table.Cell className="text-foreground">{row.class_room ?? (row.class_room_id ? `Class #${row.class_room_id}` : "Unassigned")}</Table.Cell>
-                        <Table.Cell className="text-right text-muted">{formatNumber(row.total)}</Table.Cell>
-                        <Table.Cell className="text-right text-muted">{formatNumber(row.attended)}</Table.Cell>
-                        <Table.Cell className="text-right text-muted">{formatNumber(row.absent)}</Table.Cell>
-                        <Table.Cell className="text-right text-muted">{row.attendance_percentage}%</Table.Cell>
-                      </Table.Row>
-                    ))
-                  )}
-                  </Table.Body>
-                  </Table.Content>
-                </Table.ScrollContainer>
-              </Table>
+          <ReportSection
+            title="Attendance trend"
+            description="Attendance rate and absence counts for each period."
+          >
+            <div className="report-chart grid gap-4 lg:grid-cols-2">
+              <div className="rounded border border-black/20 p-3">
+                <BarStatChart
+                  data={series.map((point) => ({
+                    label: point.label,
+                    value: point.attendance_percentage ?? 0,
+                  }))}
+                  color={colors["--success"]}
+                  formatValue={(value) => `${value}%`}
+                />
+              </div>
+              <div className="rounded border border-black/20 p-3">
+                <BarStatChart
+                  data={series.map((point) => ({
+                    label: point.label,
+                    value: point.absent,
+                  }))}
+                  color={colors["--danger"]}
+                />
+              </div>
             </div>
-          </Card>
+          </ReportSection>
+
+          <ReportSection title="Attendance by class">
+            <ReportTable
+              columns={["Class", "Records", "Attended", "Absent", "Rate"]}
+              align={["left", "right", "right", "right", "right"]}
+              empty="No attendance records for this selection."
+              rows={byClassRows}
+            />
+          </ReportSection>
+
+
         </>
       ) : null}
-    </div>
+    </ReportScaffold>
   );
 }

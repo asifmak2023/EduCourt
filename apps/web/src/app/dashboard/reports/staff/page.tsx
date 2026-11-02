@@ -1,19 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PermissionGate } from "@/components/PermissionGate";
-import { ReportsTabs } from "@/components/ReportsTabs";
-import { BreakdownCard } from "@/components/ReportBreakdown";
-import { Field, TextInput } from "@/components/Form";
 import {
-  Card,
-  ErrorNotice,
-  PageHeader,
-  Spinner,
-  StatCard,
-} from "@/components/ui";
+  GroupedBarsChart,
+  useChartColors,
+} from "@/components/Charts";
+import {
+  ReportScaffold,
+  ReportSection,
+  ReportStatGrid,
+  ReportTable,
+} from "@/components/reports";
+import { Field, TextInput } from "@/components/Form";
 import { formatDate, formatNumber } from "@/lib/format";
+import { downloadCsv, reportSlug } from "@/lib/csv";
 import { useReport } from "@/lib/useReport";
+import type { ReportFilterState } from "@/lib/reportPeriod";
 import type { ReportStaff } from "@/lib/types";
 
 export default function StaffReportPage() {
@@ -25,30 +28,60 @@ export default function StaffReportPage() {
 }
 
 function StaffReport() {
+  const colors = useChartColors();
   const [asOn, setAsOn] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [filters, setFilters] = useState<ReportFilterState>({
+    granularity: "all",
+    from: "",
+    to: "",
+  });
 
   const params = new URLSearchParams();
   if (asOn) params.set("as_on", asOn);
-  if (from) params.set("from", from);
-  if (to) params.set("to", to);
+  if (filters.granularity) params.set("granularity", filters.granularity);
+  if (filters.from) params.set("from", filters.from);
+  if (filters.to) params.set("to", filters.to);
   const query = params.toString();
 
   const { data, loading, error } = useReport<ReportStaff>(
     `/v1/reports/staff${query ? `?${query}` : ""}`
   );
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Staff report"
-        description="Headcount, staff attendance and leave for a period."
-      />
-      <ReportsTabs active="staff" />
+  const series = data?.series ?? [];
 
-      <Card className="p-4">
-        <div className="grid gap-4 sm:grid-cols-3">
+  const exportRows = useMemo(
+    () =>
+      (data?.headcount.by_department ?? []).map((row) => [
+        row.department ?? "Unassigned",
+        row.total,
+      ]),
+    [data]
+  );
+
+  return (
+    <ReportScaffold
+      title="Staff report"
+      description="Headcount, staff attendance and leave for a period."
+      active="staff"
+      filters={filters}
+      onFiltersChange={setFilters}
+      documentScope={
+        data ? `Headcount as on ${formatDate(data.filters.as_on)}` : null
+      }
+      periodLabel={data?.period?.label}
+      loading={loading}
+      error={error}
+      hasData={Boolean(data)}
+      onExport={() =>
+        downloadCsv(
+          `${reportSlug("staff")}-${filters.granularity}`,
+          ["Department", "Headcount"],
+          exportRows
+        )
+      }
+      exportDisabled={exportRows.length === 0}
+      rangeExtras={
+        <div className="w-full sm:w-40">
           <Field label="As on" htmlFor="staff_as_on">
             <TextInput
               id="staff_as_on"
@@ -57,82 +90,114 @@ function StaffReport() {
               onChange={(event) => setAsOn(event.target.value)}
             />
           </Field>
-          <Field label="From" htmlFor="staff_from">
-            <TextInput
-              id="staff_from"
-              type="date"
-              value={from}
-              onChange={(event) => setFrom(event.target.value)}
-            />
-          </Field>
-          <Field label="To" htmlFor="staff_to">
-            <TextInput
-              id="staff_to"
-              type="date"
-              value={to}
-              onChange={(event) => setTo(event.target.value)}
-            />
-          </Field>
         </div>
-      </Card>
-
-      {error ? <ErrorNotice message={error} /> : null}
-      {loading ? (
-        <Spinner />
-      ) : data ? (
+      }
+    >
+      {data ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard
-              label="Headcount"
-              value={formatNumber(data.headcount.total)}
-              hint={`As on ${formatDate(data.filters.as_on)}`}
-            />
-            <StatCard
-              label="Attendance records"
-              value={formatNumber(data.attendance.total)}
-            />
-            <StatCard
-              label="Leave requests"
-              value={formatNumber(data.leave.total)}
-            />
-            <StatCard
-              label="Approved leave days"
-              value={formatNumber(data.leave.approved_days)}
-            />
-          </div>
+          <ReportStatGrid
+            items={[
+              {
+                label: "Headcount",
+                value: formatNumber(data.headcount.total),
+                hint: `As on ${formatDate(data.filters.as_on)}`,
+              },
+              {
+                label: "Attendance records",
+                value: formatNumber(data.attendance.total),
+              },
+              {
+                label: "Leave requests",
+                value: formatNumber(data.leave.total),
+              },
+              {
+                label: "Approved leave days",
+                value: formatNumber(data.leave.approved_days),
+              },
+            ]}
+          />
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <BreakdownCard
-              title="Headcount by department"
-              rows={data.headcount.by_department.map((row) => [
+          <ReportSection
+            title="Staff attendance trend"
+            description="Present, absent and leave counts per period."
+          >
+            <div className="report-chart rounded border border-black/20 p-3">
+              <GroupedBarsChart
+                data={series.map((point) => ({
+                  label: point.label,
+                  present: point.present,
+                  absent: point.absent,
+                  leave: point.leave,
+                }))}
+                series={[
+                  {
+                    key: "present",
+                    label: "Present",
+                    color: colors["--success"],
+                  },
+                  {
+                    key: "absent",
+                    label: "Absent",
+                    color: colors["--danger"],
+                  },
+                  {
+                    key: "leave",
+                    label: "Leave",
+                    color: colors["--warning"],
+                  },
+                ]}
+                emptyAsGraph
+              />
+            </div>
+          </ReportSection>
+
+          <ReportSection title="Headcount by department">
+            <ReportTable
+              columns={["Department", "Staff"]}
+              align={["left", "right"]}
+              rows={(data.headcount.by_department ?? []).map((row) => [
                 row.department ?? "Unassigned",
                 formatNumber(row.total),
               ])}
             />
-            <BreakdownCard
-              title="Headcount by employment type"
-              rows={data.headcount.by_employment_type.map((row) => [
+          </ReportSection>
+
+          <ReportSection title="Headcount by employment type">
+            <ReportTable
+              columns={["Employment type", "Staff"]}
+              align={["left", "right"]}
+              rows={(data.headcount.by_employment_type ?? []).map((row) => [
                 row.employment_type ?? "Unspecified",
                 formatNumber(row.total),
               ])}
             />
-            <BreakdownCard
-              title="Staff attendance by status"
-              rows={data.attendance.by_status.map((row) => [
+          </ReportSection>
+
+          <ReportSection title="Staff attendance by status">
+            <ReportTable
+              columns={["Status", "Records"]}
+              align={["left", "right"]}
+              rows={(data.attendance.by_status ?? []).map((row) => [
                 row.status ?? "Unknown",
                 formatNumber(row.total),
               ])}
             />
-            <BreakdownCard
-              title="Leave by status"
-              rows={data.leave.by_status.map((row) => [
+          </ReportSection>
+
+          <ReportSection title="Leave by status">
+            <ReportTable
+              columns={["Status", "Requests"]}
+              align={["left", "right"]}
+              rows={(data.leave.by_status ?? []).map((row) => [
                 row.status ?? "Unknown",
                 formatNumber(row.total),
               ])}
             />
-          </div>
+          </ReportSection>
+
+
         </>
       ) : null}
-    </div>
+    </ReportScaffold>
   );
 }

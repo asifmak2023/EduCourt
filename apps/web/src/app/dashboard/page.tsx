@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslation, type MessageKey } from "@eis/i18n";
 import { Table } from "@heroui/react";
@@ -25,10 +25,12 @@ import { visibleSections } from "@/lib/nav";
 import { roleSummary } from "@/lib/roles";
 import { useTr } from "@/lib/i18n";
 import {
-  BarStatChart,
   ChartCard,
   DonutChart,
+  EqualizerChart,
   GroupedBarsChart,
+  ProportionBar,
+  RadialGauge,
   TrendChart,
   useChartColors,
 } from "@/components/Charts";
@@ -244,7 +246,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`${t(greetingKey())}، \u2068${user.name.split(" ")[0]}\u2069`}
+        title={`${t(greetingKey())}, \u2068${user.name.split(" ")[0]}\u2069`}
         description={`${selectedCampus?.name ?? user.campus?.name ?? t("dashboard.allCampuses")} - ${roleSummary(user.roles, t)}`}
         actions={
           <div className="flex flex-wrap items-center justify-end gap-2">
@@ -315,35 +317,85 @@ function PlatformView({ overview }: { overview: PlatformOverview }) {
       staff: institution.staff,
     }));
 
+  const distribution = compared.map((item) => ({
+    label: item.label,
+    value: item.students,
+  }));
+
   return (
-    <div className="space-y-6">
-      <section className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <StatCard label="dashboard.institutions" value={formatNumber(overview.totals.institutions)} />
-        <StatCard label="dashboard.campuses" value={formatNumber(overview.totals.campuses)} />
-        <StatCard label="dashboard.students" value={formatNumber(overview.totals.students)} />
-        <StatCard label="dashboard.staff" value={formatNumber(overview.totals.staff)} />
+    <div className="space-y-5 sm:space-y-6">
+      <section className="grid gap-4 sm:grid-cols-3 xl:grid-cols-5">
+        <StatCard
+          label="dashboard.institutions"
+          value={formatNumber(overview.totals.institutions)}
+          icon={<Icon name="building" />}
+        />
+        <StatCard
+          label="dashboard.campuses"
+          value={formatNumber(overview.totals.campuses)}
+          icon={<Icon name="grid" />}
+        />
+        <StatCard
+          label="dashboard.students"
+          value={formatNumber(overview.totals.students)}
+          icon={<Icon name="users" />}
+        />
+        <StatCard
+          label="dashboard.staff"
+          value={formatNumber(overview.totals.staff)}
+          icon={<Icon name="idCard" />}
+        />
         <StatCard
           label="dashboard.activeEnrollments"
           value={formatNumber(overview.totals.active_enrollments)}
+          icon={<Icon name="clipboard" />}
         />
       </section>
 
-      <ChartCard
-        title="dashboard.institutionsCompare"
-        description="dashboard.institutionsCompareHint"
-      >
-        <GroupedBarsChart
-          data={compared}
-          series={[
-            { key: "students", label: t("dashboard.students"), color: colors["--accent"] },
-            { key: "staff", label: t("dashboard.staff"), color: colors["--success"] },
-          ]}
+      <section className="grid gap-4 xl:grid-cols-3">
+        <ChartCard
+          title="dashboard.institutionsCompare"
+          description="dashboard.institutionsCompareHint"
+          className="xl:col-span-2"
+          action={
+            <span className="lw-pill bg-surface-secondary text-muted">
+              {t("dashboard.telemetry")}
+            </span>
+          }
+        >
+          <GroupedBarsChart
+            data={compared}
+            series={[
+              { key: "students", label: t("dashboard.students"), color: colors["--accent"] },
+              { key: "staff", label: t("dashboard.staff"), color: colors["--coral"] },
+            ]}
+            height={280}
+          />
+        </ChartCard>
+
+        <TelemetryTile
+          title={t("dashboard.students")}
+          value={formatNumber(overview.totals.students)}
+          caption={t("dashboard.institutionsCompareHint")}
+          data={distribution}
+          accent={colors["--mint"]}
+          footer={
+            <div className="relative flex items-center justify-between gap-2 pt-3 text-[11px] text-white/55">
+              <span>
+                {formatNumber(overview.totals.institutions)} {t("dashboard.institutions")}
+              </span>
+              <span className="font-semibold text-mint">
+                {formatNumber(overview.totals.active_enrollments)}{" "}
+                {t("dashboard.activeEnrollments")}
+              </span>
+            </div>
+          }
         />
-      </ChartCard>
+      </section>
 
       <Card>
-        <div className="flex items-center justify-between border-b border-border-secondary px-5 py-4">
-          <h2 className="text-sm font-semibold text-foreground">{t("dashboard.institutions")}</h2>
+        <div className="flex items-center justify-between px-6 pt-6">
+          <h2 className="text-base font-semibold tracking-tight text-foreground">{t("dashboard.institutions")}</h2>
           <Link
             href="/dashboard/institutions"
             className="text-xs font-medium text-muted hover:text-foreground"
@@ -399,15 +451,36 @@ function InstitutionView({ overview }: { overview: InstitutionOverview }) {
       staff: campus.staff,
     }));
 
+  const collectionByCampus = [...overview.campuses]
+    .sort((a, b) => b.fees_collected_this_month - a.fees_collected_this_month)
+    .slice(0, 8)
+    .map((campus) => ({
+      label: campus.code || campus.name,
+      value: campus.fees_collected_this_month,
+    }));
+
   return (
-    <div className="space-y-6">
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="dashboard.campuses" value={formatNumber(overview.totals.campuses)} />
-        <StatCard label="dashboard.students" value={formatNumber(overview.totals.students)} />
-        <StatCard label="dashboard.staff" value={formatNumber(overview.totals.staff)} />
+    <div className="space-y-5 sm:space-y-6">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="dashboard.campuses"
+          value={formatNumber(overview.totals.campuses)}
+          icon={<Icon name="building" />}
+        />
+        <StatCard
+          label="dashboard.students"
+          value={formatNumber(overview.totals.students)}
+          icon={<Icon name="users" />}
+        />
+        <StatCard
+          label="dashboard.staff"
+          value={formatNumber(overview.totals.staff)}
+          icon={<Icon name="idCard" />}
+        />
         <StatCard
           label="dashboard.activeEnrollments"
           value={formatNumber(overview.totals.active_enrollments)}
+          icon={<Icon name="clipboard" />}
         />
       </section>
 
@@ -417,30 +490,63 @@ function InstitutionView({ overview }: { overview: InstitutionOverview }) {
           value={formatCurrency(overview.totals.outstanding_fees)}
           tone="danger"
           hint={t("dashboard.unpaidVouchers", { count: overview.totals.unpaid_vouchers })}
+          icon={<Icon name="receipt" />}
         />
         <StatCard
           label="dashboard.collectedThisMonth"
           value={formatCurrency(overview.totals.fees_collected_this_month)}
           tone="positive"
+          icon={<Icon name="banknote" />}
         />
       </section>
 
-      <ChartCard
-        title="dashboard.campusesCompare"
-        description="dashboard.campusesCompareHint"
-      >
-        <GroupedBarsChart
-          data={compared}
-          series={[
-            { key: "students", label: t("dashboard.students"), color: colors["--accent"] },
-            { key: "staff", label: t("dashboard.staff"), color: colors["--success"] },
-          ]}
+      <section className="grid gap-4 xl:grid-cols-3 xl:items-stretch">
+        <ChartCard
+          title="dashboard.campusesCompare"
+          description="dashboard.campusesCompareHint"
+          className="xl:col-span-2"
+          action={
+            <span className="lw-pill bg-surface-secondary text-muted">
+              {t("dashboard.telemetry")}
+            </span>
+          }
+        >
+          <GroupedBarsChart
+            data={compared}
+            series={[
+              { key: "students", label: t("dashboard.students"), color: colors["--accent"] },
+              { key: "staff", label: t("dashboard.staff"), color: colors["--coral"] },
+            ]}
+            height={280}
+          />
+        </ChartCard>
+
+        <TelemetryTile
+          title={t("dashboard.collectedThisMonth")}
+          value={formatCurrency(overview.totals.fees_collected_this_month)}
+          caption={t("dashboard.campusCollectionsHint")}
+          data={collectionByCampus}
+          accent={colors["--mint"]}
+          footer={
+            <div className="relative flex items-center justify-between gap-2 pt-3 text-[11px] text-white/55">
+              <span>
+                {formatNumber(overview.totals.unpaid_vouchers)}{" "}
+                {t("dashboard.unpaidVouchersShort")}
+              </span>
+              <Link
+                href="/dashboard/reports/financial"
+                className="font-semibold text-mint hover:underline"
+              >
+                {t("dashboard.reports")}
+              </Link>
+            </div>
+          }
         />
-      </ChartCard>
+      </section>
 
       <Card>
-        <div className="flex items-center justify-between border-b border-border-secondary px-5 py-4">
-          <h2 className="text-sm font-semibold text-foreground">{t("dashboard.campuses")}</h2>
+        <div className="flex items-center justify-between px-6 pt-6">
+          <h2 className="text-base font-semibold tracking-tight text-foreground">{t("dashboard.campuses")}</h2>
         </div>
         {overview.campuses.length === 0 ? (
           <EmptyState message="dashboard.noCampuses" />
@@ -485,73 +591,164 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
   const girls = dashboard.students_by_gender.find((item) => item.gender === "female")?.total ?? 0;
   const boys = dashboard.students_by_gender.find((item) => item.gender === "male")?.total ?? 0;
 
+  const collections = (dashboard.collections_by_month ?? []).map((month) => ({
+    label: month.label,
+    value: month.total,
+  }));
+
+  const admissionFunnel = ADMISSION_FUNNEL.map((status) => ({
+    label: t(STATUS_KEYS[status]),
+    value: dashboard.admissions_by_status?.[status] ?? 0,
+  }));
+
+  const admissionTotal = admissionFunnel.reduce(
+    (sum, point) => sum + point.value,
+    0
+  );
+  const collectedPeak = collections.reduce(
+    (max, point) => Math.max(max, point.value),
+    0
+  );
+  const latestCollection = collections.at(-1)?.value ?? 0;
+  const billed = dashboard.fees_collected_this_month + dashboard.outstanding_fees;
+  const recoveryRate = billed > 0
+    ? Math.round((dashboard.fees_collected_this_month / billed) * 100)
+    : 0;
+
   return (
-    <div className="space-y-6">
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="space-y-5 sm:space-y-6">
+      {/* KPI strip: headline numbers with a micro-visual on each tile. */}
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="dashboard.activeStudents"
           value={formatNumber(dashboard.students_active)}
           hint={t("dashboard.boysGirls", { boys, girls })}
+          icon={<Icon name="users" />}
         />
-        <StatCard label="dashboard.staffEmployed" value={formatNumber(dashboard.staff_employed)} />
+        <StatCard
+          label="dashboard.staffEmployed"
+          value={formatNumber(dashboard.staff_employed)}
+          hint={t("dashboard.activeEnrollments")}
+          icon={<Icon name="idCard" />}
+        />
         <StatCard
           label="dashboard.outstandingFees"
           value={formatCurrency(dashboard.outstanding_fees)}
           tone="danger"
           hint={t("dashboard.unpaidVouchers", { count: dashboard.unpaid_vouchers })}
+          icon={<Icon name="receipt" />}
         />
         <StatCard
           label="dashboard.collectedThisMonth"
           value={formatCurrency(dashboard.fees_collected_this_month)}
           tone="positive"
+          hint={
+            latestCollection > 0
+              ? t("dashboard.latestCollection", {
+                  amount: formatCurrency(latestCollection),
+                })
+              : undefined
+          }
+          visual={
+            <RadialGauge
+              value={recoveryRate}
+              max={100}
+              label={`${recoveryRate}%`}
+              color={colors["--mint"]}
+            />
+          }
         />
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="dashboard.admissionsPending" value={formatNumber(dashboard.admissions_pending)} tone="warning" />
-        <StatCard label="dashboard.scholarshipsActive" value={formatNumber(dashboard.scholarships_active)} />
-        <StatCard label="dashboard.examsScheduled" value={formatNumber(dashboard.exams_scheduled)} />
-        <StatCard label="dashboard.leavePending" value={formatNumber(dashboard.leave_pending)} tone="warning" />
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-3">
+      {/* Bento: hero trend beside the dark telemetry tile. */}
+      <section className="grid gap-4 xl:grid-cols-3 xl:items-stretch">
         <ChartCard
           title="dashboard.feeCollectionTrend"
           description="dashboard.collectionTrendHint"
-          className="lg:col-span-2"
+          className="xl:col-span-2"
+          footer={
+            <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+              <span className="text-muted">
+                {t("dashboard.peakCollection", {
+                  amount: formatCurrency(collectedPeak),
+                })}
+              </span>
+              <Link
+                href="/dashboard/reports/financial"
+                className="inline-flex items-center gap-1 font-semibold text-accent hover:underline"
+              >
+                {t("dashboard.reports")}
+                <Icon name="arrowUp" className="h-3.5 w-3.5 rotate-90" />
+              </Link>
+            </div>
+          }
         >
-          <TrendChart
-            data={(dashboard.collections_by_month ?? []).map((month) => ({
-              label: month.label,
-              value: month.total,
-            }))}
-            formatValue={compactCurrency}
-          />
+          <TrendChart data={collections} formatValue={compactCurrency} height={260} />
         </ChartCard>
 
-        <ChartCard title="dashboard.studentsByGender">
-          <DonutChart
-            data={[
-              { label: t("gender.male"), value: boys, color: colors["--accent"] },
-              { label: t("gender.female"), value: girls, color: colors["--danger"] },
-            ]}
-          />
-        </ChartCard>
+        <TelemetryTile
+          title={t("dashboard.admissionsPipeline")}
+          value={formatNumber(admissionTotal)}
+          caption={t("dashboard.totalAdmissions")}
+          data={admissionFunnel}
+          accent={colors["--mint"]}
+          footer={
+            <div className="relative flex items-center justify-between gap-2 pt-3 text-[11px] text-white/55">
+              <span>
+                {formatNumber(dashboard.admissions_pending)}{" "}
+                {t("dashboard.admissionsPending")}
+              </span>
+              <Link
+                href="/dashboard/admissions"
+                className="font-semibold text-mint hover:underline"
+              >
+                {t("common.manage")}
+              </Link>
+            </div>
+          }
+        />
       </section>
 
+      {/* Secondary trio: finance mix, gender split, funnel readout. */}
       <section className="grid gap-4 lg:grid-cols-3">
         <ChartCard title="dashboard.vouchersByStatus">
           <VoucherStatusDonut dashboard={dashboard} />
         </ChartCard>
 
-        <ChartCard title="dashboard.admissionsPipeline" className="lg:col-span-2">
-          <BarStatChart
-            data={ADMISSION_FUNNEL.map((status) => ({
-              label: t(STATUS_KEYS[status]),
-              value: dashboard.admissions_by_status?.[status] ?? 0,
-            }))}
+        <ChartCard title="dashboard.studentsByGender">
+          <ProportionBar
+            data={[
+              { label: t("gender.male"), value: boys, color: colors["--accent"] },
+              { label: t("gender.female"), value: girls, color: colors["--coral"] },
+            ]}
           />
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <MiniMetric
+              label={t("dashboard.admissionsPending")}
+              value={formatNumber(dashboard.admissions_pending)}
+              tone="warning"
+            />
+            <MiniMetric
+              label={t("dashboard.leavePending")}
+              value={formatNumber(dashboard.leave_pending)}
+              tone="warning"
+            />
+          </div>
         </ChartCard>
+
+        <Card className="p-6">
+          <h2 className="text-base font-semibold tracking-tight text-foreground">
+            {t("dashboard.todayAtGlance")}
+          </h2>
+          <dl className="mt-4 space-y-2.5 text-sm">
+            <Row label="dashboard.activeEnrollments" value={formatNumber(dashboard.enrollments_active)} />
+            <Row label="dashboard.scholarshipsActive" value={formatNumber(dashboard.scholarships_active)} />
+            <Row label="dashboard.examsScheduled" value={formatNumber(dashboard.exams_scheduled)} />
+            <Row label="dashboard.openConductCases" value={formatNumber(dashboard.conduct_open)} />
+            <Row label="dashboard.payrollDraftRuns" value={formatNumber(dashboard.payroll_draft_runs)} />
+            <Row label="dashboard.upcomingEvents" value={formatNumber(dashboard.upcoming_events)} />
+          </dl>
+        </Card>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
@@ -569,16 +766,89 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
             { href: "/dashboard/reports", label: "dashboard.reports" },
           ]}
         />
-        <Card className="p-5">
-          <h2 className="text-sm font-semibold text-foreground">{t("dashboard.todayAtGlance")}</h2>
-          <dl className="mt-3 space-y-2 text-sm">
-            <Row label="dashboard.activeEnrollments" value={formatNumber(dashboard.enrollments_active)} />
-            <Row label="dashboard.openConductCases" value={formatNumber(dashboard.conduct_open)} />
-            <Row label="dashboard.payrollDraftRuns" value={formatNumber(dashboard.payroll_draft_runs)} />
-            <Row label="dashboard.upcomingEvents" value={formatNumber(dashboard.upcoming_events)} />
-          </dl>
-        </Card>
+        <QuickLinks
+          title="dashboard.examsResults"
+          links={[
+            { href: "/dashboard/exams", label: "navigation.exams" },
+            { href: "/dashboard/timetable", label: "navigation.timetable" },
+          ]}
+        />
       </section>
+    </div>
+  );
+}
+
+/** Dark obsidian telemetry tile with a glowing equalizer ladder. */
+function TelemetryTile({
+  title,
+  value,
+  caption,
+  data,
+  accent,
+  footer,
+}: {
+  title: string;
+  value: string;
+  caption?: string;
+  data: { label: string; value: number }[];
+  accent: string;
+  footer?: ReactNode;
+}) {
+  return (
+    <div className="lw-obsidian relative flex flex-col justify-between overflow-hidden rounded-3xl p-6">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full blur-3xl"
+        style={{ backgroundColor: "rgb(66 253 213 / 0.14)" }}
+      />
+      <div className="relative">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm font-semibold text-white/75">{title}</span>
+          <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white/70">
+            Live
+          </span>
+        </div>
+        <div className="mt-3 flex items-baseline gap-3">
+          <span className="lw-kpi-value text-4xl text-white">{value}</span>
+          {caption ? (
+            <span className="text-xs text-white/55">{caption}</span>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="relative my-6">
+        <EqualizerChart data={data} accent={accent} height={150} />
+      </div>
+
+      {footer}
+    </div>
+  );
+}
+
+function MiniMetric({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  tone?: "default" | "warning" | "danger" | "positive";
+}) {
+  const tones: Record<string, string> = {
+    default: "text-foreground",
+    positive: "text-success",
+    warning: "text-warning",
+    danger: "text-danger",
+  };
+
+  return (
+    <div className="rounded-2xl bg-surface-secondary px-3 py-2.5">
+      <p className="truncate text-[10px] font-semibold uppercase tracking-wider text-muted">
+        {label}
+      </p>
+      <p className={`mt-1 text-lg font-bold tabular-nums ${tones[tone]}`}>
+        {value}
+      </p>
     </div>
   );
 }

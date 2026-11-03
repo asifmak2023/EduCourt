@@ -4,9 +4,59 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-canvas: var(--canvas);
+  --color-panel: var(--panel);
+  --color-panel-muted: var(--panel-muted);
+  --color-obsidian: var(--obsidian);
+  --color-obsidian-foreground: var(--obsidian-foreground);
+  --color-amber: var(--amber);
+  --color-amber-foreground: var(--amber-foreground);
+  --color-mint: var(--mint);
+  --color-coral: var(--coral);
+  --color-hairline: var(--hairline);
+  --font-sans: var(--font-jakarta), var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-logo: var(--font-exo-2);
+  --shadow-lw: var(--lw-shadow);
+  --shadow-lw-float: var(--lw-shadow-float);
+  --shadow-lw-dark: var(--lw-shadow-dark);
+}
+
+:root {
+  --canvas: #f4f6fa;
+  --panel: #ffffff;
+  --panel-muted: #f3f3ff;
+  --obsidian: #11141f;
+  --obsidian-foreground: #eff0ff;
+  --amber: #f8be28;
+  --amber-foreground: #14100a;
+  --mint: #00e5be;
+  --coral: #f97316;
+  --hairline: #e2e8f0;
+  --lw-shadow:
+    0 1px 2px rgb(17 20 31 / 0.03), 0 8px 24px -4px rgb(17 20 31 / 0.05);
+  --lw-shadow-float:
+    0 20px 40px -12px rgb(17 20 31 / 0.12), 0 0 1px rgb(17 20 31 / 0.08);
+  --lw-shadow-dark:
+    0 16px 36px -8px rgb(17 20 31 / 0.35), 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+
+html[data-theme="dark"] {
+  --canvas: #0b0d14;
+  --panel: #151824;
+  --panel-muted: #1b1f2e;
+  --obsidian: #0b0e17;
+  --obsidian-foreground: #eff0ff;
+  --amber: #f8be28;
+  --amber-foreground: #14100a;
+  --mint: #22d3ee;
+  --coral: #fb923c;
+  --hairline: rgb(255 255 255 / 0.09);
+  --lw-shadow: 0 0 0 0 transparent;
+  --lw-shadow-float:
+    0 20px 40px -12px rgb(0 0 0 / 0.55), 0 0 1px rgb(255 255 255 / 0.08);
+  --lw-shadow-dark:
+    0 16px 36px -8px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.08);
 }
 
 body {
@@ -15,10 +65,74 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
+/* The porcelain canvas replaces HeroUI's neutral grey on the default
+   background, while custom wallpapers keep rendering through AppBackground. */
+html[data-background="default"] body {
+  background-color: var(--canvas);
+}
+
 /* Urdu: use a legible Naskh typeface for the whole UI. Latin glyphs (numbers,
    the EduCourt wordmark) fall through to the next font in the stack. */
 html[lang="ur"] {
-  --font-sans: var(--font-urdu), var(--font-geist-sans), system-ui, sans-serif;
+  --font-sans: var(--font-urdu), var(--font-jakarta), var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Luminous Workspace surface language. Large cards get a hairline perimeter
+   and a soft ambient shadow so they lift off the porcelain canvas. */
+.card {
+  border: 1px solid var(--hairline);
+  border-radius: 1.5rem;
+}
+
+.lw-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  padding: 0.25rem 0.625rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lw-obsidian {
+  background-color: var(--obsidian);
+  color: var(--obsidian-foreground);
+  border: 1px solid rgb(255 255 255 / 0.08);
+  box-shadow: var(--lw-shadow-dark);
+}
+
+.lw-amber {
+  background-color: var(--amber);
+  color: var(--amber-foreground);
+  border: 1px solid rgb(0 0 0 / 0.06);
+  box-shadow: 0 12px 28px -6px rgb(248 190 40 / 0.35);
+}
+
+.lw-hero-title {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.lw-kpi-value {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* HeroUI buttons adopt the pill language of the design system. */
+.button {
+  border-radius: 9999px;
+}
+
+.chip {
+  border-radius: 9999px;
+}
+
+/* Equalizer glow used by the obsidian telemetry tiles. */
+.lw-glow-mint {
+  filter: drop-shadow(0 0 8px rgb(0 229 190 / 0.45));
 }
 
 html[data-background]:not([data-background="default"]) body {

@@ -77,13 +77,14 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-2xl border border-border-secondary bg-surface p-8 shadow-sm">
-        <BrandMark className="mb-5 h-12 w-12" priority />
-        <h1 className="text-2xl font-semibold tracking-tight">
+    <main className="flex flex-1 items-center justify-center p-4 sm:p-6">
+      <div className="card w-full max-w-md bg-panel p-8 shadow-lw">
+        <span className="lw-pill self-start bg-amber text-amber-foreground">EduCourt</span>
+        <BrandMark className="mt-5 mb-4 h-12 w-12" priority />
+        <h1 className="lw-hero-title text-2xl text-foreground sm:text-3xl">
           {t("auth.brand")}
         </h1>
-        <p className="mt-1 text-sm text-muted">
+        <p className="mt-1.5 text-sm text-muted">
           {challengeToken
             ? t("auth.twoFactorPrompt")
             : t("auth.tagline")}
@@ -106,9 +107,9 @@ export default function LoginPage() {
                 autoFocus
                 value={code}
                 onChange={(event) => setCode(event.target.value)}
-                className="mt-1 w-full rounded-lg border border-border-secondary px-3 py-2 text-center text-lg tracking-[0.3em] outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+                className="mt-1 w-full rounded-xl border border-border-secondary bg-panel px-3 py-2.5 text-center text-lg tracking-[0.3em] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
               />
-              <p className="mt-1 text-xs text-muted">
+              <p className="mt-2 text-xs text-muted">
                 {t("auth.recoveryHint")}
               </p>
             </div>
@@ -122,7 +123,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition hover:bg-accent-hover disabled:opacity-60"
+              className="w-full rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground shadow-[0_6px_16px_-6px_var(--accent)] transition hover:-translate-y-px hover:bg-accent-hover disabled:opacity-60"
             >
               {submitting ? t("auth.verifying") : t("auth.verify")}
             </button>
@@ -157,7 +158,7 @@ export default function LoginPage() {
                   placeholder={t("auth.emailPlaceholder")}
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  className="mt-1 w-full rounded-lg border border-border-secondary px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+                  className="mt-1 w-full rounded-xl border border-border-secondary bg-panel px-3 py-2.5 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
                 />
               </div>
 
@@ -177,7 +178,7 @@ export default function LoginPage() {
                     placeholder={t("auth.passwordPlaceholder")}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    className="w-full rounded-lg border border-border-secondary px-3 py-2 pe-10 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+                    className="w-full rounded-xl border border-border-secondary bg-panel px-3 py-2.5 pe-10 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
                   />
                   {password ? (
                     <button
@@ -205,7 +206,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition hover:bg-accent-hover disabled:opacity-60"
+                className="w-full rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground shadow-[0_6px_16px_-6px_var(--accent)] transition hover:-translate-y-px hover:bg-accent-hover disabled:opacity-60"
               >
                 {submitting ? t("auth.signingIn") : t("auth.signIn")}
               </button>

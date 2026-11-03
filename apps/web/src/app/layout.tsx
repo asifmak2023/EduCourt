@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Exo_2, Noto_Naskh_Arabic } from "next/font/google";
+import {
+  Geist,
+  Geist_Mono,
+  Exo_2,
+  Noto_Naskh_Arabic,
+  Plus_Jakarta_Sans,
+} from "next/font/google";
 import { ACCENTS } from "@eis/appearance";
 import { AuthProvider } from "@/lib/auth";
 import { AppearanceProvider } from "@/lib/appearance";
@@ -10,6 +16,12 @@ import "./globals.css";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+});
+
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const geistMono = Geist_Mono({
@@ -54,7 +66,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${exo2.variable} ${urdu.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${jakarta.variable} ${geistMono.variable} ${exo2.variable} ${urdu.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>

@@ -130,7 +130,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="app-glass app-sidebar flex h-full flex-col bg-surface-secondary text-foreground">
       <div
         className={`shrink-0 border-b border-border-secondary ${
-          isCollapsed ? "px-2 py-3" : "px-3 py-3"
+          isCollapsed ? "px-2 py-3" : "px-3 py-4"
         }`}
       >
         <Link
@@ -138,13 +138,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           onClick={() => setMenuOpen(false)}
           aria-label={t("navigation.home")}
           title="EduCourt"
-          className={`flex items-center rounded-lg text-xl font-bold tracking-tight text-foreground ${
-            isCollapsed ? "justify-center py-1" : "gap-2 px-2.5 py-1"
+          className={`flex items-center rounded-2xl text-xl font-bold tracking-tight text-foreground ${
+            isCollapsed ? "justify-center py-1" : "gap-2.5 px-2 py-1"
           }`}
         >
-          <BrandMark className="h-[1em] w-[1em]" priority />
+          <BrandMark className="h-9 w-9" priority />
           {isCollapsed ? null : (
-            <span className="brand-glow font-logo">EduCourt</span>
+            <span className="brand-glow font-logo leading-tight">EduCourt</span>
           )}
         </Link>
       </div>
@@ -225,13 +225,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                             href={item.href}
                             onClick={() => setMenuOpen(false)}
                             title={tr(item.label)}
-                            className={`flex items-center rounded-lg transition-colors duration-150 ${
+                            className={`flex items-center rounded-xl transition-colors duration-150 ${
                               isCollapsed
                                 ? "justify-center py-2.5"
-                                : "gap-3 px-2.5 py-2.5 text-[15px]"
+                                : "gap-3 px-3 py-2.5 text-[15px]"
                             } ${
                               isActive
-                                ? "bg-accent-soft font-semibold text-accent-soft-foreground"
+                                ? "bg-accent-soft font-semibold text-accent-soft-foreground shadow-sm"
                                 : "font-medium text-foreground/80 hover:bg-accent-soft hover:text-accent-soft-foreground"
                             }`}
                           >
@@ -366,7 +366,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href="/dashboard"
                 onClick={() => setMenuOpen(false)}
                 aria-label={t("navigation.home")}
-                className="brand-glow shrink-0 font-logo text-xl font-bold tracking-tight text-foreground lg:hidden"
+                className="brand-glow hidden shrink-0 font-logo text-xl font-bold tracking-tight text-foreground sm:inline-flex lg:hidden"
               >
                 EduCourt
               </Link>

@@ -234,9 +234,33 @@ class DemoSeeder extends Seeder
         );
         $teacher->syncRoles([RoleName::Teacher->value]);
 
+        $guardianUser = User::firstOrCreate(
+            ['email' => 'guardian@demo-eis.test'],
+            [
+                'name' => 'Imran Raza',
+                'password' => 'password',
+                'institution_id' => $institution->id,
+                'campus_id' => $campus->id,
+                'job_title' => 'Parent / Guardian',
+                'is_active' => true,
+            ]
+        );
+        $guardianUser->syncRoles([RoleName::ParentGuardian->value]);
+
         $this->seedAcademics($institution, $campus, $teacher);
         $this->seedFinance($institution, $campus, $campusAdmin);
         $this->seedStudents($institution, $campus);
+
+        $guardianRecord = Guardian::query()
+            ->where('campus_id', $campus->id)
+            ->where('phone', '+92-300-0000001')
+            ->first();
+
+        if ($guardianRecord !== null) {
+            $guardianRecord->user_id = $guardianUser->id;
+            $guardianRecord->save();
+        }
+
         $this->call(ExamSeeder::class);
         $this->seedScholarships($institution, $campus, $campusAdmin);
         $this->seedConcessionPolicies($institution, $campus, $campusAdmin);
@@ -259,6 +283,7 @@ class DemoSeeder extends Seeder
         $this->command?->info('  institutionhead@demo-eis.test  Institution head (all campuses, view only)');
         $this->command?->info('  campusadmin@demo-eis.test      Campus admin (Main Campus)');
         $this->command?->info('  teacher@demo-eis.test          Teacher (Main Campus)');
+        $this->command?->info('  guardian@demo-eis.test         Parent portal (child: Ali Raza)');
     }
 
     private function seedAcademics(Institution $institution, Campus $campus, User $teacher): void

@@ -88,6 +88,36 @@ function studentQuery(studentId?: number | null): string {
   return studentId ? `?student_id=${studentId}` : "";
 }
 
+function rangeQuery(
+  studentId?: number | null,
+  range?: { from?: string; to?: string }
+): string {
+  const params = new URLSearchParams();
+
+  if (studentId) {
+    params.set("student_id", String(studentId));
+  }
+  if (range?.from) {
+    params.set("from", range.from);
+  }
+  if (range?.to) {
+    params.set("to", range.to);
+  }
+
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
+/** Rolling 365-day window used by summary views so a fresh month never
+ * reads as an empty attendance record. */
+export function portalAttendanceRange(): { from: string; to: string } {
+  const to = new Date();
+  const from = new Date(to.getTime() - 364 * 24 * 60 * 60 * 1000);
+  const iso = (date: Date) => date.toISOString().slice(0, 10);
+
+  return { from: iso(from), to: iso(to) };
+}
+
 export function formatMoney(value: number | string | null | undefined): string {
   const amount = typeof value === "string" ? Number(value) : (value ?? 0);
   const safe = Number.isFinite(amount) ? amount : 0;
@@ -118,10 +148,11 @@ export async function fetchChildren(): Promise<PortalStudent[]> {
 }
 
 export async function fetchAttendance(
-  studentId?: number | null
+  studentId?: number | null,
+  range?: { from?: string; to?: string }
 ): Promise<PortalAttendance> {
   return apiFetch<PortalAttendance>(
-    `/v1/me/attendance${studentQuery(studentId)}`
+    `/v1/me/attendance${rangeQuery(studentId, range)}`
   );
 }
 
@@ -142,4 +173,12 @@ export async function fetchResults(
 
 export async function fetchFees(studentId?: number | null): Promise<PortalFees> {
   return apiFetch<PortalFees>(`/v1/me/fees${studentQuery(studentId)}`);
+}
+
+/** Stable loader for summary screens that need a broader window than the
+ * default current month. Kept module-level so hooks don't refetch per render. */
+export function fetchAttendanceYear(
+  studentId?: number | null
+): Promise<PortalAttendance> {
+  return fetchAttendance(studentId, portalAttendanceRange());
 }

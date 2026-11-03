@@ -97,7 +97,7 @@ function DialogFrame({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="rounded-lg p-1.5 text-muted transition-colors hover:bg-[var(--surface-secondary)] hover:text-foreground"
+            className="rounded-full p-1.5 text-muted transition-colors hover:bg-[var(--surface-secondary)] hover:text-foreground"
           >
             <svg
               width="18"

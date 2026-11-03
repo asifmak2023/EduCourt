@@ -105,7 +105,7 @@ function UserDetailView() {
             {data.permissions.map((permission) => (
               <span
                 key={permission}
-                className="rounded-md bg-surface-secondary px-2 py-1 text-xs text-muted"
+                className="rounded-full bg-surface-secondary px-2.5 py-1 text-xs text-muted"
               >
                 {permission}
               </span>

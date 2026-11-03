@@ -95,7 +95,7 @@ function LeaveDetailView() {
         ) : null}
 
         {data.decision_note ? (
-          <p className="mt-4 rounded-lg bg-surface-secondary px-3 py-2 text-sm text-muted">
+          <p className="mt-4 rounded-2xl bg-surface-secondary px-3 py-2 text-sm text-muted">
             Decision note: {data.decision_note}
           </p>
         ) : null}

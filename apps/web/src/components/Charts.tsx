@@ -236,7 +236,7 @@ export function DonutChart({
         {data.map((slice) => (
           <li
             key={slice.label}
-            className="flex items-center justify-between gap-2 rounded-lg px-2 py-1 text-xs"
+            className="flex items-center justify-between gap-2 rounded-full px-2.5 py-1 text-xs"
           >
             <span className="flex min-w-0 items-center gap-2">
               <span

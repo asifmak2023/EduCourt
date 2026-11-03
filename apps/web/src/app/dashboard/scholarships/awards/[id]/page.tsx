@@ -149,7 +149,7 @@ function RevokeAction({
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           placeholder="Revocation note (optional)"
-          className="w-full max-w-md rounded-lg border border-border-secondary px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+          className="w-full max-w-md rounded-xl border border-border-secondary px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
         />
         <Button type="button" loading={busy} onClick={revoke}>
           Revoke

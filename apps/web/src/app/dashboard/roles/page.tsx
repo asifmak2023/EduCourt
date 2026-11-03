@@ -701,7 +701,7 @@ function CataloguePanel({
                               {actions.map((action) => (
                                 <span
                                   key={action}
-                                  className="rounded-md bg-surface-secondary px-1.5 py-0.5 text-[11px] capitalize text-muted"
+                                  className="rounded-full bg-surface-secondary px-2 py-0.5 text-[11px] font-medium capitalize text-muted"
                                 >
                                   {formatAction(action)}
                                 </span>
@@ -971,7 +971,7 @@ function ManageAccessDrawer({
                   return (
                     <li
                       key={roleValue}
-                      className="flex items-start justify-between gap-3 rounded-lg border border-border-secondary p-3"
+                      className="flex items-start justify-between gap-3 rounded-2xl border border-border-secondary p-3"
                     >
                       <div>
                         <p className="text-sm font-medium text-foreground">
@@ -1141,7 +1141,7 @@ function ManageAccessDrawer({
                       {actions.map((action) => (
                         <span
                           key={action}
-                          className="rounded-md bg-accent-soft px-1.5 py-0.5 text-[11px] capitalize text-accent-soft-foreground"
+                          className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium capitalize text-accent-soft-foreground"
                         >
                           {formatAction(action)}
                         </span>

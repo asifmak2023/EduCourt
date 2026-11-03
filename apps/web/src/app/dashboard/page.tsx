@@ -260,7 +260,7 @@ export default function DashboardPage() {
                     event.target.value === "" ? null : Number(event.target.value)
                   )
                 }
-                className="rounded-lg border border-border-secondary bg-surface px-2.5 py-1.5 text-sm text-foreground"
+                className="rounded-full border border-border-secondary bg-surface px-3 py-1.5 text-sm text-foreground"
               >
                 <option value="">{t("dashboard.allCampuses")}</option>
                 {campuses.map((item) => (
@@ -1331,7 +1331,7 @@ function QuickLinks({
           <li key={link.href}>
             <Link
               href={link.href}
-              className="flex items-center justify-between rounded-lg px-2 py-2 text-sm text-muted transition hover:bg-surface-secondary hover:text-foreground"
+              className="flex items-center justify-between rounded-full px-3 py-2 text-sm text-muted transition hover:bg-surface-secondary hover:text-foreground"
             >
               {tr(link.label)}
               <Icon name="arrowUp" className="h-3.5 w-3.5 rotate-90" />

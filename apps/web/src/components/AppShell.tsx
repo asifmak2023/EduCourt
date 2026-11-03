@@ -173,7 +173,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   type="button"
                   onClick={() => toggleSection(section.label)}
                   aria-expanded={isOpen}
-                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold uppercase tracking-wide text-muted transition-colors hover:bg-accent-soft hover:text-accent-soft-foreground"
+                  className="flex w-full items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted transition-colors hover:bg-accent-soft hover:text-accent-soft-foreground"
                 >
                   <span className="flex-1 text-start">{tr(section.label)}</span>
                   <Icon
@@ -199,7 +199,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                           <li key={item.href}>
                             <span
                               title={tr(item.label)}
-                              className={`flex cursor-not-allowed items-center rounded-lg text-muted ${
+                              className={`flex cursor-not-allowed items-center rounded-full text-muted ${
                                 isCollapsed
                                   ? "justify-center py-2.5"
                                   : "gap-3 px-2.5 py-2.5 text-[15px]"
@@ -225,7 +225,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                             href={item.href}
                             onClick={() => setMenuOpen(false)}
                             title={tr(item.label)}
-                            className={`flex items-center rounded-xl transition-colors duration-150 ${
+                            className={`flex items-center rounded-full transition-colors duration-150 ${
                               isCollapsed
                                 ? "justify-center py-2.5"
                                 : "gap-3 px-3 py-2.5 text-[15px]"
@@ -268,7 +268,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               }}
               aria-label={t("common.signOut")}
               title={t("common.signOut")}
-              className="rounded-lg border border-border-secondary p-2 text-muted transition-colors hover:bg-surface-tertiary hover:text-danger"
+              className="rounded-full border border-border-secondary p-2 text-muted transition-colors hover:bg-surface-tertiary hover:text-danger"
             >
               <Icon name="logout" className="h-4 w-4" />
             </button>
@@ -278,7 +278,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Link
               href="/dashboard/profile"
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 rounded-lg p-1 transition-colors hover:bg-surface-tertiary"
+              className="flex items-center gap-3 rounded-full p-1 pe-3 transition-colors hover:bg-surface-tertiary"
             >
               <Avatar name={currentUser.name} photoUrl={currentUser.photo_url} />
               <div className="min-w-0 flex-1">
@@ -291,7 +291,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               onClick={() => {
                 void logout().then(() => router.replace("/login"));
               }}
-              className="mt-3 w-full rounded-lg border border-border-secondary px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-surface-tertiary"
+              className="mt-3 w-full rounded-full border border-border-secondary px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-surface-tertiary"
             >
               {t("common.signOut")}
             </button>
@@ -345,7 +345,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     ? t("navigation.expandSidebar")
                     : t("navigation.collapseSidebar")
                 }
-                className="hidden shrink-0 rounded-lg border border-border-secondary p-2 text-muted transition-colors hover:bg-surface-tertiary hover:text-foreground lg:inline-flex"
+                className="hidden shrink-0 rounded-full border border-border-secondary p-2 text-muted transition-colors hover:bg-surface-tertiary hover:text-foreground lg:inline-flex"
               >
                 <Icon
                   name="panelLeft"
@@ -357,7 +357,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => setMenuOpen(true)}
-                className="shrink-0 rounded-lg border border-border-secondary p-2 text-muted transition-colors hover:bg-surface-tertiary lg:hidden"
+                className="shrink-0 rounded-full border border-border-secondary p-2 text-muted transition-colors hover:bg-surface-tertiary lg:hidden"
                 aria-label={t("navigation.open")}
               >
                 <Icon name="list" className="h-5 w-5" />

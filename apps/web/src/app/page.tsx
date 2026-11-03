@@ -158,7 +158,7 @@ export default function LandingPage() {
                   {["grid", "users", "book", "receipt", "chart"].map((icon, index) => (
                     <div
                       key={icon}
-                      className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs ${
+                      className={`flex items-center gap-2 rounded-full px-2.5 py-1.5 text-xs ${
                         index === 0
                           ? "bg-accent-soft font-semibold text-accent-soft-foreground"
                           : "text-muted"

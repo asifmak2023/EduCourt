@@ -323,7 +323,7 @@ function ArReports() {
               key={tab.value}
               type="button"
               onClick={() => update(setStatus)(tab.value)}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
                 status === tab.value
                   ? "bg-accent text-accent-foreground"
                   : "text-muted hover:text-foreground"

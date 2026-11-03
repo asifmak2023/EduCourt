@@ -693,7 +693,7 @@ export function FeeVoucherGenerator({
                     ) : null}
                   </div>
 
-                  <div className="inline-flex rounded-xl border border-border-secondary p-1">
+                  <div className="inline-flex rounded-full border border-border-secondary bg-surface-secondary p-1">
                     {(
                       [
                         ["monthly", "Monthly"],
@@ -705,7 +705,7 @@ export function FeeVoucherGenerator({
                         key={value}
                         type="button"
                         onClick={() => setReceiveType(value)}
-                        className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
+                        className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
                           receiveType === value
                             ? "bg-accent text-accent-foreground"
                             : "text-muted hover:text-foreground"

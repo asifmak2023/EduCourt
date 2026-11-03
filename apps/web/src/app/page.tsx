@@ -93,7 +93,7 @@ export default function LandingPage() {
               <a
                 key={link.href}
                 href={link.href}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-foreground/75 transition-colors hover:bg-surface-tertiary hover:text-foreground"
+                className="rounded-full px-3.5 py-2 text-sm font-semibold text-foreground/75 transition-colors hover:bg-surface-tertiary hover:text-foreground"
               >
                 {tr(link.label)}
               </a>
@@ -103,13 +103,13 @@ export default function LandingPage() {
           <div className="ms-auto flex items-center gap-2">
             <Link
               href="/login"
-              className="hidden rounded-lg px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-surface-tertiary sm:inline-flex"
+              className="hidden rounded-full px-3.5 py-2 text-sm font-semibold text-foreground/80 transition-colors hover:bg-surface-tertiary sm:inline-flex"
             >
               {t("landing.nav.signIn")}
             </Link>
             <Link
               href="/login"
-              className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition-opacity hover:opacity-90"
+              className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition-opacity hover:opacity-90"
             >
               {t("landing.nav.getStarted")}
             </Link>

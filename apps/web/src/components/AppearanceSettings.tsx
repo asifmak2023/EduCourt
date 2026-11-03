@@ -77,7 +77,7 @@ function Segmented<T extends string>({
     <div
       role="radiogroup"
       aria-label={label}
-      className="inline-flex w-fit max-w-full flex-wrap gap-0.5 rounded-full border border-border-secondary bg-surface-secondary p-1"
+      className="flex w-full flex-wrap gap-0.5 rounded-full border border-border-secondary bg-surface-secondary p-1 sm:inline-flex sm:w-fit sm:max-w-full"
     >
       {options.map((option) => {
         const selected = option.value === value;
@@ -88,7 +88,7 @@ function Segmented<T extends string>({
             role="radio"
             aria-checked={selected}
             onClick={() => onChange(option.value)}
-            className={`rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
+            className={`rounded-full px-3 py-1.5 text-sm font-semibold transition sm:px-3.5 ${
               selected
                 ? "bg-accent text-accent-foreground shadow-sm"
                 : "text-muted hover:text-foreground"

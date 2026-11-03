@@ -366,6 +366,154 @@ export type SeriesKey = {
   color: string;
 };
 
+/** Bare axis-less sparkline for KPI tiles and compact stat rows. */
+export function Sparkline({
+  values,
+  color,
+  height = 40,
+  className = "",
+}: {
+  values: number[];
+  color?: string;
+  height?: number;
+  className?: string;
+}) {
+  const colors = useChartColors();
+  const gradientId = `spark-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const stroke = color ?? colors["--accent"];
+
+  if (values.length < 2 || values.every((value) => value === 0)) {
+    return (
+      <div
+        aria-hidden="true"
+        className={`flex items-end gap-1 ${className}`}
+        style={{ height }}
+      >
+        {Array.from({ length: 12 }).map((_, index) => (
+          <span
+            key={index}
+            className="flex-1 rounded-full"
+            style={{
+              height: `${18 + ((index * 7) % 26)}%`,
+              backgroundColor: colors["--hairline"],
+              opacity: 0.7,
+            }}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  const data = values.map((value, index) => ({ index, value }));
+
+  return (
+    <div className={className} style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 4, right: 2, left: 2, bottom: 0 }}>
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={stroke} stopOpacity={0.35} />
+              <stop offset="100%" stopColor={stroke} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke={stroke}
+            strokeWidth={2}
+            fill={`url(#${gradientId})`}
+            dot={false}
+            activeDot={false}
+            isAnimationActive={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+/** Proportional mini bar strip for "top N" rankings inside cards. */
+export function SparkBars({
+  data,
+  color,
+  formatValue = (value) => String(value),
+  className = "",
+}: {
+  data: BarPoint[];
+  color?: string;
+  formatValue?: (value: number) => string;
+  className?: string;
+}) {
+  const colors = useChartColors();
+  const fill = color ?? colors["--accent"];
+  const max = Math.max(...data.map((point) => point.value), 1);
+
+  if (data.length === 0) {
+    return null;
+  }
+
+  return (
+    <ul className={`space-y-2.5 ${className}`}>
+      {data.map((point) => (
+        <li key={point.label} className="space-y-1.5">
+          <div className="flex items-baseline justify-between gap-3 text-xs">
+            <span className="truncate font-medium text-muted">{point.label}</span>
+            <span className="shrink-0 font-semibold tabular-nums text-foreground">
+              {formatValue(point.value)}
+            </span>
+          </div>
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-secondary">
+            <div
+              className="h-full rounded-full transition-[width] duration-500"
+              style={{
+                width: `${Math.max(4, (point.value / max) * 100)}%`,
+                backgroundColor: fill,
+              }}
+            />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Chart body shown when a series has no movement, so the card never looks broken. */
+export function ChartEmpty({
+  title,
+  hint,
+  action,
+}: {
+  title: string;
+  hint?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="flex min-h-[160px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border px-6 py-10 text-center">
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-secondary text-muted">
+        <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+          <path
+            d="M4 16.5 9 11l3.5 3.5L20 6.5"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M4 20h16"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            opacity="0.4"
+          />
+        </svg>
+      </span>
+      <p className="text-sm font-semibold text-foreground">{title}</p>
+      {hint ? <p className="max-w-xs text-xs text-muted">{hint}</p> : null}
+      {action}
+    </div>
+  );
+}
+
 export function TrendChart({
   data,
   color,
@@ -421,7 +569,8 @@ export function TrendChart({
               x2="0"
               y2="1"
             >
-              <stop offset="0%" stopColor={item.color} stopOpacity={0.3} />
+              <stop offset="0%" stopColor={item.color} stopOpacity={0.38} />
+              <stop offset="60%" stopColor={item.color} stopOpacity={0.12} />
               <stop offset="100%" stopColor={item.color} stopOpacity={0} />
             </linearGradient>
           ))}

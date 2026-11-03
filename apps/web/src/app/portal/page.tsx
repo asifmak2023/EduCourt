@@ -18,6 +18,8 @@ import {
   Spinner,
   StatCard,
 } from "@/components/ui";
+import { Icon } from "@/components/Icons";
+import type { NavIcon } from "@/lib/nav";
 
 export default function PortalDashboardPage() {
   const { t } = useTranslation();
@@ -81,21 +83,24 @@ export default function PortalDashboardPage() {
           </div>
 
           <Card className="p-6">
-            <h2 className="text-sm font-semibold text-foreground">
+            <h2 className="text-sm font-semibold tracking-tight text-foreground">
               {t("portal.dashboard.quickLinks")}
             </h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { href: "/portal/timetable", label: t("portal.nav.timetable") },
-                { href: "/portal/attendance", label: t("portal.nav.attendance") },
-                { href: "/portal/results", label: t("portal.nav.results") },
-                { href: "/portal/fees", label: t("portal.nav.fees") },
+                { href: "/portal/timetable", label: t("portal.nav.timetable"), icon: "calendar" },
+                { href: "/portal/attendance", label: t("portal.nav.attendance"), icon: "check" },
+                { href: "/portal/results", label: t("portal.nav.results"), icon: "award" },
+                { href: "/portal/fees", label: t("portal.nav.fees"), icon: "wallet" },
               ].map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="rounded-lg border border-border-secondary px-4 py-3 text-sm font-medium text-foreground/80 transition-colors hover:bg-accent-soft hover:text-accent-soft-foreground"
+                  className="group flex items-center gap-3 rounded-2xl border border-border-secondary px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:bg-accent-soft hover:text-accent-soft-foreground"
                 >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-surface-secondary text-accent group-hover:bg-surface">
+                    <Icon name={link.icon as NavIcon} className="h-4 w-4" />
+                  </span>
                   {link.label}
                 </Link>
               ))}

@@ -935,6 +935,7 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
             caption={t("dashboard.totalAdmissions")}
             data={admissionFunnel}
             accent={colors["--mint"]}
+            chartMode="count"
             footer={
               <div className="relative flex items-center justify-between gap-2 pt-3 text-[11px] text-white/55">
                 <span>
@@ -1115,6 +1116,7 @@ function TelemetryTile({
   accent,
   footer,
   className = "",
+  chartMode = "proportion",
 }: {
   title: string;
   value: string;
@@ -1123,6 +1125,7 @@ function TelemetryTile({
   accent: string;
   footer?: ReactNode;
   className?: string;
+  chartMode?: "proportion" | "count";
 }) {
   return (
     <div
@@ -1149,7 +1152,13 @@ function TelemetryTile({
       </div>
 
       <div className="relative my-6">
-        <EqualizerChart data={data} accent={accent} height={150} />
+        <EqualizerChart
+          data={data}
+          accent={accent}
+          height={150}
+          mode={chartMode}
+          maxDots={12}
+        />
       </div>
 
       {footer}

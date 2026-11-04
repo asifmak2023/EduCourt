@@ -764,19 +764,31 @@ export function ChartLegend({ series }: { series: SeriesKey[] }) {
   );
 }
 
-/** Stacked "equalizer" pills, tuned for the obsidian telemetry tiles. */
+/**
+ * Stacked "equalizer" pills, tuned for the obsidian telemetry tiles.
+ *
+ * Two modes:
+ * - "proportion" (default) draws a fixed number of segments and fills a share
+ *   of them, which is right for relative magnitudes.
+ * - "count" draws one lit pill per unit of data, capped at `maxDots`, so the
+ *   number of pills matches the real value (e.g. admissions per status).
+ */
 export function EqualizerChart({
   data,
   segments = 5,
   formatValue = (value) => String(value),
   accent,
   height = 150,
+  mode = "proportion",
+  maxDots = 12,
 }: {
   data: BarPoint[];
   segments?: number;
   formatValue?: (value: number) => string;
   accent?: string;
   height?: number;
+  mode?: "proportion" | "count";
+  maxDots?: number;
 }) {
   const colors = useChartColors();
   const lit = accent ?? colors["--mint"];
@@ -786,37 +798,65 @@ export function EqualizerChart({
     return <ChartPlaceholder dark />;
   }
 
+  const labelArea = 24;
+  const columnHeight = Math.max(height - labelArea, 0);
+
   return (
     <div
       className="flex w-full items-end justify-between gap-2 px-1"
       style={{ height }}
     >
       {data.map((point, index) => {
-        const filled = Math.max(
-          point.value > 0 ? 1 : 0,
-          Math.round((point.value / max) * segments)
+        const value = Math.max(0, Math.round(point.value));
+
+        let litCount: number;
+        let pillCount: number;
+        let overflow = 0;
+
+        if (mode === "count") {
+          litCount = Math.min(value, maxDots);
+          overflow = Math.max(0, value - maxDots);
+          pillCount = litCount;
+        } else {
+          litCount = Math.max(
+            value > 0 ? 1 : 0,
+            Math.round((value / max) * segments)
+          );
+          pillCount = segments;
+        }
+
+        const isPeak = mode === "proportion"
+          ? litCount === segments && value === max
+          : value === max && value > 0;
+
+        const gap = pillCount > 8 ? 3 : 5;
+        const pillHeight = Math.max(
+          4,
+          Math.min(
+            18,
+            Math.floor((columnHeight - (pillCount - 1) * gap) / pillCount)
+          )
         );
-        const isPeak = filled === segments && point.value === max;
 
         return (
           <div
             key={`${point.label}-${index}`}
             className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2"
-            title={`${point.label}: ${formatValue(point.value)}`}
+            title={`${point.label}: ${formatValue(value)}`}
           >
-            <div className="flex w-full flex-col-reverse items-center gap-[5px]">
-              {Array.from({ length: segments }).map((_, segment) => {
-                const active = segment < filled;
+            <div
+              className="relative flex w-full flex-col-reverse items-center"
+              style={{ gap }}
+            >
+              {Array.from({ length: pillCount }).map((_, segment) => {
+                const active = segment < litCount;
 
                 return (
                   <span
                     key={segment}
                     className="w-full max-w-[18px] rounded-full transition-colors"
                     style={{
-                      height: Math.max(
-                        4,
-                        Math.floor((height - 24) / segments) - 6
-                      ),
+                      height: pillHeight,
                       backgroundColor: active
                         ? isPeak
                           ? colors["--mint"]
@@ -830,6 +870,11 @@ export function EqualizerChart({
                   />
                 );
               })}
+              {overflow > 0 ? (
+                <span className="mt-1 text-[9px] font-semibold text-white/55">
+                  +{overflow}
+                </span>
+              ) : null}
             </div>
             <span
               className={`flex min-h-[24px] w-full items-end justify-center text-center text-[10px] font-semibold leading-[1.15] ${

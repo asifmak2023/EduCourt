@@ -123,7 +123,7 @@ function TranscriptView() {
                       earned
                     </p>
                   </div>
-                  <span className="rounded-lg bg-accent px-3 py-1 text-sm font-medium text-accent-foreground">
+                  <span className="rounded-full bg-accent px-3 py-1 text-sm font-semibold text-accent-foreground">
                     GPA {term.gpa === null ? "-" : formatNumber(term.gpa)}
                   </span>
                 </div>

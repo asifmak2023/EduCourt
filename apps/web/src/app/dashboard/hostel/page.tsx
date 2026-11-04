@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { MasterList } from "@/components/MasterList";
+import { buttonClasses } from "@/components/Form";
 import { Badge } from "@/components/ui";
 import { formatNumber } from "@/lib/format";
 import type { Hostel } from "@/lib/types";
@@ -24,11 +25,9 @@ export default function HostelsPage() {
           <Link
             key={tab.href}
             href={tab.href}
-            className={
-              tab.href === "/dashboard/hostel"
-                ? "rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground"
-                : "rounded-lg border border-border-secondary px-3 py-1.5 text-sm font-medium text-foreground hover:border-accent"
-            }
+            className={buttonClasses(
+              tab.href === "/dashboard/hostel" ? "primary" : "secondary"
+            )}
           >
             {tab.label}
           </Link>

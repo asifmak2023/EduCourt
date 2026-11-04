@@ -77,7 +77,7 @@ function Segmented<T extends string>({
     <div
       role="radiogroup"
       aria-label={label}
-      className="inline-flex w-fit max-w-full flex-wrap rounded-lg border border-border bg-surface-secondary p-1"
+      className="flex w-full flex-wrap gap-0.5 rounded-full border border-border-secondary bg-surface-secondary p-1 sm:inline-flex sm:w-fit sm:max-w-full"
     >
       {options.map((option) => {
         const selected = option.value === value;
@@ -88,9 +88,9 @@ function Segmented<T extends string>({
             role="radio"
             aria-checked={selected}
             onClick={() => onChange(option.value)}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+            className={`rounded-full px-3 py-1.5 text-sm font-semibold transition sm:px-3.5 ${
               selected
-                ? "bg-accent text-accent-foreground"
+                ? "bg-accent text-accent-foreground shadow-sm"
                 : "text-muted hover:text-foreground"
             }`}
           >
@@ -124,7 +124,7 @@ function Swatch({
       aria-label={label}
       title={label}
       onClick={onSelect}
-      className={`group relative flex flex-col overflow-hidden rounded-lg border text-start transition ${
+      className={`group relative flex flex-col overflow-hidden rounded-2xl border text-start transition ${
         selected
           ? "border-accent ring-2 ring-accent"
           : "border-border hover:border-accent"
@@ -285,7 +285,7 @@ export function AppearanceSettings() {
               aria-label={accent.label}
               title={accent.label}
               onClick={() => setAccent(accent.id)}
-              className={`relative flex h-10 items-center justify-center rounded-lg transition ${
+              className={`relative flex h-10 items-center justify-center rounded-xl transition ${
                 config.accentId === accent.id
                   ? "ring-2 ring-offset-2 ring-offset-surface"
                   : "hover:opacity-90"
@@ -331,7 +331,7 @@ export function AppearanceSettings() {
               type="button"
               aria-pressed={config.backgroundId === "default"}
               onClick={() => setBackground("default")}
-              className={`w-full rounded-lg border px-4 py-3 text-start text-sm transition ${
+              className={`w-full rounded-2xl border px-4 py-3 text-start text-sm transition ${
                 config.backgroundId === "default"
                   ? "border-accent ring-2 ring-accent"
                   : "border-border hover:border-accent"

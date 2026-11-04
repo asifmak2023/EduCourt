@@ -171,7 +171,7 @@ function Breakdown({
   rows: { label: string; total: number }[];
 }) {
   return (
-    <div className="rounded-lg border border-border-secondary p-4">
+    <div className="rounded-2xl border border-border-secondary bg-surface-secondary p-4">
       <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
         {title}
       </h3>
@@ -201,7 +201,7 @@ function MovementTable({
   rows: StaffJoinersLeavers["joiners"];
 }) {
   return (
-    <div className="rounded-lg border border-border-secondary p-4">
+    <div className="rounded-2xl border border-border-secondary bg-surface-secondary p-4">
       <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
         {title}
       </h3>

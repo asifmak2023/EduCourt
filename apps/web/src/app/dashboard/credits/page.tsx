@@ -1,51 +1,37 @@
 "use client";
 
-import Link from "next/link";
 import { PermissionGate } from "@/components/PermissionGate";
-import { Card, PageHeader } from "@/components/ui";
+import { ModuleHub, type HubSection } from "@/components/ModuleHub";
 
-const SECTIONS = [
+const SECTIONS: HubSection[] = [
   {
     href: "/dashboard/credits/registrations",
     title: "Course registrations",
     description: "Register students for term courses and manage drops.",
+    icon: "grid",
   },
   {
     href: "/dashboard/credits/term-gpa",
     title: "Term GPA",
     description: "Credit-weighted grade point average for one term.",
+    icon: "chart",
   },
   {
     href: "/dashboard/credits/transcript",
     title: "Transcript",
     description: "Cumulative GPA with a per-term breakdown.",
+    icon: "award",
   },
 ];
 
 export default function CreditsPage() {
   return (
     <PermissionGate permission="credit.view">
-      <div className="space-y-6">
-        <PageHeader
-          title="Credits & GPA"
-          description="Credit-hour course registration and GPA for college campuses."
-        />
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {SECTIONS.map((section) => (
-            <Link key={section.href} href={section.href}>
-              <Card className="h-full p-5 transition hover:border-accent">
-                <p className="text-sm font-semibold text-foreground">
-                  {section.title}
-                </p>
-                <p className="mt-1 text-sm text-muted">
-                  {section.description}
-                </p>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </div>
+      <ModuleHub
+        title="Credits & GPA"
+        description="Credit-hour course registration and GPA for college campuses."
+        sections={SECTIONS}
+      />
     </PermissionGate>
   );
 }

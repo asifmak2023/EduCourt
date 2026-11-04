@@ -228,7 +228,7 @@ function ClassAnalysis() {
                     ([grade, count]) => (
                       <div
                         key={grade}
-                        className="rounded-lg border border-border px-3 py-2 text-sm"
+                        className="rounded-full border border-border px-3 py-1.5 text-sm"
                       >
                         <span className="font-medium text-foreground">
                           {grade}

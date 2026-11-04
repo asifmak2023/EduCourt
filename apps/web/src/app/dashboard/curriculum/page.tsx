@@ -1,51 +1,37 @@
 "use client";
 
-import Link from "next/link";
 import { PermissionGate } from "@/components/PermissionGate";
-import { Card, PageHeader } from "@/components/ui";
+import { ModuleHub, type HubSection } from "@/components/ModuleHub";
 
-const SECTIONS = [
+const SECTIONS: HubSection[] = [
   {
     href: "/dashboard/curriculum/syllabus-units",
     title: "Syllabus units",
     description: "Sequence topics per class and subject with period estimates.",
+    icon: "list",
   },
   {
     href: "/dashboard/curriculum/class-books",
     title: "Class books",
     description: "Text and reference books assigned to each class.",
+    icon: "book",
   },
   {
     href: "/dashboard/curriculum/lesson-plans",
     title: "Lesson plans",
     description: "Plan lessons and route them through approval.",
+    icon: "clipboard",
   },
 ];
 
 export default function CurriculumPage() {
   return (
     <PermissionGate permission="curriculum.view">
-      <div className="space-y-6">
-        <PageHeader
-          title="Curriculum"
-          description="Syllabus, prescribed books and lesson planning."
-        />
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {SECTIONS.map((section) => (
-            <Link key={section.href} href={section.href}>
-              <Card className="h-full p-5 transition hover:border-accent">
-                <p className="text-sm font-semibold text-foreground">
-                  {section.title}
-                </p>
-                <p className="mt-1 text-sm text-muted">
-                  {section.description}
-                </p>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </div>
+      <ModuleHub
+        title="Curriculum"
+        description="Syllabus, prescribed books and lesson planning."
+        sections={SECTIONS}
+      />
     </PermissionGate>
   );
 }

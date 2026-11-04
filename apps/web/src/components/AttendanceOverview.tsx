@@ -5,16 +5,13 @@ import Link from "next/link";
 import { ApiError, apiFetch } from "@/lib/api";
 import {
   ChartCard,
+  ChartEmpty,
   DonutChart,
   GroupedBarsChart,
   useChartColors,
 } from "@/components/Charts";
-import {
-  Card,
-  ErrorNotice,
-  Spinner,
-  StatCard,
-} from "@/components/ui";
+import { Card, ErrorNotice, Spinner } from "@/components/ui";
+import { useTr } from "@/lib/i18n";
 import { formatNumber } from "@/lib/format";
 import type { AttendanceReport } from "@/lib/types";
 
@@ -31,6 +28,7 @@ function today(): string {
 
 export function AttendanceOverview({ campusId }: { campusId?: number | null }) {
   const colors = useChartColors();
+  const tr = useTr();
   const [report, setReport] = useState<AttendanceReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,23 +78,34 @@ export function AttendanceOverview({ campusId }: { campusId?: number | null }) {
 
   const totals = report?.totals;
   const classes = report?.classes ?? [];
+  const marked = totals?.total ?? 0;
+  const present = totals?.present ?? 0;
+  const leave = totals?.leave ?? 0;
+  const absent = totals?.absent ?? 0;
+  const presentRate = marked > 0 ? Math.round((present / marked) * 100) : 0;
+
+  const split = [
+    { label: tr("dashboard.present"), value: present, color: colors["--success"] },
+    { label: tr("dashboard.leave"), value: leave, color: colors["--warning"] },
+    { label: tr("dashboard.absent"), value: absent, color: colors["--danger"] },
+  ];
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h2 className="text-sm font-semibold text-foreground">
-            Attendance this month
+          <h2 className="text-base font-semibold tracking-tight text-foreground">
+            {tr("dashboard.attendanceThisMonth")}
           </h2>
           <p className="mt-0.5 text-xs text-muted">
-            Monthly attendance summary by class.
+            {tr("dashboard.attendanceHint")}
           </p>
         </div>
         <Link
           href="/dashboard/attendance/report"
-          className="text-xs font-medium text-muted hover:text-foreground"
+          className="inline-flex items-center gap-1.5 rounded-full bg-surface-secondary px-3 py-1.5 text-[11px] font-semibold text-muted transition hover:text-foreground"
         >
-          View full report
+          {tr("dashboard.viewFullReport")}
         </Link>
       </div>
 
@@ -107,85 +116,64 @@ export function AttendanceOverview({ campusId }: { campusId?: number | null }) {
           <Spinner />
         </Card>
       ) : report ? (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard
-              label="Students marked"
-              value={formatNumber(totals?.total ?? 0)}
+        <div className="grid gap-3 lg:grid-cols-12 lg:items-stretch">
+          <Card className="p-6 lg:col-span-4">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-foreground">
+                {tr("dashboard.attendanceSplit")}
+              </h3>
+              <span className="lw-pill bg-surface-secondary text-muted">
+                {presentRate}%
+              </span>
+            </div>
+            <DonutChart
+              emptyAsGraph
+              data={split}
+              centerValue={formatNumber(marked)}
+              centerLabel={tr("dashboard.studentsMarked")}
             />
-            <StatCard
-              label="Present"
-              value={formatNumber(totals?.present ?? 0)}
-              tone="positive"
-            />
-            <StatCard
-              label="Leave"
-              value={formatNumber(totals?.leave ?? 0)}
-              tone="warning"
-            />
-            <StatCard
-              label="Absent"
-              value={formatNumber(totals?.absent ?? 0)}
-              tone="danger"
-            />
-          </div>
+          </Card>
 
-          <div className="grid gap-4 lg:grid-cols-3">
-            <ChartCard title="Attendance split">
-              <DonutChart
-                emptyAsGraph
-                data={[
-                  {
-                    label: "Present",
-                    value: totals?.present ?? 0,
-                    color: colors["--success"],
-                  },
-                  {
-                    label: "Leave",
-                    value: totals?.leave ?? 0,
-                    color: colors["--warning"],
-                  },
-                  {
-                    label: "Absent",
-                    value: totals?.absent ?? 0,
-                    color: colors["--danger"],
-                  },
-                ]}
-                centerValue={formatNumber(totals?.total ?? 0)}
-                centerLabel="Marked"
+          <ChartCard
+            title="dashboard.attendanceByClass"
+            description="dashboard.attendanceHint"
+            className="lg:col-span-8"
+          >
+            {classes.length === 0 ? (
+              <ChartEmpty
+                title={tr("dashboard.noMovement")}
+                hint={tr("dashboard.attendanceHint")}
               />
-            </ChartCard>
-
-            <ChartCard title="Attendance by class" className="lg:col-span-2">
-              <GroupedBarsChart
-                emptyAsGraph
-                data={classes.map((row) => ({
-                  label: row.class_room ?? "Unassigned",
-                  present: row.present,
-                  leave: row.leave,
-                  absent: row.absent,
-                }))}
-                series={[
-                  {
-                    key: "present",
-                    label: "Present",
-                    color: colors["--success"],
-                  },
-                  {
-                    key: "leave",
-                    label: "Leave",
-                    color: colors["--warning"],
-                  },
-                  {
-                    key: "absent",
-                    label: "Absent",
-                    color: colors["--danger"],
-                  },
-                ]}
-              />
-            </ChartCard>
-          </div>
-        </>
+            ) : (
+            <GroupedBarsChart
+              emptyAsGraph
+              data={classes.map((row) => ({
+                label: row.class_room ?? "Unassigned",
+                present: row.present,
+                leave: row.leave,
+                absent: row.absent,
+              }))}
+              series={[
+                {
+                  key: "present",
+                  label: tr("dashboard.present"),
+                  color: colors["--success"],
+                },
+                {
+                  key: "leave",
+                  label: tr("dashboard.leave"),
+                  color: colors["--warning"],
+                },
+                {
+                  key: "absent",
+                  label: tr("dashboard.absent"),
+                  color: colors["--danger"],
+                },
+              ]}
+            />
+            )}
+          </ChartCard>
+        </div>
       ) : null}
     </section>
   );

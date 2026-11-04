@@ -34,11 +34,17 @@ export function StatCard({
   value,
   hint,
   tone = "default",
+  icon,
+  visual,
+  footer,
 }: {
   label: string;
   value: ReactNode;
   hint?: string;
   tone?: "default" | "positive" | "warning" | "danger";
+  icon?: ReactNode;
+  visual?: ReactNode;
+  footer?: ReactNode;
 }) {
   const tones: Record<string, string> = {
     default: "text-foreground",
@@ -49,12 +55,22 @@ export function StatCard({
   const tr = useTr();
 
   return (
-    <Card className="p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted">
-        {tr(label)}
-      </p>
-      <p className={`mt-2 text-2xl font-semibold ${tones[tone]}`}>{value}</p>
-      {hint ? <p className="mt-1 text-xs text-muted">{tr(hint)}</p> : null}
+    <Card className="flex flex-col p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+            {tr(label)}
+          </p>
+          <p className={`lw-kpi-value mt-1.5 text-2xl ${tones[tone]}`}>{value}</p>
+        </div>
+        {visual ?? (icon ? (
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-surface-secondary text-accent">
+            {icon}
+          </div>
+        ) : null)}
+      </div>
+      {hint ? <p className="mt-1.5 text-xs text-muted">{tr(hint)}</p> : null}
+      {footer ? <div className="mt-4">{footer}</div> : null}
     </Card>
   );
 }
@@ -117,13 +133,13 @@ export function PageHeader({
   const tr = useTr();
 
   return (
-    <div className="page-header flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+    <div className="page-header flex flex-wrap items-end justify-between gap-4">
+      <div className="min-w-0">
+        <h1 className="lw-hero-title text-2xl text-foreground sm:text-3xl">
           {tr(title)}
         </h1>
         {description ? (
-          <p className="mt-1 text-md">{tr(description)}</p>
+          <p className="mt-1.5 text-sm text-muted">{tr(description)}</p>
         ) : null}
       </div>
       {actions ? (

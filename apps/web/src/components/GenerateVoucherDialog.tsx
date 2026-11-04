@@ -204,7 +204,7 @@ export function GenerateVoucherDialog({ onDone }: { onDone?: () => void }) {
                 type="button"
                 onClick={close}
                 aria-label="Close dialog"
-                className="rounded-lg p-1.5 text-muted transition-colors hover:bg-[var(--surface-secondary)] hover:text-foreground"
+                className="rounded-full p-1.5 text-muted transition-colors hover:bg-[var(--surface-secondary)] hover:text-foreground"
               >
                 <svg
                   width="18"
@@ -298,11 +298,11 @@ export function GenerateVoucherDialog({ onDone }: { onDone?: () => void }) {
                     <span className="mb-1 block text-sm font-medium text-foreground">
                       Generate for
                     </span>
-                    <div className="inline-flex rounded-xl border border-border-secondary p-1">
+                    <div className="inline-flex rounded-full border border-border-secondary bg-surface-secondary p-1">
                       <button
                         type="button"
                         onClick={() => setMode("class")}
-                        className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
+                        className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
                           mode === "class"
                             ? "bg-accent text-accent-foreground"
                             : "text-muted hover:text-foreground"
@@ -313,7 +313,7 @@ export function GenerateVoucherDialog({ onDone }: { onDone?: () => void }) {
                       <button
                         type="button"
                         onClick={() => setMode("student")}
-                        className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
+                        className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
                           mode === "student"
                             ? "bg-accent text-accent-foreground"
                             : "text-muted hover:text-foreground"

@@ -4,9 +4,55 @@ import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
 import { SportsTabs } from "@/components/SportsTabs";
-import { Card, PageHeader, Spinner, StatCard } from "@/components/ui";
+import { HubGrid, type HubSection } from "@/components/ModuleHub";
+import { PageHeader, Spinner, StatCard } from "@/components/ui";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import type { SportSummary } from "@/lib/types";
+
+const SPORTS_SECTIONS: HubSection[] = [
+  {
+    href: "/dashboard/sports/catalog",
+    title: "Sports",
+    description: "The catalogue of sports offered.",
+    icon: "trophy",
+  },
+  {
+    href: "/dashboard/sports/teams",
+    title: "Teams",
+    description: "Teams and player rosters.",
+    icon: "users",
+  },
+  {
+    href: "/dashboard/sports/training",
+    title: "Training",
+    description: "Training schedules and attendance.",
+    icon: "calendar",
+  },
+  {
+    href: "/dashboard/sports/fixtures",
+    title: "Fixtures",
+    description: "Matches, results and standings.",
+    icon: "clock",
+  },
+  {
+    href: "/dashboard/sports/achievements",
+    title: "Achievements",
+    description: "Medals, titles and records.",
+    icon: "award",
+  },
+  {
+    href: "/dashboard/sports/equipment",
+    title: "Equipment",
+    description: "Gear stock and valuation.",
+    icon: "box",
+  },
+  {
+    href: "/dashboard/sports/reports",
+    title: "Reports",
+    description: "Participation and performance summaries.",
+    icon: "chart",
+  },
+];
 
 export default function SportsPage() {
   return (
@@ -24,7 +70,7 @@ function SportsHome() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5">
       <PageHeader
         title="Sports"
         description="Sports catalogue, teams, fixtures, achievements and equipment."
@@ -34,7 +80,7 @@ function SportsHome() {
 
       {summary ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard label="Teams" value={formatNumber(summary.teams)} />
             <StatCard
               label="Active players"
@@ -51,7 +97,7 @@ function SportsHome() {
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
               label="Wins"
               value={formatNumber(summary.fixtures.wins)}
@@ -77,13 +123,7 @@ function SportsHome() {
         <Spinner />
       ) : null}
 
-      <Card className="p-5">
-        <p className="text-sm text-muted">
-          Use the tabs above to manage the sports catalogue, build teams and
-          rosters, schedule training and fixtures, log achievements and track
-          equipment.
-        </p>
-      </Card>
+      <HubGrid sections={SPORTS_SECTIONS} />
     </div>
   );
 }

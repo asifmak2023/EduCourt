@@ -46,11 +46,13 @@ export function ReportRangeBar({
       <div className="flex flex-wrap items-end gap-3">
         {showPeriods ? (
         <div className="min-w-0 flex-1">
-          <p className="mb-1 text-sm font-medium text-foreground">Period</p>
+          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
+            Period
+          </p>
           <div
             role="tablist"
             aria-label="Report period"
-            className="flex flex-wrap gap-1 rounded-lg border border-border-secondary bg-surface-tertiary p-1"
+            className="inline-flex flex-wrap gap-1 rounded-full bg-surface-secondary p-1"
           >
             {options.map((option) => {
               const active = option.value === value.granularity;
@@ -62,9 +64,9 @@ export function ReportRangeBar({
                   role="tab"
                   aria-selected={active}
                   onClick={() => setGranularity(option.value)}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                     active
-                      ? "bg-accent-soft text-accent-soft-foreground"
+                      ? "bg-accent text-accent-foreground shadow-sm"
                       : "text-muted hover:text-foreground"
                   }`}
                 >

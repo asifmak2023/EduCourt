@@ -13,9 +13,11 @@ import {
   Spinner,
   StatCard,
 } from "@/components/ui";
+import { ChartCard, ProportionBar, useChartColors } from "@/components/Charts";
 
 export default function PortalFeesPage() {
   const { t } = useTranslation();
+  const colors = useChartColors();
   const { activeStudentId, loading } = usePortal();
   const { data, loading: queryLoading, error } = usePortalQuery(
     activeStudentId,
@@ -24,9 +26,24 @@ export default function PortalFeesPage() {
   );
 
   const totals = data?.totals;
+  const billed = Number(totals?.billed ?? 0);
+  const paid = Number(totals?.paid ?? 0);
+  const outstanding = Number(totals?.outstanding ?? 0);
+  const recovery = billed > 0 ? Math.round((paid / billed) * 100) : 0;
+
+  const mix = billed > 0
+    ? [
+        { label: t("portal.fees.paid"), value: paid, color: colors["--success"] },
+        {
+          label: t("portal.fees.outstanding"),
+          value: Math.max(outstanding, 0),
+          color: colors["--danger"],
+        },
+      ]
+    : [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader title="portal.fees.title" description="portal.fees.subtitle" />
 
       {error ? <ErrorNotice message={error} /> : null}
@@ -35,7 +52,7 @@ export default function PortalFeesPage() {
         <Spinner />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-3">
             <StatCard
               label="portal.fees.billed"
               value={formatMoney(totals?.billed)}
@@ -48,9 +65,25 @@ export default function PortalFeesPage() {
             <StatCard
               label="portal.fees.outstanding"
               value={formatMoney(totals?.outstanding)}
-              tone={Number(totals?.outstanding ?? 0) > 0 ? "danger" : "positive"}
+              tone={outstanding > 0 ? "danger" : "positive"}
+              hint={
+                billed > 0
+                  ? t("portal.fees.recovery", { percent: String(recovery) })
+                  : undefined
+              }
             />
           </div>
+
+          {mix.length > 0 ? (
+            <ChartCard title="portal.fees.recoveryTitle" description="portal.fees.subtitle">
+              <div className="pt-2">
+                <ProportionBar
+                  data={mix}
+                  formatValue={(value) => formatMoney(value)}
+                />
+              </div>
+            </ChartCard>
+          ) : null}
 
           {data && data.data.length > 0 ? (
             <Card className="overflow-x-auto">

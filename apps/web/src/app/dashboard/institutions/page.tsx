@@ -1,13 +1,39 @@
 "use client";
 
-import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
 import { PermissionGate } from "@/components/PermissionGate";
 import { InstitutionsTabs } from "@/components/InstitutionsTabs";
-import { Card, PageHeader, StatCard } from "@/components/ui";
-import { buttonClasses } from "@/components/Form";
+import { HubGrid, type HubSection } from "@/components/ModuleHub";
+import { PageHeader, StatCard } from "@/components/ui";
 import type { Campus, Institution } from "@/lib/types";
+
+const INSTITUTIONS_SECTIONS: HubSection[] = [
+  {
+    href: "/dashboard/institutions/list",
+    title: "Institutions",
+    description: "Groupings and their guardrail settings.",
+    icon: "building",
+  },
+  {
+    href: "/dashboard/institutions/campuses",
+    title: "Campuses",
+    description: "Tenant boundaries and campus profiles.",
+    icon: "grid",
+  },
+  {
+    href: "/dashboard/institutions/list/new",
+    title: "New institution",
+    description: "Create a grouping for a new tenant.",
+    icon: "userPlus",
+  },
+  {
+    href: "/dashboard/institutions/campuses/new",
+    title: "New campus",
+    description: "Add a campus to an institution.",
+    icon: "building",
+  },
+];
 
 export default function InstitutionsPage() {
   return (
@@ -19,6 +45,15 @@ export default function InstitutionsPage() {
 
 function InstitutionsHome() {
   const { can } = useAuth();
+  const sections = INSTITUTIONS_SECTIONS.filter((section) => {
+    if (section.href.endsWith("/list/new")) {
+      return can("institution.create");
+    }
+    if (section.href.endsWith("/campuses/new")) {
+      return can("campus.create");
+    }
+    return true;
+  });
   const { meta: institutionMeta } = useList<Institution>("/v1/institutions", {
     per_page: 1,
   });
@@ -27,7 +62,7 @@ function InstitutionsHome() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5">
       <PageHeader
         title="Institutions and campuses"
         description="Groupings and tenant boundaries across the platform."
@@ -35,7 +70,7 @@ function InstitutionsHome() {
 
       <InstitutionsTabs active="overview" />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         <StatCard
           label="Institutions"
           value={institutionMeta?.total ?? 0}
@@ -48,43 +83,7 @@ function InstitutionsHome() {
         />
       </div>
 
-      <Card className="space-y-4 p-5">
-        <p className="text-sm text-muted">
-          A campus is the tenant boundary for data isolation. Institutions
-          group campuses and act as a guardrail for cross-campus roles. Manage
-          both from the tabs above.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/dashboard/institutions/list"
-            className={buttonClasses("secondary")}
-          >
-            View institutions
-          </Link>
-          <Link
-            href="/dashboard/institutions/campuses"
-            className={buttonClasses("secondary")}
-          >
-            View campuses
-          </Link>
-          {can("institution.create") ? (
-            <Link
-              href="/dashboard/institutions/list/new"
-              className={buttonClasses("primary")}
-            >
-              New institution
-            </Link>
-          ) : null}
-          {can("campus.create") ? (
-            <Link
-              href="/dashboard/institutions/campuses/new"
-              className={buttonClasses("primary")}
-            >
-              New campus
-            </Link>
-          ) : null}
-        </div>
-      </Card>
+      <HubGrid sections={sections} />
     </div>
   );
 }

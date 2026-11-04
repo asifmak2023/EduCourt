@@ -12,6 +12,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
+import { BarStatChart, ChartCard } from "@/components/Charts";
 
 export default function PortalResultsPage() {
   const { t } = useTranslation();
@@ -23,9 +24,18 @@ export default function PortalResultsPage() {
   );
 
   const cards = data?.data ?? [];
+  const latest = cards[0] ?? null;
+
+  const subjectBars = (latest?.subjects ?? []).map((subject) => ({
+    label: subject.subject ?? "-",
+    value:
+      subject.max_marks > 0 && subject.marks_obtained !== null
+        ? Math.round((subject.marks_obtained / subject.max_marks) * 100)
+        : 0,
+  }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         title="portal.results.title"
         description="portal.results.subtitle"
@@ -38,7 +48,20 @@ export default function PortalResultsPage() {
       ) : cards.length === 0 ? (
         <EmptyState message="portal.results.empty" />
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-5">
+          {subjectBars.some((bar) => bar.value > 0) ? (
+            <ChartCard
+              title="portal.results.performance"
+              description={latest?.exam?.name ?? "portal.results.subtitle"}
+            >
+              <BarStatChart
+                data={subjectBars}
+                formatValue={(value) => `${value}%`}
+                height={210}
+              />
+            </ChartCard>
+          ) : null}
+
           {cards.map((card, cardIndex) => (
             <Card key={card.exam?.id ?? `result-${cardIndex}`}>
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-4">

@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
-import { Card, PageHeader, Spinner, StatCard } from "@/components/ui";
+import { ModuleHub, type HubSection } from "@/components/ModuleHub";
+import { Spinner, StatCard } from "@/components/ui";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import type { TransportSummary } from "@/lib/types";
 
@@ -16,26 +16,30 @@ export default function TransportPage() {
   );
 }
 
-const SECTIONS = [
+const SECTIONS: HubSection[] = [
   {
     href: "/dashboard/transport/vehicles",
     title: "Vehicles",
     description: "Fleet register with capacity and driver details.",
+    icon: "bus",
   },
   {
     href: "/dashboard/transport/routes",
     title: "Routes",
     description: "Routes, stops, distances and fares.",
+    icon: "grid",
   },
   {
     href: "/dashboard/transport/allocations",
     title: "Allocations",
     description: "Assign students to routes and stops.",
+    icon: "users",
   },
   {
     href: "/dashboard/transport/report",
     title: "Summary report",
     description: "Fleet, routes and monthly fare commitment.",
+    icon: "chart",
   },
 ];
 
@@ -46,47 +50,32 @@ function TransportHome() {
   );
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Transport"
-        description="Fleet, routes and student allocations."
-      />
-
-      {loading ? (
-        <Spinner />
-      ) : data ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Vehicles" value={formatNumber(data.vehicles)} />
-          <StatCard
-            label="Seats"
-            value={formatNumber(data.vehicle_capacity)}
-          />
-          <StatCard label="Routes" value={formatNumber(data.routes)} />
-          <StatCard
-            label="Riders"
-            value={formatNumber(data.allocated_students)}
-          />
-          <StatCard
-            label="Monthly fare"
-            value={formatCurrency(data.monthly_fare)}
-          />
-        </div>
-      ) : null}
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {SECTIONS.map((section) => (
-          <Link key={section.href} href={section.href}>
-            <Card className="h-full p-5 transition hover:border-accent">
-              <p className="text-sm font-semibold text-foreground">
-                {section.title}
-              </p>
-              <p className="mt-1 text-sm text-muted">
-                {section.description}
-              </p>
-            </Card>
-          </Link>
-        ))}
-      </div>
-    </div>
+    <ModuleHub
+      title="Transport"
+      description="Fleet, routes and student allocations."
+      sections={SECTIONS}
+      stats={
+        loading ? (
+          <Spinner />
+        ) : data ? (
+          <>
+            <StatCard label="Vehicles" value={formatNumber(data.vehicles)} />
+            <StatCard
+              label="Seats"
+              value={formatNumber(data.vehicle_capacity)}
+            />
+            <StatCard label="Routes" value={formatNumber(data.routes)} />
+            <StatCard
+              label="Riders"
+              value={formatNumber(data.allocated_students)}
+            />
+            <StatCard
+              label="Monthly fare"
+              value={formatCurrency(data.monthly_fare)}
+            />
+          </>
+        ) : null
+      }
+    />
   );
 }

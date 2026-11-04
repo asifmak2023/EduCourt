@@ -90,7 +90,7 @@ function PortalFrame({ children }: { children: ReactNode }) {
                 <select
                   value={activeStudentId ?? ""}
                   onChange={(event) => setActiveStudentId(Number(event.target.value))}
-                  className="max-w-[12rem] rounded-lg border border-border-secondary bg-surface px-2.5 py-1.5 text-sm text-foreground"
+                  className="max-w-[12rem] rounded-full border border-border-secondary bg-surface px-3 py-1.5 text-sm text-foreground"
                 >
                   {students.map((student) => (
                     <option key={student.id} value={student.id}>
@@ -126,9 +126,9 @@ function PortalFrame({ children }: { children: ReactNode }) {
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                className={`flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold transition-colors ${
                   isActive
-                    ? "bg-accent-soft text-accent-soft-foreground"
+                    ? "bg-accent text-accent-foreground shadow-sm"
                     : "text-foreground/75 hover:bg-surface-tertiary"
                 }`}
               >

@@ -1,13 +1,27 @@
 "use client";
 
-import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/useList";
 import { AppearanceSettings } from "@/components/AppearanceSettings";
 import { SettingsTabs } from "@/components/SettingsTabs";
-import { buttonClasses } from "@/components/Form";
-import { Card, ErrorNotice, PageHeader, StatCard } from "@/components/ui";
+import { HubGrid, type HubSection } from "@/components/ModuleHub";
+import { ErrorNotice, PageHeader, StatCard } from "@/components/ui";
 import type { SsoProvider } from "@/lib/types";
+
+const SETTINGS_SECTIONS: HubSection[] = [
+  {
+    href: "/dashboard/settings/sso-providers",
+    title: "SSO providers",
+    description: "Generic OpenID Connect connections.",
+    icon: "shield",
+  },
+  {
+    href: "/dashboard/settings/appearance",
+    title: "Appearance",
+    description: "Color mode, accent and background.",
+    icon: "palette",
+  },
+];
 
 export default function SettingsPage() {
   const { user, can } = useAuth();
@@ -29,7 +43,7 @@ export default function SettingsPage() {
 
 function AppearanceSettingsPanel() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5">
       <PageHeader
         title="Appearance"
         description="Personalize color mode, accent color and background. Preferences are stored in this browser."
@@ -41,7 +55,6 @@ function AppearanceSettingsPanel() {
 }
 
 function SettingsHome() {
-  const { can } = useAuth();
   const { items, meta } = useList<SsoProvider>("/v1/sso-providers", {
     per_page: 50,
   });
@@ -58,7 +71,7 @@ function SettingsHome() {
 
       <SettingsTabs active="overview" />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-3">
         <StatCard
           label="SSO providers"
           value={meta?.total ?? 0}
@@ -72,29 +85,7 @@ function SettingsHome() {
         />
       </div>
 
-      <Card className="space-y-4 p-5">
-        <p className="text-sm text-muted">
-          Single sign-on uses generic OpenID Connect providers. Each provider is
-          linked to an institution and can optionally provision users on first
-          login with a default role.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/dashboard/settings/sso-providers"
-            className={buttonClasses("secondary")}
-          >
-            Manage SSO providers
-          </Link>
-          {can("setting.edit") ? (
-            <Link
-              href="/dashboard/settings/sso-providers/new"
-              className={buttonClasses("primary")}
-            >
-              New provider
-            </Link>
-          ) : null}
-        </div>
-      </Card>
+      <HubGrid sections={SETTINGS_SECTIONS} />
     </div>
   );
 }

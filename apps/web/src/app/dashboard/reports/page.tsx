@@ -1,14 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { PermissionGate } from "@/components/PermissionGate";
 import { ReportsTabs } from "@/components/ReportsTabs";
-import { Card, PageHeader, ErrorNotice, Spinner } from "@/components/ui";
+import { HubGrid, type HubSection } from "@/components/ModuleHub";
+import { PageHeader, ErrorNotice, Spinner } from "@/components/ui";
 import {
   GroupedBarsChart,
   useChartColors,
 } from "@/components/Charts";
+import type { NavIcon } from "@/lib/nav";
 import {
   ReportActions,
   ReportDocument,
@@ -24,46 +25,53 @@ import { downloadCsv, reportSlug } from "@/lib/csv";
 import { buildReportQuery, type ReportFilterState } from "@/lib/reportPeriod";
 import type { ReportCampusComparison } from "@/lib/types";
 
-const REPORTS = [
+const REPORTS: (HubSection & { icon: NavIcon })[] = [
   {
     href: "/dashboard/reports/progress",
     title: "Progress",
     description:
       "Student, admission, enrollment and scholarship totals over a period.",
+    icon: "arrowUp",
   },
   {
     href: "/dashboard/reports/attendance",
     title: "Attendance",
     description:
       "Present, absent and late totals with a per-class attendance rate.",
+    icon: "check",
   },
   {
     href: "/dashboard/reports/results",
     title: "Results",
     description:
       "Pass rate, grade spread and per-subject averages for a chosen exam.",
+    icon: "award",
   },
   {
     href: "/dashboard/reports/staff",
     title: "Staff",
     description:
       "Headcount by department and type, staff attendance and leave.",
+    icon: "idCard",
   },
   {
     href: "/dashboard/reports/students",
     title: "Student yearly",
     description:
       "A student's year-by-year attendance, academics and conduct summary.",
+    icon: "users",
   },
   {
     href: "/dashboard/reports/financial",
     title: "Financial",
     description: "Income, expense and surplus from the posted ledger.",
+    icon: "banknote",
   },
   {
     href: "/dashboard/reports/payroll",
     title: "Payroll",
     description: "Payroll cost by period with gross, deductions and net.",
+    icon: "wallet",
   },
 ];
 
@@ -89,18 +97,7 @@ function ReportsOverview() {
         description="Campus reporting and analytics for the current tenant."
       />
       <ReportsTabs active="overview" />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {REPORTS.map((report) => (
-          <Link key={report.href} href={report.href}>
-            <Card className="h-full p-5 transition hover:border-accent">
-              <h2 className="text-sm font-semibold text-foreground">
-                {report.title}
-              </h2>
-              <p className="mt-1 text-sm text-muted">{report.description}</p>
-            </Card>
-          </Link>
-        ))}
-      </div>
+      <HubGrid sections={REPORTS} />
 
       {isInstitutionHead ? <CampusComparison /> : null}
     </div>

@@ -5,7 +5,9 @@ namespace App\Services\Reports;
 use App\Enums\AccountType;
 use App\Enums\AdmissionStatus;
 use App\Enums\ConductStatus;
+use App\Enums\EnrollmentStatus;
 use App\Enums\ExamStatus;
+use App\Enums\IncomeStatus;
 use App\Enums\JournalStatus;
 use App\Enums\LeaveStatus;
 use App\Enums\PaymentStatus;
@@ -29,6 +31,7 @@ use App\Models\GradeScale;
 use App\Models\Institution;
 use App\Models\JournalLine;
 use App\Models\LeaveRequest;
+use App\Models\OtherIncome;
 use App\Models\PayrollRun;
 use App\Models\ScholarshipAward;
 use App\Models\StaffAttendance;
@@ -36,6 +39,7 @@ use App\Models\StaffMember;
 use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Models\StudentEnrollment;
+use App\Models\TeachingAssignment;
 use App\Support\ReportPeriod;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -1148,15 +1152,359 @@ class ReportService
     }
 
     /**
+     * Consolidated single-campus report covering income, payments, students
+     * and staff for one period.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    public function campusReport(array $filters, int $campusId): array
+    {
+        $period = ReportPeriod::fromFilters($filters);
+        $campus = Campus::query()->findOrFail($campusId);
+        $figures = $this->campusFigures($period);
+
+        return array_merge([
+            'period' => $period->meta(),
+            'filters' => [
+                'campus_id' => $campus->id,
+                'from' => $period->from?->toDateString(),
+                'to' => $period->to?->toDateString(),
+            ],
+            'campus' => [
+                'id' => $campus->id,
+                'name' => $campus->name,
+                'code' => $campus->code,
+            ],
+        ], $this->campusFigureRow($campus->id, $figures));
+    }
+
+    /**
+     * Head office roll-up: one row per campus with income, payments, balance,
+     * receivables and payables, plus a grand total. Each campus row uses the
+     * same figures as campusReport() so the drill-down reconciles exactly.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    public function headOfficeReport(array $filters): array
+    {
+        $period = ReportPeriod::fromFilters($filters);
+        $campuses = Campus::query()->orderBy('name')->get();
+        $figures = $this->campusFigures($period);
+
+        $rows = $campuses->map(fn (Campus $campus) => array_merge([
+            'campus_id' => $campus->id,
+            'campus' => $campus->name,
+            'code' => $campus->code,
+        ], $this->campusFigureRow($campus->id, $figures)))->values();
+
+        return [
+            'period' => $period->meta(),
+            'filters' => [
+                'from' => $period->from?->toDateString(),
+                'to' => $period->to?->toDateString(),
+            ],
+            'campuses' => $rows,
+            'totals' => [
+                'campuses' => $rows->count(),
+                'income' => $this->round($rows->sum('income')),
+                'payments' => $this->round($rows->sum('payments')),
+                'balance' => $this->round($rows->sum('balance')),
+                'receivable' => $this->round($rows->sum('receivable')),
+                'payable' => $this->round($rows->sum('payable')),
+            ],
+        ];
+    }
+
+    /**
+     * Per-campus metric maps shared by both the campus and head office report.
+     * Keyed by campus id so a single set of grouped queries can render one
+     * campus or every campus without diverging.
+     *
+     * @return array<string, array<string, array<int, float|int>>>
+     */
+    private function campusFigures(ReportPeriod $period): array
+    {
+        $asOn = $period->to?->toDateString() ?? CarbonImmutable::today()->toDateString();
+
+        $feeDue = FeeVoucher::query()
+            ->where('status', '!=', VoucherStatus::Void->value)
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('due_date', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('due_date', '<=', $to->toDateString()))
+            ->select('campus_id', DB::raw('sum(amount) as total'))
+            ->groupBy('campus_id')
+            ->pluck('total', 'campus_id');
+
+        $feeReceived = FeePayment::query()
+            ->where('status', PaymentStatus::Posted->value)
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('payment_date', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('payment_date', '<=', $to->toDateString()))
+            ->select('campus_id', DB::raw('sum(amount) as total'))
+            ->groupBy('campus_id')
+            ->pluck('total', 'campus_id');
+
+        $otherIncome = OtherIncome::query()
+            ->where('status', IncomeStatus::Posted->value)
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('received_on', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('received_on', '<=', $to->toDateString()))
+            ->select('campus_id', DB::raw('sum(amount) as total'))
+            ->groupBy('campus_id')
+            ->pluck('total', 'campus_id');
+
+        /*
+         * "Received" is cash collected, so it combines fee receipts and posted
+         * other income. "Due" stays the billed fee amount, and their difference
+         * is the receivable/advance position shown as R/A.
+         */
+        $receivedByCampus = [];
+
+        foreach ([$feeReceived->all(), $otherIncome->all()] as $source) {
+            foreach ($source as $campusKey => $total) {
+                $receivedByCampus[$campusKey] = round(
+                    ($receivedByCampus[$campusKey] ?? 0) + (float) $total,
+                    2
+                );
+            }
+        }
+
+        $receivable = FeeVoucher::query()
+            ->where('status', '!=', VoucherStatus::Void->value)
+            ->whereColumn('paid_amount', '<', 'amount')
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('due_date', '<=', $to->toDateString()))
+            ->select('campus_id', DB::raw('sum(amount - paid_amount) as total'))
+            ->groupBy('campus_id')
+            ->pluck('total', 'campus_id');
+
+        /*
+         * Payments follow the double-entry ledger (the same source as the
+         * financial summary) because that is where every settlement is posted.
+         * Salaries and utilities are split out by their default chart codes;
+         * everything else rolls into "others".
+         */
+        $expenseByCampus = $this->ledgerByCampus(AccountType::Expense->value, $period);
+
+        $salaryCode = (string) config('finance.accounts.salary_expense', '5010');
+        $salaries = $this->ledgerByCampus(AccountType::Expense->value, $period, [$salaryCode]);
+        $utilities = $this->ledgerByCampus(AccountType::Expense->value, $period, ['5020']);
+
+        $others = [];
+
+        foreach ($expenseByCampus as $campusKey => $total) {
+            $others[$campusKey] = round(
+                $total
+                    - (float) ($salaries[$campusKey] ?? 0)
+                    - (float) ($utilities[$campusKey] ?? 0),
+                2
+            );
+        }
+
+        $payable = $this->payableByCampus($period);
+
+        $students = Student::query()->get(['id', 'campus_id', 'status', 'admission_date']);
+        $withdrawals = StudentEnrollment::query()
+            ->whereIn('status', [EnrollmentStatus::Withdrawn->value, EnrollmentStatus::Transferred->value])
+            ->when($period->from, fn (Builder $q, $from) => $q->whereDate('ends_on', '>=', $from->toDateString()))
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('ends_on', '<=', $to->toDateString()))
+            ->select('campus_id', DB::raw('count(distinct student_id) as total'))
+            ->groupBy('campus_id')
+            ->pluck('total', 'campus_id');
+
+        $staff = StaffMember::query()->get([
+            'id', 'campus_id', 'user_id', 'gender', 'status', 'joining_date', 'leaving_date',
+        ]);
+        $teachingByCampus = TeachingAssignment::query()
+            ->where('is_active', true)
+            ->whereNotNull('teacher_user_id')
+            ->get(['campus_id', 'teacher_user_id'])
+            ->groupBy('campus_id')
+            ->map(fn ($rows) => $rows->pluck('teacher_user_id')->unique()->flip());
+
+        $studentTotals = [];
+        $studentNew = [];
+        $studentOngoing = [];
+        $staffTotals = [];
+        $staffTeaching = [];
+        $staffMales = [];
+        $staffFemales = [];
+        $staffHired = [];
+        $staffFired = [];
+
+        foreach ($students as $student) {
+            $campusKey = (int) $student->campus_id;
+            $admitted = $student->admission_date?->toDateString();
+            $onRoll = $admitted === null || $admitted <= $asOn;
+
+            if ($onRoll) {
+                $studentTotals[$campusKey] = ($studentTotals[$campusKey] ?? 0) + 1;
+            }
+
+            if ($this->enumValue($student->status) === StudentStatus::Active->value && $onRoll) {
+                $studentOngoing[$campusKey] = ($studentOngoing[$campusKey] ?? 0) + 1;
+            }
+
+            if ($admitted !== null
+                && ($period->from === null || $admitted >= $period->from->toDateString())
+                && ($period->to === null || $admitted <= $period->to->toDateString())) {
+                $studentNew[$campusKey] = ($studentNew[$campusKey] ?? 0) + 1;
+            }
+        }
+
+        foreach ($staff as $member) {
+            $campusKey = (int) $member->campus_id;
+            $joined = $member->joining_date?->toDateString();
+            $left = $member->leaving_date?->toDateString();
+            $employed = in_array($this->enumValue($member->status), $this->employedStatuses(), true)
+                && ($joined === null || $joined <= $asOn)
+                && ($left === null || $left >= $asOn);
+
+            if ($employed) {
+                $staffTotals[$campusKey] = ($staffTotals[$campusKey] ?? 0) + 1;
+
+                $gender = $this->enumValue($member->gender);
+
+                if ($gender === 'male') {
+                    $staffMales[$campusKey] = ($staffMales[$campusKey] ?? 0) + 1;
+                } elseif ($gender === 'female') {
+                    $staffFemales[$campusKey] = ($staffFemales[$campusKey] ?? 0) + 1;
+                }
+
+                $teachers = $teachingByCampus->get($campusKey);
+                if ($member->user_id !== null && $teachers?->has($member->user_id)) {
+                    $staffTeaching[$campusKey] = ($staffTeaching[$campusKey] ?? 0) + 1;
+                }
+            }
+
+            if ($joined !== null
+                && ($period->from === null || $joined >= $period->from->toDateString())
+                && ($period->to === null || $joined <= $period->to->toDateString())) {
+                $staffHired[$campusKey] = ($staffHired[$campusKey] ?? 0) + 1;
+            }
+
+            if ($left !== null
+                && ($period->from === null || $left >= $period->from->toDateString())
+                && ($period->to === null || $left <= $period->to->toDateString())) {
+                $staffFired[$campusKey] = ($staffFired[$campusKey] ?? 0) + 1;
+            }
+        }
+
+        return [
+            'income' => [
+                'due' => $feeDue->all(),
+                'received' => $receivedByCampus,
+                'fees' => $feeReceived->all(),
+                'other' => $otherIncome->all(),
+                'receivable' => $receivable->all(),
+            ],
+            'payments' => [
+                'salaries' => $salaries,
+                'utilities' => $utilities,
+                'others' => $others,
+                'payable' => $payable,
+            ],
+            'students' => [
+                'total' => $studentTotals,
+                'new' => $studentNew,
+                'withdrawals' => $withdrawals->all(),
+                'ongoing' => $studentOngoing,
+            ],
+            'staff' => [
+                'total' => $staffTotals,
+                'teaching' => $staffTeaching,
+                'males' => $staffMales,
+                'females' => $staffFemales,
+                'hired' => $staffHired,
+                'fired' => $staffFired,
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<string, array<string, array<int, float|int>>>  $figures
+     * @return array<string, mixed>
+     */
+    private function campusFigureRow(int $campusId, array $figures): array
+    {
+        $due = $this->figure($figures['income']['due'], $campusId);
+        $received = $this->figure($figures['income']['received'], $campusId);
+        $fees = $this->figure($figures['income']['fees'], $campusId);
+        $other = $this->figure($figures['income']['other'], $campusId);
+        $receivable = $this->figure($figures['income']['receivable'], $campusId);
+
+        $salaries = $this->figure($figures['payments']['salaries'], $campusId);
+        $utilities = $this->figure($figures['payments']['utilities'], $campusId);
+        $others = $this->figure($figures['payments']['others'], $campusId);
+        $payable = $this->figure($figures['payments']['payable'], $campusId);
+
+        $income = $this->round($received);
+        $payments = $this->round($salaries + $utilities + $others);
+
+        $studentTotal = (int) $this->figure($figures['students']['total'], $campusId);
+        $staffTotal = (int) $this->figure($figures['staff']['total'], $campusId);
+        $teaching = (int) $this->figure($figures['staff']['teaching'], $campusId);
+
+        return [
+            'income' => $income,
+            'payments' => $payments,
+            'balance' => $this->round($income - $payments),
+            'receivable' => $this->round($receivable),
+            'payable' => $this->round($payable),
+            'income_breakdown' => [
+                'due' => $this->round($due),
+                'received' => $this->round($received),
+                'fees' => $this->round($fees),
+                'other' => $this->round($other),
+                'receivable' => $this->round($receivable),
+            ],
+            'payments_breakdown' => [
+                'salaries' => $this->round($salaries),
+                'utilities' => $this->round($utilities),
+                'others' => $this->round($others),
+                'payable' => $this->round($payable),
+            ],
+            'students' => [
+                'total' => $studentTotal,
+                'new_admissions' => (int) $this->figure($figures['students']['new'], $campusId),
+                'withdrawals' => (int) $this->figure($figures['students']['withdrawals'], $campusId),
+                'ongoing' => (int) $this->figure($figures['students']['ongoing'], $campusId),
+            ],
+            'staff' => [
+                'total' => $staffTotal,
+                'teaching' => $teaching,
+                'non_teaching' => max($staffTotal - $teaching, 0),
+                'males' => (int) $this->figure($figures['staff']['males'], $campusId),
+                'females' => (int) $this->figure($figures['staff']['females'], $campusId),
+                'hired' => (int) $this->figure($figures['staff']['hired'], $campusId),
+                'fired' => (int) $this->figure($figures['staff']['fired'], $campusId),
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<int, float|int>  $values
+     */
+    private function figure(array $values, int $campusId): float
+    {
+        return (float) ($values[$campusId] ?? 0);
+    }
+
+    private function round(float $value): float
+    {
+        return round($value, 2);
+    }
+
+    /**
+     * @param  array<int, string>|null  $accountCodes  Restrict to specific chart codes.
      * @return array<int, float>
      */
-    private function ledgerByCampus(string $accountType, ReportPeriod $period): array
+    private function ledgerByCampus(string $accountType, ReportPeriod $period, ?array $accountCodes = null): array
     {
         return JournalLine::query()
             ->join('journal_entries', 'journal_entries.id', '=', 'journal_lines.journal_entry_id')
             ->join('chart_of_accounts', 'chart_of_accounts.id', '=', 'journal_lines.chart_of_account_id')
             ->whereIn('journal_entries.status', [JournalStatus::Posted->value, JournalStatus::Reversed->value])
             ->where('chart_of_accounts.account_type', $accountType)
+            ->when($accountCodes !== null, fn (Builder $q) => $q->whereIn('chart_of_accounts.code', $accountCodes))
             ->when($period->from, fn (Builder $q, $from) => $q->whereDate('journal_entries.entry_date', '>=', $from->toDateString()))
             ->when($period->to, fn (Builder $q, $to) => $q->whereDate('journal_entries.entry_date', '<=', $to->toDateString()))
             ->select('journal_entries.campus_id')
@@ -1169,6 +1517,50 @@ class ReportService
             ->pluck('total', 'journal_entries.campus_id')
             ->map(fn ($value) => (float) $value)
             ->all();
+    }
+
+    /**
+     * Outstanding accounts payable per campus, derived from the payable
+     * control account on the ledger so it reconciles with the balance sheet.
+     *
+     * @return array<int, float>
+     */
+    /**
+     * Outstanding accounts payable per campus as at the period end. Unlike the
+     * P&L lines this is a cumulative balance, so it is bounded by the end date
+     * only and includes every earlier posting.
+     *
+     * @return array<int, float>
+     */
+    private function payableByCampus(ReportPeriod $period): array
+    {
+        return JournalLine::query()
+            ->join('journal_entries', 'journal_entries.id', '=', 'journal_lines.journal_entry_id')
+            ->join('chart_of_accounts', 'chart_of_accounts.id', '=', 'journal_lines.chart_of_account_id')
+            ->whereIn('journal_entries.status', [JournalStatus::Posted->value, JournalStatus::Reversed->value])
+            ->where('chart_of_accounts.account_type', AccountType::Liability->value)
+            ->whereIn('chart_of_accounts.code', $this->payableCodes())
+            ->when($period->to, fn (Builder $q, $to) => $q->whereDate('journal_entries.entry_date', '<=', $to->toDateString()))
+            ->select('journal_entries.campus_id')
+            ->selectRaw('SUM(journal_lines.credit - journal_lines.debit) as total')
+            ->groupBy('journal_entries.campus_id')
+            ->pluck('total', 'journal_entries.campus_id')
+            ->map(fn ($value) => max((float) $value, 0.0))
+            ->all();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function payableCodes(): array
+    {
+        return array_values(array_filter([
+            config('finance.accounts.vendor_payable'),
+            config('finance.accounts.salary_payable'),
+            config('finance.accounts.tax_payable'),
+            config('finance.accounts.withholding_tax_payable'),
+            config('finance.accounts.payroll_deductions_payable'),
+        ]));
     }
 
     /**

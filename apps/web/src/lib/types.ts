@@ -2921,3 +2921,84 @@ export interface ReportCampusComparison {
   };
   campus_ids: number[];
 }
+
+export interface ReportCampusIncomeBreakdown {
+  due: number;
+  received: number;
+  fees: number;
+  other: number;
+  receivable: number;
+}
+
+export interface ReportCampusPaymentsBreakdown {
+  salaries: number;
+  utilities: number;
+  others: number;
+  payable: number;
+}
+
+export interface ReportCampusStudents {
+  total: number;
+  new_admissions: number;
+  withdrawals: number;
+  ongoing: number;
+}
+
+export interface ReportCampusStaff {
+  total: number;
+  teaching: number;
+  non_teaching: number;
+  males: number;
+  females: number;
+  hired: number;
+  fired: number;
+}
+
+export interface ReportCampusFigures {
+  income: number;
+  payments: number;
+  balance: number;
+  receivable: number;
+  payable: number;
+  income_breakdown: ReportCampusIncomeBreakdown;
+  payments_breakdown: ReportCampusPaymentsBreakdown;
+  students: ReportCampusStudents;
+  staff: ReportCampusStaff;
+}
+
+export interface ReportCampus extends ReportCampusFigures {
+  period?: ReportPeriodMeta;
+  filters: {
+    campus_id: number;
+    from: string | null;
+    to: string | null;
+  };
+  campus: {
+    id: number;
+    name: string;
+    code: string | null;
+  };
+}
+
+export interface ReportHeadOfficeRow extends ReportCampusFigures {
+  campus_id: number;
+  campus: string;
+  code: string | null;
+}
+
+export interface ReportHeadOffice {
+  period?: ReportPeriodMeta;
+  filters: {
+    from: string | null;
+    to: string | null;
+  };
+  campuses: ReportHeadOfficeRow[];
+  totals: {
+    campuses: number;
+    income: number;
+    payments: number;
+    balance: number;
+    receivable: number;
+    payable: number;
+  };
+}

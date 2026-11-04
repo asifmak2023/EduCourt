@@ -283,6 +283,10 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:report.view');
         Route::get('reports/institution-overview', [ReportController::class, 'institutionOverview'])
             ->middleware('permission:report.view');
+        Route::get('reports/campus', [ReportController::class, 'campus'])
+            ->middleware('permission:report.view');
+        Route::get('reports/head-office', [ReportController::class, 'headOffice'])
+            ->middleware('permission:report.view');
 
         Route::middleware('campus')->group(function () {
             $academic = function (string $uri, string $controller, string $param, bool $withCode = false): void {

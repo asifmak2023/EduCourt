@@ -27,6 +27,20 @@ import type { ReportCampusComparison } from "@/lib/types";
 
 const REPORTS: (HubSection & { icon: NavIcon })[] = [
   {
+    href: "/dashboard/reports/campus",
+    title: "Campus report",
+    description:
+      "Income, payments, students and staff for one campus over a period.",
+    icon: "building",
+  },
+  {
+    href: "/dashboard/reports/head-office",
+    title: "Head office report",
+    description:
+      "Per-campus roll-up of income, payments, balance, receivables and payables.",
+    icon: "chart",
+  },
+  {
     href: "/dashboard/reports/progress",
     title: "Progress",
     description:

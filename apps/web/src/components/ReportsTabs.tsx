@@ -6,6 +6,16 @@ import { buttonClasses } from "@/components/Form";
 export const REPORTS_TABS = [
   { key: "overview", href: "/dashboard/reports", label: "Overview" },
   {
+    key: "campus",
+    href: "/dashboard/reports/campus",
+    label: "Campus",
+  },
+  {
+    key: "head-office",
+    href: "/dashboard/reports/head-office",
+    label: "Head office",
+  },
+  {
     key: "progress",
     href: "/dashboard/reports/progress",
     label: "Progress",

@@ -150,52 +150,54 @@ export function ReportTable({
   align?: ("left" | "right")[];
 }) {
   return (
-    <table className="report-table w-full border-collapse text-xs">
-      <thead>
-        <tr className="border-b-2 border-black/70">
-          {columns.map((column, index) => (
-            <th
-              key={column}
-              className={`py-1.5 pr-3 font-semibold ${
-                align[index] === "right" ? "text-right" : "text-left"
-              }`}
-            >
-              {column}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.length === 0 ? (
-          <tr>
-            <td
-              colSpan={columns.length}
-              className="py-3 text-center text-black/60"
-            >
-              {empty}
-            </td>
+    <div className="overflow-x-auto print:overflow-visible">
+      <table className="report-table w-full border-collapse text-xs">
+        <thead>
+          <tr className="border-b-2 border-black/70">
+            {columns.map((column, index) => (
+              <th
+                key={column}
+                className={`py-1.5 pr-3 font-semibold ${
+                  align[index] === "right" ? "text-right" : "text-left"
+                }`}
+              >
+                {column}
+              </th>
+            ))}
           </tr>
-        ) : (
-          rows.map((row, rowIndex) => (
-            <tr
-              key={rowIndex}
-              className="border-b border-black/20 even:bg-black/[0.03]"
-            >
-              {row.map((cell, cellIndex) => (
-                <td
-                  key={cellIndex}
-                  className={`py-1.5 pr-3 ${
-                    align[cellIndex] === "right" ? "text-right" : "text-left"
-                  }`}
-                >
-                  {cell ?? "-"}
-                </td>
-              ))}
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td
+                colSpan={columns.length}
+                className="py-3 text-center text-black/60"
+              >
+                {empty}
+              </td>
             </tr>
-          ))
-        )}
-      </tbody>
-    </table>
+          ) : (
+            rows.map((row, rowIndex) => (
+              <tr
+                key={rowIndex}
+                className="border-b border-black/20 even:bg-black/[0.03]"
+              >
+                {row.map((cell, cellIndex) => (
+                  <td
+                    key={cellIndex}
+                    className={`py-1.5 pr-3 ${
+                      align[cellIndex] === "right" ? "text-right" : "text-left"
+                    }`}
+                  >
+                    {cell ?? "-"}
+                  </td>
+                ))}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

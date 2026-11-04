@@ -119,6 +119,8 @@ class UatFoundationSeeder extends UatSeederBase
                 $campuses[] = $campus;
             }
 
+            $this->institutionHead($institution, $platformAdmin);
+
             $tenants[] = ['institution' => $institution, 'campuses' => $campuses];
         }
 
@@ -139,6 +141,43 @@ class UatFoundationSeeder extends UatSeederBase
         );
 
         $user->syncRoles([RoleName::PlatformAdmin->value]);
+
+        return $user;
+    }
+
+    public function institutionHead(Institution $institution, ?User $grantedBy = null): User
+    {
+        $slug = strtolower((string) $institution->code);
+
+        $user = User::firstOrCreate(
+            ['email' => 'institutionhead.'.$slug.'@'.self::EMAIL_DOMAIN],
+            [
+                'name' => $institution->name.' Head',
+                'password' => self::passwordHash(),
+                'email_verified_at' => now(),
+                'institution_id' => $institution->id,
+                'campus_id' => null,
+                'job_title' => 'Institution Head',
+                'is_active' => true,
+            ]
+        );
+
+        $user->syncRoles([RoleName::InstitutionHead->value]);
+
+        ScopeAssignment::firstOrCreate(
+            [
+                'user_id' => $user->id,
+                'role' => RoleName::InstitutionHead->value,
+                'institution_id' => $institution->id,
+            ],
+            [
+                'campus_id' => null,
+                'scope_type' => ScopeType::Institution,
+                'scope_id' => $institution->id,
+                'granted_by' => $grantedBy?->id,
+                'is_active' => true,
+            ]
+        );
 
         return $user;
     }

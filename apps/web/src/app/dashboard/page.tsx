@@ -65,6 +65,7 @@ const ADMISSION_FUNNEL = [
   "under_review",
   "approved",
   "enrolled",
+  "rejected",
 ] as const;
 
 function compactCurrency(value: number): string {
@@ -804,8 +805,8 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
     value: dashboard.admissions_by_status?.[status] ?? 0,
   }));
 
-  const admissionTotal = admissionFunnel.reduce(
-    (sum, point) => sum + point.value,
+  const admissionTotal = Object.values(dashboard.admissions_by_status ?? {}).reduce(
+    (sum, count) => sum + count,
     0
   );
   const collectedPeak = collections.reduce(

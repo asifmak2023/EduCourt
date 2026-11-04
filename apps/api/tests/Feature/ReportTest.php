@@ -8,6 +8,7 @@ use App\Enums\ScholarshipAwardStatus;
 use App\Enums\ScholarshipDiscountType;
 use App\Enums\ScholarshipType;
 use App\Models\AcademicYear;
+use App\Models\Admission;
 use App\Models\Campus;
 use App\Models\ChartOfAccount;
 use App\Models\ClassRoom;
@@ -864,6 +865,47 @@ class ReportTest extends TestCase
                 'credit' => $credit,
             ]);
         }
+    }
+
+    public function test_campus_dashboard_admissions_status_map_covers_every_status(): void
+    {
+        $statuses = ['enquiry', 'applied', 'under_review', 'approved', 'rejected', 'enrolled'];
+
+        foreach ($statuses as $index => $status) {
+            Admission::create([
+                'institution_id' => $this->institution->id,
+                'campus_id' => $this->campus->id,
+                'application_no' => 'APP-TEST-'.$index,
+                'first_name' => 'Applicant', 'last_name' => ucfirst($status),
+                'gender' => 'male',
+                'class_room_id' => $this->class->id,
+                'academic_year_id' => $this->year->id,
+                'status' => $status,
+                'applied_on' => '2026-08-01',
+            ]);
+        }
+
+        $dashboard = $this->api($this->admin)
+            ->getJson('/api/v1/reports/campus-dashboard')
+            ->assertOk()
+            ->json('data');
+
+        $byStatus = $dashboard['admissions_by_status'];
+
+        $this->assertArrayHasKey('rejected', $byStatus);
+
+        $listed = collect(
+            $this->api($this->admin)
+                ->getJson('/api/v1/admissions?per_page=100')
+                ->assertOk()
+                ->json('meta.total')
+        )->first();
+
+        $this->assertSame(
+            (int) $listed,
+            array_sum($byStatus),
+            'Dashboard admissions_by_status must reconcile with the admissions list total.'
+        );
     }
 
     private function attendance(Student $student, string $date, string $status): void

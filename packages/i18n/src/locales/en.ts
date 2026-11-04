@@ -89,6 +89,8 @@ export const en = {
   "auth.verifyFailed": "Unable to verify the code. Please try again.",
   "auth.showPassword": "Show password",
   "auth.hidePassword": "Hide password",
+  "auth.welcomeTitle": "Welcome back",
+  "auth.welcomeSubtitle": "Sign in to continue to your campus workspace.",
 
   "navigation.dashboard": "Dashboard",
   "navigation.profile": "Profile",

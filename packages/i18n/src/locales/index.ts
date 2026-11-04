@@ -106,6 +106,8 @@ export type MessageKey =
   | "auth.verifyFailed"
   | "auth.showPassword"
   | "auth.hidePassword"
+  | "auth.welcomeTitle"
+  | "auth.welcomeSubtitle"
   | "navigation.dashboard"
   | "navigation.profile"
   | "navigation.timetable"

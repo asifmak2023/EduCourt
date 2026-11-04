@@ -229,6 +229,35 @@ class RbacTest extends TestCase
             ->assertStatus(403);
     }
 
+    public function test_users_role_filter_returns_empty_for_unknown_role(): void
+    {
+        $admin = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $admin->syncRoles([RoleName::CampusAdmin->value]);
+
+        $teacher = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $teacher->syncRoles([RoleName::Teacher->value]);
+
+        $this->withToken($admin->createToken('t')->plainTextToken)
+            ->getJson('/api/v1/users?role=not_a_real_role&per_page=100')
+            ->assertOk()
+            ->assertJsonPath('data', []);
+
+        $ids = collect(
+            $this->withToken($admin->createToken('t')->plainTextToken)
+                ->getJson('/api/v1/users?role=teacher&per_page=100')
+                ->assertOk()
+                ->json('data')
+        )->pluck('id');
+
+        $this->assertTrue($ids->contains($teacher->id));
+    }
+
     public function test_campus_admin_can_filter_staff_accounts(): void
     {
         $admin = User::factory()->create([

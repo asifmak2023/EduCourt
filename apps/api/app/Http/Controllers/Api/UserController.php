@@ -33,8 +33,14 @@ class UserController extends Controller
                     ->orWhere('job_title', 'like', "%{$search}%")))
             ->when($request->filled('campus_id'), fn ($query) => $query
                 ->where('campus_id', $request->integer('campus_id')))
-            ->when($request->filled('role'), fn ($query) => $query
-                ->role($request->string('role')->toString()))
+            ->when($request->filled('role'), function ($query) use ($request) {
+                $role = $request->string('role')->toString();
+
+                // Filter by relation instead of Spatie's role() scope so an
+                // unknown role name returns an empty page, not a 500.
+                $query->whereHas('roles', fn ($roles) => $roles
+                    ->where('name', $role));
+            })
             ->when($request->filled('account_type'), function ($query) use ($request) {
                 $type = $request->string('account_type')->toString();
                 $portal = [

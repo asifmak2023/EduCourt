@@ -9,12 +9,20 @@ use App\Enums\ScholarshipDiscountType;
 use App\Enums\ScholarshipType;
 use App\Models\AcademicYear;
 use App\Models\Campus;
+use App\Models\ChartOfAccount;
 use App\Models\ClassRoom;
 use App\Models\Exam;
 use App\Models\ExamMark;
 use App\Models\ExamPaper;
 use App\Models\ExamType;
+use App\Models\FeePayment;
+use App\Models\FeePlan;
+use App\Models\FeeVoucher;
+use App\Models\FiscalYear;
+use App\Models\IncomeSource;
 use App\Models\Institution;
+use App\Models\JournalEntry;
+use App\Models\OtherIncome;
 use App\Models\PayrollRun;
 use App\Models\Scholarship;
 use App\Models\ScholarshipAward;
@@ -25,7 +33,9 @@ use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Models\StudentEnrollment;
 use App\Models\Subject;
+use App\Models\TeachingAssignment;
 use App\Models\User;
+use App\Services\Accounting\DefaultChartOfAccounts;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -517,6 +527,343 @@ class ReportTest extends TestCase
         $this->api($this->admin)
             ->getJson('/api/v1/reports/progress?granularity=decade')
             ->assertStatus(422);
+    }
+
+    public function test_campus_report_summarises_income_payments_students_and_staff(): void
+    {
+        $this->seedCampusFigures();
+
+        $data = $this->api($this->admin)
+            ->getJson('/api/v1/reports/campus?from=2026-09-01&to=2026-09-30')
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame($this->campus->id, $data['campus']['id']);
+        $this->assertSame('2026-09-01', $data['filters']['from']);
+
+        $this->assertSame(1150.0, (float) $data['income_breakdown']['received']);
+        $this->assertSame(900.0, (float) $data['income_breakdown']['fees']);
+        $this->assertSame(250.0, (float) $data['income_breakdown']['other']);
+        $this->assertSame(1150.0, (float) $data['income']);
+        $this->assertSame(600.0, (float) $data['receivable']);
+
+        $this->assertSame(300.0, (float) $data['payments_breakdown']['salaries']);
+        $this->assertSame(100.0, (float) $data['payments_breakdown']['utilities']);
+        $this->assertSame(400.0, (float) $data['payments_breakdown']['others']);
+        $this->assertSame(800.0, (float) $data['payments']);
+        $this->assertSame(400.0, (float) $data['payable']);
+        $this->assertSame(350.0, (float) $data['balance']);
+
+        $this->assertSame(3, $data['students']['total']);
+        $this->assertSame(1, $data['students']['new_admissions']);
+        $this->assertSame(1, $data['students']['withdrawals']);
+        $this->assertSame(2, $data['students']['ongoing']);
+
+        $this->assertSame(2, $data['staff']['total']);
+        $this->assertSame(1, $data['staff']['teaching']);
+        $this->assertSame(1, $data['staff']['non_teaching']);
+        $this->assertSame(1, $data['staff']['males']);
+        $this->assertSame(1, $data['staff']['females']);
+        $this->assertSame(1, $data['staff']['hired']);
+        $this->assertSame(1, $data['staff']['fired']);
+    }
+
+    public function test_campus_admin_cannot_open_another_campus_report(): void
+    {
+        $otherCampus = Campus::create([
+            'institution_id' => $this->institution->id,
+            'name' => 'Campus B', 'code' => 'B', 'type' => CampusType::School->value,
+        ]);
+
+        $this->api($this->admin)
+            ->getJson('/api/v1/reports/campus?campus_id='.$otherCampus->id)
+            ->assertStatus(403);
+    }
+
+    public function test_head_office_report_rolls_up_campuses_and_reconciles(): void
+    {
+        $this->seedCampusFigures();
+
+        $otherCampus = Campus::create([
+            'institution_id' => $this->institution->id,
+            'name' => 'Campus B', 'code' => 'B', 'type' => CampusType::School->value,
+        ]);
+
+        $plan = FeePlan::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $otherCampus->id,
+            'academic_year_id' => $this->year->id,
+            'class_room_id' => $this->class->id,
+            'name' => 'Campus B plan',
+        ]);
+
+        FeeVoucher::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $otherCampus->id,
+            'student_id' => $this->sara->id,
+            'academic_year_id' => $this->year->id,
+            'fee_plan_id' => $plan->id,
+            'sequence' => 1,
+            'voucher_no' => 'B-V1',
+            'due_date' => '2026-09-10',
+            'gross_amount' => 800,
+            'amount' => 800,
+            'paid_amount' => 800,
+            'status' => 'paid',
+        ]);
+
+        $campusBAccounts = app(DefaultChartOfAccounts::class)->seed($otherCampus);
+
+        $this->postLedgerEntry($otherCampus, [
+            [$campusBAccounts->get('5050'), 300, 0],
+            [$campusBAccounts->get('1020'), 0, 300],
+        ], '2026-09-12');
+
+        $head = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => null,
+        ]);
+        $head->syncRoles([RoleName::InstitutionHead->value]);
+
+        $data = $this->api($head)
+            ->getJson('/api/v1/reports/head-office?from=2026-09-01&to=2026-09-30')
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame(2, $data['totals']['campuses']);
+        $this->assertCount(2, $data['campuses']);
+
+        $campusA = collect($data['campuses'])->firstWhere('campus_id', $this->campus->id);
+        $this->assertSame(1150.0, (float) $campusA['income']);
+        $this->assertSame(800.0, (float) $campusA['payments']);
+        $this->assertSame(350.0, (float) $campusA['balance']);
+        $this->assertSame(600.0, (float) $campusA['receivable']);
+        $this->assertSame(400.0, (float) $campusA['payable']);
+
+        $campusB = collect($data['campuses'])->firstWhere('campus_id', $otherCampus->id);
+        $this->assertSame(0.0, (float) $campusB['income']);
+        $this->assertSame(300.0, (float) $campusB['payments']);
+        $this->assertSame(-300.0, (float) $campusB['balance']);
+
+        $this->assertSame(1150.0, (float) $data['totals']['income']);
+        $this->assertSame(1100.0, (float) $data['totals']['payments']);
+        $this->assertSame(50.0, (float) $data['totals']['balance']);
+        $this->assertSame(600.0, (float) $data['totals']['receivable']);
+        $this->assertSame(400.0, (float) $data['totals']['payable']);
+
+        $campusOnly = $this->api($this->admin)
+            ->getJson('/api/v1/reports/campus?from=2026-09-01&to=2026-09-30')
+            ->assertOk()
+            ->json('data');
+
+        foreach (['income', 'payments', 'balance', 'receivable', 'payable'] as $key) {
+            $this->assertSame(
+                (float) $campusA[$key],
+                (float) $campusOnly[$key],
+                "Head office row for {$key} must match the campus report."
+            );
+        }
+    }
+
+    public function test_campus_admin_cannot_access_head_office_report(): void
+    {
+        $this->api($this->admin)
+            ->getJson('/api/v1/reports/head-office')
+            ->assertStatus(403);
+    }
+
+    private function seedCampusFigures(): void
+    {
+        $plan = FeePlan::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'academic_year_id' => $this->year->id,
+            'class_room_id' => $this->class->id,
+            'name' => 'Standard plan',
+        ]);
+
+        FeeVoucher::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'student_id' => $this->ali->id,
+            'academic_year_id' => $this->year->id,
+            'fee_plan_id' => $plan->id,
+            'sequence' => 1,
+            'voucher_no' => 'V-1',
+            'due_date' => '2026-09-05',
+            'gross_amount' => 1000,
+            'amount' => 1000,
+            'paid_amount' => 400,
+            'status' => 'partial',
+        ]);
+
+        FeeVoucher::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'student_id' => $this->sara->id,
+            'academic_year_id' => $this->year->id,
+            'fee_plan_id' => $plan->id,
+            'sequence' => 2,
+            'voucher_no' => 'V-2',
+            'due_date' => '2026-09-10',
+            'gross_amount' => 500,
+            'amount' => 500,
+            'paid_amount' => 500,
+            'status' => 'paid',
+        ]);
+
+        FeePayment::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'student_id' => $this->ali->id,
+            'receipt_no' => 'R-1',
+            'payment_date' => '2026-09-06',
+            'amount' => 400,
+            'method' => 'cash',
+            'status' => 'posted',
+        ]);
+
+        FeePayment::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'student_id' => $this->sara->id,
+            'receipt_no' => 'R-2',
+            'payment_date' => '2026-09-11',
+            'amount' => 500,
+            'method' => 'cash',
+            'status' => 'posted',
+        ]);
+
+        $source = IncomeSource::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'name' => 'Hall rent', 'code' => 'HALL', 'category' => 'other',
+        ]);
+
+        OtherIncome::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'income_source_id' => $source->id,
+            'receipt_no' => 'OI-1',
+            'received_on' => '2026-09-08',
+            'amount' => 250,
+            'method' => 'cash',
+            'status' => 'posted',
+        ]);
+
+        $accounts = app(DefaultChartOfAccounts::class)->seed($this->campus);
+
+        $this->postLedger([
+            [$accounts->get('5010'), 300, 0],
+            [$accounts->get('1020'), 0, 300],
+        ], '2026-09-15');
+
+        $this->postLedger([
+            [$accounts->get('5020'), 100, 0],
+            [$accounts->get('1020'), 0, 100],
+        ], '2026-09-16');
+
+        $this->postLedger([
+            [$accounts->get('5030'), 400, 0],
+            [$accounts->get('2010'), 0, 400],
+        ], '2026-09-18');
+
+        Student::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'admission_no' => 'ADM-3',
+            'first_name' => 'Hina', 'last_name' => 'Shah', 'gender' => 'female',
+            'status' => 'active',
+            'admission_date' => '2026-09-03',
+        ]);
+
+        $this->sara->update(['status' => 'withdrawn']);
+        StudentEnrollment::query()
+            ->where('student_id', $this->sara->id)
+            ->update(['status' => 'withdrawn', 'ends_on' => '2026-09-15']);
+
+        StaffMember::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'user_id' => $this->teacher->id,
+            'employee_no' => 'EMP-1001', 'first_name' => 'Imran', 'last_name' => 'Yousaf',
+            'gender' => 'male', 'employment_type' => 'permanent', 'status' => 'active',
+            'joining_date' => '2025-01-01',
+        ]);
+
+        TeachingAssignment::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'academic_year_id' => $this->year->id,
+            'teacher_user_id' => $this->teacher->id,
+            'subject_id' => Subject::query()->firstOrFail()->id,
+            'class_room_id' => $this->class->id,
+            'is_active' => true,
+        ]);
+
+        StaffMember::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'employee_no' => 'EMP-1002', 'first_name' => 'Nadia', 'last_name' => 'Iqbal',
+            'gender' => 'female', 'employment_type' => 'contract', 'status' => 'active',
+            'joining_date' => '2026-09-01',
+        ]);
+
+        StaffMember::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'employee_no' => 'EMP-1003', 'first_name' => 'Kamran', 'last_name' => 'Ali',
+            'gender' => 'male', 'employment_type' => 'contract', 'status' => 'resigned',
+            'joining_date' => '2024-01-01', 'leaving_date' => '2026-09-20',
+        ]);
+    }
+
+    /**
+     * @param  array<int, array{0: ChartOfAccount, 1: float|int, 2: float|int}>  $lines
+     */
+    private function postLedger(array $lines, string $date): void
+    {
+        $this->postLedgerEntry($this->campus, $lines, $date);
+    }
+
+    /**
+     * @param  array<int, array{0: ChartOfAccount, 1: float|int, 2: float|int}>  $lines
+     */
+    private function postLedgerEntry(Campus $campus, array $lines, string $date): void
+    {
+        $fiscalYear = FiscalYear::firstOrCreate(
+            ['campus_id' => $campus->id, 'code' => 'FY27'],
+            [
+                'institution_id' => $campus->institution_id,
+                'name' => 'FY 2026-2027',
+                'starts_on' => '2026-07-01',
+                'ends_on' => '2027-06-30',
+                'status' => 'open',
+                'is_current' => true,
+            ]
+        );
+
+        $entry = JournalEntry::create([
+            'institution_id' => $campus->institution_id,
+            'campus_id' => $campus->id,
+            'fiscal_year_id' => $fiscalYear->id,
+            'reference' => 'JV-'.strtoupper(uniqid()),
+            'entry_date' => $date,
+            'status' => 'posted',
+            'memo' => 'Report test entry',
+            'total_debit' => array_sum(array_map(fn ($line) => (float) $line[1], $lines)),
+            'total_credit' => array_sum(array_map(fn ($line) => (float) $line[2], $lines)),
+        ]);
+
+        foreach ($lines as $index => [$account, $debit, $credit]) {
+            $entry->lines()->create([
+                'chart_of_account_id' => $account->id,
+                'line_no' => $index + 1,
+                'description' => 'Report test',
+                'debit' => $debit,
+                'credit' => $credit,
+            ]);
+        }
     }
 
     private function attendance(Student $student, string $date, string $status): void

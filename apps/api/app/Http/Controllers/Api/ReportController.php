@@ -7,6 +7,7 @@ use App\Models\Exam;
 use App\Models\Student;
 use App\Services\Reports\ReportService;
 use App\Support\ReportPeriod;
+use App\Support\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -39,6 +40,43 @@ class ReportController extends Controller
 
         return response()->json([
             'data' => $this->reports->campusComparison(
+                $this->validatedFilters($request)
+            ),
+        ]);
+    }
+
+    public function campus(Request $request): JsonResponse
+    {
+        $filters = $this->validatedFilters($request, [
+            'campus_id' => ['nullable', 'integer', 'exists:campuses,id'],
+        ]);
+
+        $campusId = isset($filters['campus_id'])
+            ? (int) $filters['campus_id']
+            : $this->activeCampusId($request);
+
+        abort_if($campusId === null, 403, 'Select a campus to view this report.');
+
+        abort_unless(
+            $request->user()?->canAccessCampus($campusId)
+                || $request->user()?->isPlatformAdmin(),
+            403
+        );
+
+        return response()->json([
+            'data' => $this->reports->campusReport($filters, $campusId),
+        ]);
+    }
+
+    public function headOffice(Request $request): JsonResponse
+    {
+        abort_unless(
+            $request->user()?->isInstitutionHead() || $request->user()?->isPlatformAdmin(),
+            403
+        );
+
+        return response()->json([
+            'data' => $this->reports->headOfficeReport(
                 $this->validatedFilters($request)
             ),
         ]);
@@ -111,5 +149,10 @@ class ReportController extends Controller
             'to' => ['nullable', 'date', 'after_or_equal:from'],
             'granularity' => ['nullable', Rule::in(ReportPeriod::GRANULARITIES)],
         ], $extra));
+    }
+
+    private function activeCampusId(Request $request): ?int
+    {
+        return app(TenantContext::class)->campusId() ?? $request->user()?->campus_id;
     }
 }

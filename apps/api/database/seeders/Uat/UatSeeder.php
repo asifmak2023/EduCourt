@@ -3,6 +3,7 @@
 namespace Database\Seeders\Uat;
 
 use App\Models\User;
+use Database\Seeders\RbacSeeder;
 use Illuminate\Database\Seeder;
 
 /**
@@ -21,6 +22,11 @@ class UatSeeder extends Seeder
     public function run(): void
     {
         $this->command?->info('UAT: ===== starting UAT dataset seeding =====');
+
+        // Ensure every declared role (incl. institution_head) exists before
+        // assigning them. Production databases seeded before a role was added
+        // will otherwise throw RoleDoesNotExist.
+        $this->call(RbacSeeder::class);
 
         $foundation = (new UatFoundationSeeder())->withCommand($this->command);
         $foundationData = $foundation->seed();

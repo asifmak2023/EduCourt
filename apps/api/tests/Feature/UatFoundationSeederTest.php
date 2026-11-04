@@ -8,7 +8,10 @@ use App\Models\Institution;
 use App\Models\User;
 use Database\Seeders\RbacSeeder;
 use Database\Seeders\Uat\UatFoundationSeeder;
+use Database\Seeders\Uat\UatSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 class UatFoundationSeederTest extends TestCase
@@ -77,6 +80,33 @@ class UatFoundationSeederTest extends TestCase
         $this->assertSame(
             3,
             User::query()->where('email', 'like', 'institutionhead.%@'.UatFoundationSeeder::EMAIL_DOMAIN)->count()
+        );
+    }
+
+    public function test_uat_orchestrator_recreates_missing_roles_before_assigning_them(): void
+    {
+        Role::query()->where('name', RoleName::InstitutionHead->value)->delete();
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->assertFalse(
+            Role::query()->where('name', RoleName::InstitutionHead->value)->exists(),
+            'Role should be absent before running the orchestrator'
+        );
+
+        putenv('UAT_CAMPUSES=__none__');
+        $_ENV['UAT_CAMPUSES'] = '__none__';
+        $_SERVER['UAT_CAMPUSES'] = '__none__';
+
+        try {
+            $this->seed(UatSeeder::class);
+        } finally {
+            putenv('UAT_CAMPUSES');
+            unset($_ENV['UAT_CAMPUSES'], $_SERVER['UAT_CAMPUSES']);
+        }
+
+        $this->assertTrue(
+            Role::query()->where('name', RoleName::InstitutionHead->value)->exists(),
+            'Orchestrator must recreate the institution_head role before assigning it'
         );
     }
 }

@@ -1,11 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import {
-  Geist,
-  Geist_Mono,
-  Exo_2,
-  Noto_Naskh_Arabic,
-  Plus_Jakarta_Sans,
-} from "next/font/google";
+import localFont from "next/font/local";
 import { ACCENTS } from "@eis/appearance";
 import { AuthProvider } from "@/lib/auth";
 import { AppearanceProvider } from "@/lib/appearance";
@@ -14,31 +8,50 @@ import { AppBackground } from "@/components/AppBackground";
 import { TableCardizer } from "@/components/TableCardizer";
 import "./globals.css";
 
-const geistSans = Geist({
+/*
+ * Fonts are self-hosted instead of fetched from Google Fonts at build time.
+ * Google intermittently serves extensionless `/l/font?kit=` URLs, which makes
+ * `next build` fail randomly on both Turbopack and webpack:
+ * https://github.com/vercel/next.js/issues/99114
+ * The woff2 files in ./fonts were downloaded once from Google Fonts; the
+ * variable faces keep their full weight axes, Exo 2 ships one file per weight.
+ */
+const geistSans = localFont({
+  src: "./fonts/geist-latin.woff2",
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  weight: "100 900",
+  display: "swap",
 });
 
-const jakarta = Plus_Jakarta_Sans({
+const jakarta = localFont({
+  src: "./fonts/plus-jakarta-sans-latin.woff2",
   variable: "--font-jakarta",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: "200 800",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: "./fonts/geist-mono-latin.woff2",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: "100 900",
+  display: "swap",
 });
 
-const exo2 = Exo_2({
+const exo2 = localFont({
+  src: [
+    { path: "./fonts/exo-2-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/exo-2-600.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/exo-2-700.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-exo-2",
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
+  display: "swap",
 });
 
-const urdu = Noto_Naskh_Arabic({
+const urdu = localFont({
+  src: "./fonts/noto-naskh-arabic.woff2",
   variable: "--font-urdu",
-  subsets: ["arabic"],
+  weight: "400 700",
+  display: "swap",
 });
 
 export const metadata: Metadata = {

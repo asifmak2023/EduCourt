@@ -90,7 +90,7 @@ function StudentsTable() {
         description="students.description"
         actions={
           <>
-            <div className="w-56">
+            <div className="w-full sm:w-56">
               <TextInput
                 type="search"
                 value={search}
@@ -104,7 +104,7 @@ function StudentsTable() {
             {can("student.create") ? (
               <Link
                 href="/dashboard/students/new"
-                className={buttonClasses("primary")}
+                className={`${buttonClasses("primary")} w-full sm:w-auto`}
               >
                 {t("students.new")}
               </Link>
@@ -123,9 +123,9 @@ function StudentsTable() {
       />
 
       {/* Filter bar */}
-      <div className="flex flex-wrap gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
         {/* Status */}
-        <div className="w-44">
+        <div className="w-full sm:w-44">
           <Select
             value={status}
             onChange={(event) => {
@@ -142,7 +142,7 @@ function StudentsTable() {
         </div>
 
         {/* Gender */}
-        <div className="w-44">
+        <div className="w-full sm:w-44">
           <Select
             value={gender}
             onChange={(event) => {
@@ -158,7 +158,7 @@ function StudentsTable() {
         </div>
 
         {/* Academic year */}
-        <div className="w-44">
+        <div className="w-full sm:w-44">
           <Select
             value={academicYearId}
             onChange={(event) => {
@@ -176,7 +176,7 @@ function StudentsTable() {
         </div>
 
         {/* Class */}
-        <div className="w-44">
+        <div className="w-full sm:w-44">
           <Select
             value={classId}
             onChange={(event) => handleClassChange(event.target.value)}
@@ -191,7 +191,7 @@ function StudentsTable() {
         </div>
 
         {/* Section — only meaningful once a class is selected */}
-        <div className="w-44">
+        <div className="w-full sm:w-44">
           <Select
             value={sectionId}
             onChange={(event) => {
@@ -218,86 +218,156 @@ function StudentsTable() {
         ) : items.length === 0 ? (
           <EmptyState message="students.empty" />
         ) : (
-          <Table variant="secondary">
-            <Table.ScrollContainer>
-              <Table.Content aria-label={t("students.title")} className="min-w-[1100px]">
-                <Table.Header>
-                  <Table.Column isRowHeader>{t("students.admissionNo")}</Table.Column>
-                  <Table.Column>{t("common.name")}</Table.Column>
-                  <Table.Column>{t("common.class")}</Table.Column>
-                  <Table.Column>{t("common.section")}</Table.Column>
-                  <Table.Column>{t("common.rollNo")}</Table.Column>
-                  <Table.Column>{t("common.gender")}</Table.Column>
-                  <Table.Column>{t("students.field.dateOfBirth")}</Table.Column>
-                  <Table.Column>{t("common.status")}</Table.Column>
-                  {canAny(AR_VIEW) ? (
-                    <Table.Column>{t("common.actions")}</Table.Column>
-                  ) : null}
-                </Table.Header>
-                <Table.Body>
-                  {items.map((student) => {
-                    const enrollment =
-                      student.enrollments?.find((e) => e.status === "active") ??
-                      student.enrollments?.[0];
-                    return (
-                    <Table.Row key={student.id} id={student.id}>
-                      <Table.Cell className="font-mono text-xs text-muted">
-                        {student.admission_no}
-                      </Table.Cell>
-                      <Table.Cell className="font-medium text-foreground">
+          <>
+            <ul className="divide-y divide-border-secondary md:hidden">
+              {items.map((student) => {
+                const enrollment =
+                  student.enrollments?.find((e) => e.status === "active") ??
+                  student.enrollments?.[0];
+                return (
+                  <li key={student.id} className="px-4 py-3.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
                         <Link
                           href={`/dashboard/students/${student.id}`}
-                          className="hover:underline"
+                          className="text-sm font-semibold text-foreground hover:underline"
                         >
                           {student.full_name}
                         </Link>
-                      </Table.Cell>
-                      <Table.Cell className="text-muted">
-                        {enrollment?.class_room?.name ?? "-"}
-                      </Table.Cell>
-                      <Table.Cell className="text-muted">
-                        {enrollment?.section?.name ?? "-"}
-                      </Table.Cell>
-                      <Table.Cell className="font-mono text-xs text-muted">
-                        {enrollment?.roll_number ?? "-"}
-                      </Table.Cell>
-                      <Table.Cell className="capitalize text-muted">
-                        {student.gender ?? "-"}
-                      </Table.Cell>
-                      <Table.Cell className="text-muted">
-                        {formatDate(student.date_of_birth)}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Badge value={student.status} />
-                      </Table.Cell>
+                        <p className="mt-0.5 font-mono text-[11px] text-muted">
+                          {student.admission_no}
+                        </p>
+                      </div>
+                      <Badge value={student.status} />
+                    </div>
+                    <dl className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                      <div>
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                          {t("common.class")}
+                        </dt>
+                        <dd className="mt-0.5 text-foreground">
+                          {enrollment?.class_room?.name ?? "-"}
+                          {enrollment?.section?.name
+                            ? ` - ${enrollment.section.name}`
+                            : ""}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                          {t("common.rollNo")}
+                        </dt>
+                        <dd className="mt-0.5 text-foreground">
+                          {enrollment?.roll_number ?? "-"}
+                        </dd>
+                      </div>
+                    </dl>
+                    {canAny(AR_VIEW) ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <CollectPaymentButton
+                          student={{
+                            id: student.id,
+                            full_name: student.full_name,
+                            admission_no: student.admission_no,
+                          }}
+                          label="Collect"
+                        />
+                        <FeeVoucherAction
+                          student={{
+                            id: student.id,
+                            full_name: student.full_name,
+                            admission_no: student.admission_no,
+                          }}
+                        />
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="hidden md:block">
+              <Table variant="secondary">
+                <Table.ScrollContainer>
+                  <Table.Content aria-label={t("students.title")} className="min-w-[1100px]">
+                    <Table.Header>
+                      <Table.Column isRowHeader>{t("students.admissionNo")}</Table.Column>
+                      <Table.Column>{t("common.name")}</Table.Column>
+                      <Table.Column>{t("common.class")}</Table.Column>
+                      <Table.Column>{t("common.section")}</Table.Column>
+                      <Table.Column>{t("common.rollNo")}</Table.Column>
+                      <Table.Column>{t("common.gender")}</Table.Column>
+                      <Table.Column>{t("students.field.dateOfBirth")}</Table.Column>
+                      <Table.Column>{t("common.status")}</Table.Column>
                       {canAny(AR_VIEW) ? (
-                        <Table.Cell>
-                          <div className="flex flex-wrap gap-2">
-                            <CollectPaymentButton
-                              student={{
-                                id: student.id,
-                                full_name: student.full_name,
-                                admission_no: student.admission_no,
-                              }}
-                              label="Collect"
-                            />
-                            <FeeVoucherAction
-                              student={{
-                                id: student.id,
-                                full_name: student.full_name,
-                                admission_no: student.admission_no,
-                              }}
-                            />
-                          </div>
-                        </Table.Cell>
+                        <Table.Column>{t("common.actions")}</Table.Column>
                       ) : null}
-                    </Table.Row>
-                    );
-                  })}
-                </Table.Body>
-              </Table.Content>
-            </Table.ScrollContainer>
-          </Table>
+                    </Table.Header>
+                    <Table.Body>
+                      {items.map((student) => {
+                        const enrollment =
+                          student.enrollments?.find((e) => e.status === "active") ??
+                          student.enrollments?.[0];
+                        return (
+                        <Table.Row key={student.id} id={student.id}>
+                          <Table.Cell className="font-mono text-xs text-muted">
+                            {student.admission_no}
+                          </Table.Cell>
+                          <Table.Cell className="font-medium text-foreground">
+                            <Link
+                              href={`/dashboard/students/${student.id}`}
+                              className="hover:underline"
+                            >
+                              {student.full_name}
+                            </Link>
+                          </Table.Cell>
+                          <Table.Cell className="text-muted">
+                            {enrollment?.class_room?.name ?? "-"}
+                          </Table.Cell>
+                          <Table.Cell className="text-muted">
+                            {enrollment?.section?.name ?? "-"}
+                          </Table.Cell>
+                          <Table.Cell className="font-mono text-xs text-muted">
+                            {enrollment?.roll_number ?? "-"}
+                          </Table.Cell>
+                          <Table.Cell className="capitalize text-muted">
+                            {student.gender ?? "-"}
+                          </Table.Cell>
+                          <Table.Cell className="text-muted">
+                            {formatDate(student.date_of_birth)}
+                          </Table.Cell>
+                          <Table.Cell>
+                            <Badge value={student.status} />
+                          </Table.Cell>
+                          {canAny(AR_VIEW) ? (
+                            <Table.Cell>
+                              <div className="flex flex-wrap gap-2">
+                                <CollectPaymentButton
+                                  student={{
+                                    id: student.id,
+                                    full_name: student.full_name,
+                                    admission_no: student.admission_no,
+                                  }}
+                                  label="Collect"
+                                />
+                                <FeeVoucherAction
+                                  student={{
+                                    id: student.id,
+                                    full_name: student.full_name,
+                                    admission_no: student.admission_no,
+                                  }}
+                                />
+                              </div>
+                            </Table.Cell>
+                          ) : null}
+                        </Table.Row>
+                        );
+                      })}
+                    </Table.Body>
+                  </Table.Content>
+                </Table.ScrollContainer>
+              </Table>
+            </div>
+          </>
         )}
 
         {meta ? (

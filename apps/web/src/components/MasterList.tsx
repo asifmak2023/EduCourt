@@ -120,7 +120,7 @@ export function MasterList<T extends { id: number }>({
         actions={
           <>
             {searchable ? (
-              <div className="w-56">
+              <div className="w-full sm:w-56">
                 <TextInput
                   type="search"
                   value={search}
@@ -133,7 +133,7 @@ export function MasterList<T extends { id: number }>({
               </div>
             ) : null}
             {canCreate ? (
-              <Link href={createHref} className={buttonClasses()}>
+              <Link href={createHref} className={`${buttonClasses()} w-full sm:w-auto`}>
                 {createLabel}
               </Link>
             ) : null}
@@ -193,79 +193,126 @@ export function MasterList<T extends { id: number }>({
         ) : items.length === 0 ? (
           <EmptyState message="No records match your filters." />
         ) : (
-          <Table variant="secondary">
-            <Table.ScrollContainer>
-              <Table.Content aria-label={title} className="min-w-[720px]">
-                <Table.Header>
-                  {columns.map((column, index) => (
-                    <Table.Column
-                      key={column.header}
-                      isRowHeader={index === 0}
-                      className={column.align === "right" ? "text-right" : undefined}
-                    >
-                      {column.header}
-                    </Table.Column>
-                  ))}
-                  {rowActions ? (
-                    <Table.Column key="actions" className="text-right">
-                      Actions
-                    </Table.Column>
-                  ) : null}
-                </Table.Header>
-                <Table.Body>
-                  {items.map((item) => (
-                    <Table.Row key={item.id} id={item.id}>
-                      {columns.map((column, index) => (
-                        <Table.Cell
-                          key={column.header}
-                          className={
-                            column.align === "right" ? "text-right" : undefined
-                          }
-                        >
-                          {index === 0 && editHref ? (
-                            <Link
-                              href={editHref(item)}
-                              className="font-medium text-foreground hover:underline"
-                            >
+          <>
+            <ul className="divide-y divide-border-secondary md:hidden">
+              {items.map((item) => {
+                const [first, ...rest] = columns;
+                return (
+                  <li key={item.id} className="px-4 py-3.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        {editHref ? (
+                          <Link
+                            href={editHref(item)}
+                            className="text-sm font-semibold text-foreground hover:underline"
+                          >
+                            {first.render(item)}
+                          </Link>
+                        ) : (
+                          <span className="text-sm font-semibold text-foreground">
+                            {first.render(item)}
+                          </span>
+                        )}
+                      </div>
+                      {rowActions ? (
+                        <div className="shrink-0">{rowActions(item, { reload })}</div>
+                      ) : null}
+                    </div>
+                    {rest.length > 0 ? (
+                      <dl className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2">
+                        {rest.map((column) => (
+                          <div key={column.header} className="min-w-0">
+                            <dt className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                              {column.header}
+                            </dt>
+                            <dd className="mt-0.5 break-words text-sm text-foreground">
                               {column.render(item)}
-                            </Link>
-                          ) : (
-                            column.render(item)
-                          )}
-                        </Table.Cell>
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="hidden md:block">
+              <Table variant="secondary">
+                <Table.ScrollContainer>
+                  <Table.Content aria-label={title} className="min-w-[720px]">
+                    <Table.Header>
+                      {columns.map((column, index) => (
+                        <Table.Column
+                          key={column.header}
+                          isRowHeader={index === 0}
+                          className={column.align === "right" ? "text-right" : undefined}
+                        >
+                          {column.header}
+                        </Table.Column>
                       ))}
                       {rowActions ? (
-                        <Table.Cell key="actions" className="text-right">
-                          {rowActions(item, { reload })}
-                        </Table.Cell>
+                        <Table.Column key="actions" className="text-right">
+                          Actions
+                        </Table.Column>
                       ) : null}
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-                {hasFooter ? (
-                  <Table.Footer>
-                    <Table.Row id="list-total">
-                      {columns.map((column) => (
-                        <Table.Cell
-                          key={column.header}
-                          className={
-                            column.align === "right"
-                              ? "text-right font-semibold"
-                              : "font-semibold"
-                          }
-                        >
-                          {column.footer
-                            ? column.footer({ items, summary: summary ?? null })
-                            : null}
-                        </Table.Cell>
+                    </Table.Header>
+                    <Table.Body>
+                      {items.map((item) => (
+                        <Table.Row key={item.id} id={item.id}>
+                          {columns.map((column, index) => (
+                            <Table.Cell
+                              key={column.header}
+                              className={
+                                column.align === "right" ? "text-right" : undefined
+                              }
+                            >
+                              {index === 0 && editHref ? (
+                                <Link
+                                  href={editHref(item)}
+                                  className="font-medium text-foreground hover:underline"
+                                >
+                                  {column.render(item)}
+                                </Link>
+                              ) : (
+                                column.render(item)
+                              )}
+                            </Table.Cell>
+                          ))}
+                          {rowActions ? (
+                            <Table.Cell key="actions" className="text-right">
+                              {rowActions(item, { reload })}
+                            </Table.Cell>
+                          ) : null}
+                        </Table.Row>
                       ))}
-                      {rowActions ? <Table.Cell /> : null}
-                    </Table.Row>
-                  </Table.Footer>
-                ) : null}
-              </Table.Content>
-            </Table.ScrollContainer>
-          </Table>
+                    </Table.Body>
+                    {hasFooter ? (
+                      <Table.Footer>
+                        <Table.Row id="list-total">
+                          {columns.map((column) => (
+                            <Table.Cell
+                              key={column.header}
+                              className={
+                                column.align === "right"
+                                  ? "text-right font-semibold"
+                                  : "font-semibold"
+                              }
+                            >
+                              {column.footer
+                                ? column.footer({ items, summary: summary ?? null })
+                                : null}
+                            </Table.Cell>
+                          ))}
+                          {rowActions ? <Table.Cell /> : null}
+                        </Table.Row>
+                      </Table.Footer>
+                    ) : null}
+                  </Table.Content>
+                </Table.ScrollContainer>
+              </Table>
+            </div>
+          </>
         )}
 
         {meta ? (
@@ -314,7 +361,7 @@ function FilterControl({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="w-52">
+    <div className="w-full sm:w-52">
       {filter.label ? (
         <label
           htmlFor={`filter-${filter.param}`}

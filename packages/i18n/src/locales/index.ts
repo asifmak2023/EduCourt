@@ -36,6 +36,7 @@ export type MessageKey =
   | "common.loading"
   | "common.retry"
   | "common.close"
+  | "common.more"
   | "common.back"
   | "common.yes"
   | "common.no"

@@ -83,7 +83,7 @@ function AdmissionsTable() {
         description="Applications and their current stage."
         actions={
           <>
-            <div className="w-64">
+            <div className="w-full sm:w-64">
               <TextInput
                 type="search"
                 value={search}
@@ -107,9 +107,9 @@ function AdmissionsTable() {
       />
 
       {/* Filter bar */}
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
         {/* Status */}
-        <div className="w-44">
+        <div className="w-full sm:w-44">
           <label className="mb-1 block text-xs font-medium text-muted">Status</label>
           <Select
             value={status}
@@ -122,7 +122,7 @@ function AdmissionsTable() {
         </div>
 
         {/* Academic year */}
-        <div className="w-44">
+        <div className="w-full sm:w-44">
           <label className="mb-1 block text-xs font-medium text-muted">Academic year</label>
           <Select
             value={academicYearId}
@@ -136,7 +136,7 @@ function AdmissionsTable() {
         </div>
 
         {/* Class */}
-        <div className="w-44">
+        <div className="w-full sm:w-44">
           <label className="mb-1 block text-xs font-medium text-muted">Requested class</label>
           <Select
             value={classRoomId}
@@ -150,7 +150,7 @@ function AdmissionsTable() {
         </div>
 
         {/* Gender */}
-        <div className="w-36">
+        <div className="w-full sm:w-36">
           <label className="mb-1 block text-xs font-medium text-muted">Gender</label>
           <Select
             value={gender}
@@ -164,7 +164,7 @@ function AdmissionsTable() {
         </div>
 
         {/* Applied from */}
-        <div className="w-40">
+        <div className="w-full sm:w-40">
           <label className="mb-1 block text-xs font-medium text-muted">Applied from</label>
           <TextInput
             type="date"
@@ -174,7 +174,7 @@ function AdmissionsTable() {
         </div>
 
         {/* Applied to */}
-        <div className="w-40">
+        <div className="w-full sm:w-40">
           <label className="mb-1 block text-xs font-medium text-muted">Applied to</label>
           <TextInput
             type="date"
@@ -203,57 +203,108 @@ function AdmissionsTable() {
         ) : items.length === 0 ? (
           <EmptyState message="No applications match your filters." />
         ) : (
-          <Table variant="secondary">
-            <Table.ScrollContainer>
-              <Table.Content aria-label="Admissions" className="min-w-[1000px]">
-                <Table.Header>
-                  <Table.Column isRowHeader>Application no</Table.Column>
-                  <Table.Column>Applicant</Table.Column>
-                  <Table.Column>Gender</Table.Column>
-                  <Table.Column>Class requested</Table.Column>
-                  <Table.Column>Academic year</Table.Column>
-                  <Table.Column>Guardian phone</Table.Column>
-                  <Table.Column>Applied</Table.Column>
-                  <Table.Column>Status</Table.Column>
-                </Table.Header>
-                <Table.Body>
-                  {items.map((admission) => (
-                    <Table.Row key={admission.id} id={admission.id}>
-                      <Table.Cell className="font-mono text-xs text-muted">
+          <>
+            <ul className="divide-y divide-border-secondary md:hidden">
+              {items.map((admission) => (
+                <li key={admission.id} className="px-4 py-3.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        href={`/dashboard/admissions/${admission.id}`}
+                        className="text-sm font-semibold text-foreground hover:underline"
+                      >
+                        {admission.full_name}
+                      </Link>
+                      <p className="mt-0.5 font-mono text-[11px] text-muted">
                         {admission.application_no}
-                      </Table.Cell>
-                      <Table.Cell className="font-medium text-foreground">
-                        <Link
-                          href={`/dashboard/admissions/${admission.id}`}
-                          className="hover:underline"
-                        >
-                          {admission.full_name}
-                        </Link>
-                      </Table.Cell>
-                      <Table.Cell className="capitalize text-muted">
-                        {admission.gender ?? "-"}
-                      </Table.Cell>
-                      <Table.Cell className="text-muted">
+                      </p>
+                    </div>
+                    <Badge value={admission.status} />
+                  </div>
+                  <dl className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                    <div>
+                      <dt className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                        Class requested
+                      </dt>
+                      <dd className="mt-0.5 text-foreground">
                         {admission.class_room ?? "-"}
-                      </Table.Cell>
-                      <Table.Cell className="text-muted">
-                        {admission.academic_year ?? "-"}
-                      </Table.Cell>
-                      <Table.Cell className="text-muted">
-                        {admission.guardian_phone ?? "-"}
-                      </Table.Cell>
-                      <Table.Cell className="text-muted">
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                        Applied
+                      </dt>
+                      <dd className="mt-0.5 text-foreground">
                         {formatDate(admission.applied_on)}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Badge value={admission.status} />
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Content>
-            </Table.ScrollContainer>
-          </Table>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                        Guardian phone
+                      </dt>
+                      <dd className="mt-0.5 text-foreground">
+                        {admission.guardian_phone ?? "-"}
+                      </dd>
+                    </div>
+                  </dl>
+                </li>
+              ))}
+            </ul>
+
+            <div className="hidden md:block">
+              <Table variant="secondary">
+                <Table.ScrollContainer>
+                  <Table.Content aria-label="Admissions" className="min-w-[1000px]">
+                    <Table.Header>
+                      <Table.Column isRowHeader>Application no</Table.Column>
+                      <Table.Column>Applicant</Table.Column>
+                      <Table.Column>Gender</Table.Column>
+                      <Table.Column>Class requested</Table.Column>
+                      <Table.Column>Academic year</Table.Column>
+                      <Table.Column>Guardian phone</Table.Column>
+                      <Table.Column>Applied</Table.Column>
+                      <Table.Column>Status</Table.Column>
+                    </Table.Header>
+                    <Table.Body>
+                      {items.map((admission) => (
+                        <Table.Row key={admission.id} id={admission.id}>
+                          <Table.Cell className="font-mono text-xs text-muted">
+                            {admission.application_no}
+                          </Table.Cell>
+                          <Table.Cell className="font-medium text-foreground">
+                            <Link
+                              href={`/dashboard/admissions/${admission.id}`}
+                              className="hover:underline"
+                            >
+                              {admission.full_name}
+                            </Link>
+                          </Table.Cell>
+                          <Table.Cell className="capitalize text-muted">
+                            {admission.gender ?? "-"}
+                          </Table.Cell>
+                          <Table.Cell className="text-muted">
+                            {admission.class_room ?? "-"}
+                          </Table.Cell>
+                          <Table.Cell className="text-muted">
+                            {admission.academic_year ?? "-"}
+                          </Table.Cell>
+                          <Table.Cell className="text-muted">
+                            {admission.guardian_phone ?? "-"}
+                          </Table.Cell>
+                          <Table.Cell className="text-muted">
+                            {formatDate(admission.applied_on)}
+                          </Table.Cell>
+                          <Table.Cell>
+                            <Badge value={admission.status} />
+                          </Table.Cell>
+                        </Table.Row>
+                      ))}
+                    </Table.Body>
+                  </Table.Content>
+                </Table.ScrollContainer>
+              </Table>
+            </div>
+          </>
         )}
 
         {meta ? (

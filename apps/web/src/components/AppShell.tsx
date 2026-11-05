@@ -7,7 +7,7 @@ import { useTranslation } from "@eis/i18n";
 import { useAuth } from "@/lib/auth";
 import { useTr } from "@/lib/i18n";
 import { roleLabel as roleText, isPortalOnly } from "@/lib/roles";
-import { sectionForPath, visibleSections } from "@/lib/nav";
+import { sectionForPath, visibleSections, mobileNavEntries } from "@/lib/nav";
 import { Icon } from "@/components/Icons";
 import { Avatar } from "@/components/Avatar";
 import { BrandMark } from "@/components/BrandMark";
@@ -388,7 +388,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 print:max-w-none print:px-0 print:py-0">
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-6 lg:px-8 lg:pb-6 print:max-w-none print:px-0 print:py-0 print:pb-0">
           <div className="print:hidden">
             <Breadcrumbs />
           </div>
@@ -397,6 +397,124 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </main>
       </div>
+
+      <MobileTabBar permissions={user.permissions} sections={sections} pathname={pathname} />
     </div>
+  );
+}
+
+function MobileTabBar({
+  permissions,
+  sections,
+  pathname,
+}: {
+  permissions: string[];
+  sections: ReturnType<typeof visibleSections>;
+  pathname: string;
+}) {
+  const { t } = useTranslation();
+  const tr = useTr();
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  const entries = mobileNavEntries(permissions).map((entry) => ({
+    ...entry,
+    label: tr(entry.label),
+  }));
+
+  if (sections.length === 0) {
+    return null;
+  }
+
+  const isActive = (href: string) =>
+    href === "/dashboard"
+      ? pathname === "/dashboard"
+      : href === "/dashboard/finance"
+        ? pathname === "/dashboard/finance" ||
+          pathname.startsWith("/dashboard/finance/") ||
+          pathname.startsWith("/dashboard/reports")
+        : pathname === href || pathname.startsWith(`${href}/`);
+
+  return (
+    <>
+      {moreOpen ? (
+        <div className="fixed inset-0 z-40 lg:hidden print:hidden">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setMoreOpen(false)}
+            aria-hidden="true"
+          />
+          <div className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto overscroll-contain rounded-t-3xl border-t border-border-secondary bg-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-lw-float">
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border" />
+            <ul className="space-y-1">
+              {sections.map((section) => (
+                <li key={section.label} className="py-1">
+                  <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+                    {tr(section.label)}
+                  </p>
+                  <ul className="space-y-0.5">
+                    {section.items.map((item) => (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          onClick={() => setMoreOpen(false)}
+                          className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm ${
+                            isActive(item.href)
+                              ? "bg-accent-soft font-semibold text-accent-soft-foreground"
+                              : "font-medium text-foreground/80"
+                          }`}
+                        >
+                          <Icon name={item.icon} className="h-[18px] w-[18px] shrink-0" />
+                          <span className="flex-1 truncate">{tr(item.label)}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      ) : null}
+
+      <nav
+        aria-label={t("navigation.primary")}
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-border-secondary bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden print:hidden"
+      >
+        <ul
+          className="grid"
+          style={{
+            gridTemplateColumns: `repeat(${entries.length + 1}, minmax(0, 1fr))`,
+          }}
+        >
+          {entries.map((entry) => {
+            const active = isActive(entry.href);
+            return (
+              <li key={entry.key}>
+                <Link
+                  href={entry.href}
+                  className={`flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium ${
+                    active ? "text-accent" : "text-muted"
+                  }`}
+                >
+                  <Icon name={entry.icon} className="h-5 w-5" />
+                  <span className="max-w-full truncate">{entry.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+          <li>
+            <button
+              type="button"
+              onClick={() => setMoreOpen(true)}
+              aria-expanded={moreOpen}
+              className="flex w-full flex-col items-center gap-1 py-2.5 text-[10px] font-medium text-muted"
+            >
+              <Icon name="list" className="h-5 w-5" />
+              <span>{t("common.more")}</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </>
   );
 }

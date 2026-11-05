@@ -133,7 +133,7 @@ export function PageHeader({
   const tr = useTr();
 
   return (
-    <div className="page-header flex flex-wrap items-end justify-between gap-4">
+    <div className="page-header flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
       <div className="min-w-0">
         <h1 className="lw-hero-title text-2xl text-foreground sm:text-3xl">
           {tr(title)}
@@ -143,7 +143,7 @@ export function PageHeader({
         ) : null}
       </div>
       {actions ? (
-        <div className="flex flex-wrap items-center justify-end gap-2">{actions}</div>
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">{actions}</div>
       ) : null}
     </div>
   );

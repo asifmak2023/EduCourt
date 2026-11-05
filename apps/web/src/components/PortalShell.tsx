@@ -118,7 +118,7 @@ function PortalFrame({ children }: { children: ReactNode }) {
 
         <nav
           aria-label={t("portal.title")}
-          className="mx-auto flex max-w-6xl items-center gap-1 overflow-x-auto px-4 pb-2 sm:px-6"
+          className="mx-auto hidden max-w-6xl items-center gap-1 overflow-x-auto px-4 pb-2 sm:flex sm:px-6"
         >
           {PORTAL_TABS.map((tab) => {
             const isActive = pathname === tab.href;
@@ -140,11 +140,38 @@ function PortalFrame({ children }: { children: ReactNode }) {
         </nav>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
+      <main className="mx-auto w-full max-w-6xl px-4 py-6 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-6">
         <div key={pathname} className="page-enter">
           {children}
         </div>
       </main>
+
+      <nav
+        aria-label={t("portal.title")}
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-border-secondary bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden"
+      >
+        <ul
+          className="grid"
+          style={{ gridTemplateColumns: `repeat(${PORTAL_TABS.length}, minmax(0, 1fr))` }}
+        >
+          {PORTAL_TABS.map((tab) => {
+            const isActive = pathname === tab.href;
+            return (
+              <li key={tab.href}>
+                <Link
+                  href={tab.href}
+                  className={`flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium ${
+                    isActive ? "text-accent" : "text-muted"
+                  }`}
+                >
+                  <Icon name={tab.icon} className="h-5 w-5" />
+                  <span className="max-w-full truncate px-0.5">{tr(tab.label)}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
     </div>
   );
 }

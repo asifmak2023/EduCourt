@@ -192,3 +192,85 @@ export function sectionForPath(pathname: string): NavSection | null {
 
   return best;
 }
+
+/**
+ * Thumb-reachable bottom navigation entries. Each entry maps to the first
+ * ready item in a top-level section so the bar stays stable across roles:
+ * a user only sees an entry when they can reach at least one of its routes.
+ */
+export const MOBILE_NAV_TARGETS: {
+  key: string;
+  label: string;
+  icon: NavIcon;
+  href: string;
+  match: string[];
+}[] = [
+  {
+    key: "home",
+    label: "navigation.dashboard",
+    icon: "grid",
+    href: "/dashboard",
+    match: ["/dashboard"],
+  },
+  {
+    key: "admissions",
+    label: "navigation.students",
+    icon: "users",
+    href: "/dashboard/students",
+    match: ["/dashboard/students", "/dashboard/admissions", "/dashboard/scholarships", "/dashboard/promotions"],
+  },
+  {
+    key: "academics",
+    label: "navigation.attendance",
+    icon: "calendar",
+    href: "/dashboard/attendance",
+    match: [
+      "/dashboard/academics",
+      "/dashboard/timetable",
+      "/dashboard/attendance",
+      "/dashboard/exams",
+      "/dashboard/curriculum",
+      "/dashboard/credits",
+    ],
+  },
+  {
+    key: "finance",
+    label: "navigation.fees",
+    icon: "receipt",
+    href: "/dashboard/finance",
+    match: ["/dashboard/finance", "/dashboard/reports"],
+  },
+];
+
+export interface MobileNavEntry {
+  key: string;
+  label: string;
+  icon: NavIcon;
+  href: string;
+}
+
+/**
+ * Resolve the bottom navigation for a permission set: keep only targets whose
+ * first reachable route is permitted, and point each at that reachable route.
+ */
+export function mobileNavEntries(userPermissions: string[]): MobileNavEntry[] {
+  const byHref = new Map<string, NavItem>();
+  for (const section of NAV_SECTIONS) {
+    for (const item of section.items) {
+      if (!byHref.has(item.href)) {
+        byHref.set(item.href, item);
+      }
+    }
+  }
+
+  return MOBILE_NAV_TARGETS.flatMap((target) => {
+    for (const href of target.match) {
+      const item = byHref.get(href);
+      if (item && item.ready && can(userPermissions, item.permission)) {
+        return [{ key: target.key, label: target.label, icon: target.icon, href }];
+      }
+    }
+
+    return [];
+  });
+}

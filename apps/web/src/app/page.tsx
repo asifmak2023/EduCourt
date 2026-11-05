@@ -18,13 +18,6 @@ const NAV_LINKS = [
   { href: "#pricing", label: "landing.nav.pricing" },
 ];
 
-const TRUST_STATS = [
-  { value: "250+", label: "landing.trust.campuses" },
-  { value: "120K+", label: "landing.trust.students" },
-  { value: "8K+", label: "landing.trust.staff" },
-  { value: "20+", label: "landing.trust.modules" },
-];
-
 const FEATURES: { icon: NavIcon; key: string }[] = [
   { icon: "userPlus", key: "admissions" },
   { icon: "check", key: "attendance" },
@@ -195,19 +188,6 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-          </div>
-        </section>
-
-        <section className="border-y border-border-secondary bg-surface-secondary/60">
-          <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-6 px-4 py-10 sm:px-6 lg:grid-cols-4">
-            {TRUST_STATS.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <p className="text-3xl font-bold text-foreground">{stat.value}</p>
-                <p className="mt-1 text-xs font-medium uppercase tracking-wide text-muted">
-                  {tr(stat.label)}
-                </p>
-              </div>
-            ))}
           </div>
         </section>
 

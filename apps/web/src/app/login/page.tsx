@@ -5,22 +5,14 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "@eis/i18n";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { useTr } from "@/lib/i18n";
 import { Icon } from "@/components/Icons";
 import { BrandMark } from "@/components/BrandMark";
-
-const METRICS = [
-  { value: "250+", label: "landing.trust.campuses" },
-  { value: "120K+", label: "landing.trust.students" },
-  { value: "20+", label: "landing.trust.modules" },
-];
 
 const EQUALIZER = [38, 62, 46, 84, 58, 96, 70, 88, 52, 74];
 
 export default function LoginPage() {
   const { user, loading, login, verifyTwoFactor } = useAuth();
   const { t } = useTranslation();
-  const tr = useTr();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -125,22 +117,6 @@ export default function LoginPage() {
                 className="lw-glow-mint w-2 flex-1 rounded-full bg-mint"
                 style={{ height: `${height}%` }}
               />
-            ))}
-          </div>
-
-          <div className="mt-8 grid grid-cols-3 gap-3">
-            {METRICS.map((metric) => (
-              <div
-                key={metric.label}
-                className="rounded-2xl border border-white/10 bg-white/5 px-3 py-3 backdrop-blur-sm"
-              >
-                <p className="lw-kpi-value text-xl text-obsidian-foreground">
-                  {metric.value}
-                </p>
-                <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-obsidian-foreground/55">
-                  {tr(metric.label)}
-                </p>
-              </div>
             ))}
           </div>
         </div>

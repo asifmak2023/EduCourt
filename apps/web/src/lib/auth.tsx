@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { apiFetch, TOKEN_KEY } from "./api";
+import { apiFetch } from "./api";
 
 export interface AuthUser {
   id: number;
@@ -27,8 +27,7 @@ export interface AuthUser {
   institution?: { id: number; name: string } | null;
 }
 
-interface TokenResponse {
-  token: string;
+interface SessionResponse {
   user: AuthUser;
 }
 
@@ -60,20 +59,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const loadProfile = useCallback(async () => {
-    const token =
-      typeof window !== "undefined" ? window.localStorage.getItem(TOKEN_KEY) : null;
-
-    if (!token) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
-
     try {
       const response = await apiFetch<{ data: AuthUser }>("/v1/auth/me");
       setUser(response.data);
     } catch {
-      window.localStorage.removeItem(TOKEN_KEY);
       setUser(null);
     } finally {
       setLoading(false);
@@ -99,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string): Promise<LoginResult> => {
-      const response = await apiFetch<TokenResponse | ChallengeResponse>(
+      const response = await apiFetch<SessionResponse | ChallengeResponse>(
         "/v1/auth/login",
         {
           method: "POST",
@@ -114,7 +103,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
-      window.localStorage.setItem(TOKEN_KEY, response.token);
+      // The session cookie is set HttpOnly by the BFF route, so no credential
+      // ever reaches client-side JavaScript.
       setUser(response.user);
 
       return { status: "authenticated" };
@@ -124,12 +114,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const verifyTwoFactor = useCallback(
     async (challengeToken: string, code: string) => {
-      const response = await apiFetch<TokenResponse>("/v1/auth/two-factor/challenge", {
+      const response = await apiFetch<SessionResponse>("/v1/auth/two-factor/challenge", {
         method: "POST",
         body: { challenge_token: challengeToken, code },
       });
 
-      window.localStorage.setItem(TOKEN_KEY, response.token);
       setUser(response.user);
     },
     []
@@ -139,9 +128,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await apiFetch("/v1/auth/logout", { method: "POST" });
     } catch {
-      // Ignore network errors on logout; clear the local session regardless.
+      // Ignore network errors on logout; the cookie is cleared by the BFF regardless.
     }
-    window.localStorage.removeItem(TOKEN_KEY);
     setUser(null);
   }, []);
 

@@ -6,8 +6,6 @@ export interface ApiErrorShape {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "/api";
 
-export const TOKEN_KEY = "eis_token";
-
 export class ApiError extends Error {
   status: number;
 
@@ -32,16 +30,13 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const { body, campusId, headers, ...rest } = options;
 
-  const token =
-    typeof window !== "undefined" ? window.localStorage.getItem(TOKEN_KEY) : null;
-
   const response = await fetch(`${API_BASE}${path}`, {
     ...rest,
+    credentials: "same-origin",
     body: body === undefined ? undefined : JSON.stringify(body),
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(campusId ? { "X-Campus-Id": String(campusId) } : {}),
       ...(headers ?? {}),
     },
@@ -66,15 +61,12 @@ export async function apiUpload<T>(
   path: string,
   formData: FormData
 ): Promise<T> {
-  const token =
-    typeof window !== "undefined" ? window.localStorage.getItem(TOKEN_KEY) : null;
-
   const response = await fetch(`${API_BASE}${path}`, {
     method: "POST",
+    credentials: "same-origin",
     body: formData,
     headers: {
       Accept: "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
 
@@ -94,13 +86,8 @@ export async function apiUpload<T>(
 }
 
 export async function apiDownload(path: string): Promise<Blob> {
-  const token =
-    typeof window !== "undefined" ? window.localStorage.getItem(TOKEN_KEY) : null;
-
   const response = await fetch(`${API_BASE}${path}`, {
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    credentials: "same-origin",
   });
 
   if (!response.ok) {

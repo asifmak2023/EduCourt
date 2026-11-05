@@ -368,7 +368,7 @@ function PlatformView({ overview }: { overview: PlatformOverview }) {
         />
       </section>
 
-      <section className="grid gap-3 xl:grid-cols-12 xl:items-stretch">
+      <section className="grid grid-cols-1 gap-3 xl:grid-cols-12 xl:items-stretch">
         <ChartCard
           title="dashboard.institutionsCompare"
           description="dashboard.institutionsCompareHint"
@@ -604,7 +604,7 @@ function InstitutionView({ overview }: { overview: InstitutionOverview }) {
         />
       </section>
 
-      <section className="grid gap-3 xl:grid-cols-12 xl:items-stretch">
+      <section className="grid grid-cols-1 gap-3 xl:grid-cols-12 xl:items-stretch">
         <ChartCard
           title="dashboard.campusesCompare"
           description="dashboard.campusesCompareHint"
@@ -867,7 +867,7 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
       </section>
 
       {/* Analytics anchor: hero collection trend paired with live telemetry. */}
-      <section className="grid gap-3 xl:grid-cols-12 xl:items-stretch">
+      <section className="grid grid-cols-1 gap-3 xl:grid-cols-12 xl:items-stretch">
         <ChartCard
           title="dashboard.feeCollectionTrend"
           description="dashboard.collectionTrendHint"

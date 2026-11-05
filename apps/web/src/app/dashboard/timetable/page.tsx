@@ -361,7 +361,7 @@ function TimetableView() {
         ) : slots.length === 0 ? (
           <EmptyState message="No timetable slots for this selection." />
         ) : (
-          <Table variant="secondary">
+          <Table variant="secondary" data-cardizer="off">
             <Table.ScrollContainer>
               <Table.Content
                 aria-label="Weekly timetable grid"

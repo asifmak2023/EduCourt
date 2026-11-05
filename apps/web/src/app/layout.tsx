@@ -11,6 +11,7 @@ import { AuthProvider } from "@/lib/auth";
 import { AppearanceProvider } from "@/lib/appearance";
 import { WebI18nProvider } from "@/lib/i18n";
 import { AppBackground } from "@/components/AppBackground";
+import { TableCardizer } from "@/components/TableCardizer";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -79,6 +80,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <WebI18nProvider>
           <AppearanceProvider>
             <AppBackground />
+            <TableCardizer />
             <AuthProvider>{children}</AuthProvider>
           </AppearanceProvider>
         </WebI18nProvider>

@@ -69,7 +69,10 @@ function FeeReceiptPrint() {
         backLabel="Back to receipts"
       />
 
-      <div className="mx-auto max-w-[820px] bg-white p-8 text-black shadow-sm print:max-w-none print:p-0 print:shadow-none">
+      <div
+        className="mx-auto max-w-[820px] bg-white p-8 text-black shadow-sm print:max-w-none print:p-0 print:shadow-none"
+        data-cardizer="off"
+      >
         <PrintHeader
           title="Fee Receipt"
           campus={data.campus}

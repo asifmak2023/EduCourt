@@ -166,7 +166,7 @@ export default function PortalDashboardPage() {
             />
           </section>
 
-          <section className="grid gap-3 xl:grid-cols-12">
+          <section className="grid grid-cols-1 gap-3 xl:grid-cols-12">
             <ChartCard
               title="portal.attendance.mix"
               description="portal.attendance.subtitle"

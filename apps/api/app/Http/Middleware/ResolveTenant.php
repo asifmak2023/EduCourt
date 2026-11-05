@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Access\ScopeValidity;
 use App\Support\TenantContext;
 use Closure;
 use Illuminate\Http\Request;
@@ -20,7 +21,10 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ResolveTenant
 {
-    public function __construct(private readonly TenantContext $context) {}
+    public function __construct(
+        private readonly TenantContext $context,
+        private readonly ScopeValidity $scopeValidity,
+    ) {}
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -31,6 +35,11 @@ class ResolveTenant
 
             return $next($request);
         }
+
+        // Revoke anything whose validity window has closed before the request
+        // is authorised, so expired assignments stop granting campus access
+        // and roles immediately rather than waiting for a scheduled sweep.
+        $this->scopeValidity->reconcile($user);
 
         $requested = $request->header('X-Campus-Id');
         $requested = $requested !== null ? (int) $requested : null;

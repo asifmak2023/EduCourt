@@ -79,7 +79,7 @@ class ScopeAssignmentController extends Controller
             ->where('user_id', $target->id)
             ->where('role', $data['role'])
             ->where('scope_type', $data['scope_type'])
-            ->where('is_active', true)
+            ->current()
             ->where('campus_id', $data['campus_id'] ?? null)
             ->where('scope_id', $data['scope_id'] ?? null)
             ->first();
@@ -97,7 +97,11 @@ class ScopeAssignmentController extends Controller
             'is_active' => true,
         ]);
 
-        $target->assignRole($data['role']);
+        // Future-dated grants stay dormant until their start date arrives; the
+        // request-time reconciliation promotes them once they become current.
+        if ($assignment->isCurrent()) {
+            $target->assignRole($data['role']);
+        }
 
         activity('rbac')
             ->causedBy($actor)
@@ -144,7 +148,7 @@ class ScopeAssignmentController extends Controller
         if ($target !== null && $role !== '') {
             $stillHas = $target->scopeAssignments()
                 ->where('role', $role)
-                ->where('is_active', true)
+                ->current()
                 ->exists();
 
             if (! $stillHas) {

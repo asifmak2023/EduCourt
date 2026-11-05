@@ -130,8 +130,8 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         $ids = ScopeAssignment::withoutGlobalScopes()
+            ->current()
             ->where('user_id', $this->id)
-            ->where('is_active', true)
             ->whereNotNull('campus_id')
             ->pluck('campus_id')
             ->all();

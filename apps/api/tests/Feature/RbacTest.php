@@ -419,4 +419,102 @@ class RbacTest extends TestCase
             ])
             ->assertStatus(403);
     }
+
+    public function test_future_dated_assignment_does_not_grant_campus_or_role(): void
+    {
+        $student = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => null,
+        ]);
+
+        ScopeAssignment::create([
+            'user_id' => $student->id,
+            'role' => RoleName::Accountant->value,
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'scope_type' => ScopeType::Campus->value,
+            'scope_id' => $this->campus->id,
+            'is_active' => true,
+            'starts_at' => now()->addDays(3),
+        ]);
+
+        $student->assignRole(RoleName::Accountant->value);
+
+        $this->assertSame([], $student->fresh()->allowedCampusIds());
+        $this->assertFalse($student->canAccessCampus($this->campus->id));
+
+        $this->withToken($student->createToken('t')->plainTextToken)
+            ->getJson('/api/v1/auth/me')
+            ->assertOk();
+
+        $this->assertFalse($student->fresh()->hasRole(RoleName::Accountant->value));
+    }
+
+    public function test_expired_assignment_revokes_campus_access_and_role(): void
+    {
+        $user = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => null,
+        ]);
+
+        ScopeAssignment::create([
+            'user_id' => $user->id,
+            'role' => RoleName::Accountant->value,
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'scope_type' => ScopeType::Campus->value,
+            'scope_id' => $this->campus->id,
+            'is_active' => true,
+            'starts_at' => now()->subMonth(),
+            'ends_at' => now()->subDay(),
+        ]);
+
+        $user->assignRole(RoleName::Accountant->value);
+
+        $this->assertSame([], $user->fresh()->allowedCampusIds());
+
+        $this->withToken($user->createToken('t')->plainTextToken)
+            ->getJson('/api/v1/auth/me')
+            ->assertOk();
+
+        $user->refresh();
+
+        $this->assertFalse($user->hasRole(RoleName::Accountant->value));
+        $this->assertDatabaseHas('scope_assignments', [
+            'user_id' => $user->id,
+            'role' => RoleName::Accountant->value,
+            'is_active' => false,
+        ]);
+    }
+
+    public function test_assignment_inside_window_still_grants_access(): void
+    {
+        $user = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => null,
+        ]);
+
+        ScopeAssignment::create([
+            'user_id' => $user->id,
+            'role' => RoleName::Accountant->value,
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'scope_type' => ScopeType::Campus->value,
+            'scope_id' => $this->campus->id,
+            'is_active' => true,
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addMonth(),
+        ]);
+
+        $user->assignRole(RoleName::Accountant->value);
+
+        $this->assertSame([$this->campus->id], $user->fresh()->allowedCampusIds());
+        $this->assertTrue($user->fresh()->canAccessCampus($this->campus->id));
+
+        $this->withToken($user->createToken('t')->plainTextToken)
+            ->getJson('/api/v1/auth/me')
+            ->assertOk();
+
+        $this->assertTrue($user->fresh()->hasRole(RoleName::Accountant->value));
+    }
 }

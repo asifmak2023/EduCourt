@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
@@ -14,15 +14,15 @@ export function setToken(value: string | null): void {
   authToken = value;
 
   if (value) {
-    AsyncStorage.setItem(TOKEN_KEY, value).catch(() => undefined);
+    SecureStore.setItemAsync(TOKEN_KEY, value).catch(() => undefined);
   } else {
-    AsyncStorage.removeItem(TOKEN_KEY).catch(() => undefined);
+    SecureStore.deleteItemAsync(TOKEN_KEY).catch(() => undefined);
   }
 }
 
 export async function loadStoredToken(): Promise<string | null> {
   try {
-    const stored = await AsyncStorage.getItem(TOKEN_KEY);
+    const stored = await SecureStore.getItemAsync(TOKEN_KEY);
     authToken = stored;
     return stored;
   } catch {

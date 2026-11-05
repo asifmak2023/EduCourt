@@ -165,7 +165,9 @@ class RbacTest extends TestCase
             ])
             ->assertJsonFragment(['value' => RoleName::Teacher->value])
             ->assertJsonFragment(['grantable_by_campus_admin' => false, 'value' => RoleName::CampusAdmin->value])
-            ->assertJsonFragment(['grantable_by_campus_admin' => false, 'value' => RoleName::InstitutionHead->value]);
+            ->assertJsonFragment(['grantable_by_campus_admin' => false, 'value' => RoleName::InstitutionHead->value])
+            ->assertJsonFragment(['grantable_by_campus_admin' => false, 'value' => RoleName::FinanceHead->value])
+            ->assertJsonFragment(['grantable_by_campus_admin' => true, 'value' => RoleName::Accountant->value]);
     }
 
     public function test_campus_admin_can_grant_and_revoke_a_local_role(): void
@@ -351,6 +353,26 @@ class RbacTest extends TestCase
             ->assertStatus(403);
     }
 
+    public function test_campus_admin_cannot_grant_a_role_broader_than_their_own(): void
+    {
+        $admin = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $admin->syncRoles([RoleName::CampusAdmin->value]);
+
+        $this->withToken($admin->createToken('t')->plainTextToken)
+            ->postJson('/api/v1/users', [
+                'name' => 'Payroll Overreach',
+                'email' => 'payroll-overreach@example.test',
+                'password' => 'secret-password',
+                'roles' => [RoleName::FinanceHead->value],
+            ])
+            ->assertStatus(403);
+
+        $this->assertDatabaseMissing('users', ['email' => 'payroll-overreach@example.test']);
+    }
+
     public function test_product_owner_can_create_institution_head(): void
     {
         $owner = User::factory()->create();
@@ -380,7 +402,7 @@ class RbacTest extends TestCase
         $head->syncRoles([RoleName::InstitutionHead->value]);
 
         $this->assertTrue($head->hasPermissionTo('student.view'));
-        $this->assertTrue($head->hasPermissionTo('report.view'));
+        $this->assertTrue($head->hasPermissionTo('report.campus'));
         $this->assertTrue($head->hasPermissionTo('fee.view'));
         $this->assertFalse($head->hasPermissionTo('student.create'));
         $this->assertFalse($head->hasPermissionTo('student.edit'));

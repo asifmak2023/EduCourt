@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Models\ScopeAssignment;
 use App\Models\User;
+use App\Support\RoleCatalog;
 use App\Support\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -202,10 +203,21 @@ class UserController extends Controller
      */
     private function authorizeRoleAssignment(Request $request, array $roles): void
     {
+        $actor = $request->user();
         $restricted = RoleName::restrictedToProductOwner();
 
-        if (array_intersect($roles, $restricted) !== [] && ! $request->user()->isPlatformAdmin()) {
+        if (array_intersect($roles, $restricted) !== [] && ! $actor->isPlatformAdmin()) {
             abort(403, 'Only the Super User (product owner) may create campus admin or institution head accounts.');
+        }
+
+        if ($actor->isPlatformAdmin()) {
+            return;
+        }
+
+        $excess = RoleCatalog::excessFor($roles, $actor->getAllPermissions()->pluck('name')->all());
+
+        if ($excess !== []) {
+            abort(403, 'You cannot grant permissions you do not hold: '.implode(', ', $excess));
         }
     }
 

@@ -296,7 +296,9 @@ function StudentsTable() {
                       <Table.Column>{t("common.section")}</Table.Column>
                       <Table.Column>{t("common.rollNo")}</Table.Column>
                       <Table.Column>{t("common.gender")}</Table.Column>
-                      <Table.Column>{t("students.field.dateOfBirth")}</Table.Column>
+                      {can("student.pii") ? (
+                        <Table.Column>{t("students.field.dateOfBirth")}</Table.Column>
+                      ) : null}
                       <Table.Column>{t("common.status")}</Table.Column>
                       {canAny(AR_VIEW) ? (
                         <Table.Column>{t("common.actions")}</Table.Column>
@@ -332,9 +334,11 @@ function StudentsTable() {
                           <Table.Cell className="capitalize text-muted">
                             {student.gender ?? "-"}
                           </Table.Cell>
-                          <Table.Cell className="text-muted">
-                            {formatDate(student.date_of_birth)}
-                          </Table.Cell>
+                          {can("student.pii") ? (
+                            <Table.Cell className="text-muted">
+                              {formatDate(student.date_of_birth)}
+                            </Table.Cell>
+                          ) : null}
                           <Table.Cell>
                             <Badge value={student.status} />
                           </Table.Cell>

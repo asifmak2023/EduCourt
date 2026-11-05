@@ -39,6 +39,7 @@ use App\Models\StaffMember;
 use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Models\StudentEnrollment;
+use App\Models\User;
 use App\Models\TeachingAssignment;
 use App\Support\ReportPeriod;
 use Carbon\CarbonImmutable;
@@ -57,7 +58,7 @@ class ReportService
      *
      * @return array<string, mixed>
      */
-    public function campusDashboard(): array
+    public function campusDashboard(?User $viewer = null): array
     {
         $today = CarbonImmutable::today();
 
@@ -102,7 +103,7 @@ class ReportService
             ->pluck('total', 'status')
             ->map(fn ($count) => (int) $count);
 
-        return [
+        $dashboard = [
             'as_on' => $today->toDateString(),
             'students_active' => (int) $students->count(),
             'students_by_gender' => (clone $students)
@@ -136,6 +137,50 @@ class ReportService
             'payroll_draft_runs' => (int) PayrollRun::query()->where('status', PayrollRunStatus::Draft->value)->count(),
             'upcoming_events' => (int) AcademicEvent::query()->whereDate('starts_on', '>=', $today->toDateString())->count(),
         ];
+
+        return $viewer === null ? $dashboard : $this->scopeDashboard($dashboard, $viewer);
+    }
+
+    /**
+     * Strip dashboard sections the viewer has no report permission for, so a
+     * department role never receives another department's aggregate figures.
+     *
+     * @param  array<string, mixed>  $dashboard
+     * @return array<string, mixed>
+     */
+    private function scopeDashboard(array $dashboard, User $viewer): array
+    {
+        if ($viewer->isPlatformAdmin()) {
+            return $dashboard;
+        }
+
+        $sections = [
+            'students_active' => 'report.students',
+            'students_by_gender' => 'report.students',
+            'enrollments_active' => 'report.students',
+            'admissions_pending' => 'report.students',
+            'admissions_by_status' => 'report.students',
+            'scholarships_active' => 'report.students',
+            'staff_employed' => 'report.staff',
+            'leave_pending' => 'report.staff',
+            'payroll_draft_runs' => 'report.payroll',
+            'unpaid_vouchers' => 'report.finance',
+            'outstanding_fees' => 'report.finance',
+            'fees_collected_this_month' => 'report.finance',
+            'collections_by_month' => 'report.finance',
+            'vouchers_by_status' => 'report.finance',
+            'exams_scheduled' => 'report.results',
+            'conduct_open' => 'report.students',
+            'upcoming_events' => 'report.campus',
+        ];
+
+        foreach ($sections as $key => $permission) {
+            if (! $viewer->can($permission)) {
+                unset($dashboard[$key]);
+            }
+        }
+
+        return $dashboard;
     }
 
     /**

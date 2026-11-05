@@ -13,19 +13,20 @@ interface ReportDef {
   key: string;
   label: string;
   endpoint: string;
+  permission: string;
   selector?: Selector;
   dateRange?: boolean;
 }
 
 const REPORTS: ReportDef[] = [
-  { key: "dashboard", label: "Campus dashboard", endpoint: "/v1/reports/campus-dashboard" },
-  { key: "progress", label: "Progress", endpoint: "/v1/reports/progress", dateRange: true },
-  { key: "attendance", label: "Attendance summary", endpoint: "/v1/reports/attendance", dateRange: true },
-  { key: "results", label: "Exam results", endpoint: "/v1/reports/results", selector: "exam" },
-  { key: "staff", label: "Staff summary", endpoint: "/v1/reports/staff", dateRange: true },
-  { key: "yearly", label: "Student yearly", endpoint: "/v1/reports/students", selector: "student" },
-  { key: "financial", label: "Financial summary", endpoint: "/v1/reports/financial", dateRange: true },
-  { key: "payroll", label: "Payroll summary", endpoint: "/v1/reports/payroll", dateRange: true },
+  { key: "dashboard", label: "Campus dashboard", endpoint: "/v1/reports/campus-dashboard", permission: "report.campus" },
+  { key: "progress", label: "Progress", endpoint: "/v1/reports/progress", permission: "report.students", dateRange: true },
+  { key: "attendance", label: "Attendance summary", endpoint: "/v1/reports/attendance", permission: "report.attendance", dateRange: true },
+  { key: "results", label: "Exam results", endpoint: "/v1/reports/results", permission: "report.results", selector: "exam" },
+  { key: "staff", label: "Staff summary", endpoint: "/v1/reports/staff", permission: "report.staff", dateRange: true },
+  { key: "yearly", label: "Student yearly", endpoint: "/v1/reports/students", permission: "report.students", selector: "student" },
+  { key: "financial", label: "Financial summary", endpoint: "/v1/reports/financial", permission: "report.finance", dateRange: true },
+  { key: "payroll", label: "Payroll summary", endpoint: "/v1/reports/payroll", permission: "report.payroll", dateRange: true },
 ];
 
 function today(): string {
@@ -40,11 +41,15 @@ function monthStart() {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`;
 }
 
-export function AnalyticsScreen() {
+export function AnalyticsScreen({ permissions }: { permissions: string[] }) {
   const { colors } = useTheme();
   const tr = useTr();
-  const [activeKey, setActiveKey] = useState(REPORTS[0].key);
-  const active = REPORTS.find((report) => report.key === activeKey) ?? REPORTS[0];
+  const available = useMemo(
+    () => REPORTS.filter((report) => permissions.includes(report.permission)),
+    [permissions]
+  );
+  const [activeKey, setActiveKey] = useState(available[0]?.key ?? "");
+  const active = available.find((report) => report.key === activeKey) ?? available[0] ?? null;
 
   const [examId, setExamId] = useState<unknown>("");
   const [studentId, setStudentId] = useState<unknown>("");
@@ -53,6 +58,9 @@ export function AnalyticsScreen() {
   const [applied, setApplied] = useState({ from: monthStart(), to: today() });
 
   const endpoint = useMemo(() => {
+    if (!active) {
+      return null;
+    }
     if (active.selector === "exam") {
       return examId ? `${active.endpoint}/${String(examId)}` : null;
     }
@@ -62,7 +70,7 @@ export function AnalyticsScreen() {
     return active.endpoint;
   }, [active, examId, studentId]);
 
-  const params = active.dateRange ? { from: applied.from, to: applied.to } : {};
+  const params = active?.dateRange ? { from: applied.from, to: applied.to } : {};
 
   const reset = (key: string) => {
     setActiveKey(key);
@@ -70,10 +78,18 @@ export function AnalyticsScreen() {
     setStudentId("");
   };
 
+  if (!active) {
+    return (
+      <ScrollView contentContainerStyle={styles.container}>
+        <EmptyState message={tr("No reports are available for your role.")} />
+      </ScrollView>
+    );
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.chips}>
-        {REPORTS.map((report) => {
+        {available.map((report) => {
           const isActive = active.key === report.key;
           return (
             <Pressable

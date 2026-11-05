@@ -20,7 +20,7 @@ import type { ReportProgress } from "@/lib/types";
 
 export default function ProgressReportPage() {
   return (
-    <PermissionGate permission="report.view">
+    <PermissionGate permission="report.students">
       <ProgressReport />
     </PermissionGate>
   );

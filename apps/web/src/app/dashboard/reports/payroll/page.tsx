@@ -20,7 +20,7 @@ import type { ReportPayroll } from "@/lib/types";
 
 export default function PayrollReportPage() {
   return (
-    <PermissionGate permission="report.view">
+    <PermissionGate permission="report.payroll">
       <PayrollReport />
     </PermissionGate>
   );

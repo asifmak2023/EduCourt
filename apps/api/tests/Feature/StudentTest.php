@@ -282,6 +282,34 @@ class StudentTest extends TestCase
         ])->assertStatus(403);
     }
 
+    public function test_student_pii_is_hidden_without_the_pii_permission(): void
+    {
+        $student = $this->student('ADM-PII', 'Ali', 'Raza');
+        $student->update([
+            'national_id' => '35202-1234567-1',
+            'date_of_birth' => '2015-04-01',
+            'address' => '12 Mall Road',
+        ]);
+
+        $coordinatorView = $this->as($this->actor(RoleName::AcademicCoordinator))
+            ->getJson("/api/v1/students/{$student->id}")
+            ->assertOk()
+            ->json('data');
+
+        $this->assertArrayNotHasKey('national_id', $coordinatorView);
+        $this->assertArrayNotHasKey('date_of_birth', $coordinatorView);
+        $this->assertArrayNotHasKey('address', $coordinatorView);
+        $this->assertSame('ADM-PII', $coordinatorView['admission_no']);
+
+        $adminView = $this->as($this->admin)
+            ->getJson("/api/v1/students/{$student->id}")
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame('35202-1234567-1', $adminView['national_id']);
+        $this->assertSame('12 Mall Road', $adminView['address']);
+    }
+
     private function as(User $user): self
     {
         $this->app['auth']->forgetGuards();

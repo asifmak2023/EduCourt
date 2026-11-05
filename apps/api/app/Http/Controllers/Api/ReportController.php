@@ -16,9 +16,9 @@ class ReportController extends Controller
 {
     public function __construct(private readonly ReportService $reports) {}
 
-    public function campusDashboard(): JsonResponse
+    public function campusDashboard(Request $request): JsonResponse
     {
-        return response()->json(['data' => $this->reports->campusDashboard()]);
+        return response()->json(['data' => $this->reports->campusDashboard($request->user())]);
     }
 
     public function institutionOverview(Request $request): JsonResponse

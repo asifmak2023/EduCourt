@@ -38,7 +38,7 @@ class PortalController extends Controller
     public function children(Request $request): AnonymousResourceCollection
     {
         $students = $this->actingStudents($request)->load([
-            'enrollments.academicYear', 'enrollments.classRoom', 'enrollments.section', 'user',
+            'enrollments.academicYear', 'enrollments.classRoom', 'enrollments.section', 'user', 'guardians',
         ]);
 
         return StudentResource::collection($students);

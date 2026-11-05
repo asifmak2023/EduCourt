@@ -84,7 +84,7 @@ function modeFor(user: AuthUser): Mode {
     return "institution";
   }
 
-  if (user.permissions.includes("report.view")) {
+  if (user.permissions.some((permission) => permission.startsWith("report."))) {
     return "campus";
   }
 
@@ -791,9 +791,21 @@ function InstitutionView({ overview }: { overview: InstitutionOverview }) {
 
 function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
   const { t } = useTranslation();
+  const { can } = useAuth();
   const colors = useChartColors();
-  const girls = dashboard.students_by_gender.find((item) => item.gender === "female")?.total ?? 0;
-  const boys = dashboard.students_by_gender.find((item) => item.gender === "male")?.total ?? 0;
+
+  // The API omits any section the caller has no report permission for, so
+  // render strictly from what this viewer is allowed to see.
+  const canStudents = can("report.students");
+  const canStaff = can("report.staff");
+  const canFinance = can("report.finance");
+  const canResults = can("report.results");
+  const canPayroll = can("report.payroll");
+  const canCampus = can("report.campus");
+
+  const students = dashboard.students_by_gender ?? [];
+  const girls = students.find((item) => item.gender === "female")?.total ?? 0;
+  const boys = students.find((item) => item.gender === "male")?.total ?? 0;
 
   const collections = (dashboard.collections_by_month ?? []).map((month) => ({
     label: month.label,
@@ -814,227 +826,275 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
     0
   );
   const latestCollection = collections.at(-1)?.value ?? 0;
-  const billed = dashboard.fees_collected_this_month + dashboard.outstanding_fees;
-  const recoveryRate = billed > 0
-    ? Math.round((dashboard.fees_collected_this_month / billed) * 100)
-    : 0;
+  const collected = dashboard.fees_collected_this_month ?? 0;
+  const outstandingFees = dashboard.outstanding_fees ?? 0;
+  const billed = collected + outstandingFees;
+  const recoveryRate = billed > 0 ? Math.round((collected / billed) * 100) : 0;
   const collectionValues = collections.map((point) => point.value);
   const hasCollectionMovement = collectionValues.some((value) => value > 0);
 
+  const operations = [
+    canStudents
+      ? { key: "enrollments", label: "dashboard.activeEnrollments", value: dashboard.enrollments_active ?? 0 }
+      : null,
+    canStudents
+      ? { key: "scholarships", label: "dashboard.scholarshipsActive", value: dashboard.scholarships_active ?? 0 }
+      : null,
+    canResults
+      ? { key: "exams", label: "dashboard.examsScheduled", value: dashboard.exams_scheduled ?? 0 }
+      : null,
+    canStudents
+      ? { key: "conduct", label: "dashboard.openConductCases", value: dashboard.conduct_open ?? 0 }
+      : null,
+    canPayroll
+      ? { key: "payroll", label: "dashboard.payrollDraftRuns", value: dashboard.payroll_draft_runs ?? 0 }
+      : null,
+    canCampus
+      ? { key: "events", label: "dashboard.upcomingEvents", value: dashboard.upcoming_events ?? 0 }
+      : null,
+  ].filter((row): row is { key: string; label: string; value: number } => row !== null);
+
   return (
     <div className="space-y-4 sm:space-y-5">
-      {/* Headline strip: the four numbers that frame the rest of the page. */}
+      {/* Headline strip: only the domains this viewer may report on. */}
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="dashboard.activeStudents"
-          value={formatNumber(dashboard.students_active)}
-          hint={t("dashboard.boysGirls", { boys, girls })}
-          icon={<Icon name="users" />}
-        />
-        <StatCard
-          label="dashboard.staffEmployed"
-          value={formatNumber(dashboard.staff_employed)}
-          hint={t("dashboard.activeEnrollments")}
-          icon={<Icon name="idCard" />}
-        />
-        <StatCard
-          label="dashboard.outstandingFees"
-          value={formatCurrency(dashboard.outstanding_fees)}
-          tone="danger"
-          hint={t("dashboard.unpaidVouchers", { count: dashboard.unpaid_vouchers })}
-          icon={<Icon name="receipt" />}
-        />
-        <StatCard
-          label="dashboard.collectedThisMonth"
-          value={formatCurrency(dashboard.fees_collected_this_month)}
-          tone="positive"
-          hint={
-            latestCollection > 0
-              ? t("dashboard.latestCollection", {
-                  amount: formatCurrency(latestCollection),
-                })
-              : undefined
-          }
-          visual={
-            <RadialGauge
-              value={recoveryRate}
-              max={100}
-              label={`${recoveryRate}%`}
-              color={colors["--mint"]}
-            />
-          }
-        />
-      </section>
-
-      {/* Analytics anchor: hero collection trend paired with live telemetry. */}
-      <section className="grid grid-cols-1 gap-3 xl:grid-cols-12 xl:items-stretch">
-        <ChartCard
-          title="dashboard.feeCollectionTrend"
-          description="dashboard.collectionTrendHint"
-          className="xl:col-span-8"
-          action={
-            <Link
-              href="/dashboard/reports/financial"
-              className="inline-flex items-center gap-1.5 rounded-full bg-surface-secondary px-3 py-1.5 text-[11px] font-semibold text-muted transition hover:text-foreground"
-            >
-              {t("dashboard.reports")}
-              <Icon name="arrowUp" className="h-3 w-3 rotate-90" />
-            </Link>
-          }
-          footer={
-            <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                <span className="inline-flex items-center gap-1.5">
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: colors["--accent"] }}
-                  />
-                  <span className="text-muted">{t("dashboard.collected")}</span>
-                  <span className="font-semibold text-foreground">
-                    {formatCurrency(dashboard.fees_collected_this_month)}
-                  </span>
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: colors["--coral"] }}
-                  />
-                  <span className="text-muted">{t("dashboard.billedThisYear")}</span>
-                  <span className="font-semibold text-foreground">
-                    {formatCurrency(billed)}
-                  </span>
-                </span>
-              </div>
-              <span className="text-muted">
-                {t("dashboard.peakCollection", {
-                  amount: formatCurrency(collectedPeak),
-                })}
-              </span>
-            </div>
-          }
-        >
-          {hasCollectionMovement ? (
-            <TrendChart
-              data={collections}
-              formatValue={compactCurrency}
-              height={288}
-            />
-          ) : (
-            <ChartEmpty
-              title={t("dashboard.noMovement")}
-              hint={t("dashboard.noMovementHint")}
-            />
-          )}
-        </ChartCard>
-
-        <div className="flex flex-col gap-3 xl:col-span-4">
-          <TelemetryTile
-            className="flex-1"
-            title={t("dashboard.admissionsPipeline")}
-            value={formatNumber(admissionTotal)}
-            caption={t("dashboard.totalAdmissions")}
-            data={admissionFunnel}
-            accent={colors["--mint"]}
-            chartMode="count"
-            footer={
-              <div className="relative flex items-center justify-between gap-2 pt-3 text-[11px] text-white/55">
-                <span>
-                  {formatNumber(dashboard.admissions_pending)}{" "}
-                  {t("dashboard.admissionsPending")}
-                </span>
-                <Link
-                  href="/dashboard/admissions"
-                  className="font-semibold text-mint hover:underline"
-                >
-                  {t("common.manage")}
-                </Link>
-              </div>
-            }
+        {canStudents ? (
+          <StatCard
+            label="dashboard.activeStudents"
+            value={formatNumber(dashboard.students_active ?? 0)}
+            hint={t("dashboard.boysGirls", { boys, girls })}
+            icon={<Icon name="users" />}
           />
-
-          {/* Amber capsule: the one warm surface on the page. */}
-          <div className="lw-amber relative overflow-hidden rounded-3xl p-5">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -right-8 -bottom-10 h-32 w-32 rounded-full bg-white/25 blur-2xl"
-            />
-            <div className="relative flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-amber-foreground/70">
-                  {t("dashboard.feeRecovery")}
-                </p>
-                <p className="lw-kpi-value mt-1 text-3xl text-amber-foreground">
-                  {recoveryRate}%
-                </p>
-                <p className="mt-1 text-xs font-medium text-amber-foreground/70">
-                  {t("dashboard.feeRecoveryHint")}
-                </p>
-              </div>
+        ) : null}
+        {canStaff ? (
+          <StatCard
+            label="dashboard.staffEmployed"
+            value={formatNumber(dashboard.staff_employed ?? 0)}
+            hint={t("dashboard.activeEnrollments")}
+            icon={<Icon name="idCard" />}
+          />
+        ) : null}
+        {canFinance ? (
+          <StatCard
+            label="dashboard.outstandingFees"
+            value={formatCurrency(outstandingFees)}
+            tone="danger"
+            hint={t("dashboard.unpaidVouchers", {
+              count: dashboard.unpaid_vouchers ?? 0,
+            })}
+            icon={<Icon name="receipt" />}
+          />
+        ) : null}
+        {canFinance ? (
+          <StatCard
+            label="dashboard.collectedThisMonth"
+            value={formatCurrency(collected)}
+            tone="positive"
+            hint={
+              latestCollection > 0
+                ? t("dashboard.latestCollection", {
+                    amount: formatCurrency(latestCollection),
+                  })
+                : undefined
+            }
+            visual={
               <RadialGauge
                 value={recoveryRate}
                 max={100}
                 label={`${recoveryRate}%`}
-                color="#11141f"
-                size={64}
+                color={colors["--mint"]}
               />
-            </div>
-            <div className="relative mt-4 grid grid-cols-2 gap-2">
-              <AmberMetric
-                label={t("dashboard.collected")}
-                value={formatCurrency(dashboard.fees_collected_this_month)}
-              />
-              <AmberMetric
-                label={t("dashboard.outstandingFees")}
-                value={formatCurrency(dashboard.outstanding_fees)}
-              />
-            </div>
-          </div>
-        </div>
+            }
+          />
+        ) : null}
       </section>
+
+      {/* Analytics anchor: collection trend or admissions pipeline, per role. */}
+      {canFinance || canStudents ? (
+        <section className="grid grid-cols-1 gap-3 xl:grid-cols-12 xl:items-stretch">
+          {canFinance ? (
+            <ChartCard
+              title="dashboard.feeCollectionTrend"
+              description="dashboard.collectionTrendHint"
+              className="xl:col-span-8"
+              action={
+                <Link
+                  href="/dashboard/reports/financial"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-surface-secondary px-3 py-1.5 text-[11px] font-semibold text-muted transition hover:text-foreground"
+                >
+                  {t("dashboard.reports")}
+                  <Icon name="arrowUp" className="h-3 w-3 rotate-90" />
+                </Link>
+              }
+              footer={
+                <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: colors["--accent"] }}
+                      />
+                      <span className="text-muted">{t("dashboard.collected")}</span>
+                      <span className="font-semibold text-foreground">
+                        {formatCurrency(collected)}
+                      </span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: colors["--coral"] }}
+                      />
+                      <span className="text-muted">{t("dashboard.billedThisYear")}</span>
+                      <span className="font-semibold text-foreground">
+                        {formatCurrency(billed)}
+                      </span>
+                    </span>
+                  </div>
+                  <span className="text-muted">
+                    {t("dashboard.peakCollection", {
+                      amount: formatCurrency(collectedPeak),
+                    })}
+                  </span>
+                </div>
+              }
+            >
+              {hasCollectionMovement ? (
+                <TrendChart
+                  data={collections}
+                  formatValue={compactCurrency}
+                  height={288}
+                />
+              ) : (
+                <ChartEmpty
+                  title={t("dashboard.noMovement")}
+                  hint={t("dashboard.noMovementHint")}
+                />
+              )}
+            </ChartCard>
+          ) : null}
+
+          <div
+            className={`flex flex-col gap-3 ${canFinance ? "xl:col-span-4" : "xl:col-span-12"}`}
+          >
+            {canStudents ? (
+              <TelemetryTile
+                className="flex-1"
+                title={t("dashboard.admissionsPipeline")}
+                value={formatNumber(admissionTotal)}
+                caption={t("dashboard.totalAdmissions")}
+                data={admissionFunnel}
+                accent={colors["--mint"]}
+                chartMode="count"
+                footer={
+                  <div className="relative flex items-center justify-between gap-2 pt-3 text-[11px] text-white/55">
+                    <span>
+                      {formatNumber(dashboard.admissions_pending ?? 0)}{" "}
+                      {t("dashboard.admissionsPending")}
+                    </span>
+                    <Link
+                      href="/dashboard/admissions"
+                      className="font-semibold text-mint hover:underline"
+                    >
+                      {t("common.manage")}
+                    </Link>
+                  </div>
+                }
+              />
+            ) : null}
+
+            {/* Amber capsule: the one warm surface on the page. */}
+            {canFinance ? (
+              <div className="lw-amber relative overflow-hidden rounded-3xl p-5">
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -right-8 -bottom-10 h-32 w-32 rounded-full bg-white/25 blur-2xl"
+                />
+                <div className="relative flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-amber-foreground/70">
+                      {t("dashboard.feeRecovery")}
+                    </p>
+                    <p className="lw-kpi-value mt-1 text-3xl text-amber-foreground">
+                      {recoveryRate}%
+                    </p>
+                    <p className="mt-1 text-xs font-medium text-amber-foreground/70">
+                      {t("dashboard.feeRecoveryHint")}
+                    </p>
+                  </div>
+                  <RadialGauge
+                    value={recoveryRate}
+                    max={100}
+                    label={`${recoveryRate}%`}
+                    color="#11141f"
+                    size={64}
+                  />
+                </div>
+                <div className="relative mt-4 grid grid-cols-2 gap-2">
+                  <AmberMetric
+                    label={t("dashboard.collected")}
+                    value={formatCurrency(collected)}
+                  />
+                  <AmberMetric
+                    label={t("dashboard.outstandingFees")}
+                    value={formatCurrency(outstandingFees)}
+                  />
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       {/* Second analytics band: distribution charts share one row. */}
-      <section className="grid gap-3 lg:grid-cols-3">
-        <ChartCard title="dashboard.vouchersByStatus">
-          <VoucherStatusDonut dashboard={dashboard} />
-        </ChartCard>
+      {canFinance || canStudents || operations.length > 0 ? (
+        <section className="grid gap-3 lg:grid-cols-3">
+          {canFinance ? (
+            <ChartCard title="dashboard.vouchersByStatus">
+              <VoucherStatusDonut dashboard={dashboard} />
+            </ChartCard>
+          ) : null}
 
-        <ChartCard title="dashboard.studentsByGender">
-          <div className="flex flex-1 flex-col justify-between gap-5">
-            <ProportionBar
-              data={[
-                { label: t("gender.male"), value: boys, color: colors["--accent"] },
-                { label: t("gender.female"), value: girls, color: colors["--coral"] },
-              ]}
-            />
-            <div className="grid grid-cols-2 gap-2.5">
-              <MiniMetric
-                label={t("dashboard.admissionsPending")}
-                value={formatNumber(dashboard.admissions_pending)}
-                tone="warning"
-              />
-              <MiniMetric
-                label={t("dashboard.leavePending")}
-                value={formatNumber(dashboard.leave_pending)}
-                tone="warning"
-              />
-            </div>
-          </div>
-        </ChartCard>
+          {canStudents ? (
+            <ChartCard title="dashboard.studentsByGender">
+              <div className="flex flex-1 flex-col justify-between gap-5">
+                <ProportionBar
+                  data={[
+                    { label: t("gender.male"), value: boys, color: colors["--accent"] },
+                    { label: t("gender.female"), value: girls, color: colors["--coral"] },
+                  ]}
+                />
+                <div className="grid grid-cols-2 gap-2.5">
+                  <MiniMetric
+                    label={t("dashboard.admissionsPending")}
+                    value={formatNumber(dashboard.admissions_pending ?? 0)}
+                    tone="warning"
+                  />
+                  {canStaff ? (
+                    <MiniMetric
+                      label={t("dashboard.leavePending")}
+                      value={formatNumber(dashboard.leave_pending ?? 0)}
+                      tone="warning"
+                    />
+                  ) : null}
+                </div>
+              </div>
+            </ChartCard>
+          ) : null}
 
-        <ChartCard
-          title="dashboard.operations"
-          description="dashboard.operationsHint"
-        >
-          <ul className="divide-y divide-border-secondary">
-            <OperationRow label="dashboard.activeEnrollments" value={dashboard.enrollments_active} />
-            <OperationRow label="dashboard.scholarshipsActive" value={dashboard.scholarships_active} />
-            <OperationRow label="dashboard.examsScheduled" value={dashboard.exams_scheduled} />
-            <OperationRow label="dashboard.openConductCases" value={dashboard.conduct_open} />
-            <OperationRow label="dashboard.payrollDraftRuns" value={dashboard.payroll_draft_runs} />
-            <OperationRow label="dashboard.upcomingEvents" value={dashboard.upcoming_events} />
-          </ul>
-        </ChartCard>
-      </section>
+          {operations.length > 0 ? (
+            <ChartCard
+              title="dashboard.operations"
+              description="dashboard.operationsHint"
+            >
+              <ul className="divide-y divide-border-secondary">
+                {operations.map((row) => (
+                  <OperationRow key={row.key} label={row.label} value={row.value} />
+                ))}
+              </ul>
+            </ChartCard>
+          ) : null}
+        </section>
+      ) : null}
 
       <ShortcutStrip
         items={[

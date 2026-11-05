@@ -88,20 +88,24 @@ export interface Enrollment {
   section?: { id: number; name: string } | null;
 }
 
+/**
+ * Full student record. PII fields are omitted by the API unless the caller
+ * holds `student.pii` (or is the student's own portal account), so they are
+ * optional here.
+ */
 export interface StudentDetail extends Student {
   institution_id: number;
-  campus_id: number;
-  national_id: string | null;
-  blood_group: string | null;
-  nationality: string | null;
-  religion: string | null;
-  category: string | null;
-  email: string | null;
-  address: string | null;
-  city: string | null;
-  previous_school: string | null;
-  admission_date: string | null;
-  notes: string | null;
+  national_id?: string | null;
+  blood_group?: string | null;
+  nationality?: string | null;
+  religion?: string | null;
+  category?: string | null;
+  email?: string | null;
+  address?: string | null;
+  city?: string | null;
+  previous_school?: string | null;
+  admission_date?: string | null;
+  notes?: string | null;
   guardians: Guardian[];
   enrollments: Enrollment[];
 }
@@ -593,25 +597,29 @@ export interface MonthlyTotal {
   total: number;
 }
 
+/**
+ * Campus dashboard snapshot. Sections are omitted by the API when the caller
+ * lacks the matching `report.*` permission, so every domain field is optional.
+ */
 export interface CampusDashboard {
   as_on: string;
-  students_active: number;
-  students_by_gender: GenderedCount[];
-  staff_employed: number;
-  enrollments_active: number;
-  admissions_pending: number;
-  unpaid_vouchers: number;
-  outstanding_fees: number;
-  fees_collected_this_month: number;
-  collections_by_month: MonthlyTotal[];
-  vouchers_by_status: Record<string, number>;
-  admissions_by_status: Record<string, number>;
-  scholarships_active: number;
-  exams_scheduled: number;
-  leave_pending: number;
-  conduct_open: number;
-  payroll_draft_runs: number;
-  upcoming_events: number;
+  students_active?: number;
+  students_by_gender?: GenderedCount[];
+  staff_employed?: number;
+  enrollments_active?: number;
+  admissions_pending?: number;
+  unpaid_vouchers?: number;
+  outstanding_fees?: number;
+  fees_collected_this_month?: number;
+  collections_by_month?: MonthlyTotal[];
+  vouchers_by_status?: Record<string, number>;
+  admissions_by_status?: Record<string, number>;
+  scholarships_active?: number;
+  exams_scheduled?: number;
+  leave_pending?: number;
+  conduct_open?: number;
+  payroll_draft_runs?: number;
+  upcoming_events?: number;
 }
 
 export interface PlatformOverview {

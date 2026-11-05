@@ -19,19 +19,21 @@ import {
 } from "@/components/reports";
 import { ReportRangeBar } from "@/components/reports/ReportRangeBar";
 import { useAuth } from "@/lib/auth";
+import { REPORT_PERMISSIONS } from "@/lib/permissions";
 import { useReport } from "@/lib/useReport";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { downloadCsv, reportSlug } from "@/lib/csv";
 import { buildReportQuery, type ReportFilterState } from "@/lib/reportPeriod";
 import type { ReportCampusComparison } from "@/lib/types";
 
-const REPORTS: (HubSection & { icon: NavIcon })[] = [
+const REPORTS: (HubSection & { icon: NavIcon; permission: string })[] = [
   {
     href: "/dashboard/reports/campus",
     title: "Campus report",
     description:
       "Income, payments, students and staff for one campus over a period.",
     icon: "building",
+    permission: "report.campus",
   },
   {
     href: "/dashboard/reports/head-office",
@@ -39,6 +41,7 @@ const REPORTS: (HubSection & { icon: NavIcon })[] = [
     description:
       "Per-campus roll-up of income, payments, balance, receivables and payables.",
     icon: "chart",
+    permission: "report.campus",
   },
   {
     href: "/dashboard/reports/progress",
@@ -46,6 +49,7 @@ const REPORTS: (HubSection & { icon: NavIcon })[] = [
     description:
       "Student, admission, enrollment and scholarship totals over a period.",
     icon: "arrowUp",
+    permission: "report.students",
   },
   {
     href: "/dashboard/reports/attendance",
@@ -53,6 +57,7 @@ const REPORTS: (HubSection & { icon: NavIcon })[] = [
     description:
       "Present, absent and late totals with a per-class attendance rate.",
     icon: "check",
+    permission: "report.attendance",
   },
   {
     href: "/dashboard/reports/results",
@@ -60,6 +65,7 @@ const REPORTS: (HubSection & { icon: NavIcon })[] = [
     description:
       "Pass rate, grade spread and per-subject averages for a chosen exam.",
     icon: "award",
+    permission: "report.results",
   },
   {
     href: "/dashboard/reports/staff",
@@ -67,6 +73,7 @@ const REPORTS: (HubSection & { icon: NavIcon })[] = [
     description:
       "Headcount by department and type, staff attendance and leave.",
     icon: "idCard",
+    permission: "report.staff",
   },
   {
     href: "/dashboard/reports/students",
@@ -74,35 +81,40 @@ const REPORTS: (HubSection & { icon: NavIcon })[] = [
     description:
       "A student's year-by-year attendance, academics and conduct summary.",
     icon: "users",
+    permission: "report.students",
   },
   {
     href: "/dashboard/reports/financial",
     title: "Financial",
     description: "Income, expense and surplus from the posted ledger.",
     icon: "banknote",
+    permission: "report.finance",
   },
   {
     href: "/dashboard/reports/payroll",
     title: "Payroll",
     description: "Payroll cost by period with gross, deductions and net.",
     icon: "wallet",
+    permission: "report.payroll",
   },
 ];
 
 export default function ReportsPage() {
   return (
-    <PermissionGate permission="report.view">
+    <PermissionGate permission={REPORT_PERMISSIONS}>
       <ReportsOverview />
     </PermissionGate>
   );
 }
 
 function ReportsOverview() {
-  const { user } = useAuth();
+  const { user, can } = useAuth();
   const isInstitutionHead =
     user?.roles?.includes("institution_head") ||
     user?.roles?.includes("platform_admin") ||
     false;
+
+  const reports = REPORTS.filter((report) => can(report.permission));
 
   return (
     <div className="space-y-6">
@@ -111,7 +123,7 @@ function ReportsOverview() {
         description="Campus reporting and analytics for the current tenant."
       />
       <ReportsTabs active="overview" />
-      <HubGrid sections={REPORTS} />
+      <HubGrid sections={reports} />
 
       {isInstitutionHead ? <CampusComparison /> : null}
     </div>

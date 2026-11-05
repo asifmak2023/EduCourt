@@ -19,7 +19,7 @@ import type { ReportHeadOffice } from "@/lib/types";
 
 export default function HeadOfficeReportPage() {
   return (
-    <PermissionGate permission="report.view">
+    <PermissionGate permission="report.campus">
       <HeadOfficeReport />
     </PermissionGate>
   );

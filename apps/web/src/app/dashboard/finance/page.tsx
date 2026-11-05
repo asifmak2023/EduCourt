@@ -66,7 +66,7 @@ const LINKS: (HubSection & { permission: string | string[] })[] = [
     title: "Reports",
     description: "Finance and management reports.",
     href: "/dashboard/reports",
-    permission: "report.view",
+    permission: "report.finance",
     icon: "users",
   },
 ];

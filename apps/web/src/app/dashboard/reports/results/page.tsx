@@ -19,7 +19,7 @@ import type { ReportResults } from "@/lib/types";
 
 export default function ResultsReportPage() {
   return (
-    <PermissionGate permission="report.view">
+    <PermissionGate permission="report.results">
       <ResultsReport />
     </PermissionGate>
   );

@@ -17,7 +17,9 @@ class RoleCatalog
             RoleName::twoFactorRequired()
         );
 
-        return array_map(function (RoleName $role) use ($restricted, $twoFactor) {
+        $campusAdminPermissions = self::permissionsFor(RoleName::CampusAdmin->value);
+
+        return array_map(function (RoleName $role) use ($restricted, $twoFactor, $campusAdminPermissions) {
             $permissions = self::permissionsFor($role->value);
 
             return [
@@ -26,7 +28,10 @@ class RoleCatalog
                 'description' => $role->description(),
                 'department' => $role->department(),
                 'department_label' => $role->departmentLabel(),
-                'grantable_by_campus_admin' => ! in_array($role->value, $restricted, true),
+                // A campus admin can only hand out roles whose permissions they
+                // already hold themselves, so the catalog mirrors that ceiling.
+                'grantable_by_campus_admin' => ! in_array($role->value, $restricted, true)
+                    && self::excessFor([$role->value], $campusAdminPermissions) === [],
                 'two_factor_required' => in_array($role->value, $twoFactor, true),
                 'portal_only' => $role->isPortal(),
                 'permissions' => $permissions,
@@ -67,6 +72,25 @@ class RoleCatalog
             self::expand(is_array($patterns) ? $patterns : [], $modules),
             self::expand(is_array($baseline) ? $baseline : [], $modules),
         )));
+    }
+
+    /**
+     * Permissions a role carries that the actor does not hold themselves.
+     * Used to stop privilege escalation when granting roles.
+     *
+     * @param  array<int, string>  $roles
+     * @param  array<int, string>  $held
+     * @return array<int, string>
+     */
+    public static function excessFor(array $roles, array $held): array
+    {
+        $granted = [];
+
+        foreach ($roles as $role) {
+            $granted = array_merge($granted, self::permissionsFor($role));
+        }
+
+        return array_values(array_unique(array_diff($granted, $held)));
     }
 
     /**

@@ -97,12 +97,22 @@ export function buildNav(user: AuthUser | null, portal: boolean): NavSection[] {
     },
   ];
 
-  if (isStaffUser(user) && can(permissions, "report.view")) {
+  const reportPermissions = [
+    "report.campus",
+    "report.students",
+    "report.attendance",
+    "report.results",
+    "report.staff",
+    "report.finance",
+    "report.payroll",
+  ];
+  const reportPermission = reportPermissions.find((p) => can(permissions, p));
+  if (isStaffUser(user) && reportPermission) {
     overviewItems.push({
       key: "analytics",
       label: "Analytics",
       subtitle: "Overview",
-      permission: "report.view",
+      permission: reportPermission,
       customScreen: "analytics",
     });
   }

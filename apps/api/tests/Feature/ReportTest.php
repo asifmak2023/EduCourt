@@ -435,6 +435,33 @@ class ReportTest extends TestCase
             ->assertOk();
     }
 
+    public function test_campus_dashboard_is_scoped_to_viewer_report_permissions(): void
+    {
+        $finance = $this->api($this->actor(RoleName::FinanceHead))
+            ->getJson('/api/v1/reports/campus-dashboard')
+            ->assertOk()
+            ->json('data');
+
+        $this->assertArrayHasKey('outstanding_fees', $finance);
+        $this->assertArrayHasKey('students_active', $finance);
+        $this->assertArrayNotHasKey('staff_employed', $finance);
+        $this->assertArrayNotHasKey('exams_scheduled', $finance);
+
+        $academic = $this->api($this->actor(RoleName::AcademicCoordinator))
+            ->getJson('/api/v1/reports/campus-dashboard')
+            ->assertOk()
+            ->json('data');
+
+        $this->assertArrayHasKey('students_active', $academic);
+        $this->assertArrayHasKey('exams_scheduled', $academic);
+        $this->assertArrayNotHasKey('outstanding_fees', $academic);
+        $this->assertArrayNotHasKey('staff_employed', $academic);
+
+        $this->api($this->actor(RoleName::CanteenManager))
+            ->getJson('/api/v1/reports/campus-dashboard')
+            ->assertStatus(403);
+    }
+
     public function test_attendance_series_is_bucketed_by_granularity(): void
     {
         $this->attendance($this->ali, '2026-09-02', 'present');

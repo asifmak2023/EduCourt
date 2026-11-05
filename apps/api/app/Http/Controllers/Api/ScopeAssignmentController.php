@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ScopeAssignmentResource;
 use App\Models\ScopeAssignment;
 use App\Models\User;
+use App\Support\RoleCatalog;
 use App\Support\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -118,7 +119,7 @@ class ScopeAssignmentController extends Controller
             : (string) $scopeAssignment->role;
 
         if ($target !== null) {
-            $this->authorizeRole($actor, $role, $target);
+            $this->authorizeRole($actor, $role, $target, enforceCeiling: false);
             $this->assertSameCampus($actor, $target);
         } elseif (! $actor->isPlatformAdmin()) {
             abort(403, 'You cannot revoke this assignment.');
@@ -154,7 +155,7 @@ class ScopeAssignmentController extends Controller
         return response()->json(['message' => 'Scope assignment revoked.']);
     }
 
-    private function authorizeRole(User $actor, string $role, User $target): void
+    private function authorizeRole(User $actor, string $role, User $target, bool $enforceCeiling = true): void
     {
         $restricted = RoleName::restrictedToProductOwner();
 
@@ -164,6 +165,16 @@ class ScopeAssignmentController extends Controller
 
         if (! $actor->isPlatformAdmin() && $target->hasAnyRole($restricted)) {
             abort(403, 'You cannot change access for a campus admin or super user.');
+        }
+
+        if ($actor->isPlatformAdmin() || ! $enforceCeiling) {
+            return;
+        }
+
+        $excess = RoleCatalog::excessFor([$role], $actor->getAllPermissions()->pluck('name')->all());
+
+        if ($excess !== []) {
+            abort(403, 'You cannot grant permissions you do not hold: '.implode(', ', $excess));
         }
     }
 

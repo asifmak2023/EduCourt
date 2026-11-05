@@ -20,7 +20,7 @@ import type { ReportCampus } from "@/lib/types";
 
 export default function CampusReportPage() {
   return (
-    <PermissionGate permission="report.view">
+    <PermissionGate permission="report.campus">
       <CampusReport />
     </PermissionGate>
   );

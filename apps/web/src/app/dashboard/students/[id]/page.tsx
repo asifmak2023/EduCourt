@@ -46,6 +46,8 @@ function StudentDetailView() {
     id ? `/v1/students/${id}` : null
   );
 
+  const canSeePii = can("student.pii");
+
   if (loading) {
     return <Spinner />;
   }
@@ -100,23 +102,30 @@ function StudentDetailView() {
 
       <SectionCard title="students.profileSection">
         <DataList>
-          <DataItem label="students.field.dateOfBirth" value={formatDate(data.date_of_birth)} />
+          {canSeePii ? (
+            <>
+              <DataItem label="students.field.dateOfBirth" value={formatDate(data.date_of_birth)} />
+              <DataItem label="students.field.nationalId" value={data.national_id} />
+              <DataItem label="students.field.bloodGroup" value={data.blood_group} />
+              <DataItem label="students.field.nationality" value={data.nationality} />
+              <DataItem label="students.field.religion" value={data.religion} />
+              <DataItem label="students.field.category" value={data.category} />
+              <DataItem label="common.email" value={data.email} />
+              <DataItem label="common.phone" value={data.phone} />
+              <DataItem label="common.city" value={data.city} />
+              <DataItem
+                label="students.field.previousSchool"
+                value={data.previous_school}
+              />
+              <DataItem label="common.address" value={data.address} />
+              <DataItem label="common.notes" value={data.notes} />
+            </>
+          ) : null}
           <DataItem label="common.gender" value={humanize(data.gender)} />
-          <DataItem label="students.field.nationalId" value={data.national_id} />
-          <DataItem label="students.field.bloodGroup" value={data.blood_group} />
-          <DataItem label="students.field.nationality" value={data.nationality} />
-          <DataItem label="students.field.religion" value={data.religion} />
-          <DataItem label="students.field.category" value={data.category} />
-          <DataItem label="common.email" value={data.email} />
-          <DataItem label="common.phone" value={data.phone} />
-          <DataItem label="common.city" value={data.city} />
-          <DataItem label="students.field.previousSchool" value={data.previous_school} />
           <DataItem
             label="students.field.admissionDate"
             value={formatDate(data.admission_date)}
           />
-          <DataItem label="common.address" value={data.address} />
-          <DataItem label="common.notes" value={data.notes} />
         </DataList>
       </SectionCard>
 
@@ -126,10 +135,11 @@ function StudentDetailView() {
         admissionNo={data.admission_no}
       />
 
-      <SectionCard
-        title="students.guardians"
-        description="students.guardiansDesc"
-      >
+      {canSeePii ? (
+        <SectionCard
+          title="students.guardians"
+          description="students.guardiansDesc"
+        >
         {data.guardians.length === 0 ? (
           <EmptyState message="students.noGuardians" />
         ) : (
@@ -162,7 +172,8 @@ function StudentDetailView() {
             ))}
           </ul>
         )}
-      </SectionCard>
+        </SectionCard>
+      ) : null}
 
       <EnrollmentPanel
         studentId={data.id}

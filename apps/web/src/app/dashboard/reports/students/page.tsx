@@ -23,7 +23,7 @@ import type { ReportStudentYearly } from "@/lib/types";
 
 export default function StudentYearlyReportPage() {
   return (
-    <PermissionGate permission="report.view">
+    <PermissionGate permission="report.students">
       <StudentYearlyReport />
     </PermissionGate>
   );

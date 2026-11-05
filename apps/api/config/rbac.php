@@ -29,7 +29,7 @@ return [
         'finance' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'fee' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'admission' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
-        'student' => ['view', 'create', 'edit', 'photo', 'approve', 'delete', 'export'],
+        'student' => ['view', 'create', 'edit', 'photo', 'approve', 'delete', 'export', 'pii'],
         'attendance' => ['view', 'create', 'edit', 'approve', 'export'],
         'scholarship' => ['view', 'create', 'edit', 'approve', 'delete'],
         'concession' => ['view', 'create', 'edit', 'approve', 'delete'],
@@ -54,7 +54,18 @@ return [
         'circular' => ['view', 'create', 'edit', 'approve', 'delete'],
         'front_office' => ['view', 'create', 'edit', 'delete'],
         'ptm' => ['view', 'create', 'edit', 'delete'],
-        'report' => ['view', 'export'],
+        'report' => [
+            // Domain-scoped reporting. A role only sees the slices it is
+            // granted, so a department never reads another department's data.
+            'campus',
+            'students',
+            'attendance',
+            'results',
+            'staff',
+            'finance',
+            'payroll',
+            'export',
+        ],
         'it' => ['view', 'create', 'edit', 'approve', 'delete'],
         'audit' => ['view', 'export'],
         'setting' => ['view', 'edit'],
@@ -77,7 +88,7 @@ return [
     'roles' => [
         RoleName::PlatformAdmin->value => [
             'institution.*', 'campus.*', 'user.*', 'role.*',
-            'subscription.*', 'audit.*', 'setting.*', 'report.view',
+            'subscription.*', 'audit.*', 'setting.*', 'report.*',
             'student.photo',
         ],
 
@@ -102,7 +113,7 @@ return [
             'user.view',
             'role.view',
             'admission.view', 'admission.export',
-            'student.view', 'student.photo', 'student.export',
+            'student.view', 'student.photo', 'student.export', 'student.pii',
             'attendance.view', 'attendance.export',
             'exam.view', 'exam.export',
             'credit.view', 'credit.export',
@@ -132,14 +143,14 @@ return [
             'circular.view',
             'front_office.view',
             'ptm.view',
-            'report.view', 'report.export',
+            'report.*',
             'audit.view', 'audit.export',
             'setting.view',
             'it.view',
         ],
 
         RoleName::Principal->value => [
-            'student.view', 'student.photo', 'user.view', 'attendance.view', 'exam.view', 'exam.approve',
+            'student.view', 'student.pii', 'student.photo', 'user.view', 'attendance.view', 'exam.view', 'exam.approve',
             'credit.view',
             'academic.view', 'timetable.view', 'timetable.approve', 'scholarship.view',
             'curriculum.view', 'curriculum.approve',
@@ -156,7 +167,8 @@ return [
 
         RoleName::FinanceHead->value => [
             'academic.view', 'student.view',
-            'finance.*', 'fee.*', 'payroll.*', 'report.*', 'audit.view',
+            'finance.*', 'fee.*', 'payroll.*', 'audit.view',
+            'report.finance', 'report.payroll', 'report.students', 'report.campus',
             'scholarship.*', 'concession.*', 'fine.*', 'reminder.*',
         ],
 
@@ -164,14 +176,15 @@ return [
             'academic.view', 'student.view',
             'finance.view', 'finance.create', 'finance.edit', 'finance.export',
             'fee.view', 'fee.create', 'fee.edit', 'fee.export',
-            'report.view', 'scholarship.view', 'concession.view',
+            'report.finance', 'report.students', 'scholarship.view', 'concession.view',
             'fine.view', 'fine.create', 'fine.edit',
             'reminder.view', 'reminder.create', 'reminder.send',
         ],
 
         RoleName::AdmissionsOfficer->value => [
             'academic.view',
-            'admission.*', 'student.view', 'student.create', 'student.photo', 'report.view',
+            'admission.*', 'student.view', 'student.pii', 'student.create', 'student.photo',
+            'report.students',
             'scholarship.view', 'concession.view', 'fine.view', 'reminder.view',
             'front_office.*', 'circular.view',
         ],
@@ -179,11 +192,12 @@ return [
         RoleName::HrOfficer->value => [
             'academic.view', 'student.view', 'user.view',
             'hr.*', 'payroll.view', 'payroll.create', 'payroll.edit',
-            'report.view', 'audit.view',
+            'report.staff', 'report.payroll', 'audit.view',
         ],
 
         RoleName::AcademicCoordinator->value => [
-            'student.view', 'user.view', 'attendance.view', 'exam.view', 'exam.marks', 'report.view',
+            'student.view', 'user.view', 'attendance.view', 'exam.view', 'exam.marks',
+            'report.students', 'report.attendance', 'report.results',
             'academic.view', 'academic.create', 'academic.edit',
             'curriculum.view', 'curriculum.create', 'curriculum.edit', 'curriculum.approve',
             'timetable.*',
@@ -204,27 +218,27 @@ return [
 
         RoleName::ExamController->value => [
             'academic.view', 'user.view',
-            'exam.*', 'credit.*', 'student.view', 'report.view',
+            'exam.*', 'credit.*', 'student.view', 'report.results',
         ],
 
         RoleName::StudentAffairsOfficer->value => [
             'academic.view', 'user.view',
-            'student_affairs.*', 'sports.view', 'complaint.view', 'report.view', 'conduct.*',
+            'student_affairs.*', 'sports.view', 'complaint.view', 'conduct.*',
         ],
 
         RoleName::Counsellor->value => [
             'academic.view', 'user.view',
-            'counselling.*', 'student.view', 'student_affairs.view', 'report.view',
+            'counselling.*', 'student.view', 'student.pii', 'student_affairs.view',
         ],
 
         RoleName::CanteenManager->value => [
             'academic.view', 'student.view',
-            'canteen.*', 'inventory.view', 'inventory.edit', 'report.view',
+            'canteen.*',
         ],
 
         RoleName::SportsDirector->value => [
             'academic.view', 'user.view',
-            'sports.*', 'student.view', 'inventory.view', 'report.view',
+            'sports.*', 'student.view',
         ],
 
         RoleName::ItAdministrator->value => [
@@ -234,7 +248,7 @@ return [
 
         RoleName::Librarian->value => [
             'academic.view', 'student.view', 'user.view',
-            'library.*', 'inventory.view',
+            'library.*',
         ],
 
         RoleName::StoreIncharge->value => [
@@ -244,7 +258,7 @@ return [
 
         RoleName::TransportHostelIncharge->value => [
             'academic.view', 'student.view',
-            'transport.*', 'hostel.*', 'report.view',
+            'transport.*', 'hostel.*',
         ],
 
         RoleName::ParentGuardian->value => [

@@ -23,7 +23,7 @@ import type { ReportFinancial } from "@/lib/types";
 
 export default function FinancialReportPage() {
   return (
-    <PermissionGate permission="report.view">
+    <PermissionGate permission="report.finance">
       <FinancialReport />
     </PermissionGate>
   );

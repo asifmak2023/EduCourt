@@ -21,7 +21,7 @@ import type { ReportAttendance } from "@/lib/types";
 
 export default function AttendanceReportPage() {
   return (
-    <PermissionGate permission="report.view">
+    <PermissionGate permission="report.attendance">
       <AttendanceReport />
     </PermissionGate>
   );

@@ -45,39 +45,13 @@ class FeeArAccessTest extends TestCase
         ])->assertStatus(403);
     }
 
-    public function test_academic_create_grants_voucher_generation_and_collection(): void
+    public function test_academic_create_does_not_grant_accounts_receivable(): void
     {
         $user = $this->userWithPermissions(['academic.create']);
 
-        $this->as($user)->getJson('/api/v1/fee-reports/ar')->assertOk();
-        $this->as($user)->getJson('/api/v1/fee-counter/students')->assertOk();
-
-        $chargeId = $this->as($user)
-            ->postJson('/api/v1/fee-counter/generate', [
-                'student_id' => $this->ali->id,
-                'academic_year_id' => $this->year->id,
-                'items' => [[
-                    'billing_kind' => 'monthly',
-                    'period_year' => 2026,
-                    'period_month' => 7,
-                    'title' => 'Tuition Fee',
-                    'amount' => 12000,
-                    'due_date' => '2026-07-10',
-                ]],
-            ])
-            ->assertStatus(201)
-            ->json('charges.0.id');
-
-        $this->as($user)
-            ->postJson('/api/v1/fee-receipts', [
-                'student_id' => $this->ali->id,
-                'fee_charge_id' => $chargeId,
-                'academic_year_id' => $this->year->id,
-                'payment_date' => '2026-07-15',
-                'amount' => 4000,
-                'method' => 'cash',
-            ])
-            ->assertStatus(201);
+        $this->as($user)->getJson('/api/v1/fee-reports/ar')->assertStatus(403);
+        $this->as($user)->getJson('/api/v1/fee-counter/students')->assertStatus(403);
+        $this->as($user)->getJson('/api/v1/fee-receipts')->assertStatus(403);
     }
 
     public function test_finance_view_grants_voucher_generation_and_collection(): void
@@ -138,13 +112,13 @@ class FeeArAccessTest extends TestCase
             ->assertStatus(201);
     }
 
-    public function test_academic_coordinator_role_reaches_accounts_receivable(): void
+    public function test_academic_coordinator_cannot_reach_accounts_receivable(): void
     {
         $coordinator = $this->actor(RoleName::AcademicCoordinator);
 
-        $this->as($coordinator)->getJson('/api/v1/fee-reports/ar')->assertOk();
-        $this->as($coordinator)->getJson('/api/v1/fee-counter/students')->assertOk();
-        $this->as($coordinator)->getJson('/api/v1/fee-receipts')->assertOk();
+        $this->as($coordinator)->getJson('/api/v1/fee-reports/ar')->assertStatus(403);
+        $this->as($coordinator)->getJson('/api/v1/fee-counter/students')->assertStatus(403);
+        $this->as($coordinator)->getJson('/api/v1/fee-receipts')->assertStatus(403);
     }
 
     public function test_accountant_role_reaches_accounts_receivable(): void

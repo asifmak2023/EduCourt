@@ -199,6 +199,24 @@ class PortalTest extends TestCase
             ->assertJsonPath('data.0.full_name', 'Sara Khan');
     }
 
+    public function test_portal_accounts_still_see_pii_for_their_own_children(): void
+    {
+        $this->ali->update(['national_id' => '35202-7654321-9', 'address' => '9 Garden Road']);
+
+        $this->as($this->aliUser)
+            ->getJson('/api/v1/me/children')
+            ->assertOk()
+            ->assertJsonPath('data.0.national_id', '35202-7654321-9')
+            ->assertJsonPath('data.0.address', '9 Garden Road');
+
+        $child = $this->as($this->parentUser)
+            ->getJson('/api/v1/me/children')
+            ->assertOk()
+            ->json('data.0');
+
+        $this->assertArrayHasKey('guardians', $child);
+    }
+
     public function test_a_student_can_read_their_attendance_summary(): void
     {
         $this->as($this->aliUser)

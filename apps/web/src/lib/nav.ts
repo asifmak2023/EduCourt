@@ -1,4 +1,4 @@
-import { AR_VIEW } from "./permissions";
+import { AR_VIEW, REPORT_PERMISSIONS } from "./permissions";
 
 export type NavIcon =
   | "grid"
@@ -102,7 +102,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "navigation.vendors", href: "/dashboard/finance/vendors", icon: "building", permission: "finance.view", ready: true },
       { label: "navigation.expenseCategories", href: "/dashboard/finance/expense-categories", icon: "list", permission: "finance.view", ready: true },
       { label: "navigation.budgets", href: "/dashboard/finance/budgets", icon: "chart", permission: "finance.view", ready: true },
-      { label: "navigation.reports", href: "/dashboard/reports", icon: "chart", permission: "report.view", ready: true },
+      { label: "navigation.reports", href: "/dashboard/reports", icon: "chart", permission: REPORT_PERMISSIONS, ready: true },
     ],
   },
   {

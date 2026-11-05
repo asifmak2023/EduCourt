@@ -21,7 +21,7 @@ import type { ReportStaff } from "@/lib/types";
 
 export default function StaffReportPage() {
   return (
-    <PermissionGate permission="report.view">
+    <PermissionGate permission="report.staff">
       <StaffReport />
     </PermissionGate>
   );

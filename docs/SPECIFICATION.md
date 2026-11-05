@@ -541,9 +541,13 @@ writes are gated by `view` and `create`/`edit`/`delete` on the module.
 
 | Method | Path | Permission |
 | --- | --- | --- |
-| GET | `/reports/campus-dashboard`, `/reports/progress`, `/reports/attendance`, `/reports/staff`, `/reports/financial`, `/reports/payroll` | report.view |
-| GET | `/reports/results/{exam}` | report.view |
-| GET | `/reports/students/{student}/yearly` | report.view |
+| GET | `/reports/campus-dashboard`, `/reports/campus-comparison` | report.campus |
+| GET | `/reports/progress`, `/reports/students/{student}/yearly` | report.students |
+| GET | `/reports/attendance` | report.attendance |
+| GET | `/reports/results/{exam}` | report.results |
+| GET | `/reports/staff` | report.staff |
+| GET | `/reports/financial` | report.finance |
+| GET | `/reports/payroll` | report.payroll |
 | GET | `/reports/platform-overview` | platform admin (product owner) |
 
 ### 12.10 Settings, SSO and audit

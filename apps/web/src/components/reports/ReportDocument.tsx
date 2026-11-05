@@ -143,11 +143,13 @@ export function ReportTable({
   rows,
   empty = "No data for this selection.",
   align = [],
+  totalRow,
 }: {
   columns: string[];
   rows: (string | number | null | undefined)[][];
   empty?: string;
   align?: ("left" | "right")[];
+  totalRow?: (string | number | null | undefined)[];
 }) {
   return (
     <div className="overflow-x-auto print:overflow-visible">
@@ -196,6 +198,22 @@ export function ReportTable({
             ))
           )}
         </tbody>
+        {totalRow ? (
+          <tfoot>
+            <tr className="border-t-2 border-black/70 bg-black/[0.04] font-semibold">
+              {totalRow.map((cell, cellIndex) => (
+                <td
+                  key={cellIndex}
+                  className={`py-1.5 pr-3 ${
+                    align[cellIndex] === "right" ? "text-right" : "text-left"
+                  }`}
+                >
+                  {cell ?? "-"}
+                </td>
+              ))}
+            </tr>
+          </tfoot>
+        ) : null}
       </table>
     </div>
   );

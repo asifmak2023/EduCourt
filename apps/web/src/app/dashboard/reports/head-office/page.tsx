@@ -56,19 +56,34 @@ function HeadOfficeReportBody() {
 
   const rows = useMemo(() => data?.campuses ?? [], [data]);
 
-  const exportRows = useMemo(
-    () =>
-      rows.map((row) => [
-        row.campus,
-        row.code ?? "",
-        row.income,
-        row.payments,
-        row.balance,
-        row.receivable,
-        row.payable,
-      ]),
-    [rows]
-  );
+  const exportRows = useMemo(() => {
+    const campusRows = rows.map((row) => [
+      row.campus,
+      row.code ?? "",
+      row.income,
+      row.payments,
+      row.balance,
+      row.receivable,
+      row.payable,
+    ]);
+
+    if (!data) {
+      return campusRows;
+    }
+
+    return [
+      ...campusRows,
+      [
+        "Grand total",
+        "",
+        data.totals.income,
+        data.totals.payments,
+        data.totals.balance,
+        data.totals.receivable,
+        data.totals.payable,
+      ],
+    ];
+  }, [rows, data]);
 
   return (
     <ReportScaffold
@@ -176,19 +191,28 @@ function HeadOfficeReportBody() {
                 formatCurrency(row.receivable),
                 formatCurrency(row.payable),
               ])}
+              totalRow={[
+                "Grand total",
+                formatCurrency(data.totals.income),
+                formatCurrency(data.totals.payments),
+                formatCurrency(data.totals.balance),
+                formatCurrency(data.totals.receivable),
+                formatCurrency(data.totals.payable),
+              ]}
             />
           </ReportSection>
 
           <ReportSection title="Students and staff by campus">
             <ReportTable
-              columns={["Campus", "Students", "Staff", "Teaching"]}
-              align={["left", "right", "right", "right"]}
+              columns={["Campus", "Students", "Staff", "Teaching", "Non-teaching"]}
+              align={["left", "right", "right", "right", "right"]}
               empty="No campuses in this institution."
               rows={rows.map((row) => [
                 row.campus,
                 formatNumber(row.students.total),
                 formatNumber(row.staff.total),
                 formatNumber(row.staff.teaching),
+                formatNumber(row.staff.non_teaching),
               ])}
             />
           </ReportSection>

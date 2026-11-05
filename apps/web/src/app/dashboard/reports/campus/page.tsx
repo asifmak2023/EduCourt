@@ -149,43 +149,6 @@ function CampusReport() {
           />
 
           <ReportSection
-            title="Income and payments"
-            description="Received income against paid expenditure."
-          >
-            <div className="report-chart rounded border border-black/20 p-3">
-              <GroupedBarsChart
-                data={[
-                  {
-                    label: "Income",
-                    received: data.income_breakdown.received,
-                    fees: data.income_breakdown.fees,
-                    other: data.income_breakdown.other,
-                  },
-                ]}
-                series={[
-                  {
-                    key: "received",
-                    label: "Received",
-                    color: colors["--success"],
-                  },
-                  {
-                    key: "fees",
-                    label: "Fee receipts",
-                    color: colors["--accent"],
-                  },
-                  {
-                    key: "other",
-                    label: "Other income",
-                    color: colors["--warning"],
-                  },
-                ]}
-                formatValue={(value) => formatCurrency(value)}
-                emptyAsGraph
-              />
-            </div>
-          </ReportSection>
-
-          <ReportSection
             title="Payment breakdown"
             description="Salaries, utilities and other operational spend."
           >
@@ -275,6 +238,43 @@ function CampusReport() {
                 ["Fired", formatNumber(data.staff.fired)],
               ]}
             />
+          </ReportSection>
+
+          <ReportSection
+            title="Income and expense"
+            description="Received income against paid expenditure."
+          >
+            <div className="report-chart rounded border border-black/20 p-3">
+              <GroupedBarsChart
+                data={[
+                  {
+                    label: "Income",
+                    received: data.income_breakdown.received,
+                    fees: data.income_breakdown.fees,
+                    other: data.income_breakdown.other,
+                  },
+                ]}
+                series={[
+                  {
+                    key: "received",
+                    label: "Received",
+                    color: colors["--success"],
+                  },
+                  {
+                    key: "fees",
+                    label: "Fee receipts",
+                    color: colors["--accent"],
+                  },
+                  {
+                    key: "other",
+                    label: "Other income",
+                    color: colors["--warning"],
+                  },
+                ]}
+                formatValue={(value) => formatCurrency(value)}
+                emptyAsGraph
+              />
+            </div>
           </ReportSection>
         </>
       ) : null}

@@ -3,6 +3,12 @@ export const en = {
   "app.loading": "Loading",
   "app.settings": "Settings",
 
+  "appDownload.title": "Get the EduCourt app",
+  "appDownload.body": "Install the app for a faster, full-screen experience.",
+  "appDownload.install": "Download app",
+  "appDownload.dismiss": "Not now",
+  "appDownload.close": "Dismiss app download prompt",
+
   "common.done": "Done",
   "common.cancel": "Cancel",
   "common.save": "Save",

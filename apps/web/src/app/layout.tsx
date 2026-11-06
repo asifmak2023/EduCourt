@@ -5,6 +5,7 @@ import { AuthProvider } from "@/lib/auth";
 import { AppearanceProvider } from "@/lib/appearance";
 import { WebI18nProvider } from "@/lib/i18n";
 import { AppBackground } from "@/components/AppBackground";
+import { AppDownloadBanner } from "@/components/AppDownloadBanner";
 import { TableCardizer } from "@/components/TableCardizer";
 import "./globals.css";
 
@@ -95,6 +96,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <AppBackground />
             <TableCardizer />
             <AuthProvider>{children}</AuthProvider>
+            <AppDownloadBanner />
           </AppearanceProvider>
         </WebI18nProvider>
       </body>

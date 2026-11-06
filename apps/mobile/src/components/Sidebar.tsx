@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { Avatar } from "./Avatar";
+import { BrandMark } from "./BrandMark";
 import { ChildSelector } from "./ChildSelector";
 import { SectionLabel } from "./ui";
 import { useTheme } from "../theme/ThemeProvider";
@@ -80,6 +81,10 @@ export function Sidebar({
 
   const panel = (
     <View style={styles.panel}>
+      <View style={[styles.brandBlock, { borderColor: colors.border }]}>
+        <BrandMark size={34} showName />
+      </View>
+
       <View style={[styles.userBlock, { borderColor: colors.border }]}>
         <Avatar name={user.name} photoUrl={user.photo_url} />
         <View style={styles.userText}>
@@ -265,11 +270,18 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 56,
   },
+  brandBlock: {
+    paddingHorizontal: 18,
+    paddingTop: 4,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+  },
   userBlock: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
     paddingHorizontal: 18,
+    paddingTop: 14,
     paddingBottom: 16,
     borderBottomWidth: 1,
   },

@@ -1,15 +1,19 @@
 {
   "expo": {
     "name": "EduCourt",
-    "slug": "mobile",
+    "slug": "educourt",
+    "scheme": "educourt",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.educourt.app"
     },
     "android": {
+      "package": "com.educourt.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#4F46E5",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -22,7 +26,20 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#4F46E5",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#0B0D14",
+            "image": "./assets/splash-icon.png"
+          }
+        }
+      ]
     ]
   }
 }

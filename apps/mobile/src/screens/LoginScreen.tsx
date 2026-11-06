@@ -3,6 +3,7 @@ import { useTranslation } from "@eis/i18n";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { ApiError, apiFetch, setToken, type AuthUser } from "../lib/api";
 import { Card, ErrorText, PrimaryButton, TextField } from "../components/ui";
+import { BrandMark } from "../components/BrandMark";
 import { useTheme } from "../theme/ThemeProvider";
 
 export function LoginScreen({
@@ -56,6 +57,8 @@ export function LoginScreen({
         </Pressable>
       </View>
 
+      <BrandMark size={64} />
+
       <Text style={[styles.brand, { color: colors.foreground }]}>
         {t("auth.brand")}
       </Text>
@@ -106,6 +109,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   brand: {
+    marginTop: 18,
     fontSize: 24,
     fontWeight: "800",
   },

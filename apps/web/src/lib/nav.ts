@@ -38,6 +38,7 @@ export type NavIcon =
   | "eye"
   | "eyeOff"
   | "panelLeft"
+  | "download"
   | "logout";
 
 export interface NavItem {

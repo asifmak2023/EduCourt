@@ -1,26 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useTranslation } from "@eis/i18n";
 import { BrandMark } from "@/components/BrandMark";
+import {
+  androidDownloadUrl,
+  iosDownloadUrl,
+  isAndroid,
+  isIOS,
+} from "@/lib/download";
 
 const DISMISS_KEY = "eis.appDownload.dismissed";
 
-const ANDROID_URL = process.env.NEXT_PUBLIC_APP_ANDROID_URL ?? "";
-const IOS_URL = process.env.NEXT_PUBLIC_APP_IOS_URL ?? "";
-const FALLBACK_URL = process.env.NEXT_PUBLIC_APP_DOWNLOAD_URL ?? "";
+const DOWNLOAD_PAGE = "/download";
 
-function downloadUrl(): string {
-  if (typeof navigator !== "undefined") {
-    const ua = navigator.userAgent;
-    if (/iPhone|iPad|iPod/i.test(ua) && IOS_URL) {
-      return IOS_URL;
-    }
-    if (/Android/i.test(ua) && ANDROID_URL) {
-      return ANDROID_URL;
-    }
+function bannerHref(ua: string): string {
+  if (isIOS(ua)) {
+    return iosDownloadUrl() || DOWNLOAD_PAGE;
   }
-  return FALLBACK_URL || ANDROID_URL || IOS_URL;
+  if (isAndroid(ua)) {
+    return androidDownloadUrl() || DOWNLOAD_PAGE;
+  }
+  return DOWNLOAD_PAGE;
 }
 
 function isMobileBrowser(): boolean {
@@ -46,16 +48,14 @@ function isStandalone(): boolean {
 
 export function AppDownloadBanner() {
   const { t } = useTranslation();
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
-  const [href, setHref] = useState("");
+  const [href, setHref] = useState(DOWNLOAD_PAGE);
+
+  const onDownloadPage = pathname === DOWNLOAD_PAGE;
 
   useEffect(() => {
     function evaluate() {
-      const url = downloadUrl();
-      if (!url) {
-        setVisible(false);
-        return;
-      }
       if (isStandalone() || !isMobileBrowser()) {
         setVisible(false);
         return;
@@ -68,7 +68,7 @@ export function AppDownloadBanner() {
       } catch {
         // Ignore storage failures and show the banner.
       }
-      setHref(url);
+      setHref(bannerHref(navigator.userAgent));
       setVisible(true);
     }
 
@@ -85,7 +85,7 @@ export function AppDownloadBanner() {
     }
   }
 
-  if (!visible) {
+  if (!visible || onDownloadPage) {
     return null;
   }
 

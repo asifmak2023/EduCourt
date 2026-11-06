@@ -1,14 +1,80 @@
 import * as SecureStore from "expo-secure-store";
 
-const CONFIGURED_API_URL =
+const DEFAULT_SERVER_URL =
   process.env.EXPO_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
-// Every request path already starts with /v1, and the API is mounted under
-// /api, so the base must end with /api. Accept a configured origin with or
-// without the prefix so a bare host never resolves to a 404.
-const API_BASE = `${CONFIGURED_API_URL.replace(/\/+$/, "").replace(/\/api$/, "")}/api`;
-
 const TOKEN_KEY = "eis_token";
+const SERVER_KEY = "eis_server_url";
+
+// Every request path already starts with /v1, and the API is mounted under
+// /api, so the base must end with /api. Accept a server value with or without
+// a scheme and the /api suffix so a bare host never resolves to a 404.
+function normalizeBase(value: string): string {
+  let trimmed = value.trim();
+
+  if (!trimmed) {
+    return "";
+  }
+  if (!/^https?:\/\//i.test(trimmed)) {
+    trimmed = `http://${trimmed}`;
+  }
+
+  return `${trimmed.replace(/\/+$/, "").replace(/\/api$/i, "")}/api`;
+}
+
+export function isValidServerUrl(value: string): boolean {
+  return /^https?:\/\/[^\s/]+/i.test(value.trim());
+}
+
+let resolvedBase = normalizeBase(DEFAULT_SERVER_URL);
+let serverUrlLoaded = false;
+
+export function getApiBase(): string {
+  return resolvedBase;
+}
+
+// The server origin without the /api suffix, suitable for display/editing.
+export function getConfiguredServerUrl(): string {
+  return resolvedBase.replace(/\/api$/i, "");
+}
+
+export async function loadStoredServerUrl(): Promise<void> {
+  if (serverUrlLoaded) {
+    return;
+  }
+  serverUrlLoaded = true;
+
+  try {
+    const stored = await SecureStore.getItemAsync(SERVER_KEY);
+    const normalized = stored ? normalizeBase(stored) : "";
+    if (normalized) {
+      resolvedBase = normalized;
+    }
+  } catch {
+    // Fall back to the configured default when storage is unavailable.
+  }
+}
+
+export async function setServerUrl(value: string | null): Promise<void> {
+  const normalized = value ? normalizeBase(value) : "";
+
+  if (!normalized) {
+    resolvedBase = normalizeBase(DEFAULT_SERVER_URL);
+    try {
+      await SecureStore.deleteItemAsync(SERVER_KEY);
+    } catch {
+      // Ignore storage errors; the in-memory value is already reset.
+    }
+    return;
+  }
+
+  resolvedBase = normalized;
+  try {
+    await SecureStore.setItemAsync(SERVER_KEY, normalized);
+  } catch {
+    // Ignore storage errors; the in-memory value still applies for this session.
+  }
+}
 
 let authToken: string | null = null;
 
@@ -191,7 +257,7 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const { method = "GET", body, campusId } = options;
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(`${resolvedBase}${path}`, {
     method,
     body: body === undefined ? undefined : JSON.stringify(body),
     headers: {
@@ -210,7 +276,7 @@ export async function apiUpload<T>(
 ): Promise<T> {
   const { method = "POST", campusId } = options;
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(`${resolvedBase}${path}`, {
     method,
     body: formData,
     headers: authHeaders(campusId),
@@ -225,7 +291,7 @@ export async function apiDownload(
 ): Promise<Blob> {
   const { campusId } = options;
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(`${resolvedBase}${path}`, {
     headers: authHeaders(campusId),
   });
 

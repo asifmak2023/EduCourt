@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View, useWindowDimensions } from "react-native";
 import {
   apiFetch,
+  loadStoredServerUrl,
   loadStoredToken,
   setToken,
   type AuthUser,
@@ -72,6 +73,7 @@ function AppInner() {
     let active = true;
 
     (async () => {
+      await loadStoredServerUrl();
       const token = await loadStoredToken();
 
       if (!token) {

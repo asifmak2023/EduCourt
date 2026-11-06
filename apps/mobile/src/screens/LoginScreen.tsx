@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { useTranslation } from "@eis/i18n";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { ApiError, apiFetch, setToken, type AuthUser } from "../lib/api";
+import {
+  ApiError,
+  apiFetch,
+  getConfiguredServerUrl,
+  isValidServerUrl,
+  setServerUrl,
+  setToken,
+  type AuthUser,
+} from "../lib/api";
 import { Card, ErrorText, PrimaryButton, TextField } from "../components/ui";
 import { BrandMark } from "../components/BrandMark";
 import { useTheme } from "../theme/ThemeProvider";
@@ -19,6 +27,24 @@ export function LoginScreen({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showServer, setShowServer] = useState(false);
+  const [serverUrl, setServerUrlValue] = useState(() => getConfiguredServerUrl());
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [serverSaved, setServerSaved] = useState(false);
+
+  async function saveServer() {
+    setServerError(null);
+    setServerSaved(false);
+
+    if (!isValidServerUrl(serverUrl)) {
+      setServerError(t("auth.serverInvalid"));
+      return;
+    }
+
+    await setServerUrl(serverUrl);
+    setServerUrlValue(getConfiguredServerUrl());
+    setServerSaved(true);
+  }
 
   async function signIn() {
     if (!email.trim() || !password) {
@@ -89,6 +115,38 @@ export function LoginScreen({
           onPress={() => void signIn()}
           loading={loading}
         />
+
+        <Pressable
+          onPress={() => setShowServer((current) => !current)}
+          accessibilityRole="button"
+          style={styles.serverToggle}
+        >
+          <Text style={{ color: colors.muted, fontSize: 13, fontWeight: "600" }}>
+            {t("auth.server")}
+          </Text>
+        </Pressable>
+
+        {showServer ? (
+          <View>
+            <TextField
+              label={t("auth.serverTitle")}
+              value={serverUrl}
+              onChangeText={setServerUrlValue}
+              placeholder={t("auth.serverPlaceholder")}
+              keyboardType="default"
+            />
+            <Text style={[styles.hint, { color: colors.muted }]}>
+              {t("auth.serverHint")}
+            </Text>
+            {serverError ? <ErrorText message={serverError} /> : null}
+            {serverSaved && !serverError ? (
+              <Text style={[styles.hint, { color: colors.success }]}>
+                {t("auth.serverSaved")}
+              </Text>
+            ) : null}
+            <PrimaryButton label={t("auth.serverSave")} onPress={() => void saveServer()} />
+          </View>
+        ) : null}
       </Card>
     </ScrollView>
   );
@@ -116,5 +174,15 @@ const styles = StyleSheet.create({
   tagline: {
     marginTop: 6,
     fontSize: 14,
+  },
+  serverToggle: {
+    marginTop: 18,
+    alignItems: "center",
+    paddingVertical: 6,
+  },
+  hint: {
+    marginTop: 10,
+    fontSize: 12,
+    lineHeight: 17,
   },
 });

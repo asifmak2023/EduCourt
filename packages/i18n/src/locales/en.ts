@@ -107,6 +107,13 @@ export const en = {
   "auth.hidePassword": "Hide password",
   "auth.welcomeTitle": "Welcome back",
   "auth.welcomeSubtitle": "Sign in to continue to your campus workspace.",
+  "auth.server": "Server",
+  "auth.serverTitle": "Server address",
+  "auth.serverHint": "Enter the address of your EduCourt API, for example https://api.your-institute.com.",
+  "auth.serverPlaceholder": "https://api.example.com",
+  "auth.serverInvalid": "Enter a valid address starting with http:// or https://.",
+  "auth.serverSave": "Save",
+  "auth.serverSaved": "Server address saved.",
 
   "navigation.dashboard": "Dashboard",
   "navigation.profile": "Profile",

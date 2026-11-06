@@ -16,3 +16,6 @@ apps/mobile/.env.local
 
 # Local-only static design/preview pages (not part of the live app)
 static-preview/
+
+# Locally built mobile binaries (host these separately, not in git)
+artifacts/

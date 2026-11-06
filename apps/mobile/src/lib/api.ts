@@ -1,6 +1,12 @@
 import * as SecureStore from "expo-secure-store";
 
-const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
+const CONFIGURED_API_URL =
+  process.env.EXPO_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
+
+// Every request path already starts with /v1, and the API is mounted under
+// /api, so the base must end with /api. Accept a configured origin with or
+// without the prefix so a bare host never resolves to a 404.
+const API_BASE = `${CONFIGURED_API_URL.replace(/\/+$/, "").replace(/\/api$/, "")}/api`;
 
 const TOKEN_KEY = "eis_token";
 

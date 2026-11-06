@@ -23,7 +23,18 @@ function normalizeBase(value: string): string {
 }
 
 export function isValidServerUrl(value: string): boolean {
-  return /^https?:\/\/[^\s/]+/i.test(value.trim());
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return false;
+  }
+
+  // Accept an optional scheme; normalizeBase() adds http:// when omitted.
+  const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `http://${trimmed}`;
+
+  return /^https?:\/\/[^\s/]+(\.[^\s/]+|localhost|:\d+)(\/[^\s]*)?$/i.test(
+    candidate
+  );
 }
 
 let resolvedBase = normalizeBase(DEFAULT_SERVER_URL);

@@ -216,6 +216,59 @@ class AuthTest extends TestCase
         ])->assertStatus(422)->assertJsonValidationErrors('current_password');
     }
 
+    public function test_a_token_expires_after_the_configured_lifetime(): void
+    {
+        config(['sanctum.expiration' => 60]);
+
+        $user = User::factory()->create();
+        $token = $user->createToken('laptop');
+
+        $this->asToken($token->plainTextToken)
+            ->getJson('/api/v1/auth/me')
+            ->assertOk();
+
+        $this->travel(61)->minutes();
+        $this->app['auth']->forgetGuards();
+
+        $this->asToken($token->plainTextToken)
+            ->getJson('/api/v1/auth/me')
+            ->assertUnauthorized();
+    }
+
+    public function test_a_fresh_token_is_accepted_within_its_lifetime(): void
+    {
+        config(['sanctum.expiration' => 60]);
+
+        $user = User::factory()->create();
+        $token = $user->createToken('laptop');
+
+        $this->travel(30)->minutes();
+
+        $this->asToken($token->plainTextToken)
+            ->getJson('/api/v1/auth/me')
+            ->assertOk();
+    }
+
+    public function test_a_revoked_token_is_rejected_immediately(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('laptop');
+
+        $this->asToken($token->plainTextToken)
+            ->getJson('/api/v1/auth/me')
+            ->assertOk();
+
+        $this->asToken($token->plainTextToken)
+            ->postJson('/api/v1/auth/logout')
+            ->assertOk();
+
+        $this->app['auth']->forgetGuards();
+
+        $this->asToken($token->plainTextToken)
+            ->getJson('/api/v1/auth/me')
+            ->assertUnauthorized();
+    }
+
     private function asToken(string $token): self
     {
         $this->app['auth']->forgetGuards();

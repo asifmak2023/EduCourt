@@ -1148,3 +1148,41 @@ npx expo start --web --port 8081
   set `ENFORCE_TWO_FACTOR=true`.
 - Back up the database before running migrations in production.
 - Never edit or delete posted financial entries; use reversals.
+
+## Database backup and restore
+
+`deploy-edu.sh` takes a gzip-compressed `mysqldump` into `/root/backups/`
+before every migration and verifies the archive with `gzip -t`. Backups are
+never deleted automatically; prune old files manually.
+
+Take a manual backup:
+
+```bash
+cd /var/www/educourt/apps/api
+set -a; . ./.env; set +a
+F="/root/backups/educourt-$(date +%F-%H%M%S).sql.gz"
+MYSQL_PWD="$DB_PASSWORD" mysqldump --no-defaults --no-tablespaces -u "$DB_USERNAME" "$DB_DATABASE" | gzip > "$F"
+gzip -t "$F" && echo "Backup OK: $F"
+```
+
+Verify a backup restores (run as a MySQL superuser via the local socket; this
+never touches the live `educourt` database):
+
+```bash
+F=$(ls -t /root/backups/educourt-*.sql.gz | head -1)
+TESTDB=educourt_restore_test
+mysql --no-defaults -uroot -e "DROP DATABASE IF EXISTS $TESTDB; CREATE DATABASE $TESTDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+zcat "$F" | mysql --no-defaults -uroot "$TESTDB"
+mysql --no-defaults -uroot -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$TESTDB';"
+mysql --no-defaults -uroot -e "DROP DATABASE $TESTDB;"
+```
+
+Restore over the live database (stop the queue first, then restart it):
+
+```bash
+pm2 stop educourt-web educourt-queue
+F=$(ls -t /root/backups/educourt-*.sql.gz | head -1)
+zcat "$F" | mysql --no-defaults -uroot educourt
+cd /var/www/educourt/apps/api && php artisan migrate --force
+pm2 restart educourt-web educourt-queue
+```

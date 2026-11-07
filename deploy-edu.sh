@@ -61,8 +61,11 @@ git reset --hard "origin/$BRANCH"
 log "Backing up MySQL database"
 mkdir -p "$BACKUP_DIR"
 BACKUP_FILE="$BACKUP_DIR/educourt-$(date +%F-%H%M%S).sql.gz"
-MYSQL_PWD="$DB_PASSWORD" mysqldump --no-defaults -u "$DB_USER" "$DB_NAME" | gzip > "$BACKUP_FILE"
-log "Backup saved: $BACKUP_FILE"
+# --no-tablespaces avoids a "PROCESS privilege" error on MySQL 8 when the app
+# user cannot read tablespace metadata; the dump is otherwise complete.
+MYSQL_PWD="$DB_PASSWORD" mysqldump --no-defaults --no-tablespaces -u "$DB_USER" "$DB_NAME" | gzip > "$BACKUP_FILE"
+gzip -t "$BACKUP_FILE" || { err "Backup file is corrupt: $BACKUP_FILE"; exit 1; }
+log "Backup saved and verified: $BACKUP_FILE"
 
 # Old backups are kept on purpose. Prune manually (e.g. keep the last 14 days)
 # if disk usage grows; this script never deletes files.

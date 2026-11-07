@@ -384,7 +384,7 @@ function UploadDocumentForm({
           <input
             id="doc_file"
             type="file"
-            accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
+            accept=".pdf,.jpg,.jpeg,.png,.webp,.docx"
             onChange={(event) => setFile(event.target.files?.[0] ?? null)}
             className="block w-full text-sm text-muted"
           />

@@ -112,8 +112,10 @@ php artisan serve --host=127.0.0.1 --port=8000
   templated message, send/cancel lifecycle and same-day duplicate suppression,
   delivered through a pluggable gateway (log driver by default). Student
   records are rounded out with a per-student document store (type/size/MIME
-  validation, verify/download and a pluggable virus scanner defaulting to a
-  no-op driver with opt-in ClamAV) and conduct/incident records (category,
+  validation, verify/download and content-based upload inspection that validates
+  magic bytes, blocks embedded PDF scripts, macro-bearing DOCX and trailing
+  payloads as a default, with opt-in ClamAV scanning layered on top) and
+  conduct/incident records (category,
   severity, status, resolution) that feed the consolidated student history.
   Attendance now closes the loop with parents: marking a student absent
   automatically queues a primary-guardian notification with a queue/send/cancel

@@ -114,7 +114,6 @@ function DocumentUploadModal({
         type: [
           "application/pdf",
           "image/*",
-          "application/msword",
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         ],
         copyToCacheDirectory: true,

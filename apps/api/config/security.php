@@ -51,18 +51,29 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Upload malware scanning
+    | Upload scanning
     |--------------------------------------------------------------------------
     |
-    | Driver "null" skips scanning (development default). Set UPLOAD_SCANNER to
-    | "clamav" to scan every uploaded document with ClamAV before it is stored.
+    | Every upload is always validated structurally: the file is identified by
+    | its magic bytes and checked against format rules (images must decode and
+    | carry no trailing payload, PDFs must not embed active content, DOCX files
+    | must be well-formed and macro-free). This runs even without an antivirus
+    | engine, so uploads keep working on servers without ClamAV.
+    |
+    | scanner:
+    |   "strict" (default) - structural validation only.
+    |   "clamav"           - structural validation plus a ClamAV scan.
+    |   "off" / "none"     - disable upload inspection entirely (local/dev only).
+    |
+    | Set UPLOAD_SCANNER=clamav (and install ClamAV) for full malware scanning.
     |
     */
 
     'uploads' => [
-        'scanner' => env('UPLOAD_SCANNER', 'null'),
+        'scanner' => env('UPLOAD_SCANNER', 'strict'),
         'clamav_binary' => env('CLAMAV_BINARY', 'clamdscan'),
         'scan_timeout' => (int) env('UPLOAD_SCAN_TIMEOUT', 30),
+        'allow_pdf_scripts' => (bool) env('UPLOAD_ALLOW_PDF_SCRIPTS', false),
     ],
 
     /*

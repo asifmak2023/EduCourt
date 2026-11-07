@@ -40,7 +40,7 @@ class AdmissionDocumentController extends Controller
             'title' => ['nullable', 'string', 'max:191'],
             'file' => [
                 'required', 'file', 'max:10240',
-                'mimes:pdf,jpg,jpeg,png,webp,doc,docx',
+                'mimes:pdf,jpg,jpeg,png,webp,docx',
             ],
         ]);
 
@@ -101,7 +101,7 @@ class AdmissionDocumentController extends Controller
 
         if ($threat !== null) {
             throw ValidationException::withMessages([
-                'file' => ["The uploaded file failed a malware scan ({$threat})."],
+                'file' => ["The uploaded file was rejected: {$threat}."],
             ]);
         }
     }

@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Services\Files\ClamavFileScanner;
 use App\Services\Files\FileScanner;
 use App\Services\Files\NullFileScanner;
+use App\Services\Files\StrictFileScanner;
 use App\Services\Notifications\NotificationGateway;
 use App\Services\Notifications\NotificationService;
 use App\Services\Reminders\ReminderGateway;
@@ -27,8 +28,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(NotificationGateway::class, fn () => NotificationService::makeGateway());
         $this->app->bind(OidcClient::class, fn () => new HttpOidcClient);
         $this->app->bind(FileScanner::class, fn () => match (config('security.uploads.scanner')) {
-            'clamav' => new ClamavFileScanner,
-            default => new NullFileScanner,
+            'clamav' => new StrictFileScanner(engine: new ClamavFileScanner),
+            'off', 'none' => new NullFileScanner,
+            default => new StrictFileScanner,
         });
     }
 

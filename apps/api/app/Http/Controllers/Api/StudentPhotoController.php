@@ -73,7 +73,7 @@ class StudentPhotoController extends Controller
 
         if ($threat !== null) {
             throw ValidationException::withMessages([
-                'photo' => ["The uploaded photo failed a malware scan ({$threat})."],
+                'photo' => ["The uploaded photo was rejected: {$threat}."],
             ]);
         }
     }

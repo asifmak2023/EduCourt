@@ -210,7 +210,7 @@ Priorities: M = Must, S = Should, C = Could.
 | ID | Requirement | Priority | Status |
 | --- | --- | --- | --- |
 | FR-5.1 | Online admission form and enquiry tracking | M | Delivered (API: enquiry/applied/under-review/approved/rejected/enrolled statuses) |
-| FR-5.2 | Document upload with validation and virus scanning | M | Delivered (upload with type/size/MIME validation and download, plus a pluggable scanner with a default no-op driver and an opt-in ClamAV driver via `UPLOAD_SCANNER`) |
+| FR-5.2 | Document upload with validation and virus scanning | M | Delivered (upload with type/size/MIME validation and download, plus content-based upload inspection by default (magic-byte identification, PDF active-content rejection, macro-free DOCX, trailing-payload detection) with opt-in ClamAV scanning via `UPLOAD_SCANNER=clamav`) |
 | FR-5.3 | Approval workflow with class and section allocation | M | Delivered (API: submit/approve/reject, then enroll into class and section) |
 | FR-5.4 | Admission and withdrawal records with dates | M | Delivered (API: dated application/decision/enrollment and dated withdrawal/transfer) |
 | FR-5.5 | Student profile, guardians (many-to-many) and documents | M | Delivered (API: profile, guardians, admission documents and a per-student document store with type validation, scanner hook, verify and download) |

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { PermissionGate } from "@/components/PermissionGate";
-import { GroupedBarsChart, useChartColors } from "@/components/Charts";
+import { CategoryBarsChart, useChartColors } from "@/components/Charts";
 import {
   ReportScaffold,
   ReportSection,
@@ -242,33 +242,35 @@ function CampusReport() {
 
           <ReportSection
             title="Income and expense"
-            description="Received income against paid expenditure."
+            description="Every income and expense component for the period."
           >
             <div className="report-chart rounded border border-black/20 p-3">
-              <GroupedBarsChart
+              <CategoryBarsChart
                 data={[
                   {
-                    label: "Income",
-                    received: data.income_breakdown.received,
-                    fees: data.income_breakdown.fees,
-                    other: data.income_breakdown.other,
-                  },
-                ]}
-                series={[
-                  {
-                    key: "received",
-                    label: "Received",
+                    label: "Fees received",
+                    value: data.income_breakdown.fees,
                     color: colors["--success"],
                   },
                   {
-                    key: "fees",
-                    label: "Fee receipts",
-                    color: colors["--accent"],
+                    label: "Other income",
+                    value: data.income_breakdown.other,
+                    color: colors["--mint"],
                   },
                   {
-                    key: "other",
-                    label: "Other income",
+                    label: "Salaries",
+                    value: data.payments_breakdown.salaries,
+                    color: colors["--danger"],
+                  },
+                  {
+                    label: "Utilities",
+                    value: data.payments_breakdown.utilities,
                     color: colors["--warning"],
+                  },
+                  {
+                    label: "Other expenses",
+                    value: data.payments_breakdown.others,
+                    color: colors["--coral"],
                   },
                 ]}
                 formatValue={(value) => formatCurrency(value)}

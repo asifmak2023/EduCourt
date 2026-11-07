@@ -258,6 +258,7 @@ export function DonutChart({
 export type BarPoint = {
   label: string;
   value: number;
+  color?: string;
 };
 
 /**
@@ -365,6 +366,94 @@ export type SeriesKey = {
   label: string;
   color: string;
 };
+
+/**
+ * Single-series bar chart where each bar carries its own colour, so mixed
+ * income/expense line items can be compared in one place without rendering
+ * the empty zero-height bars that a multi-series grouping would produce.
+ */
+export function CategoryBarsChart({
+  data,
+  formatValue = (value) => String(value),
+  height = 260,
+  emptyAsGraph = false,
+}: {
+  data: BarPoint[];
+  formatValue?: (value: number) => string;
+  height?: number;
+  emptyAsGraph?: boolean;
+}) {
+  const colors = useChartColors();
+  const isEmpty = data.length === 0 || data.every((point) => !point.value);
+  const yWidth = axisWidth(
+    data.map((point) => point.value),
+    formatValue
+  );
+
+  if (isEmpty && !emptyAsGraph) {
+    return <ChartPlaceholder />;
+  }
+
+  const chartData = data.length === 0 ? [{ label: "—", value: 0 }] : data;
+
+  return (
+    <div>
+      <ResponsiveContainer width="100%" height={height}>
+        <BarChart
+          data={chartData}
+          margin={{ top: 12, right: 8, left: 6, bottom: 0 }}
+        >
+          <CartesianGrid
+            vertical={false}
+            stroke={colors["--hairline"]}
+            strokeDasharray="3 6"
+          />
+          <XAxis
+            dataKey="label"
+            tickLine={false}
+            axisLine={false}
+            tick={{ fontSize: 11, fill: colors["--muted"] }}
+            interval={0}
+            dy={6}
+          />
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            width={yWidth}
+            allowDecimals={false}
+            domain={isEmpty ? [0, 4] : [0, "auto"]}
+            tick={{ fontSize: 11, fill: colors["--muted"] }}
+            tickFormatter={(value: number) => formatValue(value)}
+          />
+          <Tooltip
+            cursor={{ fill: colors["--hairline"], opacity: 0.35 }}
+            content={({ active, payload, label }) =>
+              active && payload?.length ? (
+                <ChartTooltip
+                  rows={[
+                    {
+                      label: String(label),
+                      value: formatValue(Number(payload[0].value)),
+                      color: payload[0].payload.color as string,
+                    },
+                  ]}
+                />
+              ) : null
+            }
+          />
+          <Bar dataKey="value" radius={[8, 8, 3, 3]} maxBarSize={56}>
+            {chartData.map((point, index) => (
+              <Cell
+                key={`${point.label}-${index}`}
+                fill={point.color ?? colors["--accent"]}
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
 /** Bare axis-less sparkline for KPI tiles and compact stat rows. */
 export function Sparkline({

@@ -41,7 +41,7 @@ class FeeReminderController extends Controller
             'as_of' => ['nullable', 'date'],
             'academic_year_id' => ['nullable', 'integer', 'exists:academic_years,id'],
             'class_room_id' => ['nullable', 'integer', 'exists:class_rooms,id'],
-            'channel' => ['nullable', Rule::in(['email', 'sms', 'in_app'])],
+            'channel' => ['nullable', Rule::in(['email', 'sms', 'whatsapp', 'in_app'])],
             'overdue_only' => ['nullable', 'boolean'],
             'min_days_overdue' => ['nullable', 'integer', 'min:0'],
             'min_balance' => ['nullable', 'numeric', 'min:0'],

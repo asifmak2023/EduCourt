@@ -154,6 +154,7 @@ function NotificationsView() {
               <option value="">All channels</option>
               <option value="email">Email</option>
               <option value="sms">SMS</option>
+              <option value="whatsapp">WhatsApp</option>
               <option value="in_app">In-app</option>
             </Select>
           </Field>

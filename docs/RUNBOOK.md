@@ -514,6 +514,29 @@ Reminder delivery uses the `REMINDER_GATEWAY` driver (`log` by default, so
 reminders are written to `storage/logs/laravel.log`). Generation is idempotent
 per student per day; pass `"force":true` to re-queue.
 
+#### WhatsApp delivery
+
+Set `REMINDER_GATEWAY=whatsapp` and provide Meta WhatsApp Cloud API credentials:
+
+```env
+REMINDER_GATEWAY=whatsapp
+REMINDER_CHANNEL=whatsapp
+WHATSAPP_TOKEN=<permanent-system-user-token>
+WHATSAPP_PHONE_NUMBER_ID=<business-phone-number-id>
+WHATSAPP_BASE_URL=https://graph.facebook.com/v21.0
+WHATSAPP_TIMEOUT=15
+WHATSAPP_DEFAULT_COUNTRY_CODE=92
+```
+
+The `whatsapp` gateway only delivers records whose channel is `whatsapp`;
+reminders/notifications queued on `email`, `sms` or `in_app` fall back to the log
+driver, so a single gateway switch is safe. Recipient numbers are normalised to
+E.164 digits (a national `0300…` number with country code `92` becomes
+`92300…`); records without a valid phone number are marked failed with a reason
+and never hit the API. To generate WhatsApp fee reminders, POST
+`{"channel":"whatsapp"}` to `/api/v1/fee-reminders`. Leave `REMINDER_GATEWAY=log`
+until credentials are provisioned.
+
 Absence notification quick check (campus admin token):
 
 ```bash

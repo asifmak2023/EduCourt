@@ -159,6 +159,7 @@ const FINE_STATUS: SelectOption[] = [
 const REMINDER_CHANNEL: SelectOption[] = [
   { value: "email", label: "Email" },
   { value: "sms", label: "SMS" },
+  { value: "whatsapp", label: "WhatsApp" },
   { value: "in_app", label: "In-app" },
 ];
 

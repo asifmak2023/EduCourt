@@ -11,6 +11,8 @@ use App\Models\FeeVoucher;
 use App\Models\Guardian;
 use App\Models\Student;
 use App\Services\Reminders\Gateways\LogReminderGateway;
+use App\Services\Reminders\Gateways\WhatsAppReminderGateway;
+use App\Services\WhatsApp\WhatsAppClient;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -33,6 +35,7 @@ class ReminderService
     public static function makeGateway(): ReminderGateway
     {
         return match (config('reminders.gateway')) {
+            'whatsapp' => new WhatsAppReminderGateway(WhatsAppClient::fromConfig()),
             'log' => new LogReminderGateway,
             default => new LogReminderGateway,
         };
@@ -151,13 +154,13 @@ class ReminderService
 
             [$guardian, $email, $phone] = $this->contactFor($student, $channel);
 
-            if ($channel === ReminderChannel::Sms && $phone === null) {
+            if ($channel->usesPhone() && $phone === null) {
                 $skipped++;
 
                 continue;
             }
 
-            if ($channel !== ReminderChannel::Sms && $email === null) {
+            if (! $channel->usesPhone() && $email === null) {
                 $skipped++;
 
                 continue;
@@ -231,11 +234,11 @@ class ReminderService
             $email = $guardian->email;
             $phone = $guardian->phone;
 
-            if ($channel === ReminderChannel::Sms && $phone !== null) {
+            if ($channel->usesPhone() && $phone !== null) {
                 return [$guardian, $email, $phone];
             }
 
-            if ($channel !== ReminderChannel::Sms && $email !== null) {
+            if (! $channel->usesPhone() && $email !== null) {
                 return [$guardian, $email, $phone];
             }
         }

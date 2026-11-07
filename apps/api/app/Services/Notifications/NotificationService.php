@@ -11,6 +11,8 @@ use App\Models\Guardian;
 use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Services\Notifications\Gateways\LogNotificationGateway;
+use App\Services\Notifications\Gateways\WhatsAppNotificationGateway;
+use App\Services\WhatsApp\WhatsAppClient;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -25,6 +27,7 @@ class NotificationService
     public static function makeGateway(): NotificationGateway
     {
         return match (config('reminders.gateway')) {
+            'whatsapp' => new WhatsAppNotificationGateway(WhatsAppClient::fromConfig()),
             default => new LogNotificationGateway,
         };
     }
@@ -153,6 +156,20 @@ class NotificationService
         $guardians = $student->guardians
             ->sortByDesc(fn (Guardian $guardian) => (bool) $guardian->pivot->is_primary)
             ->values();
+
+        $preferWhatsApp = config('reminders.channel') === ReminderChannel::WhatsApp->value;
+
+        if ($preferWhatsApp) {
+            foreach ($guardians as $guardian) {
+                if ($guardian->phone !== null) {
+                    return [$guardian, ReminderChannel::WhatsApp, $guardian->email, $guardian->phone];
+                }
+            }
+
+            if ($student->phone !== null) {
+                return [null, ReminderChannel::WhatsApp, $student->email, $student->phone];
+            }
+        }
 
         foreach ($guardians as $guardian) {
             if ($guardian->email !== null) {

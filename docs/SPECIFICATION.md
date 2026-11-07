@@ -202,7 +202,7 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-4.3 | Per-student status: due, received, discount, concession, scholarship | M | Delivered (API: per-student vouchers with unpaid/partial/paid status and paid amounts; campus concession policies with rule-based criteria (gender, category, sibling count), stackable/non-stackable discounts with caps, approval-gated grants, and automatic scholarship and concession discounts merged into fee voucher generation) |
 | FR-4.4 | Vouchers and receipts with numbering and void/reversal | M | Delivered (API: campus-numbered vouchers and receipts, discount-aware lines, double-entry posting, void with reversal) |
 | FR-4.5 | Late fees, fines, advance balances and refunds | S | Delivered (API: per-plan late fee policy and application, configurable fine rules and per-student fines with apply/waive/revoke posting on outstanding vouchers, advance payments and allocation, refunds with an approval workflow that posts to the ledger only on approval and reverses on revoke) |
-| FR-4.6 | Defaulter lists and reminders | M | Delivered (API: aging defaulter list by student/class; configurable fee reminders queued per defaulting student with an email/SMS/in-app channel, primary-guardian recipient resolution, templated message, send/cancel lifecycle and same-day duplicate suppression; pluggable delivery gateway with a default log driver) |
+| FR-4.6 | Defaulter lists and reminders | M | Delivered (API: aging defaulter list by student/class; configurable fee reminders queued per defaulting student with an email/SMS/WhatsApp/in-app channel, primary-guardian recipient resolution, templated message, send/cancel lifecycle and same-day duplicate suppression; pluggable delivery gateway with log and Meta WhatsApp Cloud API drivers) |
 | FR-4.7 | Online payment gateway integration | S | Delivered (API: gateway-agnostic payment intents with checkout URL, signed HMAC webhooks, idempotent confirmation that posts a fee payment and settles the voucher; manual/test gateway driver behind a PaymentGateway interface) |
 
 ### 6.5 Admissions and student records
@@ -582,7 +582,9 @@ names, `recipient_name`/`recipient_email`/`recipient_phone`, `title`, `body`,
 `occurred_on`, `sent_at`, `failure_reason` and `created_at`. Absence notices are
 queued automatically when a student is marked absent, and
 `queue-absences` backfills a day (optionally one class) idempotently. Delivery
-uses the configured `REMINDER_GATEWAY` driver (`log` by default).
+uses the configured `REMINDER_GATEWAY` driver (`log` by default; `whatsapp`
+delivers WhatsApp-channel records through the Meta Cloud API and falls back to
+the log driver for other channels).
 
 All endpoints follow a consistent envelope and error shape defined in
 `docs/ARCHITECTURE.md`.

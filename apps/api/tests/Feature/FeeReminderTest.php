@@ -155,6 +155,25 @@ class FeeReminderTest extends TestCase
         ]);
     }
 
+    public function test_a_whatsapp_reminder_resolves_the_guardian_phone_number(): void
+    {
+        $this->as($this->admin)->postJson('/api/v1/fee-reminders', [
+            'academic_year_id' => $this->year->id,
+            'as_of' => '2026-09-26',
+            'channel' => 'whatsapp',
+        ])->assertStatus(201)
+            ->assertJsonPath('created', 1)
+            ->assertJsonPath('data.0.channel', 'whatsapp')
+            ->assertJsonPath('data.0.channel_label', 'WhatsApp')
+            ->assertJsonPath('data.0.recipient_phone', '+92-300-0000001')
+            ->assertJsonPath('data.0.recipient_email', 'imran@example.test');
+
+        $this->assertDatabaseHas('fee_reminders', [
+            'student_id' => $this->student->id,
+            'channel' => 'whatsapp',
+        ]);
+    }
+
     public function test_a_pending_reminder_can_be_sent(): void
     {
         $id = $this->generateReminder();

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@eis/i18n";
 import { BrandMark } from "@/components/BrandMark";
+import { Icon } from "@/components/Icons";
 import {
   androidDownloadUrl,
   iosDownloadUrl,
@@ -14,6 +15,8 @@ import {
 const DISMISS_KEY = "eis.appDownload.dismissed";
 
 const DOWNLOAD_PAGE = "/download";
+
+type Mode = "hidden" | "prompt" | "compact";
 
 function bannerHref(ua: string): string {
   if (isIOS(ua)) {
@@ -49,7 +52,7 @@ function isStandalone(): boolean {
 export function AppDownloadBanner() {
   const { t } = useTranslation();
   const pathname = usePathname();
-  const [visible, setVisible] = useState(false);
+  const [mode, setMode] = useState<Mode>("hidden");
   const [href, setHref] = useState(DOWNLOAD_PAGE);
 
   const onDownloadPage = pathname === DOWNLOAD_PAGE;
@@ -57,19 +60,18 @@ export function AppDownloadBanner() {
   useEffect(() => {
     function evaluate() {
       if (isStandalone() || !isMobileBrowser()) {
-        setVisible(false);
+        setMode("hidden");
         return;
       }
-      try {
-        if (window.localStorage.getItem(DISMISS_KEY) === "1") {
-          setVisible(false);
-          return;
-        }
-      } catch {
-        // Ignore storage failures and show the banner.
-      }
       setHref(bannerHref(navigator.userAgent));
-      setVisible(true);
+      let dismissed = false;
+      try {
+        dismissed = window.localStorage.getItem(DISMISS_KEY) === "1";
+      } catch {
+        // Ignore storage failures and show the full prompt.
+      }
+      // Once dismissed, keep a compact button so the download stays reachable.
+      setMode(dismissed ? "compact" : "prompt");
     }
 
     const raf = requestAnimationFrame(evaluate);
@@ -77,7 +79,7 @@ export function AppDownloadBanner() {
   }, []);
 
   function dismiss() {
-    setVisible(false);
+    setMode("compact");
     try {
       window.localStorage.setItem(DISMISS_KEY, "1");
     } catch {
@@ -85,8 +87,22 @@ export function AppDownloadBanner() {
     }
   }
 
-  if (!visible || onDownloadPage) {
+  if (mode === "hidden" || onDownloadPage) {
     return null;
+  }
+
+  if (mode === "compact") {
+    return (
+      <a
+        href={href}
+        rel="noopener"
+        aria-label={t("appDownload.install")}
+        className="fixed end-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 inline-flex items-center gap-2 rounded-full bg-amber px-4 py-2.5 text-xs font-semibold text-amber-foreground shadow-lw-float sm:bottom-4 print:hidden"
+      >
+        <Icon name="download" className="h-4 w-4" />
+        {t("appDownload.install")}
+      </a>
+    );
   }
 
   return (

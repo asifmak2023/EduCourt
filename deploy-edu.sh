@@ -151,7 +151,11 @@ chmod -R 775 "$BACKEND/storage" "$BACKEND/bootstrap/cache"
 log "Building Next.js frontend"
 cd "$PROJECT"
 pnpm install --frozen-lockfile
-API_ORIGIN="http://127.0.0.1:$API_PORT" pnpm --filter web build
+# Point the mobile "Get the app" banner at the APK hosted under /downloads.
+APP_ANDROID_URL="${APP_ANDROID_URL:-https://educourt.asifent.com/downloads/educourt.apk}"
+API_ORIGIN="http://127.0.0.1:$API_PORT" \
+  NEXT_PUBLIC_APP_ANDROID_URL="$APP_ANDROID_URL" \
+  pnpm --filter web build
 
 # ------------------------------------------------------------
 # 10. Restart PM2

@@ -6,9 +6,10 @@ const DEFAULT_SERVER_URL =
 const TOKEN_KEY = "eis_token";
 const SERVER_KEY = "eis_server_url";
 
-// Every request path already starts with /v1, and the API is mounted under
-// /api, so the base must end with /api. Accept a server value with or without
-// a scheme and the /api suffix so a bare host never resolves to a 404.
+// The API base is a full URL that may already include a path prefix. Production
+// builds point at the dedicated `/mobile-api` route (which proxies straight to
+// Laravel) so the Bearer token is honoured; the web app keeps using the cookie
+// BFF under `/api`. When only a bare host is given we default to `/api`.
 function normalizeBase(value: string): string {
   let trimmed = value.trim();
 
@@ -19,7 +20,12 @@ function normalizeBase(value: string): string {
     trimmed = `http://${trimmed}`;
   }
 
-  return `${trimmed.replace(/\/+$/, "").replace(/\/api$/i, "")}/api`;
+  trimmed = trimmed.replace(/\/+$/, "");
+
+  const afterScheme = trimmed.replace(/^https?:\/\//i, "");
+  const hasPath = afterScheme.includes("/");
+
+  return hasPath ? trimmed : `${trimmed}/api`;
 }
 
 export function isValidServerUrl(value: string): boolean {
@@ -44,9 +50,9 @@ export function getApiBase(): string {
   return resolvedBase;
 }
 
-// The server origin without the /api suffix, suitable for display/editing.
+// Full API base URL (including any path prefix), for display/editing.
 export function getConfiguredServerUrl(): string {
-  return resolvedBase.replace(/\/api$/i, "");
+  return resolvedBase;
 }
 
 export async function loadStoredServerUrl(): Promise<void> {

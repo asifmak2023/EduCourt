@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- PHP 8.2 with pdo_mysql, mbstring, xml, curl, zip, bcmath, gd, intl
+- PHP 8.3 with pdo_mysql, mbstring, xml, curl, zip, bcmath, gd, intl
 - Composer 2
 - Node.js 20+ and pnpm
 - MySQL 8 or MariaDB 10.11

@@ -4,10 +4,10 @@
 
 | Layer | Technology |
 | --- | --- |
-| API | PHP 8.2, Laravel 11, Sanctum, Spatie Permission, Spatie Activitylog |
+| API | PHP 8.3, Laravel 13, Sanctum, Spatie Permission, Spatie Activitylog |
 | Database | MySQL 8 / MariaDB 10.11 (utf8mb4) |
-| Web | Next.js (App Router), Tailwind CSS, TanStack Query |
-| Mobile | Expo (React Native) |
+| Web | Next.js 16 (App Router), Tailwind CSS, TanStack Query |
+| Mobile | Expo SDK 57 (React Native) |
 | Queue / cache | Laravel queue (database), Redis in production |
 
 ## Repository layout

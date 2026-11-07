@@ -7,7 +7,7 @@ Laravel API.
 ## Repository
 
 ```
-apps/api      Laravel 11 API (PHP 8.2, MySQL)
+apps/api      Laravel 13 API (PHP 8.3, MySQL)
 apps/web      Next.js web application
 apps/mobile   Expo mobile application
 docs          Specification, architecture and runbook
@@ -331,12 +331,16 @@ The client reads reference lists (academic years, classes, sections) from
 student readers so front-office staff can complete forms without holding the
 academic structure permission.
 
-Demo accounts (password `password`): `superadmin@demo-eis.test` (Super User),
+Demo accounts (password `password`, **local/testing only**): `superadmin@demo-eis.test` (Super User),
 `institutionhead@demo-eis.test` (institution head, view-only across campuses),
 `campusadmin@demo-eis.test` (campus admin) and `teacher@demo-eis.test`. The
 demo seed also lays down a completed terminal exam (grade scale, exam type,
 papers and marks) so the exam and reporting screens have data out of the box;
 `php artisan db:seed --class=ExamSeeder` adds just that exam data to an
 existing database.
+
+> These demo accounts are created by `DemoSeeder`, which refuses to run when
+> `APP_ENV` is anything other than `local`/`testing` unless `SEED_DEMO_DATA=true`
+> is set explicitly. Never enable it on a production database.
 
 See `docs/SPECIFICATION.md` section 14 for the phase plan.

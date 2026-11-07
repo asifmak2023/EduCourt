@@ -65,4 +65,17 @@ return [
         'scan_timeout' => (int) env('UPLOAD_SCAN_TIMEOUT', 30),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Demo data seeding
+    |--------------------------------------------------------------------------
+    |
+    | The DemoSeeder creates well-known accounts (password "password"). It
+    | refuses to run outside local/testing unless this flag is enabled, so a
+    | production database can never accidentally receive demo logins.
+    |
+    */
+
+    'seed_demo_data' => (bool) env('SEED_DEMO_DATA', false),
+
 ];

@@ -115,6 +115,17 @@ class DemoSeeder extends Seeder
 
     public function run(): void
     {
+        // Demo accounts use the well-known password "password" and must never be
+        // usable against a production database. Allow an explicit opt-in via
+        // SEED_DEMO_DATA for staging demos, but refuse everywhere else that is
+        // not local/testing. The value is read through config so it still works
+        // when the configuration is cached (env() returns null after cache).
+        if (! app()->environment(['local', 'testing']) && ! config('security.seed_demo_data')) {
+            $this->command?->warn('DemoSeeder skipped: refusing to create demo accounts outside local/testing (set SEED_DEMO_DATA=true to override).');
+
+            return;
+        }
+
         $institution = Institution::firstOrCreate(
             ['code' => 'DEMO-TRUST'],
             [

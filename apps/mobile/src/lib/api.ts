@@ -222,6 +222,42 @@ export interface FeeVoucher {
   status?: string | null;
 }
 
+export interface GenderedCount {
+  gender: string | null;
+  total: number;
+}
+
+export interface MonthlyTotal {
+  month: string;
+  label: string;
+  total: number;
+}
+
+/**
+ * Campus dashboard snapshot. The API omits any section the caller has no
+ * matching `report.*` permission for, so every domain field is optional.
+ */
+export interface CampusDashboard {
+  as_on: string;
+  students_active?: number;
+  students_by_gender?: GenderedCount[];
+  staff_employed?: number;
+  enrollments_active?: number;
+  admissions_pending?: number;
+  unpaid_vouchers?: number;
+  outstanding_fees?: number;
+  fees_collected_this_month?: number;
+  collections_by_month?: MonthlyTotal[];
+  vouchers_by_status?: Record<string, number>;
+  admissions_by_status?: Record<string, number>;
+  scholarships_active?: number;
+  exams_scheduled?: number;
+  leave_pending?: number;
+  conduct_open?: number;
+  payroll_draft_runs?: number;
+  upcoming_events?: number;
+}
+
 export class ApiError extends Error {
   status: number;
 

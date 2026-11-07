@@ -16,7 +16,7 @@ import { useTheme } from "../theme/ThemeProvider";
 import { withAlpha } from "../theme/colors";
 import { useCampus } from "../lib/campus";
 import { useTr } from "../lib/i18n";
-import type { NavItem, NavSection } from "../lib/nav";
+import { COLLAPSIBLE_SECTIONS, type NavItem, type NavSection } from "../lib/nav";
 import type { AuthUser, StudentSummary } from "../lib/api";
 
 export const SIDEBAR_WIDTH = 280;
@@ -78,6 +78,32 @@ export function Sidebar({
       useNativeDriver: false,
     }).start();
   }, [open, wide, translateX, backdrop]);
+
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => {
+    const initial = new Set<string>();
+    for (const section of sections) {
+      if (!COLLAPSIBLE_SECTIONS.has(section.label)) {
+        continue;
+      }
+      if (section.items.some((item) => item.key === activeKey)) {
+        continue;
+      }
+      initial.add(section.label);
+    }
+    return initial;
+  });
+
+  const toggleSection = (label: string) => {
+    setCollapsed((previous) => {
+      const next = new Set(previous);
+      if (next.has(label)) {
+        next.delete(label);
+      } else {
+        next.add(label);
+      }
+      return next;
+    });
+  };
 
   const panel = (
     <View style={styles.panel}>
@@ -145,44 +171,70 @@ export function Sidebar({
           </View>
         ) : null}
 
-        {sections.map((section) => (
-          <View key={section.label} style={styles.group}>
-            <SectionLabel>{tr(section.label)}</SectionLabel>
-            <View style={styles.nav}>
-              {section.items.map((item) => {
-                const active = item.key === activeKey;
+        {sections.map((section) => {
+          const collapsible = COLLAPSIBLE_SECTIONS.has(section.label);
+          const isCollapsed = collapsible && collapsed.has(section.label);
 
-                return (
-                  <Pressable
-                    key={item.key}
-                    onPress={() => onSelectItem(item)}
-                    accessibilityRole="button"
+          return (
+            <View key={section.label} style={styles.group}>
+              {collapsible ? (
+                <Pressable
+                  onPress={() => toggleSection(section.label)}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: !isCollapsed }}
+                  style={styles.sectionHeader}
+                >
+                  <SectionLabel>{tr(section.label)}</SectionLabel>
+                  <Text
                     style={[
-                      styles.navItem,
-                      active ? { backgroundColor: colors.accentSoft } : null,
+                      styles.chevron,
+                      { color: colors.muted, transform: [{ rotate: isCollapsed ? "0deg" : "90deg" }] },
                     ]}
                   >
-                    <View
-                      style={[
-                        styles.navBar,
-                        { backgroundColor: active ? colors.accent : "transparent" },
-                      ]}
-                    />
-                    <Text
-                      style={[
-                        styles.navLabel,
-                        { color: active ? colors.accent : colors.foreground },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {tr(item.label)}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+                    {">"}
+                  </Text>
+                </Pressable>
+              ) : (
+                <SectionLabel>{tr(section.label)}</SectionLabel>
+              )}
+              {isCollapsed ? null : (
+                <View style={styles.nav}>
+                  {section.items.map((item) => {
+                    const active = item.key === activeKey;
+
+                    return (
+                      <Pressable
+                        key={item.key}
+                        onPress={() => onSelectItem(item)}
+                        accessibilityRole="button"
+                        style={[
+                          styles.navItem,
+                          active ? { backgroundColor: colors.accentSoft } : null,
+                        ]}
+                      >
+                        <View
+                          style={[
+                            styles.navBar,
+                            { backgroundColor: active ? colors.accent : "transparent" },
+                          ]}
+                        />
+                        <Text
+                          style={[
+                            styles.navLabel,
+                            { color: active ? colors.accent : colors.foreground },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {tr(item.label)}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
             </View>
-          </View>
-        ))}
+          );
+        })}
       </ScrollView>
 
       <View style={[styles.footer, { borderColor: colors.border }]}>
@@ -302,6 +354,17 @@ const styles = StyleSheet.create({
   },
   group: {
     marginBottom: 20,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 2,
+  },
+  chevron: {
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 14,
   },
   campusRow: {
     flexDirection: "row",

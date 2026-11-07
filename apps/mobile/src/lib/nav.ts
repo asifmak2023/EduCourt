@@ -85,6 +85,13 @@ function sectionLabel(name: string): string {
   return SECTION_KEYS[name] ?? name;
 }
 
+/**
+ * Module sections (Admissions & Students, Academics, Finance, People,
+ * Operations, Administration) collapse in the sidebar. Overview, the portal
+ * tabs and Account stay always visible.
+ */
+export const COLLAPSIBLE_SECTIONS = new Set<string>(Object.values(SECTION_KEYS));
+
 export function buildNav(user: AuthUser | null, portal: boolean): NavSection[] {
   const permissions = user?.permissions ?? [];
   const sections: NavSection[] = [];

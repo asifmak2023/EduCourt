@@ -26,10 +26,11 @@ Client (web/mobile)
   -> Authorization: Bearer <sanctum token>
   -> SecurityHeaders middleware (global)
   -> auth:sanctum
-  -> tenant middleware (ResolveTenant)
+  -> tenant middleware (ResolveTenant)   [runs before route-model binding]
        product owner -> bypass isolation, optional X-Campus-Id filter
        other users   -> institution guardrail + campus from X-Campus-Id
                         if permitted, else default campus
+  -> route-model binding (SubstituteBindings, now scoped by the tenant context)
   -> permission middleware (module.action)
   -> controller -> resource
 ```
@@ -51,8 +52,13 @@ security, so isolation is enforced in the application layer:
   runs with isolation bypassed and may filter to one campus; campus users are
   pinned to a permitted campus; `RequireCampusContext` (alias `campus`) can
   guard routes that must have a campus.
+- Ordering matters: `ResolveTenant` is registered in the middleware priority
+  list *before* `SubstituteBindings` (`bootstrap/app.php`). Route-model binding
+  reads the tenant context, so resolving the tenant after binding would let a
+  user reach another campus's records by guessing an id. Keep this ordering.
 - Tests in `apps/api/tests/Feature/TenantIsolationTest.php` guard cross-campus
-  and cross-institution isolation.
+  and cross-institution isolation; `DocumentTenantIsolationTest.php` covers
+  private student/staff/admission document download and listing.
 
 ## Response conventions
 

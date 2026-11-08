@@ -515,6 +515,7 @@ export type MessageKey =
   | "dashboard.activeEnrollments"
   | "dashboard.activeStudents"
   | "dashboard.staffEmployed"
+  | "dashboard.staffEmployedHint"
   | "dashboard.outstandingFees"
   | "dashboard.collectedThisMonth"
   | "dashboard.admissionsPending"

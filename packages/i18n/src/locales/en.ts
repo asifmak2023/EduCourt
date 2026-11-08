@@ -528,6 +528,7 @@ export const en = {
   "dashboard.activeEnrollments": "Active enrollments",
   "dashboard.activeStudents": "Active students",
   "dashboard.staffEmployed": "Staff employed",
+  "dashboard.staffEmployedHint": "Active staff on roll",
   "dashboard.outstandingFees": "Outstanding fees",
   "dashboard.collectedThisMonth": "Collected this month",
   "dashboard.admissionsPending": "Admissions pending",

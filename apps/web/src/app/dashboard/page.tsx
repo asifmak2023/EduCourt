@@ -820,7 +820,7 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
           <StatCard
             label="dashboard.staffEmployed"
             value={formatNumber(dashboard.staff_employed ?? 0)}
-            hint={t("dashboard.activeEnrollments")}
+            hint={t("dashboard.staffEmployedHint")}
             icon={<Icon name="idCard" />}
           />
         ) : null}

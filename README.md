@@ -19,6 +19,41 @@ docs          Specification, architecture and runbook
 - `docs/ARCHITECTURE.md` - stack, request lifecycle, tenancy, security
 - `docs/RUNBOOK.md` - setup, run and operations commands
 
+## Architecture at a glance
+
+One Laravel API backs three clients. The API is the single source of truth for
+business rules, tenancy and persistence; the Next.js and Expo apps are thin
+clients that read and write through it.
+
+```
+apps/web (Next.js)   ─┐
+apps/mobile (Expo)   ─┼──>  apps/api (Laravel + Sanctum)
+                      │        |-- MySQL 8 (multi-tenant data)
+                      │        |-- queue (database / Redis) -> workers
+                      │        `-- scheduled commands (cron)
+```
+
+- **Multi-tenancy** - many institutions, each with many campuses. A tenant
+  middleware resolves the caller's institution/campus before route-model binding,
+  so every query is scoped; the Super User (product owner) may cross institutions
+  and optionally filter by campus via `X-Campus-Id`.
+- **Auth and access** - Sanctum bearer tokens, per-device sessions, optional TOTP
+  two-factor, and Spatie permissions enforced as `module.action`
+  (`App\Enums\RoleName`, `config/rbac.php`).
+- **Money** - double-entry ledger; all financial actions (vouchers, payments,
+  payroll, expenses, canteen) post balanced journals inside transactions, with
+  void/reversal instead of deletes.
+- **Async work** - notifications, delivery attempts and report jobs run on the
+  queue; nightly maintenance commands are scheduled through the console kernel.
+- **Integrations** - external channels (portal SSO, payment gateways, WhatsApp)
+  sit behind service classes and drivers, configured per institution, with signed
+  webhooks and idempotent event handling.
+- **Security** - global security headers, secret write-only fields, audit logging
+  via Spatie Activitylog, and content-based upload inspection.
+
+For request lifecycle, tenant isolation details and module internals see
+`docs/ARCHITECTURE.md`.
+
 ## Quick start
 
 See `docs/RUNBOOK.md`. In short:

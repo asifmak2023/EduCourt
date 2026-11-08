@@ -18,6 +18,12 @@ export const SETTINGS_TABS = [
     permission: "setting.view",
   },
   {
+    key: "whatsapp",
+    href: "/dashboard/settings/whatsapp",
+    label: "WhatsApp",
+    permission: "integration.view",
+  },
+  {
     key: "appearance",
     href: "/dashboard/settings/appearance",
     label: "Appearance",

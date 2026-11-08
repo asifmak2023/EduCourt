@@ -69,6 +69,7 @@ return [
         'it' => ['view', 'create', 'edit', 'approve', 'delete'],
         'audit' => ['view', 'export'],
         'setting' => ['view', 'edit'],
+        'integration' => ['view', 'edit', 'test', 'manage'],
         'appearance' => ['view', 'edit'],
         'subscription' => ['view', 'create', 'edit', 'delete'],
     ],
@@ -89,6 +90,7 @@ return [
         RoleName::PlatformAdmin->value => [
             'institution.*', 'campus.*', 'user.*', 'role.*',
             'subscription.*', 'audit.*', 'setting.*', 'report.*',
+            'integration.*',
             'student.photo',
         ],
 
@@ -105,6 +107,7 @@ return [
             'inventory.*', 'library.*', 'lab.*', 'transport.*', 'hostel.*',
             'canteen.*', 'sports.*', 'student_affairs.*',
             'complaint.*', 'circular.*', 'front_office.*', 'ptm.*', 'report.*', 'audit.view', 'setting.*',
+            'integration.view', 'integration.edit', 'integration.test',
         ],
 
         RoleName::InstitutionHead->value => [
@@ -146,6 +149,7 @@ return [
             'report.*',
             'audit.view', 'audit.export',
             'setting.view',
+            'integration.view',
             'it.view',
         ],
 
@@ -244,6 +248,7 @@ return [
         RoleName::ItAdministrator->value => [
             'academic.view',
             'it.*', 'user.view', 'user.create', 'user.edit', 'user.photo', 'audit.view', 'setting.view',
+            'integration.view', 'integration.edit', 'integration.test',
         ],
 
         RoleName::Librarian->value => [

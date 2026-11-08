@@ -3010,3 +3010,62 @@ export interface ReportHeadOffice {
     payable: number;
   };
 }
+
+export interface WhatsAppSender {
+  id: number;
+  owner_institution_id: number | null;
+  meta_app_connection_id: number | null;
+  managed_by: string | null;
+  label: string;
+  connection_mode: string | null;
+  phone_number_id: string | null;
+  business_account_id: string | null;
+  display_phone_number: string | null;
+  token_expiry_mode: string | null;
+  token_expires_at: string | null;
+  default_country_code: string;
+  is_active: boolean;
+  last_verified_at: string | null;
+  last_error: string | null;
+  has_access_token: boolean;
+  is_platform_owned: boolean;
+  token_expired: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface IntegrationTemplate {
+  id: number;
+  purpose: string;
+  name: string;
+  language: string;
+  approval_status: string;
+  parameters: unknown;
+}
+
+export interface IntegrationResolution {
+  ready: boolean;
+  reason: string | null;
+}
+
+export interface WhatsAppIntegration {
+  institution_id: number;
+  enabled: boolean;
+  self_service: boolean;
+  monthly_message_limit: number | null;
+  warn_at_percent: number;
+  quota_timezone: string;
+  sender: WhatsAppSender | null;
+  resolution: IntegrationResolution;
+  templates: IntegrationTemplate[];
+}
+
+export interface WhatsAppUsageSummary {
+  period: string;
+  reserved: number;
+  consumed: number;
+  released: number;
+  monthly_message_limit: number | null;
+  estimated_cost?: string;
+  billed_cost?: string;
+}

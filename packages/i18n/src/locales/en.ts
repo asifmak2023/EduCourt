@@ -3,6 +3,14 @@ export const en = {
   "app.loading": "Loading",
   "app.settings": "Settings",
 
+  "integration.whatsapp.title": "WhatsApp",
+  "integration.whatsapp.description": "Send fee reminders and notifications through your own WhatsApp business number.",
+  "integration.whatsapp.verify": "Verify credentials",
+  "integration.whatsapp.sender": "Sender",
+  "integration.whatsapp.quota": "Messaging quota",
+  "integration.whatsapp.templates": "Templates",
+  "integration.whatsapp.testMessage": "Send a test message",
+
   "appDownload.title": "Get the EduCourt app",
   "appDownload.body": "Install the app for a faster, full-screen experience.",
   "appDownload.install": "Download app",

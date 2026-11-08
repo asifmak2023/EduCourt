@@ -73,6 +73,7 @@ use App\Http\Controllers\Api\HostelReportController;
 use App\Http\Controllers\Api\HostelRoomController;
 use App\Http\Controllers\Api\IncomeSourceController;
 use App\Http\Controllers\Api\InstitutionController;
+use App\Http\Controllers\Api\IntegrationController;
 use App\Http\Controllers\Api\InventoryCategoryController;
 use App\Http\Controllers\Api\InventoryItemController;
 use App\Http\Controllers\Api\InventoryReportController;
@@ -100,6 +101,7 @@ use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\PayrollAdjustmentController;
 use App\Http\Controllers\Api\PayrollRunController;
 use App\Http\Controllers\Api\PeriodController;
+use App\Http\Controllers\Api\PlatformIntegrationController;
 use App\Http\Controllers\Api\PlatformReportController;
 use App\Http\Controllers\Api\PortalController;
 use App\Http\Controllers\Api\ProfileController;
@@ -203,6 +205,39 @@ Route::prefix('v1')->group(function () {
         Route::get('sso-providers/{provider}', [SsoProviderController::class, 'show'])->middleware('permission:setting.view');
         Route::put('sso-providers/{provider}', [SsoProviderController::class, 'update'])->middleware('permission:setting.edit');
         Route::delete('sso-providers/{provider}', [SsoProviderController::class, 'destroy'])->middleware('permission:setting.edit');
+
+        Route::prefix('integrations/whatsapp')->group(function () {
+            Route::get('/', [IntegrationController::class, 'show'])->middleware('permission:integration.view');
+            Route::put('/', [IntegrationController::class, 'update'])->middleware('permission:integration.edit');
+            Route::post('verify', [IntegrationController::class, 'verify'])->middleware('permission:integration.test');
+            Route::post('test-send', [IntegrationController::class, 'testSend'])->middleware('permission:integration.test');
+            Route::get('usage', [IntegrationController::class, 'usage'])->middleware('permission:integration.view');
+        });
+
+        Route::prefix('platform')->group(function () {
+            Route::get('institutions/{institution}/integration-policy', [PlatformIntegrationController::class, 'policy'])
+                ->middleware('permission:integration.manage');
+            Route::put('institutions/{institution}/integration-policy', [PlatformIntegrationController::class, 'updatePolicy'])
+                ->middleware('permission:integration.manage');
+
+            Route::get('whatsapp-senders', [PlatformIntegrationController::class, 'senders'])
+                ->middleware('permission:integration.manage');
+            Route::post('whatsapp-senders', [PlatformIntegrationController::class, 'storeSender'])
+                ->middleware('permission:integration.manage');
+            Route::get('whatsapp-senders/{sender}', [PlatformIntegrationController::class, 'showSender'])
+                ->middleware('permission:integration.manage');
+            Route::put('whatsapp-senders/{sender}', [PlatformIntegrationController::class, 'updateSender'])
+                ->middleware('permission:integration.manage');
+            Route::post('whatsapp-senders/{sender}/verify', [PlatformIntegrationController::class, 'verifySender'])
+                ->middleware('permission:integration.manage');
+            Route::post('whatsapp-senders/{sender}/test-send', [PlatformIntegrationController::class, 'testSender'])
+                ->middleware('permission:integration.manage');
+
+            Route::get('meta-apps', [PlatformIntegrationController::class, 'metaApps'])
+                ->middleware('permission:integration.manage');
+            Route::get('whatsapp-rate-cards', [PlatformIntegrationController::class, 'rateCards'])
+                ->middleware('permission:integration.manage');
+        });
 
         Route::get('audit-logs', [AuditLogController::class, 'index'])
             ->middleware('permission:audit.view');

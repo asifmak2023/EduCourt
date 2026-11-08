@@ -16,6 +16,12 @@ const SETTINGS_SECTIONS: HubSection[] = [
     icon: "shield",
   },
   {
+    href: "/dashboard/settings/whatsapp",
+    title: "WhatsApp",
+    description: "Business number, templates and messaging quota.",
+    icon: "message",
+  },
+  {
     href: "/dashboard/settings/appearance",
     title: "Appearance",
     description: "Color mode, accent and background.",

@@ -141,6 +141,7 @@ enum RoleName: string
             self::FinanceHead,
             self::Accountant,
             self::HrOfficer,
+            self::ItAdministrator,
         ];
     }
 

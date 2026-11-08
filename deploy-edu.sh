@@ -118,7 +118,12 @@ php artisan migrate --force
 # report.campus) that the roles never received, so pages return 403. The
 # seeder only uses findOrCreate + syncPermissions, so it is safe to re-run and
 # never touches application data.
+#
+# Clear the cached config first so the seeder reads the *newly pulled*
+# config/rbac.php. Otherwise a cached config from the previous release is used
+# and newly added permissions (e.g. student.import) are never created.
 log "Syncing RBAC roles and permissions"
+php artisan config:clear
 php artisan db:seed --class=RbacSeeder --force
 php artisan permission:cache-reset || true
 

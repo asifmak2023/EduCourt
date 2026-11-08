@@ -11,7 +11,6 @@ use App\Enums\WhatsAppQuotaStatus;
 use App\Models\AppNotification;
 use App\Models\FeeReminder;
 use App\Models\IntegrationPolicy;
-use App\Models\IntegrationTemplate;
 use App\Models\WhatsAppConsent;
 use App\Models\WhatsAppMessageEvent;
 use App\Models\WhatsAppRateCard;
@@ -36,6 +35,7 @@ class WhatsAppDeliveryService
         private readonly SenderResolver $resolver,
         private readonly string $baseUrl,
         private readonly int $timeout,
+        private readonly ?TemplateSelector $templates = null,
     ) {}
 
     public static function make(): self
@@ -44,6 +44,7 @@ class WhatsAppDeliveryService
             new SenderResolver,
             rtrim((string) config('reminders.whatsapp.base_url', 'https://graph.facebook.com/v21.0'), '/'),
             (int) config('reminders.whatsapp.timeout', 15),
+            new TemplateSelector,
         );
     }
 
@@ -66,7 +67,7 @@ class WhatsAppDeliveryService
             category: WhatsAppMessageCategory::Utility,
             purpose: 'fee_reminder',
             reminder: $reminder,
-            parameters: $this->reminderTemplateParameters($reminder),
+            templateContext: $this->reminderTemplateContext($reminder),
         );
     }
 
@@ -98,6 +99,7 @@ class WhatsAppDeliveryService
             category: WhatsAppMessageCategory::Utility,
             purpose: 'notification',
             notification: $notification,
+            templateContext: $this->notificationTemplateContext($notification),
         );
     }
 
@@ -110,7 +112,7 @@ class WhatsAppDeliveryService
         string $purpose,
         ?FeeReminder $reminder = null,
         ?AppNotification $notification = null,
-        array $parameters = [],
+        array $templateContext = [],
     ): bool {
         $resolved = $this->resolver->resolve($institutionId);
 
@@ -161,7 +163,7 @@ class WhatsAppDeliveryService
 
         $result = $windowOpen
             ? $client->sendText($normalised, $body)
-            : $this->sendViaTemplate($institutionId, $sender?->id, $normalised, $body, $purpose, $parameters);
+            : $this->sendViaTemplate($institutionId, $sender?->id, $normalised, $body, $purpose, $templateContext);
 
         if ($result['ok']) {
             $usage->update([
@@ -219,15 +221,10 @@ class WhatsAppDeliveryService
         string $recipient,
         string $body,
         string $purpose,
-        array $parameters,
+        array $templateContext,
     ): array {
-        $template = IntegrationTemplate::query()
-            ->where('institution_id', $institutionId)
-            ->where('sender_id', $senderId)
-            ->where('purpose', $purpose)
-            ->where('approval_status', 'approved')
-            ->orderByDesc('id')
-            ->first();
+        $selector = $this->templates ?? new TemplateSelector;
+        $template = $selector->select($institutionId, $senderId, $purpose);
 
         if ($template === null) {
             return [
@@ -245,7 +242,7 @@ class WhatsAppDeliveryService
             $recipient,
             $template->name,
             $template->language,
-            $parameters,
+            $selector->parameters($template, $templateContext),
         );
     }
 
@@ -393,15 +390,28 @@ class WhatsAppDeliveryService
     }
 
     /**
-     * @return array<int, string>
+     * @return array<string, string>
      */
-    private function reminderTemplateParameters(FeeReminder $reminder): array
+    private function reminderTemplateContext(FeeReminder $reminder): array
     {
         return [
-            (string) $reminder->recipient_name,
-            (string) $reminder->outstanding,
-            (string) ($reminder->oldest_due_date?->toDateString() ?? '-'),
-            (string) $reminder->days_overdue,
+            'recipient_name' => (string) $reminder->recipient_name,
+            'outstanding' => (string) $reminder->outstanding,
+            'oldest_due_date' => (string) ($reminder->oldest_due_date?->toDateString() ?? '-'),
+            'days_overdue' => (string) $reminder->days_overdue,
+            'message' => (string) $reminder->message,
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function notificationTemplateContext(AppNotification $notification): array
+    {
+        return [
+            'recipient_name' => (string) $notification->recipient_name,
+            'title' => (string) $notification->title,
+            'body' => (string) $notification->body,
         ];
     }
 }

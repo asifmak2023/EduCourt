@@ -12,7 +12,7 @@ use App\Models\Guardian;
 use App\Models\Student;
 use App\Services\Reminders\Gateways\LogReminderGateway;
 use App\Services\Reminders\Gateways\WhatsAppReminderGateway;
-use App\Services\WhatsApp\WhatsAppClient;
+use App\Services\WhatsApp\WhatsAppDeliveryService;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -35,7 +35,7 @@ class ReminderService
     public static function makeGateway(): ReminderGateway
     {
         return match (config('reminders.gateway')) {
-            'whatsapp' => new WhatsAppReminderGateway(WhatsAppClient::fromConfig()),
+            'whatsapp' => new WhatsAppReminderGateway(WhatsAppDeliveryService::make()),
             'log' => new LogReminderGateway,
             default => new LogReminderGateway,
         };

@@ -22,7 +22,7 @@ class FeeReminder extends Model
         'guardian_id', 'channel', 'recipient_name', 'recipient_email',
         'recipient_phone', 'outstanding', 'bucket', 'oldest_due_date',
         'days_overdue', 'message', 'status', 'sent_at', 'failure_reason',
-        'created_by',
+        'provider_message_id', 'provider_status', 'created_by',
     ];
 
     protected function casts(): array

@@ -2,19 +2,34 @@
 
 namespace Tests\Unit;
 
+use App\Enums\WhatsAppConnectionMode;
+use App\Models\WhatsAppSender;
+use App\Services\WhatsApp\ResolvedSender;
 use App\Services\WhatsApp\WhatsAppClient;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class WhatsAppClientTest extends TestCase
 {
-    private function client(string $countryCode = '92', ?string $token = 'token', ?string $phoneId = '1234'): WhatsAppClient
+    private function resolved(string $countryCode = '92'): ResolvedSender
+    {
+        $sender = new WhatsAppSender([
+            'connection_mode' => WhatsAppConnectionMode::InstitutionManaged->value,
+            'phone_number_id' => '1234',
+            'business_account_id' => 'WABA1',
+            'access_token' => 'token',
+            'default_country_code' => $countryCode,
+        ]);
+        $sender->id = 1;
+
+        return ResolvedSender::ready($sender);
+    }
+
+    private function client(string $countryCode = '92'): WhatsAppClient
     {
         return new WhatsAppClient(
-            token: $token,
-            phoneNumberId: $phoneId,
+            resolved: $this->resolved($countryCode),
             baseUrl: 'https://graph.facebook.com/v21.0',
             timeout: 5,
-            defaultCountryCode: $countryCode,
         );
     }
 
@@ -57,12 +72,5 @@ class WhatsAppClientTest extends TestCase
         $this->assertNull($client->normalizePhone('abc'));
         $this->assertNull($client->normalizePhone('123'));
         $this->assertNull($client->normalizePhone('+12345678901234567'));
-    }
-
-    public function test_it_reports_whether_it_is_configured(): void
-    {
-        $this->assertTrue($this->client()->configured());
-        $this->assertFalse($this->client(token: null)->configured());
-        $this->assertFalse($this->client(phoneId: null)->configured());
     }
 }

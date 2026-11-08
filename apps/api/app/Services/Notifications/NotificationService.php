@@ -12,7 +12,7 @@ use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Services\Notifications\Gateways\LogNotificationGateway;
 use App\Services\Notifications\Gateways\WhatsAppNotificationGateway;
-use App\Services\WhatsApp\WhatsAppClient;
+use App\Services\WhatsApp\WhatsAppDeliveryService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -27,7 +27,7 @@ class NotificationService
     public static function makeGateway(): NotificationGateway
     {
         return match (config('reminders.gateway')) {
-            'whatsapp' => new WhatsAppNotificationGateway(WhatsAppClient::fromConfig()),
+            'whatsapp' => new WhatsAppNotificationGateway(WhatsAppDeliveryService::make()),
             default => new LogNotificationGateway,
         };
     }

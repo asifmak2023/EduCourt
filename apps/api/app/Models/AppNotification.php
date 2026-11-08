@@ -22,6 +22,7 @@ class AppNotification extends Model
         'institution_id', 'campus_id', 'student_id', 'guardian_id', 'type',
         'channel', 'recipient_name', 'recipient_email', 'recipient_phone',
         'title', 'body', 'status', 'sent_at', 'failure_reason', 'meta',
+        'provider_message_id', 'provider_status',
         'created_by', 'occurred_on',
     ];
 

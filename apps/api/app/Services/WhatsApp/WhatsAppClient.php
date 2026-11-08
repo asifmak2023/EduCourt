@@ -5,110 +5,30 @@ namespace App\Services\WhatsApp;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
- * Thin client for the Meta WhatsApp Cloud API.
+ * Client for the Meta WhatsApp Cloud API.
  *
- * Sends plain-text messages through the configured business phone number. Phone
- * numbers are normalised to E.164 digits (the format the Cloud API expects, with
- * no leading "+") before delivery.
+ * The client is constructed per send from a ResolvedSender. It never reads
+ * global configuration and never holds credentials between calls, so a shared
+ * queue worker cannot leak one institution's token into another's send.
  */
 class WhatsAppClient
 {
     public function __construct(
-        private readonly ?string $token,
-        private readonly ?string $phoneNumberId,
+        private readonly ResolvedSender $resolved,
         private readonly string $baseUrl,
         private readonly int $timeout,
-        private readonly string $defaultCountryCode,
     ) {}
 
-    public static function fromConfig(): self
+    public function resolved(): ResolvedSender
     {
-        $config = (array) config('reminders.whatsapp', []);
-
-        return new self(
-            token: self::stringOrNull($config['token'] ?? null),
-            phoneNumberId: self::stringOrNull($config['phone_number_id'] ?? null),
-            baseUrl: rtrim((string) ($config['base_url'] ?? 'https://graph.facebook.com/v21.0'), '/'),
-            timeout: (int) ($config['timeout'] ?? 15),
-            defaultCountryCode: preg_replace('/\D+/', '', (string) ($config['default_country_code'] ?? '')) ?? '',
-        );
-    }
-
-    /**
-     * Whether the client has enough configuration to attempt delivery.
-     */
-    public function configured(): bool
-    {
-        return $this->token !== null && $this->phoneNumberId !== null;
-    }
-
-    /**
-     * Send a plain-text WhatsApp message. Returns true only on a 2xx response.
-     */
-    public function sendText(string $recipient, string $body): bool
-    {
-        if (! $this->configured()) {
-            Log::warning('WhatsApp delivery skipped: gateway is not configured.', [
-                'recipient' => $recipient,
-            ]);
-
-            return false;
-        }
-
-        $to = $this->normalizePhone($recipient);
-
-        if ($to === null) {
-            Log::warning('WhatsApp delivery skipped: recipient phone number is invalid.', [
-                'recipient' => $recipient,
-            ]);
-
-            return false;
-        }
-
-        try {
-            $response = Http::withToken($this->token)
-                ->timeout($this->timeout)
-                ->acceptJson()
-                ->post($this->endpoint(), [
-                    'messaging_product' => 'whatsapp',
-                    'recipient_type' => 'individual',
-                    'to' => $to,
-                    'type' => 'text',
-                    'text' => [
-                        'preview_url' => false,
-                        'body' => $body,
-                    ],
-                ]);
-        } catch (ConnectionException $exception) {
-            Log::warning('WhatsApp delivery failed: connection error.', [
-                'recipient' => $to,
-                'error' => $exception->getMessage(),
-            ]);
-
-            return false;
-        }
-
-        if ($response->failed()) {
-            Log::warning('WhatsApp delivery failed: API rejected the message.', [
-                'recipient' => $to,
-                'status' => $response->status(),
-                'error' => $response->json('error.message'),
-            ]);
-
-            return false;
-        }
-
-        return true;
+        return $this->resolved;
     }
 
     /**
      * Normalise a free-form phone number to E.164 digits without a leading "+".
-     *
-     * Handles leading "+", the "00" international prefix and national trunk
-     * zeros by prefixing the configured default country code. Returns null when
-     * the result is not a plausible international number.
      */
     public function normalizePhone(string $phone): ?string
     {
@@ -125,15 +45,15 @@ class WhatsAppClient
             return null;
         }
 
+        $countryCode = $this->resolved->countryCode();
+
         if (str_starts_with($digits, '00')) {
             $digits = substr($digits, 2);
         } elseif (! $hasPlus) {
             if (str_starts_with($digits, '0')) {
-                $digits = $this->defaultCountryCode === ''
-                    ? $digits
-                    : $this->defaultCountryCode.substr($digits, 1);
-            } elseif ($this->defaultCountryCode !== '' && ! str_starts_with($digits, $this->defaultCountryCode)) {
-                $digits = $this->defaultCountryCode.$digits;
+                $digits = $countryCode === '' ? $digits : $countryCode.substr($digits, 1);
+            } elseif ($countryCode !== '' && ! str_starts_with($digits, $countryCode)) {
+                $digits = $countryCode.$digits;
             }
         }
 
@@ -144,19 +64,161 @@ class WhatsAppClient
         return $digits;
     }
 
-    private function endpoint(): string
+    /**
+     * Send a plain-text message. Used only inside an open 24-hour window.
+     *
+     * @return array{ok: bool, message_id: ?string, error: ?string, uncertain: bool}
+     */
+    public function sendText(string $recipient, string $body): array
     {
-        return "{$this->baseUrl}/{$this->phoneNumberId}/messages";
+        return $this->post([
+            'messaging_product' => 'whatsapp',
+            'recipient_type' => 'individual',
+            'to' => $recipient,
+            'type' => 'text',
+            'text' => ['preview_url' => false, 'body' => $body],
+        ]);
     }
 
-    private static function stringOrNull(mixed $value): ?string
-    {
-        if (! is_string($value)) {
-            return null;
+    /**
+     * Send an approved template message with ordered body parameters.
+     *
+     * @param  array<int, string>  $parameters
+     * @return array{ok: bool, message_id: ?string, error: ?string, uncertain: bool}
+     */
+    public function sendTemplate(
+        string $recipient,
+        string $templateName,
+        string $language,
+        array $parameters = [],
+    ): array {
+        $components = [];
+
+        if ($parameters !== []) {
+            $components[] = [
+                'type' => 'body',
+                'parameters' => array_map(
+                    fn (string $value) => ['type' => 'text', 'text' => $value],
+                    array_values($parameters),
+                ),
+            ];
         }
 
-        $value = trim($value);
+        return $this->post([
+            'messaging_product' => 'whatsapp',
+            'recipient_type' => 'individual',
+            'to' => $recipient,
+            'type' => 'template',
+            'template' => [
+                'name' => $templateName,
+                'language' => ['code' => $language],
+                'components' => $components,
+            ],
+        ]);
+    }
 
-        return $value === '' ? null : $value;
+    /**
+     * Validate credentials without sending a message (non-destructive check).
+     */
+    public function verify(): bool
+    {
+        $sender = $this->resolved->sender;
+
+        if ($sender === null || $sender->phone_number_id === null) {
+            return false;
+        }
+
+        try {
+            $response = Http::withToken((string) $this->resolved->token())
+                ->timeout($this->timeout)
+                ->acceptJson()
+                ->get("{$this->baseUrl}/{$sender->phone_number_id}");
+        } catch (ConnectionException|Throwable) {
+            return false;
+        }
+
+        return $response->successful();
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array{ok: bool, message_id: ?string, error: ?string, uncertain: bool}
+     */
+    private function post(array $payload): array
+    {
+        if (! $this->resolved->ready) {
+            return ['ok' => false, 'message_id' => null, 'error' => $this->resolved->failureReason, 'uncertain' => false];
+        }
+
+        $to = $this->normalizePhone((string) $payload['to']);
+        $payload['to'] = $to;
+
+        if ($to === null) {
+            return ['ok' => false, 'message_id' => null, 'error' => 'invalid_recipient', 'uncertain' => false];
+        }
+
+        try {
+            $response = Http::withToken((string) $this->resolved->token())
+                ->timeout($this->timeout)
+                ->acceptJson()
+                ->post($this->endpoint(), $payload);
+        } catch (ConnectionException $exception) {
+            // The request may have been written before the timeout. Never retry
+            // blindly; the caller marks the intent submission_unknown.
+            Log::warning('WhatsApp delivery outcome unknown: connection error.', [
+                'sender_id' => $this->resolved->senderId(),
+                'error' => $exception->getMessage(),
+            ]);
+
+            return ['ok' => false, 'message_id' => null, 'error' => 'connection_error', 'uncertain' => true];
+        } catch (Throwable $exception) {
+            Log::warning('WhatsApp delivery failed: unexpected error.', [
+                'sender_id' => $this->resolved->senderId(),
+                'error' => $exception->getMessage(),
+            ]);
+
+            return ['ok' => false, 'message_id' => null, 'error' => 'unexpected_error', 'uncertain' => true];
+        }
+
+        if ($response->failed()) {
+            $code = (string) ($response->json('error.code') ?? '');
+            Log::warning('WhatsApp delivery rejected by API.', [
+                'sender_id' => $this->resolved->senderId(),
+                'status' => $response->status(),
+                'code' => $code,
+            ]);
+
+            return [
+                'ok' => false,
+                'message_id' => null,
+                'error' => $this->mapError($code, $response->json('error.message')),
+                'uncertain' => false,
+            ];
+        }
+
+        return [
+            'ok' => true,
+            'message_id' => $response->json('messages.0.id'),
+            'error' => null,
+            'uncertain' => false,
+        ];
+    }
+
+    private function endpoint(): string
+    {
+        return "{$this->baseUrl}/{$this->resolved->phoneNumberId()}/messages";
+    }
+
+    private function mapError(string $code, ?string $message): string
+    {
+        return match ($code) {
+            '131047' => 'reengagement_required',
+            '131026' => 'recipient_undeliverable',
+            '132000' => 'template_parameter_mismatch',
+            '132001' => 'template_not_found',
+            '132005', '132007' => 'template_paused_or_disabled',
+            '190' => 'invalid_token',
+            default => $message !== null && $message !== '' ? $message : ('api_error_'.$code),
+        };
     }
 }

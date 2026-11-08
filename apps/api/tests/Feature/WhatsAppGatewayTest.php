@@ -7,16 +7,22 @@ use App\Enums\NotificationStatus;
 use App\Enums\NotificationType;
 use App\Enums\ReminderChannel;
 use App\Enums\ReminderStatus;
+use App\Enums\WhatsAppConnectionMode;
+use App\Enums\WhatsAppManagedBy;
 use App\Models\AppNotification;
 use App\Models\Campus;
 use App\Models\FeeReminder;
 use App\Models\Institution;
+use App\Models\IntegrationPolicy;
 use App\Models\Student;
+use App\Models\WhatsAppConsent;
+use App\Models\WhatsAppMessageEvent;
+use App\Models\WhatsAppSender;
 use App\Services\Notifications\Gateways\WhatsAppNotificationGateway;
 use App\Services\Notifications\NotificationService;
 use App\Services\Reminders\Gateways\WhatsAppReminderGateway;
 use App\Services\Reminders\ReminderService;
-use App\Services\WhatsApp\WhatsAppClient;
+use App\Services\WhatsApp\WhatsAppDeliveryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -32,6 +38,8 @@ class WhatsAppGatewayTest extends TestCase
 
     private Student $student;
 
+    private WhatsAppSender $sender;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -39,13 +47,6 @@ class WhatsAppGatewayTest extends TestCase
         config([
             'reminders.gateway' => 'whatsapp',
             'reminders.channel' => 'whatsapp',
-            'reminders.whatsapp' => [
-                'token' => 'test-token',
-                'phone_number_id' => '123456',
-                'base_url' => 'https://graph.facebook.com/v21.0',
-                'timeout' => 5,
-                'default_country_code' => '92',
-            ],
         ]);
 
         $this->institution = Institution::create(['name' => 'Test Trust', 'code' => 'TT']);
@@ -61,6 +62,60 @@ class WhatsAppGatewayTest extends TestCase
             'first_name' => 'Ali', 'last_name' => 'Raza',
             'gender' => 'male', 'status' => 'active',
         ]);
+
+        $this->sender = WhatsAppSender::create([
+            'owner_institution_id' => $this->institution->id,
+            'managed_by' => WhatsAppManagedBy::Institution->value,
+            'label' => 'main',
+            'connection_mode' => WhatsAppConnectionMode::InstitutionManaged->value,
+            'phone_number_id' => '123456',
+            'business_account_id' => 'WABA-TT',
+            'access_token' => 'test-token',
+            'default_country_code' => '92',
+        ]);
+
+        IntegrationPolicy::create([
+            'institution_id' => $this->institution->id,
+            'whatsapp_allowed' => true,
+            'whatsapp_sender_id' => $this->sender->id,
+        ]);
+
+        WhatsAppConsent::create([
+            'institution_id' => $this->institution->id,
+            'business_account_id' => 'WABA-TT',
+            'phone' => '923000000001',
+            'message_category' => 'utility',
+            'status' => 'opted_in',
+            'source' => 'admission_form',
+        ]);
+
+        WhatsAppConsent::create([
+            'institution_id' => $this->institution->id,
+            'business_account_id' => 'WABA-TT',
+            'phone' => '923000000002',
+            'message_category' => 'utility',
+            'status' => 'opted_in',
+            'source' => 'admission_form',
+        ]);
+    }
+
+    private function openServiceWindow(string ...$phones): void
+    {
+        foreach ($phones as $phone) {
+            WhatsAppMessageEvent::create([
+                'integration_id' => $this->sender->id,
+                'institution_id' => $this->institution->id,
+                'contact_wa_id' => $phone,
+                'direction' => 'inbound',
+                'event' => 'message',
+                'occurred_at' => now()->subMinutes(5),
+            ]);
+        }
+    }
+
+    private function reminderGateway(): WhatsAppReminderGateway
+    {
+        return new WhatsAppReminderGateway(WhatsAppDeliveryService::make());
     }
 
     public function test_it_posts_a_whatsapp_text_message_to_the_cloud_api(): void
@@ -69,9 +124,10 @@ class WhatsAppGatewayTest extends TestCase
             'graph.facebook.com/*' => Http::response(['messages' => [['id' => 'wamid.1']]], 200),
         ]);
 
+        $this->openServiceWindow('923000000001');
         $reminder = $this->reminder(ReminderChannel::WhatsApp, '+92-300-0000001');
 
-        $sent = (new WhatsAppReminderGateway(WhatsAppClient::fromConfig()))->send($reminder);
+        $sent = $this->reminderGateway()->send($reminder);
 
         $this->assertTrue($sent);
 
@@ -93,9 +149,10 @@ class WhatsAppGatewayTest extends TestCase
             'graph.facebook.com/*' => Http::response(['error' => ['message' => 'Invalid token']], 401),
         ]);
 
+        $this->openServiceWindow('923000000001');
         $reminder = $this->reminder(ReminderChannel::WhatsApp, '+92-300-0000001');
 
-        $sent = (new WhatsAppReminderGateway(WhatsAppClient::fromConfig()))->send($reminder);
+        $sent = $this->reminderGateway()->send($reminder);
 
         $this->assertFalse($sent);
     }
@@ -106,27 +163,23 @@ class WhatsAppGatewayTest extends TestCase
 
         $reminder = $this->reminder(ReminderChannel::WhatsApp, null);
 
-        $sent = (new WhatsAppReminderGateway(WhatsAppClient::fromConfig()))->send($reminder);
+        $sent = $this->reminderGateway()->send($reminder);
 
         $this->assertFalse($sent);
         Http::assertNothingSent();
     }
 
-    public function test_it_returns_false_when_the_gateway_is_not_configured(): void
+    public function test_it_returns_false_when_the_institution_has_no_sender(): void
     {
         Http::fake();
 
+        IntegrationPolicy::where('institution_id', $this->institution->id)
+            ->update(['whatsapp_sender_id' => null]);
+
+        $this->openServiceWindow('923000000001');
         $reminder = $this->reminder(ReminderChannel::WhatsApp, '+92-300-0000001');
 
-        $client = new WhatsAppClient(
-            token: null,
-            phoneNumberId: null,
-            baseUrl: 'https://graph.facebook.com/v21.0',
-            timeout: 5,
-            defaultCountryCode: '92',
-        );
-
-        $this->assertFalse((new WhatsAppReminderGateway($client))->send($reminder));
+        $this->assertFalse($this->reminderGateway()->send($reminder));
         Http::assertNothingSent();
     }
 
@@ -136,7 +189,7 @@ class WhatsAppGatewayTest extends TestCase
 
         $reminder = $this->reminder(ReminderChannel::Email, null);
 
-        $sent = (new WhatsAppReminderGateway(WhatsAppClient::fromConfig()))->send($reminder);
+        $sent = $this->reminderGateway()->send($reminder);
 
         $this->assertTrue($sent);
         Http::assertNothingSent();
@@ -147,6 +200,8 @@ class WhatsAppGatewayTest extends TestCase
         Http::fake([
             'graph.facebook.com/*' => Http::response(['messages' => [['id' => 'wamid.2']]], 200),
         ]);
+
+        $this->openServiceWindow('923000000002');
 
         $notification = AppNotification::create([
             'institution_id' => $this->institution->id,
@@ -161,7 +216,7 @@ class WhatsAppGatewayTest extends TestCase
             'status' => NotificationStatus::Pending,
         ]);
 
-        $sent = (new WhatsAppNotificationGateway(WhatsAppClient::fromConfig()))->send($notification);
+        $sent = (new WhatsAppNotificationGateway(WhatsAppDeliveryService::make()))->send($notification);
 
         $this->assertTrue($sent);
 
@@ -180,10 +235,10 @@ class WhatsAppGatewayTest extends TestCase
             'graph.facebook.com/*' => Http::response(['messages' => [['id' => 'wamid.3']]], 200),
         ]);
 
+        $this->openServiceWindow('923000000001');
         $reminder = $this->reminder(ReminderChannel::WhatsApp, '+92-300-0000001');
 
-        $service = app(ReminderService::class);
-        $result = $service->send($reminder);
+        $result = app(ReminderService::class)->send($reminder);
 
         $this->assertSame(ReminderStatus::Sent, $result->status);
         $this->assertNotNull($result->sent_at);
@@ -195,16 +250,16 @@ class WhatsAppGatewayTest extends TestCase
             'graph.facebook.com/*' => Http::response(['error' => ['message' => 'nope']], 500),
         ]);
 
+        $this->openServiceWindow('923000000001');
         $reminder = $this->reminder(ReminderChannel::WhatsApp, '+92-300-0000001');
 
-        $service = app(ReminderService::class);
-        $result = $service->send($reminder);
+        $result = app(ReminderService::class)->send($reminder);
 
         $this->assertSame(ReminderStatus::Failed, $result->status);
         $this->assertNotNull($result->failure_reason);
     }
 
-    public function test_notification_service_resolves_the_whatsapp_gateway_from_config(): void
+    public function test_gateway_factories_resolve_the_whatsapp_gateways_from_config(): void
     {
         $this->assertInstanceOf(WhatsAppNotificationGateway::class, NotificationService::makeGateway());
         $this->assertInstanceOf(WhatsAppReminderGateway::class, ReminderService::makeGateway());

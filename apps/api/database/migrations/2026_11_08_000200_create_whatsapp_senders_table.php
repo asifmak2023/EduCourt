@@ -22,8 +22,12 @@ return new class extends Migration
     {
         Schema::create('whatsapp_senders', function (Blueprint $table) {
             $table->id();
+            // MySQL 8 forbids ON DELETE CASCADE on a column that feeds a
+            // stored generated column (owner_institution_id -> active_unique),
+            // so this FK is RESTRICT. Institutions are soft-deleted in
+            // practice, and a hard delete must be a deliberate, reviewed act.
             $table->foreignId('owner_institution_id')->nullable()
-                ->constrained('institutions')->cascadeOnDelete();
+                ->constrained('institutions');
             $table->foreignId('meta_app_connection_id')->nullable()
                 ->constrained('meta_app_connections')->nullOnDelete();
             $table->string('managed_by', 16)->default('institution');

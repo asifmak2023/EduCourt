@@ -164,6 +164,7 @@ use App\Http\Controllers\Api\VehicleController;
 use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\Api\VisitorLogController;
 use App\Http\Controllers\Api\WelfareRecordController;
+use App\Http\Controllers\Api\WhatsAppWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -185,6 +186,11 @@ Route::prefix('v1')->group(function () {
         ->middleware('signed')->name('verification.verify');
 
     Route::post('webhooks/payments/{gateway}', [PaymentWebhookController::class, 'handle'])
+        ->middleware('throttle:sensitive');
+
+    Route::get('webhooks/whatsapp/{appKey}', [WhatsAppWebhookController::class, 'verify'])
+        ->middleware('throttle:sensitive');
+    Route::post('webhooks/whatsapp/{appKey}', [WhatsAppWebhookController::class, 'handle'])
         ->middleware('throttle:sensitive');
 
     Route::middleware(['auth:sanctum', 'tenant'])->group(function () {

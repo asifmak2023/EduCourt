@@ -1247,3 +1247,79 @@ zcat "$F" | mysql --no-defaults -uroot educourt
 cd /var/www/educourt/apps/api && php artisan migrate --force
 pm2 restart educourt-web educourt-queue
 ```
+
+## WhatsApp integration operations
+
+WhatsApp is configured per institution. A sender belongs to a Meta WhatsApp
+Business Account; an institution uses it only through an explicit assignment in
+`integration_policies.whatsapp_sender_id`. There is no implicit fallback: an
+institution without an assignment cannot send.
+
+### First-time bootstrap (per platform)
+
+Import the legacy `WHATSAPP_*` environment credentials into the database. This
+is idempotent and does not assign any institution by default:
+
+```bash
+cd /var/www/educourt/apps/api
+php artisan whatsapp:bootstrap
+```
+
+Opt in institutions explicitly, one at a time:
+
+```bash
+php artisan whatsapp:bootstrap --institution=1
+```
+
+Environment variables are not deleted; the database becomes the source of truth
+after bootstrap.
+
+### Consent import (evidence-based)
+
+Absence of evidence is never consent. Only phone numbers with documented
+consent are marked opted in; unlisted numbers stay `pending` and remain blocked.
+
+```bash
+php artisan whatsapp:import-consent 1 --business-account=WABA_ID --file=/root/consent.csv
+```
+
+The CSV needs a `phone` column. Re-running is safe.
+
+### Token lifecycle
+
+Tokens are stored encrypted. The model activity log excludes the token, so
+rotation is recorded without the secret.
+
+```bash
+php artisan whatsapp:tokens
+```
+
+A `known` expiry in the past blocks sending (`token_expired`). An `unknown`
+expiry still sends but raises a banner. Rotate a token from the platform console
+or `POST /api/v1/platform/whatsapp-senders/{sender}/rotate-token`.
+
+### Webhooks
+
+Point the Meta WhatsApp webhook at:
+
+```
+https://<host>/api/v1/webhooks/whatsapp/default
+```
+
+Subscribe to the `messages` field. GET is the verify handshake (uses the app's
+`verify_token`); POST is authenticated with `X-Hub-Signature-256`. Events are
+persisted before acknowledgement; a database failure returns 5xx so Meta retries.
+An unknown `phone_number_id` is acknowledged and logged for mapping.
+
+### Failure recovery
+
+| Symptom | Meaning | Action |
+| --- | --- | --- |
+| `no_sender_assigned` | No sender assigned to the institution | Assign in platform console |
+| `token_expired` | Known token expiry has passed | Rotate the token |
+| `no_whatsapp_consent` | Guardian has not opted in | Collect evidence, import consent |
+| `template_required` | Outside 24h window with no approved template | Approve a template in the WABA |
+| `quota_exceeded` | Monthly limit reached | Raise the limit |
+| `submission_unknown` | Request may have been written before a timeout | Reconcile via receipts; do not resend blindly |
+
+Delivering is at-least-once plus reconciliation, never exactly-once.

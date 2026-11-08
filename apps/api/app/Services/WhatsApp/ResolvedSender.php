@@ -12,20 +12,30 @@ use App\Models\WhatsAppSender;
  */
 final class ResolvedSender
 {
+    /**
+     * @param  array<int, string>  $warnings
+     */
     public function __construct(
         public readonly bool $ready,
         public readonly ?WhatsAppSender $sender,
         public readonly ?string $failureReason = null,
+        public readonly array $warnings = [],
     ) {}
 
-    public static function ready(WhatsAppSender $sender): self
+    /**
+     * @param  array<int, string>  $warnings
+     */
+    public static function ready(WhatsAppSender $sender, array $warnings = []): self
     {
-        return new self(true, $sender);
+        return new self(true, $sender, null, $warnings);
     }
 
-    public static function notReady(string $reason, ?WhatsAppSender $sender = null): self
+    /**
+     * @param  array<int, string>  $warnings
+     */
+    public static function notReady(string $reason, ?WhatsAppSender $sender = null, array $warnings = []): self
     {
-        return new self(false, $sender, $reason);
+        return new self(false, $sender, $reason, $warnings);
     }
 
     public function token(): ?string

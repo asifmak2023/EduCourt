@@ -36,8 +36,34 @@ class WhatsAppSenderResource extends JsonResource
             'has_access_token' => $sender->access_token !== null,
             'is_platform_owned' => $sender->isPlatformOwned(),
             'token_expired' => $sender->tokenExpired(),
+            'token_expiry_warning' => $this->expiryWarning($sender),
             'created_at' => $sender->created_at,
             'updated_at' => $sender->updated_at,
         ];
+    }
+
+    /**
+     * A non-blocking advisory for the UI. Unknown expiry and near-expiry both
+     * warrant a banner; only a passed known expiry blocks sending.
+     */
+    private function expiryWarning(WhatsAppSender $sender): ?string
+    {
+        if ($sender->token_expiry_mode?->value === 'unknown') {
+            return 'token_expiry_unknown';
+        }
+
+        if ($sender->token_expiry_mode?->value === 'known' && $sender->token_expires_at !== null) {
+            $days = (int) now()->diffInDays($sender->token_expires_at, false);
+
+            if ($days <= 0) {
+                return 'token_expired';
+            }
+
+            if ($days <= 7) {
+                return 'token_expiring_soon';
+            }
+        }
+
+        return null;
     }
 }

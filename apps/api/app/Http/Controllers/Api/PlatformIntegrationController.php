@@ -13,6 +13,7 @@ use App\Models\MetaAppConnection;
 use App\Models\WhatsAppRateCard;
 use App\Models\WhatsAppSender;
 use App\Services\WhatsApp\ResolvedSender;
+use App\Services\WhatsApp\SenderTokenService;
 use App\Services\WhatsApp\WhatsAppClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -64,6 +65,32 @@ class PlatformIntegrationController extends Controller
         $sender->update($data);
 
         return new WhatsAppSenderResource($sender->refresh());
+    }
+
+    public function rotateToken(Request $request, WhatsAppSender $sender, SenderTokenService $tokens): JsonResponse
+    {
+        $data = $request->validate([
+            'access_token' => ['required', 'string', 'max:4000'],
+            'token_expiry_mode' => ['sometimes', Rule::enum(WhatsAppTokenExpiryMode::class)],
+            'token_expires_at' => ['nullable', 'date'],
+        ]);
+
+        $requiresExpiry = ($data['token_expiry_mode'] ?? null) === WhatsAppTokenExpiryMode::Known->value;
+
+        if ($requiresExpiry && empty($data['token_expires_at'])) {
+            return response()->json([
+                'message' => 'A known expiry requires token_expires_at.',
+            ], 422);
+        }
+
+        $tokens->rotate($sender, [
+            'access_token' => $data['access_token'],
+            'token_expiry_mode' => $data['token_expiry_mode'] ?? null,
+            'token_expires_at' => $data['token_expires_at'] ?? null,
+            'actor_id' => $request->user()?->id,
+        ]);
+
+        return response()->json(['data' => new WhatsAppSenderResource($sender->refresh())]);
     }
 
     public function verifySender(WhatsAppSender $sender): JsonResponse

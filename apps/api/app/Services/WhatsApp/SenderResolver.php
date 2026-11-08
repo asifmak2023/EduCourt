@@ -3,6 +3,7 @@
 namespace App\Services\WhatsApp;
 
 use App\Enums\WhatsAppConnectionMode;
+use App\Enums\WhatsAppTokenExpiryMode;
 use App\Models\IntegrationPolicy;
 use App\Models\WhatsAppSender;
 
@@ -66,6 +67,31 @@ class SenderResolver
             return ResolvedSender::notReady('token_expired', $sender);
         }
 
-        return ResolvedSender::ready($sender);
+        return ResolvedSender::ready($sender, $this->warnings($sender));
+    }
+
+    /**
+     * Non-fatal advisories surfaced as a UI banner. An unknown expiry does not
+     * block sending; it means we were never told when the token dies.
+     *
+     * @return array<int, string>
+     */
+    private function warnings(WhatsAppSender $sender): array
+    {
+        if ($sender->token_expiry_mode === WhatsAppTokenExpiryMode::Unknown) {
+            return ['token_expiry_unknown'];
+        }
+
+        $expiresAt = $sender->token_expires_at;
+
+        if ($sender->token_expiry_mode === WhatsAppTokenExpiryMode::Known && $expiresAt !== null) {
+            $days = (int) now()->diffInDays($expiresAt, false);
+
+            if ($days <= 7) {
+                return ['token_expiring_soon'];
+            }
+        }
+
+        return [];
     }
 }

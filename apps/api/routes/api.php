@@ -234,6 +234,8 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:integration.manage');
             Route::put('whatsapp-senders/{sender}', [PlatformIntegrationController::class, 'updateSender'])
                 ->middleware('permission:integration.manage');
+            Route::post('whatsapp-senders/{sender}/rotate-token', [PlatformIntegrationController::class, 'rotateToken'])
+                ->middleware('permission:integration.manage');
             Route::post('whatsapp-senders/{sender}/verify', [PlatformIntegrationController::class, 'verifySender'])
                 ->middleware('permission:integration.manage');
             Route::post('whatsapp-senders/{sender}/test-send', [PlatformIntegrationController::class, 'testSender'])

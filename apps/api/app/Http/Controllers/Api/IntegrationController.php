@@ -202,6 +202,7 @@ class IntegrationController extends Controller
         return [
             'ready' => $resolved->ready,
             'reason' => $resolved->failureReason,
+            'warnings' => $resolved->warnings,
         ];
     }
 

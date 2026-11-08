@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "@eis/i18n";
 import { useAuth } from "@/lib/auth";
+import { useCampus } from "@/lib/campus";
 import { useTr } from "@/lib/i18n";
 import { roleLabel as roleText, isPortalOnly } from "@/lib/roles";
 import { sectionForPath, visibleSections, mobileNavEntries } from "@/lib/nav";
@@ -375,9 +376,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <p className="truncate text-base leading-tight text-foreground">
                 {user.institution?.name ?? t("navigation.educationSystem")}
               </p>
-              <p className="truncate text-sm leading-tight text-muted">
-                {user.campus?.name ?? t("navigation.allCampuses")}
-              </p>
+              <CampusSwitcher
+                fallback={user.campus?.name ?? t("navigation.allCampuses")}
+              />
             </div>
             <div className="flex items-center justify-end gap-3">
               <span className="hidden rounded-full bg-surface-tertiary px-3 py-1 text-xs font-medium text-muted sm:inline">
@@ -399,6 +400,47 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <MobileTabBar permissions={user.permissions} sections={sections} pathname={pathname} />
+    </div>
+  );
+}
+
+function CampusSwitcher({ fallback }: { fallback: string }) {
+  const { t } = useTranslation();
+  const { campuses, campusId, campus, setCampusId, canSwitch, canSelectAll } =
+    useCampus();
+
+  if (!canSwitch) {
+    return (
+      <p className="truncate text-sm leading-tight text-muted">
+        {campus?.name ?? fallback}
+      </p>
+    );
+  }
+
+  const value = campusId === null ? "" : String(campusId);
+
+  return (
+    <div className="mt-0.5 flex justify-center">
+      <label className="sr-only" htmlFor="active-campus">
+        {t("navigation.campus")}
+      </label>
+      <select
+        id="active-campus"
+        value={value}
+        onChange={(event) =>
+          setCampusId(event.target.value === "" ? null : Number(event.target.value))
+        }
+        className="max-w-[16rem] truncate rounded-full border border-border-secondary bg-surface px-3 py-1 text-sm text-foreground transition-colors hover:bg-surface-tertiary focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      >
+        {canSelectAll ? (
+          <option value="">{t("navigation.allCampuses")}</option>
+        ) : null}
+        {campuses.map((entry) => (
+          <option key={entry.id} value={entry.id}>
+            {entry.name}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

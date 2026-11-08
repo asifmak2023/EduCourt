@@ -33,7 +33,6 @@ function BulkVoucherPrint() {
 
   useEffect(() => {
     if (ids.length === 0) {
-      setLoading(false);
       return;
     }
 

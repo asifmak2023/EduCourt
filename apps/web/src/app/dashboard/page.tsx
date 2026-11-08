@@ -6,6 +6,7 @@ import { useTranslation, type MessageKey } from "@eis/i18n";
 import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth, type AuthUser } from "@/lib/auth";
+import { useCampus } from "@/lib/campus";
 import { Icon } from "@/components/Icons";
 import { AttendanceOverview } from "@/components/AttendanceOverview";
 import {
@@ -37,7 +38,6 @@ import {
   useChartColors,
 } from "@/components/Charts";
 import type {
-  Campus,
   CampusDashboard,
   InstitutionOverview,
   PlatformOverview,
@@ -118,47 +118,15 @@ function greetingKey(): MessageKey {
 export default function DashboardPage() {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { campusId, campus: activeCampus } = useCampus();
   const [campus, setCampus] = useState<CampusDashboard | null>(null);
   const [platform, setPlatform] = useState<PlatformOverview | null>(null);
   const [institution, setInstitution] = useState<InstitutionOverview | null>(null);
-  const [campuses, setCampuses] = useState<Campus[]>([]);
-  const [campusFilter, setCampusFilter] = useState<number | null>(null);
   const [slots, setSlots] = useState<TimetableSlot[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const mode = user ? modeFor(user) : null;
-  const selectedCampus = campuses.find((item) => item.id === campusFilter) ?? null;
-
-  useEffect(() => {
-    if (!user || modeFor(user) !== "institution") {
-      return;
-    }
-
-    let active = true;
-
-    const loadCampuses = async () => {
-      try {
-        const response = await apiFetch<{ data: Campus[] }>(
-          "/v1/campuses?per_page=200"
-        );
-
-        if (active) {
-          setCampuses(response.data);
-        }
-      } catch {
-        if (active) {
-          setCampuses([]);
-        }
-      }
-    };
-
-    void loadCampuses();
-
-    return () => {
-      active = false;
-    };
-  }, [user]);
 
   useEffect(() => {
     if (!user) {
@@ -174,42 +142,38 @@ export default function DashboardPage() {
       setError(null);
 
       try {
-        if (resolved === "platform") {
+        if (resolved === "platform" && campusId === null) {
           const response = await apiFetch<{ data: PlatformOverview }>(
             "/v1/reports/platform-overview"
           );
 
           if (active) {
             setPlatform(response.data);
+            setCampus(null);
+            setInstitution(null);
           }
-        } else if (resolved === "institution") {
-          if (campusFilter) {
-            const response = await apiFetch<{ data: CampusDashboard }>(
-              "/v1/reports/campus-dashboard",
-              { campusId: campusFilter }
-            );
+        } else if (resolved === "institution" && campusId === null) {
+          const response = await apiFetch<{ data: InstitutionOverview }>(
+            "/v1/reports/institution-overview"
+          );
 
-            if (active) {
-              setCampus(response.data);
-              setInstitution(null);
-            }
-          } else {
-            const response = await apiFetch<{ data: InstitutionOverview }>(
-              "/v1/reports/institution-overview"
-            );
-
-            if (active) {
-              setInstitution(response.data);
-              setCampus(null);
-            }
+          if (active) {
+            setInstitution(response.data);
+            setCampus(null);
           }
-        } else if (resolved === "campus") {
+        } else if (
+          resolved === "platform" ||
+          resolved === "institution" ||
+          resolved === "campus"
+        ) {
           const response = await apiFetch<{ data: CampusDashboard }>(
             "/v1/reports/campus-dashboard"
           );
 
           if (active) {
             setCampus(response.data);
+            setInstitution(null);
+            setPlatform(null);
           }
         } else if (resolved === "teacher") {
           const response = await apiFetch<{ data: TimetableSlot[] }>(
@@ -240,37 +204,23 @@ export default function DashboardPage() {
     return () => {
       active = false;
     };
-  }, [user, campusFilter]);
+  }, [user, campusId]);
 
   if (!user) {
     return null;
   }
 
+  const campusDashboard =
+    mode === "campus" ||
+    ((mode === "institution" || mode === "platform") && campusId !== null);
+
   return (
     <div className="space-y-6">
       <PageHeader
         title={`${t(greetingKey())}, \u2068${user.name.split(" ")[0]}\u2069`}
-        description={`${selectedCampus?.name ?? user.campus?.name ?? t("dashboard.allCampuses")} - ${roleSummary(user.roles, t)}`}
+        description={`${activeCampus?.name ?? user.campus?.name ?? t("dashboard.allCampuses")} - ${roleSummary(user.roles, t)}`}
         actions={
           <div className="flex flex-wrap items-center justify-end gap-2">
-            {mode === "institution" && campuses.length > 0 ? (
-              <select
-                value={campusFilter ?? ""}
-                onChange={(event) =>
-                  setCampusFilter(
-                    event.target.value === "" ? null : Number(event.target.value)
-                  )
-                }
-                className="rounded-full border border-border-secondary bg-surface px-3 py-1.5 text-sm text-foreground"
-              >
-                <option value="">{t("dashboard.allCampuses")}</option>
-                {campuses.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            ) : null}
             <span dir="ltr" className="rounded-full bg-surface px-3 py-1 text-xs font-medium text-muted ring-1 ring-border-secondary">
               {formatDate(new Date().toISOString())}
             </span>
@@ -282,15 +232,15 @@ export default function DashboardPage() {
 
       {loading ? <Spinner label="dashboard.loading" /> : null}
 
-      {!loading && mode === "platform" && platform ? (
+      {!loading && mode === "platform" && campusId === null && platform ? (
         <PlatformView overview={platform} />
       ) : null}
 
-      {!loading && mode === "institution" && institution && !campusFilter ? (
+      {!loading && mode === "institution" && campusId === null && institution ? (
         <InstitutionView overview={institution} />
       ) : null}
 
-      {!loading && (mode === "campus" || (mode === "institution" && campusFilter)) && campus ? (
+      {!loading && campusDashboard && campus ? (
         <CampusView dashboard={campus} />
       ) : null}
 
@@ -301,7 +251,7 @@ export default function DashboardPage() {
       {!loading && mode === "general" ? <GeneralView user={user} /> : null}
 
       {!loading && mode !== "platform" && user.permissions.includes("attendance.view") ? (
-        <AttendanceOverview campusId={mode === "institution" ? campusFilter : undefined} />
+        <AttendanceOverview campusId={campusId} />
       ) : null}
     </div>
   );

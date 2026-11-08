@@ -64,7 +64,7 @@ function RolesView() {
   const [version, setVersion] = useState(0);
   const [selectedRoleFilter, setSelectedRoleFilter] = useState("all");
   const [accountFilter, setAccountFilter] = useState("staff");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [notice, setNotice] = useState<{ kind: "ok" | "err"; text: string } | null>(
     null
   );
@@ -102,15 +102,13 @@ function RolesView() {
     return () => window.clearTimeout(timer);
   }, [notice]);
 
-  useEffect(() => {
-    if (!selectedUser) {
-      return;
-    }
-    const fresh = users.find((entry) => entry.id === selectedUser.id);
-    if (fresh && fresh !== selectedUser) {
-      setSelectedUser(fresh);
-    }
-  }, [users, selectedUser]);
+  const selectedUser = useMemo(
+    () =>
+      selectedUserId === null
+        ? null
+        : users.find((entry) => entry.id === selectedUserId) ?? null,
+    [selectedUserId, users]
+  );
 
   const grantableRoles = useMemo(() => {
     if (isSuperUser) return catalog.items;
@@ -325,7 +323,7 @@ function RolesView() {
           getActiveRoles={getActiveRoles}
           canManageUser={canManageUser}
           canEditRoles={canEditRoles}
-          onManage={setSelectedUser}
+          onManage={(entry) => setSelectedUserId(entry.id)}
         />
       ) : null}
 
@@ -356,7 +354,7 @@ function RolesView() {
           grantableRoles={grantableRoles}
           campuses={campuses}
           canEdit={canManageUser(selectedUser)}
-          onClose={() => setSelectedUser(null)}
+          onClose={() => setSelectedUserId(null)}
           onGrant={grantRole}
           onRevokeRole={(roleValue) => revokeRoleForUser(selectedUser, roleValue)}
         />

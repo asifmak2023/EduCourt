@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useList } from "@/lib/useList";
 import { useResource } from "@/lib/useResource";
@@ -151,7 +151,9 @@ export function FeeVoucherGenerator({
 
   const [receiveType, setReceiveType] = useState<ReceiveType>("monthly");
   const [monthKey, setMonthKey] = useState(() => currentMonthValue());
-  const [monthAmount, setMonthAmount] = useState("");
+  const [monthAmountOverride, setMonthAmountOverride] = useState<string | null>(
+    null
+  );
   const [examItemId, setExamItemId] = useState("");
   const [otherTitle, setOtherTitle] = useState("");
   const [otherAmount, setOtherAmount] = useState("");
@@ -200,17 +202,17 @@ export function FeeVoucherGenerator({
     return [currentMonth];
   }, [dues]);
 
-  // Auto-fill amount when month changes (including initial load)
-  useEffect(() => {
-    if (monthKey) {
-      const option = monthOptions.find((month) => month.value === monthKey);
-      if (option) {
-        setMonthAmount(String(option.amount));
-      } else {
-        setMonthAmount(String(dues?.structure?.monthly_amount ?? 0));
-      }
+  // The amount follows the selected month's pending figure (or the structure
+  // default) unless the user has typed an explicit override.
+  const monthAmount = useMemo(() => {
+    if (monthAmountOverride !== null) {
+      return monthAmountOverride;
     }
-  }, [monthKey, monthOptions, dues?.structure?.monthly_amount]);
+
+    const option = monthOptions.find((month) => month.value === monthKey);
+
+    return String(option?.amount ?? dues?.structure?.monthly_amount ?? 0);
+  }, [monthAmountOverride, monthKey, monthOptions, dues?.structure?.monthly_amount]);
 
   const subtotal = cart.reduce((sum, item) => sum + item.amount, 0);
   const discountValue = Number(discount) || 0;
@@ -218,7 +220,7 @@ export function FeeVoucherGenerator({
 
   const resetEntry = () => {
     setMonthKey(currentMonthValue());
-    setMonthAmount("");
+    setMonthAmountOverride(null);
     setExamItemId("");
     setOtherTitle("");
     setOtherAmount("");
@@ -724,10 +726,8 @@ export function FeeVoucherGenerator({
                           type="month"
                           value={monthKey}
                           onChange={(event) => {
-                            const value = event.target.value; // format: "YYYY-MM"
-                            setMonthKey(value);
-                            const option = monthOptions.find((month) => month.value === value);
-                            setMonthAmount(option ? String(option.amount) : "");
+                            setMonthKey(event.target.value); // format: "YYYY-MM"
+                            setMonthAmountOverride(null);
                           }}
                         />
                       </Field>
@@ -738,7 +738,9 @@ export function FeeVoucherGenerator({
                           min={0}
                           step="0.01"
                           value={monthAmount}
-                          onChange={(event) => setMonthAmount(event.target.value)}
+                          onChange={(event) =>
+                            setMonthAmountOverride(event.target.value)
+                          }
                         />
                       </Field>
                       <Button type="button" onClick={addMonthly}>

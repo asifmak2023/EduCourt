@@ -419,6 +419,36 @@ curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8000/api/v1/students/1/history
 ```
 
+Bulk student migration (campus admin token, `student.import` permission):
+
+```bash
+# Download the CSV template (one header row plus an example row)
+curl -s -H "Authorization: Bearer $TOKEN" \
+  -o student-import-template.csv \
+  http://127.0.0.1:8000/api/v1/students/import/template
+
+# Preview: validates every row and reports per-line errors without writing
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -F file=@students.csv -F dry_run=1 \
+  http://127.0.0.1:8000/api/v1/students/import/preview
+
+# Import valid rows; add -F skip_invalid=1 to import the good rows and skip the rest
+curl -s -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" \
+  -F file=@students.csv -F skip_invalid=1 \
+  http://127.0.0.1:8000/api/v1/students/import
+```
+
+The importer accepts an Excel workbook saved as CSV (comma, semicolon or tab
+delimited, UTF-8 with or without a BOM). Headers are matched case-insensitively
+against common aliases (`first_name`/`firstname`, `dob`/`date_of_birth`, `cnic`
+for `national_id`, `parent_name` for `guardian_name`, and so on). `first_name`,
+`last_name` and `gender` are required. Guardians and enrollments are optional;
+when present they create a guardian and an active enrollment, resolving the
+academic year, class and section by name on the active campus. Missing
+admission numbers are generated (`ADM-#####`); duplicate numbers within the file
+or already on the campus are rejected. The endpoint is capped at 5000 rows per
+file.
+
 Fee billing quick check (campus admin token):
 
 ```bash

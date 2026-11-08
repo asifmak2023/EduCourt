@@ -13,6 +13,7 @@ import { Button, Select, TextInput, buttonClasses } from "@/components/Form";
 import { FeeVoucherAction } from "@/components/fee-counter/FeeVoucherAction";
 import { CollectPaymentButton } from "@/components/fee-counter/CollectPaymentButton";
 import { BulkFeeVoucherDialog } from "@/components/fee-counter/BulkFeeVoucherDialog";
+import { StudentImportDialog } from "@/components/StudentImportDialog";
 import {
   Badge,
   Card,
@@ -53,6 +54,7 @@ function StudentsTable() {
   const [classId, setClassId] = useState("");
   const [sectionId, setSectionId] = useState("");
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const { items: years } = useAcademicYears();
   const { items: classes } = useClassRooms();
@@ -74,7 +76,7 @@ function StudentsTable() {
   if (classId) params.class_room_id = classId;
   if (sectionId) params.section_id = sectionId;
 
-  const { items, meta, loading, error, page, setPage, search, setSearch } =
+  const { items, meta, loading, error, page, setPage, search, setSearch, reload } =
     useList<Student>("/v1/students", params);
 
   const handleClassChange = (value: string) => {
@@ -116,6 +118,15 @@ function StudentsTable() {
                 onClick={() => setBulkOpen(true)}
               >
                 Generate for class
+              </Button>
+            ) : null}
+            {can("student.import") ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setImportOpen(true)}
+              >
+                Import CSV
               </Button>
             ) : null}
           </>
@@ -387,6 +398,12 @@ function StudentsTable() {
       <BulkFeeVoucherDialog
         open={bulkOpen}
         onClose={() => setBulkOpen(false)}
+      />
+
+      <StudentImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={reload}
       />
     </div>
   );

@@ -218,6 +218,7 @@ Priorities: M = Must, S = Should, C = Could.
 | FR-5.7 | Academic, fee, attendance and conduct history | M | Delivered (API: consolidated per-student history with academic timeline, attendance rollup, fee/scholarship summary and conduct/incident records with category, severity and resolution) |
 | FR-5.8 | Scholarship holder records and policy | M | Delivered (API: scholarship catalogue by type/discount, per-student awards with override and revoke, automatic discount applied to fee vouchers) |
 | FR-5.9 | Promotion / rollover between academic years | M | Delivered (API) |
+| FR-5.10 | Bulk student migration (Excel/CSV) | M | Delivered (API: CSV import with header-alias mapping, dry-run preview with per-row errors, optional skip-invalid, guardian creation and enrollment resolution by academic year/class/section, plus a downloadable template; `student.import` permission) |
 
 ### 6.6 Attendance
 

@@ -138,6 +138,7 @@ use App\Http\Controllers\Api\StudentEnrollmentController;
 use App\Http\Controllers\Api\StudentEventController;
 use App\Http\Controllers\Api\StudentFineController;
 use App\Http\Controllers\Api\StudentHistoryController;
+use App\Http\Controllers\Api\StudentImportController;
 use App\Http\Controllers\Api\StudentPhotoController;
 use App\Http\Controllers\Api\StudentWalletController;
 use App\Http\Controllers\Api\SubjectController;
@@ -663,6 +664,12 @@ Route::prefix('v1')->group(function () {
 
             Route::get('students', [StudentController::class, 'index'])->middleware('permission:student.view');
             Route::post('students', [StudentController::class, 'store'])->middleware('permission:student.create');
+            Route::get('students/import/template', [StudentImportController::class, 'template'])
+                ->middleware('permission:student.import');
+            Route::post('students/import/preview', [StudentImportController::class, 'preview'])
+                ->middleware('permission:student.import');
+            Route::post('students/import', [StudentImportController::class, 'store'])
+                ->middleware('permission:student.import');
             Route::post('students/promote', [StudentController::class, 'promote'])->middleware('permission:student.edit');
             Route::get('students/{student}', [StudentController::class, 'show'])->middleware('permission:student.view');
             Route::put('students/{student}', [StudentController::class, 'update'])->middleware('permission:student.edit');

@@ -29,7 +29,7 @@ return [
         'finance' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'fee' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
         'admission' => ['view', 'create', 'edit', 'approve', 'delete', 'export'],
-        'student' => ['view', 'create', 'edit', 'photo', 'approve', 'delete', 'export', 'pii'],
+        'student' => ['view', 'create', 'edit', 'photo', 'approve', 'delete', 'export', 'import', 'pii'],
         'attendance' => ['view', 'create', 'edit', 'approve', 'export'],
         'scholarship' => ['view', 'create', 'edit', 'approve', 'delete'],
         'concession' => ['view', 'create', 'edit', 'approve', 'delete'],
@@ -183,7 +183,7 @@ return [
 
         RoleName::AdmissionsOfficer->value => [
             'academic.view',
-            'admission.*', 'student.view', 'student.pii', 'student.create', 'student.photo',
+            'admission.*', 'student.view', 'student.pii', 'student.create', 'student.photo', 'student.import',
             'report.students',
             'scholarship.view', 'concession.view', 'fine.view', 'reminder.view',
             'front_office.*', 'circular.view',

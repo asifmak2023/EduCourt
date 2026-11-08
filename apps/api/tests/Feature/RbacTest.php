@@ -137,6 +137,31 @@ class RbacTest extends TestCase
         $this->assertTrue($admin->hasPermissionTo('role.edit'));
     }
 
+    public function test_student_import_permission_is_granted_to_managers_only(): void
+    {
+        $admin = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $admin->syncRoles([RoleName::CampusAdmin->value]);
+
+        $officer = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $officer->syncRoles([RoleName::AdmissionsOfficer->value]);
+
+        $teacher = User::factory()->create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+        ]);
+        $teacher->syncRoles([RoleName::Teacher->value]);
+
+        $this->assertTrue($admin->hasPermissionTo('student.import'));
+        $this->assertTrue($officer->hasPermissionTo('student.import'));
+        $this->assertFalse($teacher->hasPermissionTo('student.import'));
+    }
+
     public function test_roles_catalog_includes_default_permissions(): void
     {
         $admin = User::factory()->create([

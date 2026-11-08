@@ -49,6 +49,14 @@ Seed credentials (development only):
 - Campus admin: campusadmin@demo-eis.test / password
 - Teacher: teacher@demo-eis.test / password
 
+An institution head is not bound to one campus. The dashboard header shows a
+campus selector for heads and platform admins; the choice is remembered per
+user and sent as `X-Campus-Id` on campus-scoped requests. Academic and fee
+operations (for example Generate voucher) require a campus, while
+institution-wide views such as the dashboard overview and head-office report
+stay available through the "All campuses" choice. API clients must send the
+`X-Campus-Id` header themselves for those operations.
+
 The demo seeder also provisions a Main Campus academic year (2026-2027) with
 terms, stages, classes, sections, subjects, a sample teaching assignment and a
 few calendar events. It also seeds a fiscal year, a default per-campus chart of

@@ -13,13 +13,12 @@ const base = {
   height: 20,
 };
 
-export function IconGrid(props: IconProps) {
+export function IconHome(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <rect x="3" y="3" width="7" height="7" rx="2" />
-      <rect x="14" y="3" width="7" height="7" rx="2" />
-      <rect x="3" y="14" width="7" height="7" rx="2" />
-      <rect x="14" y="14" width="7" height="7" rx="2" />
+      <path d="M3 11.5 12 4l9 7.5" />
+      <path d="M5.5 10v9a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-9" />
+      <path d="M9.5 20v-5.5h5V20" />
     </svg>
   );
 }
@@ -27,35 +26,37 @@ export function IconGrid(props: IconProps) {
 export function IconCalendar(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <rect x="3" y="4" width="18" height="17" rx="3" />
-      <path d="M8 2v4M16 2v4M3 9h18" />
+      <rect x="3" y="4.5" width="18" height="16" rx="2.5" />
+      <path d="M8 2.5v4M16 2.5v4M3 9.5h18" />
     </svg>
   );
 }
 
-export function IconCheck(props: IconProps) {
+export function IconClipboard(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M20 6 9 17l-5-5" />
+      <rect x="5" y="4" width="14" height="17" rx="2.5" />
+      <path d="M9 4a3 3 0 0 1 6 0" />
+      <path d="m9 13 2 2 4-4" />
     </svg>
   );
 }
 
-export function IconAward(props: IconProps) {
+export function IconCap(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <circle cx="12" cy="8" r="5" />
-      <path d="M8.5 12.5 7 22l5-3 5 3-1.5-9.5" />
+      <path d="M2.5 9 12 4.5 21.5 9 12 13.5 2.5 9Z" />
+      <path d="M6 11v4.5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V11" />
+      <path d="M21.5 9v5" />
     </svg>
   );
 }
 
-export function IconWallet(props: IconProps) {
+export function IconReceipt(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v2" />
-      <rect x="3" y="7" width="18" height="12" rx="3" />
-      <path d="M16 13h2" />
+      <path d="M5 3.5h14v17l-2.5-1.6-2.5 1.6-2.5-1.6L9 20.5 6.5 19 5 20.5Z" />
+      <path d="M9 8h6M9 12h6" />
     </svg>
   );
 }
@@ -64,7 +65,7 @@ export function IconUser(props: IconProps) {
   return (
     <svg {...base} {...props}>
       <circle cx="12" cy="8" r="4" />
-      <path d="M4 21c0-4 3.6-6 8-6s8 2 8 6" />
+      <path d="M4.5 20.5c0-3.6 3.4-5.5 7.5-5.5s7.5 1.9 7.5 5.5" />
     </svg>
   );
 }
@@ -85,11 +86,19 @@ export function IconChevronRight(props: IconProps) {
   );
 }
 
+export function IconArrowRight(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 12h15M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+
 export function IconLogout(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <path d="m16 17 5-5-5-5M21 12H9" />
+      <path d="M14 20h4a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-4" />
+      <path d="m9 16 4-4-4-4M13 12H3" />
     </svg>
   );
 }
@@ -111,11 +120,20 @@ export function IconMoon(props: IconProps) {
   );
 }
 
+export function IconShield(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 2.5 20 6v5.5c0 4.8-3.4 8.4-8 10-4.6-1.6-8-5.2-8-10V6Z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
 export function IconSchool(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M3 21h18M5 21V9l7-5 7 5v12" />
-      <path d="M9 21v-6h6v6" />
+      <path d="M3 21h18M5 21V9l7-4 7 4v12" />
+      <path d="M9 21v-5h6v5" />
     </svg>
   );
 }
@@ -129,44 +147,28 @@ export function IconClock(props: IconProps) {
   );
 }
 
-export function IconBook(props: IconProps) {
+export function IconMail(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5Z" />
-      <path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20" />
+      <rect x="3" y="5" width="18" height="14" rx="2.5" />
+      <path d="m3.5 7 8.5 6 8.5-6" />
     </svg>
   );
 }
 
-export function IconSpark(props: IconProps) {
+export function IconPhone(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18" />
+      <path d="M5 3.5h3l1.5 5-2 1.5a12 12 0 0 0 6 6l1.5-2 5 1.5v3a2 2 0 0 1-2 2A17 17 0 0 1 3 5.5a2 2 0 0 1 2-2Z" />
     </svg>
   );
 }
 
-export function IconBell(props: IconProps) {
+export function IconDownload(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.7 21a2 2 0 0 1-3.4 0" />
-    </svg>
-  );
-}
-
-export function IconMenu(props: IconProps) {
-  return (
-    <svg {...base} {...props}>
-      <path d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
-  );
-}
-
-export function IconX(props: IconProps) {
-  return (
-    <svg {...base} {...props}>
-      <path d="M18 6 6 18M6 6l12 12" />
+      <path d="M12 3v12M7 10l5 5 5-5" />
+      <path d="M4 20h16" />
     </svg>
   );
 }
@@ -174,17 +176,17 @@ export function IconX(props: IconProps) {
 export function IconLock(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <rect x="4" y="11" width="16" height="10" rx="2.5" />
       <path d="M8 11V7a4 4 0 0 1 8 0v4" />
     </svg>
   );
 }
 
-export function IconMail(props: IconProps) {
+export function IconLeaf(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="m3 7 9 6 9-6" />
+      <path d="M4 20c8 0 16-4 16-16C10 4 4 10 4 20Z" />
+      <path d="M4 20C6 14 10 10 16 8" />
     </svg>
   );
 }
@@ -203,14 +205,6 @@ export function IconEyeOff(props: IconProps) {
     <svg {...base} {...props}>
       <path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18 18 0 0 1-3.2 4M6.6 6.6A18 18 0 0 0 2 12s3.5 7 10 7a10.9 10.9 0 0 0 5.4-1.4" />
       <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M2 2l20 20" />
-    </svg>
-  );
-}
-
-export function IconArrowRight(props: IconProps) {
-  return (
-    <svg {...base} {...props}>
-      <path d="M5 12h14M13 6l6 6-6 6" />
     </svg>
   );
 }

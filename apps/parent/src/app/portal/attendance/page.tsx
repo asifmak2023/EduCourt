@@ -1,25 +1,68 @@
 "use client";
 
-import { useMemo } from "react";
 import { useFamily } from "@/lib/family";
 import { usePortalQuery } from "@/lib/usePortalQuery";
 import {
-  attendanceRate,
-  attendanceTone,
+  attendanceCode,
   classLabel,
   fetchAttendanceYear,
-  formatDate,
+  formatDateLong,
 } from "@/lib/portal";
-import {
-  Card,
-  EmptyState,
-  ErrorNotice,
-  Pill,
-  ProgressRing,
-  SectionHeading,
-  Skeleton,
-} from "@/components/ui";
-import { IconCheck } from "@/components/Icons";
+import { Card, EmptyState, ErrorNotice, PageTitle, Skeleton } from "@/components/ui";
+import { IconClipboard } from "@/components/Icons";
+import type { AttendanceRecord } from "@/lib/types";
+
+const MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+function markClass(status: string): string {
+  switch (status) {
+    case "present":
+      return "text-[var(--success)]";
+    case "late":
+      return "rounded bg-[color-mix(in_srgb,var(--marigold)_30%,transparent)] text-[var(--marigold-ink)]";
+    case "absent":
+      return "text-[var(--redpen)]";
+    default:
+      return "text-muted";
+  }
+}
+
+function LegendChip({
+  code,
+  label,
+  count,
+  tone,
+}: {
+  code: string;
+  label: string;
+  count: number;
+  tone: "present" | "late" | "absent" | "leave";
+}) {
+  const toneCls =
+    tone === "present"
+      ? "text-[var(--success)]"
+      : tone === "late"
+        ? "bg-[color-mix(in_srgb,var(--marigold)_30%,transparent)] text-[var(--marigold-ink)]"
+        : tone === "absent"
+          ? "text-[var(--redpen)]"
+          : "text-muted";
+  return (
+    <div className="flex items-center gap-2 border-l border-hairline pl-3 first:border-0 first:pl-0">
+      <span className={`grid h-7 min-w-7 place-items-center rounded px-1 font-[family-name:var(--font-display)] text-sm font-bold ${toneCls}`}>
+        {code}
+      </span>
+      <div>
+        <p className="font-[family-name:var(--font-display)] text-lg font-bold leading-none text-foreground">
+          {count}
+        </p>
+        <p className="text-[11px] uppercase tracking-wide text-muted">{label}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function AttendancePage() {
   const { activeChild, activeChildId, loading } = useFamily();
@@ -31,164 +74,185 @@ export default function AttendancePage() {
   );
 
   const summary = data?.summary;
-  const rate = attendanceRate(summary);
-
-  const months = useMemo(() => {
-    const groups = new Map<string, { present: number; absent: number; late: number; total: number }>();
-    for (const record of data?.data ?? []) {
-      const key = record.attendance_date.slice(0, 7);
-      const entry = groups.get(key) ?? { present: 0, absent: 0, late: 0, total: 0 };
-      entry.total += 1;
-      if (record.status === "present") entry.present += 1;
-      else if (record.status === "absent") entry.absent += 1;
-      else if (record.status === "late") entry.late += 1;
-      groups.set(key, entry);
-    }
-    return [...groups.entries()]
-      .sort((a, b) => (a[0] < b[0] ? 1 : -1))
-      .map(([key, value]) => ({ key, ...value }));
-  }, [data]);
-
   const records = data?.data ?? [];
+  const marked = summary?.marked ?? 0;
+  const rate = marked > 0 ? Math.round(((summary?.present ?? 0) / marked) * 100) : 0;
+
+  // Group records by year-month, and index by date for the heatmap.
+  const byDate = new Map<string, AttendanceRecord>();
+  records.forEach((record) => byDate.set(record.attendance_date, record));
+
+  const monthKeys: Array<{ key: string; year: number; month: number }> = [];
+  const seen = new Set<string>();
+  records.forEach((record) => {
+    const d = new Date(record.attendance_date);
+    if (Number.isNaN(d.getTime())) return;
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      monthKeys.push({ key, year: d.getFullYear(), month: d.getMonth() });
+    }
+  });
+  monthKeys.sort((a, b) =>
+    a.year === b.year ? b.month - a.month : b.year - a.year
+  );
+
+  const absences = records
+    .filter((r) => r.status === "absent")
+    .sort((a, b) => (a.attendance_date < b.attendance_date ? 1 : -1))
+    .slice(0, 6);
+
+  function daysInMonth(year: number, month: number): number {
+    return new Date(year, month + 1, 0).getDate();
+  }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-          Attendance
-        </h1>
-        <p className="text-sm text-muted">
-          Daily record{classLabel(activeChild) ? ` - ${classLabel(activeChild)}` : ""}
-        </p>
-      </div>
+    <div>
+      <PageTitle
+        eyebrow={
+          classLabel(activeChild)
+            ? `Last 12 months · ${classLabel(activeChild)}`
+            : "Last 12 months"
+        }
+        title="Attendance"
+      />
 
       {busy ? (
-        <Skeleton className="h-44" />
+        <Card>
+          <Skeleton className="h-96" />
+        </Card>
       ) : error ? (
         <ErrorNotice message={error} />
       ) : (
-        <Card>
-          <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
-            <ProgressRing value={rate} size={132} stroke={12} />
-            <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-4">
-              <Metric label="Present" value={summary?.present ?? 0} tone="success" />
-              <Metric label="Late" value={summary?.late ?? 0} tone="warning" />
-              <Metric label="Absent" value={summary?.absent ?? 0} tone="danger" />
-              <Metric
-                label="On leave"
-                value={(summary?.leave ?? 0) + (summary?.excused ?? 0)}
-                tone="muted"
-              />
+        <div className="space-y-5">
+          {/* headline + legend */}
+          <Card>
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+              <div>
+                <p className="font-[family-name:var(--font-display)] text-5xl font-bold leading-none text-[var(--success)]">
+                  {rate}%
+                </p>
+                <p className="mt-1 text-xs uppercase tracking-wide text-muted">
+                  in school · {marked} days marked
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+                <LegendChip code="P" label="Present" count={summary?.present ?? 0} tone="present" />
+                <LegendChip code="L" label="Late" count={summary?.late ?? 0} tone="late" />
+                <LegendChip code="A" label="Absent" count={summary?.absent ?? 0} tone="absent" />
+                <LegendChip
+                  code="LV"
+                  label="On leave"
+                  count={(summary?.leave ?? 0) + (summary?.excused ?? 0)}
+                  tone="leave"
+                />
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+
+          {/* register heatmap */}
+          <Card padded={false} className="overflow-hidden">
+            <div className="border-b border-hairline px-4 py-3 sm:px-5">
+              <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-foreground">
+                Register
+              </h2>
+              <p className="text-xs text-muted">Every marked day, newest month first</p>
+            </div>
+            {monthKeys.length === 0 ? (
+              <div className="p-5">
+                <EmptyState
+                  title="No attendance records"
+                  message="Attendance appears here once the school starts marking it."
+                  icon={<IconClipboard width={22} height={22} />}
+                />
+              </div>
+            ) : (
+              <div className="overflow-x-auto no-scrollbar">
+                <table className="w-full min-w-[720px] border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-rule">
+                      <th className="sticky left-0 z-10 bg-card px-3 py-2 text-left font-semibold text-muted">
+                        Month
+                      </th>
+                      {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                        <th key={day} className="numeric px-1 py-2 text-center font-medium text-muted/70">
+                          {day}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {monthKeys.map(({ key, year, month }) => {
+                      const total = daysInMonth(year, month);
+                      return (
+                        <tr key={key} className="border-b border-hairline last:border-0">
+                          <td className="sticky left-0 z-10 whitespace-nowrap bg-card px-3 py-2 font-[family-name:var(--font-display)] text-sm font-semibold text-foreground">
+                            {MONTHS[month]} {String(year).slice(2)}
+                          </td>
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
+                            if (day > total) {
+                              return <td key={day} className="px-1 py-2 text-center" />;
+                            }
+                            const iso = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                            const record = byDate.get(iso);
+                            if (!record) {
+                              return (
+                                <td key={day} className="px-1 py-2 text-center text-muted/25">
+                                  ·
+                                </td>
+                              );
+                            }
+                            return (
+                              <td key={day} className="px-1 py-2 text-center">
+                                <span
+                                  title={`${formatDateLong(record.attendance_date)} · ${record.status}`}
+                                  className={`numeric inline-grid min-w-[1.3rem] place-items-center px-0.5 py-0.5 font-bold ${markClass(
+                                    record.status
+                                  )}`}
+                                >
+                                  {attendanceCode(record.status)}
+                                </span>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+
+          {/* recent absences */}
+          {absences.length > 0 ? (
+            <Card padded={false} className="overflow-hidden">
+              <div className="border-b border-hairline px-4 py-3 sm:px-5">
+                <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-foreground">
+                  Recent absences
+                </h2>
+              </div>
+              <ul className="divide-y divide-hairline">
+                {absences.map((record) => (
+                  <li key={record.id} className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
+                    <span className="flex items-center gap-3">
+                      <span className="grid h-7 min-w-7 place-items-center rounded font-[family-name:var(--font-display)] text-sm font-bold text-[var(--redpen)]">
+                        A
+                      </span>
+                      <span className="text-sm font-medium text-foreground">
+                        {formatDateLong(record.attendance_date)}
+                      </span>
+                    </span>
+                    <span className="text-xs text-muted">
+                      {record.remarks || "No note sent"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          ) : null}
+        </div>
       )}
-
-      {months.length > 0 ? (
-        <Card>
-          <SectionHeading title="Monthly breakdown" subtitle="Attendance over the year" />
-          <div className="space-y-3">
-            {months.map((month) => {
-              const presentPct = month.total > 0 ? (month.present / month.total) * 100 : 0;
-              return (
-                <div key={month.key}>
-                  <div className="mb-1 flex items-center justify-between text-sm">
-                    <span className="font-semibold">
-                      {new Date(`${month.key}-01`).toLocaleDateString("en-GB", {
-                        month: "long",
-                        year: "numeric",
-                      })}
-                    </span>
-                    <span className="numeric text-muted">
-                      {month.present}/{month.total}
-                    </span>
-                  </div>
-                  <div className="flex h-2.5 overflow-hidden rounded-full bg-panel-muted">
-                    <div
-                      className="h-full bg-[var(--success)]"
-                      style={{ width: `${presentPct}%` }}
-                    />
-                    <div
-                      className="h-full bg-[var(--warning)]"
-                      style={{ width: `${month.total > 0 ? (month.late / month.total) * 100 : 0}%` }}
-                    />
-                    <div
-                      className="h-full bg-[var(--danger)]"
-                      style={{ width: `${month.total > 0 ? (month.absent / month.total) * 100 : 0}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      ) : null}
-
-      <Card>
-        <SectionHeading title="Recent days" subtitle="Most recent first" />
-        {busy ? (
-          <div className="space-y-2">
-            {[0, 1, 2, 3, 4].map((index) => (
-              <Skeleton key={index} className="h-12" />
-            ))}
-          </div>
-        ) : records.length === 0 ? (
-          <EmptyState
-            title="No attendance recorded yet"
-            message="Once your school marks attendance, it shows up here."
-            icon={<IconCheck width={22} height={22} />}
-          />
-        ) : (
-          <ul className="divide-y divide-[var(--hairline)]">
-            {records.slice(0, 40).map((record) => (
-              <li
-                key={record.id}
-                className="flex items-center justify-between gap-3 py-2.5"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold">
-                    {formatDate(record.attendance_date)}
-                  </p>
-                  {record.remarks ? (
-                    <p className="truncate text-xs text-muted">{record.remarks}</p>
-                  ) : null}
-                </div>
-                <Pill tone={attendanceTone(record.status)}>
-                  {record.status_label ?? record.status}
-                </Pill>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-    </div>
-  );
-}
-
-function Metric({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: "success" | "warning" | "danger" | "muted";
-}) {
-  const color: Record<string, string> = {
-    success: "text-[var(--success)]",
-    warning: "text-[var(--warning)]",
-    danger: "text-[var(--danger)]",
-    muted: "text-muted",
-  };
-
-  return (
-    <div className="rounded-2xl bg-panel-muted px-3 py-2.5 text-center">
-      <p className={`numeric font-[family-name:var(--font-display)] text-xl font-bold ${color[tone]}`}>
-        {value}
-      </p>
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-        {label}
-      </p>
     </div>
   );
 }

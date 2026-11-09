@@ -41,12 +41,15 @@ export function rollingYearRange(): { from: string; to: string } {
 }
 
 export function formatMoney(value: number | string | null | undefined): string {
+  return `Rs ${formatRupees(value)}`;
+}
+
+export function formatRupees(value: number | string | null | undefined): string {
   const amount = typeof value === "string" ? Number(value) : (value ?? 0);
   const safe = Number.isFinite(amount) ? Math.round(amount) : 0;
-  const grouped = new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 0,
   }).format(safe);
-  return `PKR ${grouped}`;
 }
 
 export function formatDate(value?: string | null): string {
@@ -204,6 +207,55 @@ export function voucherTone(
     default:
       return "muted";
   }
+}
+
+/** Letter grade from a percentage, matching a simple 90/80/70… ladder. */
+export function gradeLetter(percentage: number): string {
+  if (percentage >= 90) return "A+";
+  if (percentage >= 80) return "A";
+  if (percentage >= 70) return "B";
+  if (percentage >= 60) return "C";
+  if (percentage >= 50) return "D";
+  if (percentage >= 40) return "E";
+  return "F";
+}
+
+/** One-letter attendance code used in the register heatmap. */
+export function attendanceCode(status: string): string {
+  switch (status) {
+    case "present":
+      return "P";
+    case "late":
+      return "L";
+    case "absent":
+      return "A";
+    case "leave":
+    case "excused":
+      return "LV";
+    default:
+      return "—";
+  }
+}
+
+/** Short period label: "Period 5" -> "P5", "P5" stays "P5". */
+export function periodShort(name?: string | null): string {
+  if (!name) {
+    return "—";
+  }
+  const digits = name.match(/\d+/);
+  if (digits) {
+    return `P${digits[0]}`;
+  }
+  return name.length > 6 ? name.slice(0, 6) : name;
+}
+
+export function todaySlots(slots: TimetableSlot[], now = new Date()): TimetableSlot[] {
+  return slots
+    .filter((slot) => slot.day_of_week === now.getDay())
+    .sort(
+      (a, b) =>
+        (a.period?.id ?? 0) - (b.period?.id ?? 0)
+    );
 }
 
 export type { AttendanceRecord };

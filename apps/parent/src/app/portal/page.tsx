@@ -4,43 +4,45 @@ import Link from "next/link";
 import { useFamily } from "@/lib/family";
 import { usePortalQuery } from "@/lib/usePortalQuery";
 import {
-  attendanceRate,
+  attendanceCode,
   childName,
   classLabel,
   fetchAttendanceYear,
   fetchFees,
   fetchResults,
   fetchTimetable,
-  formatDate,
-  formatMoney,
-  voucherTone,
-  DAY_NAMES,
+  currentEnrollment,
+  formatRupees,
+  gradeLetter,
+  todaySlots,
 } from "@/lib/portal";
-import {
-  Bar,
-  Card,
-  EmptyState,
-  ErrorNotice,
-  Pill,
-  ProgressRing,
-  SectionHeading,
-  Skeleton,
-  StatTile,
-} from "@/components/ui";
+import { Card, ErrorNotice, Skeleton } from "@/components/ui";
+import { DayDial } from "@/components/DayDial";
 import {
   IconArrowRight,
-  IconAward,
-  IconCalendar,
-  IconCheck,
-  IconClock,
-  IconWallet,
+  IconReceipt,
+  IconTrend,
 } from "@/components/Icons";
+import type { AttendanceRecord } from "@/lib/types";
 
-function greeting(): string {
+function greeting(): { en: string; ur: string } {
   const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
+  if (hour < 12) return { en: "Good morning", ur: "صبح بخیر" };
+  if (hour < 17) return { en: "Good afternoon", ur: "السلام علیکم" };
+  return { en: "Good evening", ur: "شب بخیر" };
+}
+
+function attendanceMarkTone(status: string): string {
+  switch (status) {
+    case "present":
+      return "text-[var(--success)]";
+    case "late":
+      return "bg-[color-mix(in_srgb,var(--marigold)_28%,transparent)] text-[var(--marigold-ink)] rounded";
+    case "absent":
+      return "text-[var(--redpen)]";
+    default:
+      return "text-muted";
+  }
 }
 
 export default function PortalDashboardPage() {
@@ -52,345 +54,255 @@ export default function PortalDashboardPage() {
   const fees = usePortalQuery(activeChildId, fetchFees, ready);
   const timetable = usePortalQuery(activeChildId, fetchTimetable, ready);
 
+  const now = new Date();
   const summary = attendance.data?.summary;
-  const rate = attendanceRate(summary);
+  const marked = summary?.marked ?? 0;
+  const overallRate = marked > 0 ? Math.round(((summary?.present ?? 0) / marked) * 100) : 0;
 
   const outstanding = Number(fees.data?.totals.outstanding ?? 0);
-  const billed = Number(fees.data?.totals.billed ?? 0);
-  const paid = Number(fees.data?.totals.paid ?? 0);
-
   const latestResult = results.data?.data?.[0] ?? null;
-  const paidRatio = billed > 0 ? Math.round((paid / billed) * 100) : 100;
 
-  const today = new Date();
-  const todaySlots = (timetable.data ?? [])
-    .filter((slot) => slot.day_of_week === today.getDay())
-    .sort(
-      (a, b) =>
-        (a.period?.id ?? 0) - (b.period?.id ?? 0)
-    );
+  const slots = timetable.data ?? [];
+  const todays = todaySlots(slots, now);
 
   const name = childName(activeChild);
+  const firstName = name.split(" ")[0] || "there";
+  const school = activeChild ? classLabel(activeChild) : "";
+  const enrollment = currentEnrollment(activeChild);
+  const rollNo = enrollment?.roll_number;
+  const admissionNo = activeChild?.admission_no ?? "";
+
+  const greet = greeting();
+
+  // Recent marks for the mini-register: newest 14 attendance records.
+  const recent: AttendanceRecord[] = [...(attendance.data?.data ?? [])]
+    .sort((a, b) => (a.attendance_date < b.attendance_date ? 1 : -1))
+    .slice(0, 14);
+
+  // "Still to come" — today's remaining periods.
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const upcoming = todays.filter((slot) => {
+    const [h, m] = (slot.period?.starts_at ?? "00:00").split(":").map(Number);
+    return h * 60 + m >= nowMinutes;
+  });
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[var(--radius-xl2)] border bg-[#12142a] p-5 text-white shadow-[var(--shadow-lift)] sm:p-7">
-        <div
-          className="rounded-[inherit]"
-          style={{
-            background:
-              "radial-gradient(30rem 18rem at 95% -20%, rgba(124,116,255,0.5), transparent 60%)",
-          }}
-        >
-          <p className="text-sm text-white/60">
-            {greeting()}, {name.split(" ")[0] || "there"}
-          </p>
-          <h1 className="mt-1 font-[family-name:var(--font-display)] text-2xl font-bold leading-tight sm:text-3xl">
-            Here is {classLabel(activeChild) ? `${name.split(" ")[0]}'s day` : "your child's day"} at a glance
-          </h1>
-          <p className="mt-1 text-sm text-white/60">
-            {today.toLocaleDateString("en-GB", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            })}
-            {classLabel(activeChild) ? ` - ${classLabel(activeChild)}` : ""}
-          </p>
-        </div>
-      </div>
+      {/* ===== Chalkboard hero ===== */}
+      <section className="chalk-board relative overflow-hidden rounded-lg p-5 text-board-ink sm:p-7">
+        <div className="grid items-center gap-6 sm:grid-cols-[1.35fr_auto]">
+          <div className="order-2 sm:order-1">
+            <p className="font-urdu text-lg text-board-dim">{greet.ur}</p>
+            <p className="mt-1 text-sm text-board-dim">
+              {now.toLocaleDateString("en-GB", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })}
+              {school ? ` · ${school}` : ""}
+            </p>
+            <h1 className="mt-1 font-[family-name:var(--font-display)] text-5xl font-bold uppercase leading-[0.9] tracking-tight text-board-ink sm:text-6xl">
+              {firstName}
+            </h1>
+            <p className="mt-3 max-w-md text-sm text-board-dim">
+              {nowMinutes < 480
+                ? `School hasn't started yet. First class ${
+                    todays[0]?.period?.starts_at?.slice(0, 5) ?? "soon"
+                  }.`
+                : upcoming.length > 0
+                  ? `Here is what's left of ${firstName}'s day at school.`
+                  : `The school day is complete. Well done, ${firstName}.`}
+            </p>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatTile
-          label="Attendance"
-          value={attendance.loading ? "-" : `${rate}%`}
-          hint={
-            summary && summary.marked > 0
-              ? `${summary.present} of ${summary.marked} days present`
-              : "No records yet"
-          }
-          tone={rate >= 85 ? "success" : rate >= 70 ? "warning" : "danger"}
-          icon={<IconCheck width={16} height={16} />}
-        />
-        <StatTile
-          label="Outstanding"
-          value={fees.loading ? "-" : formatMoney(outstanding)}
-          hint={outstanding > 0 ? "Fees due" : "All settled"}
-          tone={outstanding > 0 ? "warning" : "success"}
-          icon={<IconWallet width={16} height={16} />}
-        />
-        <StatTile
-          label="Latest result"
-          value={
-            results.loading
-              ? "-"
-              : latestResult
-                ? `${Math.round(latestResult.percentage)}%`
-                : "-"
-          }
-          hint={
-            latestResult?.exam?.name
-              ? latestResult.exam.name
-              : "No results posted"
-          }
-          tone="brand"
-          icon={<IconAward width={16} height={16} />}
-        />
-        <StatTile
-          label="Today's classes"
-          value={timetable.loading ? "-" : String(todaySlots.length)}
-          hint={DAY_NAMES[today.getDay()]}
-          tone="brand"
-          icon={<IconClock width={16} height={16} />}
-        />
-      </div>
-
-      <div className="grid gap-5 lg:grid-cols-5">
-        <Card className="lg:col-span-2">
-          <SectionHeading title="Attendance" subtitle="Last 12 months" />
-          {attendance.loading ? (
-            <Skeleton className="h-52" />
-          ) : attendance.error ? (
-            <ErrorNotice message={attendance.error} />
-          ) : (
-            <div className="flex items-center gap-5">
-              <ProgressRing value={rate} size={116} stroke={11} />
-              <div className="flex-1 space-y-2.5 text-sm">
-                <Row label="Present" value={summary?.present ?? 0} tone="success" />
-                <Row label="Late" value={summary?.late ?? 0} tone="warning" />
-                <Row label="Absent" value={summary?.absent ?? 0} tone="danger" />
-                <Row label="Leave" value={(summary?.leave ?? 0) + (summary?.excused ?? 0)} tone="muted" />
-              </div>
-            </div>
-          )}
-          <Link
-            href="/portal/attendance"
-            className="mt-5 flex items-center justify-between rounded-2xl bg-panel-muted px-4 py-2.5 text-sm font-semibold text-foreground transition hover:bg-brand-soft"
-          >
-            View attendance history
-            <IconArrowRight width={16} height={16} />
-          </Link>
-        </Card>
-
-        <Card className="lg:col-span-3">
-          <SectionHeading
-            title={`Today's timetable`}
-            subtitle={DAY_NAMES[today.getDay()]}
-            action={
-              <Link
-                href="/portal/timetable"
-                className="text-sm font-semibold text-brand hover:underline"
-              >
-                Full week
-              </Link>
-            }
-          />
-          {timetable.loading ? (
-            <div className="space-y-2">
-              {[0, 1, 2].map((index) => (
-                <Skeleton key={index} className="h-14" />
-              ))}
-            </div>
-          ) : todaySlots.length === 0 ? (
-            <EmptyState
-              title="No classes today"
-              message="Enjoy the break. Your full timetable is one tap away."
-              icon={<IconCalendar width={22} height={22} />}
-            />
-          ) : (
-            <ul className="space-y-2">
-              {todaySlots.slice(0, 5).map((slot) => (
-                <li
-                  key={slot.id}
-                  className="flex items-center gap-3 rounded-2xl border bg-panel px-3.5 py-2.5"
-                >
-                  <div className="flex w-14 shrink-0 flex-col items-center rounded-xl bg-brand-soft py-1 text-brand">
-                    <span className="text-[10px] font-semibold uppercase">
-                      {slot.period?.name?.split(" ")[0] ?? "Period"}
-                    </span>
-                    <span className="numeric text-xs font-bold">
-                      {slot.period?.starts_at?.slice(0, 5) ?? ""}
-                    </span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">
-                      {slot.subject?.name ?? "Free"}
-                    </p>
-                    <p className="truncate text-xs text-muted">
-                      {[slot.teacher?.name, slot.room?.name]
-                        .filter(Boolean)
-                        .join(" - ") || "No teacher assigned"}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-      </div>
-
-      <div className="grid gap-5 lg:grid-cols-2">
-        <Card>
-          <SectionHeading
-            title="Fees"
-            subtitle={outstanding > 0 ? "Amount still due" : "All settled"}
-            action={
-              <Link href="/portal/fees" className="text-sm font-semibold text-brand hover:underline">
-                Details
-              </Link>
-            }
-          />
-          {fees.loading ? (
-            <Skeleton className="h-28" />
-          ) : fees.error ? (
-            <ErrorNotice message={fees.error} />
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-muted">
-                    Outstanding
-                  </p>
-                  <p className="numeric font-[family-name:var(--font-display)] text-2xl font-bold">
-                    {formatMoney(outstanding)}
-                  </p>
-                </div>
-                <Pill tone={outstanding > 0 ? "warning" : "success"}>
-                  {outstanding > 0 ? "Payment due" : "Paid up"}
-                </Pill>
-              </div>
-              <div>
-                <div className="mb-1.5 flex justify-between text-xs text-muted">
-                  <span>Paid {formatMoney(paid)}</span>
-                  <span>Billed {formatMoney(billed)}</span>
-                </div>
-                <Bar value={paidRatio} tone={paidRatio >= 100 ? "success" : "warning"} />
-              </div>
-              {fees.data?.data?.length ? (
-                <ul className="divide-y divide-[var(--hairline)] rounded-2xl border">
-                  {fees.data.data.slice(0, 3).map((voucher) => (
+            {upcoming.length > 0 ? (
+              <div className="mt-5 max-w-md">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-board-dim/80">
+                  Still to come
+                </p>
+                <ul className="space-y-2">
+                  {upcoming.slice(0, 3).map((slot) => (
                     <li
-                      key={voucher.id}
-                      className="flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm"
+                      key={slot.id}
+                      className="flex items-baseline justify-between gap-3 border-b border-white/10 pb-2 last:border-0"
                     >
-                      <span className="min-w-0">
-                        <span className="block truncate font-semibold">
-                          {voucher.voucher_no}
-                        </span>
-                        <span className="block text-xs text-muted">
-                          Due {formatDate(voucher.due_date)}
-                        </span>
+                      <span className="numeric text-xs text-board-dim">
+                        {slot.period?.starts_at?.slice(0, 5)}
                       </span>
-                      <span className="text-right">
-                        <span className="numeric block font-semibold">
-                          {Number(voucher.balance) > 0 ? formatMoney(voucher.balance) : "Settled"}
-                        </span>
-                        <Pill tone={voucherTone(voucher.status)}>{voucher.status}</Pill>
+                      <span className="font-[family-name:var(--font-display)] flex-1 text-sm font-semibold uppercase tracking-wide text-board-ink">
+                        {slot.subject?.name ?? "Free"}
+                      </span>
+                      <span className="text-right text-xs text-board-dim">
+                        {slot.teacher?.name ?? ""}
                       </span>
                     </li>
                   ))}
                 </ul>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="order-1 flex justify-center sm:order-2">
+            {timetable.loading ? (
+              <div className="grid place-items-center" style={{ width: 260, height: 260 }}>
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-marigold border-t-transparent" />
+              </div>
+            ) : (
+              <DayDial slots={todays} now={now} />
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== Summary cards ===== */}
+      <div className="grid gap-4 md:grid-cols-3">
+        {/* Attendance */}
+        <Card className="flex flex-col">
+          <div className="mb-1 flex items-center justify-between">
+            <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-foreground">
+              Attendance
+            </h2>
+            <Link
+              href="/portal/attendance"
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              Register
+            </Link>
+          </div>
+          {attendance.loading ? (
+            <Skeleton className="h-20" />
+          ) : attendance.error ? (
+            <ErrorNotice message={attendance.error} />
+          ) : (
+            <>
+              <p className="font-[family-name:var(--font-display)] text-4xl font-bold leading-none text-foreground">
+                {overallRate}
+                <span className="text-lg text-muted">%</span>
+              </p>
+              <p className="mt-1 text-xs text-muted">
+                this year · {summary?.absent ?? 0} absent, {summary?.late ?? 0} late
+              </p>
+              <div className="mt-4 flex flex-wrap gap-x-2 gap-y-1 border-t border-hairline pt-3">
+                {recent.map((record) => (
+                  <span
+                    key={record.id}
+                    title={`${record.attendance_date} · ${record.status}`}
+                    className={`numeric grid min-w-[1.35rem] place-items-center px-1 py-0.5 text-xs font-bold ${attendanceMarkTone(
+                      record.status
+                    )}`}
+                  >
+                    {attendanceCode(record.status)}
+                  </span>
+                ))}
+                {recent.length === 0 ? (
+                  <span className="text-xs text-muted">No records yet.</span>
+                ) : null}
+              </div>
+            </>
           )}
         </Card>
 
-        <Card>
-          <SectionHeading
-            title="Latest result"
-            subtitle={latestResult?.exam?.name ?? "No exams yet"}
-            action={
-              <Link href="/portal/results" className="text-sm font-semibold text-brand hover:underline">
-                All results
-              </Link>
-            }
-          />
+        {/* Fees */}
+        <Card className="flex flex-col">
+          <div className="mb-1 flex items-center justify-between">
+            <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-foreground">
+              Fees
+            </h2>
+            {outstanding > 0 ? (
+              <span className="rotate-[-4deg] rounded border-2 border-[var(--redpen)] px-1.5 py-0.5 font-[family-name:var(--font-display)] text-[10px] font-bold uppercase tracking-wider text-[var(--redpen)]">
+                Due
+              </span>
+            ) : null}
+          </div>
+          {fees.loading ? (
+            <Skeleton className="h-20" />
+          ) : fees.error ? (
+            <ErrorNotice message={fees.error} />
+          ) : (
+            <>
+              <p className="font-[family-name:var(--font-display)] text-3xl font-bold leading-none text-foreground">
+                Rs {formatRupees(outstanding)}
+              </p>
+              <p className="mt-1 text-xs text-muted">
+                {outstanding > 0 ? "outstanding balance" : "all fees settled"}
+              </p>
+              <div className="mt-auto border-t border-dashed border-rule pt-3">
+                <Link
+                  href="/portal/fees"
+                  className="flex items-center justify-between text-sm font-semibold text-foreground"
+                >
+                  <span>
+                    {fees.data?.data?.length ?? 0} challan
+                    {(fees.data?.data?.length ?? 0) === 1 ? "" : "s"} this session
+                  </span>
+                  <IconArrowRight width={16} height={16} className="text-muted" />
+                </Link>
+              </div>
+            </>
+          )}
+        </Card>
+
+        {/* Latest result */}
+        <Card className="flex flex-col">
+          <div className="mb-1 flex items-center justify-between">
+            <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-foreground">
+              {latestResult?.exam?.name
+                ? latestResult.exam.name.replace(/\d{4}.*/, "").trim() || "Result"
+                : "Results"}
+            </h2>
+            <Link
+              href="/portal/results"
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              Full
+            </Link>
+          </div>
           {results.loading ? (
-            <Skeleton className="h-28" />
+            <Skeleton className="h-20" />
           ) : results.error ? (
             <ErrorNotice message={results.error} />
           ) : !latestResult ? (
-            <EmptyState
-              title="No results yet"
-              message="Results appear here as soon as your school publishes them."
-              icon={<IconAward width={22} height={22} />}
-            />
+            <p className="py-4 text-sm text-muted">No results published yet.</p>
           ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <ProgressRing
-                  value={latestResult.percentage}
-                  size={92}
-                  stroke={9}
-                  label={
-                    <div>
-                      <span className="numeric block font-[family-name:var(--font-display)] text-xl font-bold">
-                        {Math.round(latestResult.percentage)}%
-                      </span>
-                      <span className="block text-[10px] text-muted">
-                        {latestResult.grade ?? "-"}
-                      </span>
-                    </div>
-                  }
-                />
-                <div className="flex-1 space-y-1 text-sm">
-                  <p className="text-muted">
-                    {latestResult.total_obtained} of {latestResult.total_max} marks
-                  </p>
-                  <Pill tone={latestResult.failed_subjects === 0 ? "success" : "danger"}>
-                    {latestResult.failed_subjects === 0 ? "Passed" : `${latestResult.failed_subjects} failed`}
-                  </Pill>
-                  {latestResult.exam?.starts_on ? (
-                    <p className="text-xs text-muted">
-                      {formatDate(latestResult.exam.starts_on)}
-                    </p>
-                  ) : null}
-                </div>
+            <div className="flex items-start gap-3">
+              <span className="grid h-14 w-14 shrink-0 -rotate-6 place-items-center rounded-full border-[2.5px] border-[var(--redpen)] font-[family-name:var(--font-display)] text-2xl font-bold text-[var(--redpen)]">
+                {latestResult.grade ?? gradeLetter(latestResult.percentage)}
+              </span>
+              <div className="min-w-0">
+                <p className="font-[family-name:var(--font-display)] text-3xl font-bold leading-none text-foreground">
+                  {Math.round(latestResult.percentage)}%
+                </p>
+                <p className="mt-1 flex items-center gap-1 text-xs text-[var(--success)]">
+                  <IconTrend width={13} height={13} />
+                  {latestResult.failed_subjects === 0
+                    ? "Passed every subject"
+                    : `${latestResult.failed_subjects} subject(s) to improve`}
+                </p>
               </div>
-              <ul className="divide-y divide-[var(--hairline)] rounded-2xl border">
-                {latestResult.subjects.slice(0, 4).map((subject) => (
-                  <li
-                    key={subject.exam_paper_id}
-                    className="flex items-center justify-between px-3.5 py-2 text-sm"
-                  >
-                    <span className="truncate">{subject.subject ?? "Subject"}</span>
-                    <span className="numeric font-semibold">
-                      {subject.marks_obtained ?? "-"}
-                      <span className="text-muted">/{subject.max_marks}</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
             </div>
           )}
+          {latestResult ? (
+            <div className="mt-auto border-t border-dashed border-rule pt-3">
+              <Link
+                href="/portal/results"
+                className="flex items-center justify-between text-sm font-semibold text-foreground"
+              >
+                <span>Full report card</span>
+                <IconArrowRight width={16} height={16} className="text-muted" />
+              </Link>
+            </div>
+          ) : null}
         </Card>
       </div>
-    </div>
-  );
-}
 
-function Row({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: "success" | "warning" | "danger" | "muted";
-}) {
-  const dot: Record<string, string> = {
-    success: "bg-[var(--success)]",
-    warning: "bg-[var(--warning)]",
-    danger: "bg-[var(--danger)]",
-    muted: "bg-muted",
-  };
-
-  return (
-    <div className="flex items-center justify-between">
-      <span className="flex items-center gap-2 text-muted">
-        <span className={`h-2 w-2 rounded-full ${dot[tone]}`} />
-        {label}
-      </span>
-      <span className="numeric font-semibold text-foreground">{value}</span>
+      {/* ===== Footer strip: identity ===== */}
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-hairline bg-card px-4 py-3 text-xs text-muted">
+        <span className="flex items-center gap-1.5">
+          <IconReceipt width={14} height={14} />
+          {admissionNo || "—"}
+          {rollNo ? ` · Roll no. ${rollNo}` : ""}
+        </span>
+        {school ? <span>{school}</span> : null}
+      </div>
     </div>
   );
 }

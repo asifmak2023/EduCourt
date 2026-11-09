@@ -3,62 +3,76 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-canvas: var(--canvas);
-  --color-panel: var(--panel);
-  --color-panel-muted: var(--panel-muted);
+  --color-muted: var(--muted-foreground);
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-sidebar: var(--sidebar);
   --color-hairline: var(--hairline);
-  --color-brand: var(--brand);
-  --color-brand-foreground: var(--brand-foreground);
-  --color-brand-soft: var(--brand-soft);
-  --color-accent: var(--accent);
+  --color-rule: var(--rule);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-board: var(--board);
+  --color-board-ink: var(--board-ink);
+  --color-board-dim: var(--board-dim);
+  --color-redpen: var(--redpen);
+  --color-marigold: var(--marigold);
+  --color-marigold-ink: var(--marigold-ink);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-exo-2), var(--font-jakarta), sans-serif;
-  --font-urdu: var(--font-urdu), serif;
-  --shadow-soft: var(--shadow-soft);
-  --shadow-lift: var(--shadow-lift);
-  --radius-xl2: 1.75rem;
+
+  --font-sans: var(--font-hind), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-khand), var(--font-hind), sans-serif;
+  --font-urdu: var(--font-nastaliq), serif;
 }
 
 :root {
-  --background: #f7f8fc;
-  --canvas: #eef1f9;
-  --foreground: #14182b;
-  --muted: #667085;
-  --panel: #ffffff;
-  --panel-muted: #f3f5fb;
-  --hairline: #e6e9f2;
-  --brand: #4f46e5;
-  --brand-foreground: #ffffff;
-  --brand-soft: #eef0ff;
-  --accent: #0ea5e9;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --shadow-soft: 0 1px 2px rgb(20 24 43 / 0.04), 0 10px 30px -12px rgb(20 24 43 / 0.10);
-  --shadow-lift: 0 24px 60px -24px rgb(79 70 229 / 0.28), 0 2px 6px rgb(20 24 43 / 0.05);
+  --primary: #1d5c46;
+  --primary-foreground: #ffffff;
+  --background: #f3f5ec;
+  --paper: #fbfcf6;
+  --card: #fbfcf6;
+  --foreground: #1f2b3d;
+  --muted-foreground: #5c6b7d;
+
+  --sidebar: #0f3d2e;
+  --board: #1d5c46;
+  --board-ink: #eaf3ec;
+  --board-dim: #a9c6b8;
+
+  --redpen: #c0392b;
+  --marigold: #e8a020;
+  --marigold-ink: #6b4300;
+  --rule: #cfdcda;
+  --hairline: #e2e8d8;
+
+  --success: #2e7d5b;
+  --warning: #c98a12;
+  --danger: #c0392b;
 }
 
+html.dark,
 html[data-theme="dark"] {
-  --background: #080a13;
-  --canvas: #0b0e1a;
-  --foreground: #eef0ff;
-  --muted: #98a2b3;
-  --panel: #121526;
-  --panel-muted: #1a1e33;
-  --hairline: rgb(255 255 255 / 0.08);
-  --brand: #7c74ff;
-  --brand-foreground: #ffffff;
-  --brand-soft: rgb(124 116 255 / 0.14);
-  --accent: #38bdf8;
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #f87171;
-  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 30px -12px rgb(0 0 0 / 0.6);
-  --shadow-lift: 0 24px 60px -24px rgb(0 0 0 / 0.7), 0 2px 6px rgb(0 0 0 / 0.4);
+  --background: #0e1814;
+  --paper: #131f1a;
+  --card: #16241e;
+  --foreground: #e8f0ea;
+  --muted-foreground: #94a8a0;
+
+  --sidebar: #0a130f;
+  --board: #163027;
+  --board-ink: #e8f0ea;
+  --board-dim: #7fa596;
+
+  --redpen: #e57a6c;
+  --marigold: #f0b44a;
+  --marigold-ink: #ffdfa0;
+  --rule: #2a3d36;
+  --hairline: #24352e;
+
+  --success: #6cc79b;
+  --warning: #f0b44a;
+  --danger: #e57a6c;
 }
 
 * {
@@ -88,25 +102,34 @@ body {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--brand) 22%, transparent);
+  background: color-mix(in srgb, var(--primary) 24%, transparent);
 }
 
-/* Ambient app background: soft radial glows behind the whole portal. */
-.portal-ambient {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(60rem 42rem at 12% -8%, color-mix(in srgb, var(--brand) 16%, transparent), transparent 60%),
-    radial-gradient(52rem 40rem at 100% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 55%),
-    radial-gradient(48rem 36rem at 50% 110%, color-mix(in srgb, var(--brand) 10%, transparent), transparent 60%);
-  pointer-events: none;
+.numeric {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
-.glass {
-  background: color-mix(in srgb, var(--panel) 78%, transparent);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+.font-urdu {
+  font-family: var(--font-urdu);
+  line-height: 2.1;
+}
+
+/* Chalkboard texture: soft chalky glows on the deep green board. */
+.chalk-board {
+  background-color: var(--board);
+  background-image:
+    radial-gradient(40rem 18rem at 85% 8%, oklch(1 0 0 / 0.06), transparent 70%),
+    radial-gradient(30rem 14rem at 8% 100%, oklch(1 0 0 / 0.05), transparent 70%);
+}
+
+/* Ruled paper: horizontal notebook lines used behind lists. */
+.ruled {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 35px,
+    color-mix(in oklch, var(--rule) 45%, transparent) 35px 36px
+  );
 }
 
 @keyframes rise {
@@ -121,7 +144,29 @@ body {
 }
 
 .animate-rise {
-  animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: rise 0.5s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes pen {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.pen-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: pen 0.9s 0.35s cubic-bezier(0.6, 0, 0.3, 1) forwards;
+}
+
+@keyframes breathe {
+  50% {
+    stroke-opacity: 0.7;
+  }
+}
+
+.dial-now {
+  animation: breathe 3.2s ease-in-out infinite;
 }
 
 @keyframes shimmer {
@@ -136,17 +181,12 @@ body {
 .skeleton {
   background: linear-gradient(
     90deg,
-    var(--panel-muted) 25%,
-    color-mix(in srgb, var(--panel-muted) 55%, var(--panel)) 50%,
-    var(--panel-muted) 75%
+    var(--hairline) 25%,
+    color-mix(in srgb, var(--hairline) 55%, var(--card)) 50%,
+    var(--hairline) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
-}
-
-.numeric {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum";
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -158,10 +198,13 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-rise {
-    animation: none;
-  }
+  .animate-rise,
+  .pen-draw,
+  .dial-now,
   .skeleton {
     animation: none;
+  }
+  .pen-draw {
+    stroke-dashoffset: 0;
   }
 }

@@ -282,7 +282,7 @@ export default function PortalDashboardPage() {
                       </span>
                       <span className="text-right">
                         <span className="numeric block font-semibold">
-                          {formatMoney(voucher.balance)}
+                          {Number(voucher.balance) > 0 ? formatMoney(voucher.balance) : "Settled"}
                         </span>
                         <Pill tone={voucherTone(voucher.status)}>{voucher.status}</Pill>
                       </span>

@@ -122,9 +122,15 @@ export default function FeesPage() {
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
-                        <p className="numeric font-[family-name:var(--font-display)] text-base font-bold">
-                          {formatMoney(voucher.balance)}
-                        </p>
+                        {Number(voucher.balance) > 0 ? (
+                          <p className="numeric font-[family-name:var(--font-display)] text-base font-bold">
+                            {formatMoney(voucher.balance)}
+                          </p>
+                        ) : (
+                          <p className="font-[family-name:var(--font-display)] text-base font-bold text-[var(--success)]">
+                            Settled
+                          </p>
+                        )}
                         <Pill tone={voucherTone(voucher.status)}>{voucher.status}</Pill>
                       </div>
                     </div>

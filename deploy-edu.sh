@@ -14,16 +14,19 @@ set -euo pipefail
 # App layout (pnpm monorepo):
 #   backend  = Laravel API  (apps/api, served by php-fpm)
 #   frontend = Next.js      (apps/web, served under pm2 "educourt-web")
+#   family   = Next.js      (apps/parent, served under pm2 "educourt-parent")
 # ============================================================
 
 PROJECT=/var/www/educourt
 BACKEND=$PROJECT/apps/api
 FRONTEND=$PROJECT/apps/web
+FAMILY=$PROJECT/apps/parent
 BACKUP_DIR=/root/backups
 DB_NAME=educourt
 DB_USER=educourt
 BRANCH=master
 WEB_PORT=3001
+PARENT_PORT=3002
 API_PORT=8080
 
 GREEN='\033[0;32m'
@@ -165,11 +168,17 @@ API_ORIGIN="http://127.0.0.1:$API_PORT" \
   NEXT_PUBLIC_APP_ANDROID_URL="$APP_ANDROID_URL" \
   pnpm --filter web build
 
+log "Building the family (parent/student) web app"
+API_ORIGIN="http://127.0.0.1:$API_PORT" \
+  NEXT_PUBLIC_API_BASE=/api \
+  pnpm --filter parent build
+
 # ------------------------------------------------------------
 # 10. Restart PM2
 # ------------------------------------------------------------
 log "Restarting PM2 processes"
 pm2 restart educourt-web --update-env
+pm2 start ecosystem.config.js --only educourt-parent >/dev/null 2>&1 || pm2 restart educourt-parent --update-env
 pm2 restart educourt-queue 2>/dev/null || true
 pm2 save
 
@@ -181,6 +190,7 @@ sleep 3
 
 curl -sf "http://127.0.0.1:$API_PORT/up" > /dev/null && log "Laravel API: OK" || err "Laravel API: NOT RESPONDING"
 curl -sf "http://127.0.0.1:$WEB_PORT/login" > /dev/null && log "Next.js: OK" || err "Next.js: NOT RESPONDING"
+curl -sf "http://127.0.0.1:$PARENT_PORT/login" > /dev/null && log "Family app: OK" || err "Family app: NOT RESPONDING"
 curl -sf "https://educourt.asifent.com/login" > /dev/null && log "Public site: OK" || err "Public site: NOT RESPONDING"
 
 echo ""

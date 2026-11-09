@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@eis/i18n";
@@ -9,13 +9,27 @@ import { useTr } from "@/lib/i18n";
 import { isPortalOnly } from "@/lib/roles";
 import { Icon } from "@/components/Icons";
 import { BrandMark } from "@/components/BrandMark";
+import {
+  FAMILY_DOWNLOAD_HREF,
+  MAIN_APP_HREF,
+  PARENT_PORTAL_URL,
+  STAFF_DOWNLOAD_HREF,
+} from "@/lib/app-links";
 import type { NavIcon } from "@/lib/nav";
 
 const NAV_LINKS = [
   { href: "#features", label: "landing.nav.features" },
   { href: "#modules", label: "landing.nav.modules" },
   { href: "#roles", label: "landing.nav.roles" },
+  { href: "#apps", label: "landing.nav.apps" },
   { href: "#pricing", label: "landing.nav.pricing" },
+];
+
+const APP_LINKS = [
+  { href: MAIN_APP_HREF, label: "landing.nav.mainApp", icon: "grid" as NavIcon, external: false },
+  { href: PARENT_PORTAL_URL, label: "landing.nav.parentPortal", icon: "users" as NavIcon, external: true },
+  { href: STAFF_DOWNLOAD_HREF, label: "landing.nav.staffApp", icon: "idCard" as NavIcon, external: false },
+  { href: FAMILY_DOWNLOAD_HREF, label: "landing.nav.familyApp", icon: "download" as NavIcon, external: false },
 ];
 
 const FEATURES: { icon: NavIcon; key: string }[] = [
@@ -57,6 +71,79 @@ const PLANS = [
   { key: "enterprise", popular: false },
 ];
 
+function AppsMenu() {
+  const tr = useTr();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div
+      className="relative"
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="flex items-center gap-1 rounded-full px-3.5 py-2 text-sm font-semibold text-foreground/75 transition-colors hover:bg-surface-tertiary hover:text-foreground"
+      >
+        {tr("landing.nav.apps")}
+        <Icon
+          name="chevronDown"
+          className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open ? (
+        <div
+          role="menu"
+          className="absolute end-0 z-50 mt-1 w-72 overflow-hidden rounded-2xl border border-border-secondary bg-surface p-1.5 shadow-lg"
+        >
+          {APP_LINKS.map((link) => {
+            const content = (
+              <>
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-foreground">
+                  <Icon name={link.icon} className="h-4 w-4" />
+                </span>
+                <span className="min-w-0 flex-1 text-sm font-medium text-foreground">
+                  {tr(link.label)}
+                </span>
+                {link.external ? (
+                  <Icon name="chevronDown" className="h-4 w-4 shrink-0 -rotate-90 text-muted" />
+                ) : null}
+              </>
+            );
+
+            return link.external ? (
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noopener"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-surface-tertiary"
+              >
+                {content}
+              </a>
+            ) : (
+              <Link
+                key={link.href}
+                href={link.href}
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-surface-tertiary"
+              >
+                {content}
+              </Link>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function LandingPage() {
   const { user, loading } = useAuth();
   const { t } = useTranslation();
@@ -91,6 +178,8 @@ export default function LandingPage() {
                 {tr(link.label)}
               </a>
             ))}
+
+            <AppsMenu />
           </nav>
 
           <div className="ms-auto flex items-center gap-2">
@@ -279,6 +368,71 @@ export default function LandingPage() {
           </div>
         </section>
 
+        <section id="apps" className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground">
+              {t("landing.apps.title")}
+            </h2>
+            <p className="mt-3 text-base text-muted">{t("landing.apps.subtitle")}</p>
+          </div>
+
+          <div className="mt-12 grid gap-6 lg:grid-cols-2">
+            <div className="surface-card flex flex-col rounded-2xl border border-border-secondary p-7">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-foreground">
+                <Icon name="idCard" className="h-6 w-6" />
+              </span>
+              <h3 className="mt-4 text-lg font-semibold text-foreground">
+                {t("landing.apps.staff.title")}
+              </h3>
+              <p className="mt-2 flex-1 text-sm text-muted">
+                {t("landing.apps.staff.body")}
+              </p>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Link
+                  href={STAFF_DOWNLOAD_HREF}
+                  className="rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground transition-opacity hover:opacity-90"
+                >
+                  {t("landing.apps.staff.cta")}
+                </Link>
+                <Link
+                  href={MAIN_APP_HREF}
+                  className="rounded-xl border border-border-secondary px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-surface-tertiary"
+                >
+                  {t("landing.nav.mainApp")}
+                </Link>
+              </div>
+            </div>
+
+            <div className="surface-card flex flex-col rounded-2xl border border-border-secondary p-7">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-foreground">
+                <Icon name="users" className="h-6 w-6" />
+              </span>
+              <h3 className="mt-4 text-lg font-semibold text-foreground">
+                {t("landing.apps.family.title")}
+              </h3>
+              <p className="mt-2 flex-1 text-sm text-muted">
+                {t("landing.apps.family.body")}
+              </p>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Link
+                  href={FAMILY_DOWNLOAD_HREF}
+                  className="rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground transition-opacity hover:opacity-90"
+                >
+                  {t("landing.apps.family.cta")}
+                </Link>
+                <a
+                  href={PARENT_PORTAL_URL}
+                  target="_blank"
+                  rel="noopener"
+                  className="rounded-xl border border-border-secondary px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-surface-tertiary"
+                >
+                  {t("landing.nav.parentPortal")}
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section id="pricing" className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-foreground">
@@ -366,6 +520,34 @@ export default function LandingPage() {
             </div>
             <p className="mt-1 text-xs text-muted">{t("landing.footer.tagline")}</p>
           </div>
+          <nav
+            aria-label={t("landing.apps.title")}
+            className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-medium text-muted"
+          >
+            <Link href={MAIN_APP_HREF} className="transition-colors hover:text-foreground">
+              {t("landing.footer.mainApp")}
+            </Link>
+            <a
+              href={PARENT_PORTAL_URL}
+              target="_blank"
+              rel="noopener"
+              className="transition-colors hover:text-foreground"
+            >
+              {t("landing.footer.parentPortal")}
+            </a>
+            <Link
+              href={STAFF_DOWNLOAD_HREF}
+              className="transition-colors hover:text-foreground"
+            >
+              {t("landing.footer.staffApp")}
+            </Link>
+            <Link
+              href={FAMILY_DOWNLOAD_HREF}
+              className="transition-colors hover:text-foreground"
+            >
+              {t("landing.footer.familyApp")}
+            </Link>
+          </nav>
           <p className="text-xs text-muted">
             &copy; {new Date().getFullYear()} EduCourt. {t("landing.footer.rights")}
           </p>

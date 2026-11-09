@@ -9,7 +9,7 @@ export function BrandMark({
 }) {
   return (
     <Image
-      src="/brand/educourt-mark.svg"
+      src="/brand/educourt-mark.png"
       alt=""
       width={128}
       height={128}

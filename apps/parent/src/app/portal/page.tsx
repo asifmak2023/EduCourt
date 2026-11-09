@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useFamily } from "@/lib/family";
 import { usePortalQuery } from "@/lib/usePortalQuery";
 import {
@@ -264,8 +265,18 @@ export default function PortalDashboardPage() {
             <p className="py-4 text-sm text-muted">No results published yet.</p>
           ) : (
             <div className="flex items-start gap-3">
-              <span className="grid h-14 w-14 shrink-0 -rotate-6 place-items-center rounded-full border-[2.5px] border-[var(--redpen)] font-[family-name:var(--font-display)] text-2xl font-bold text-[var(--redpen)]">
-                {latestResult.grade ?? gradeLetter(latestResult.percentage)}
+              <span className="relative grid h-16 w-16 shrink-0 place-items-center">
+                <Image
+                  src="/grade-circle.webp"
+                  alt=""
+                  aria-hidden="true"
+                  fill
+                  sizes="64px"
+                  className="-rotate-6 object-contain"
+                />
+                <span className="relative z-10 font-[family-name:var(--font-display)] text-2xl font-bold text-[var(--redpen)]">
+                  {latestResult.grade ?? gradeLetter(latestResult.percentage)}
+                </span>
               </span>
               <div className="min-w-0">
                 <p className="font-[family-name:var(--font-display)] text-3xl font-bold leading-none text-foreground">

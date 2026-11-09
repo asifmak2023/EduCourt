@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useFamily } from "@/lib/family";
 import { usePortalQuery } from "@/lib/usePortalQuery";
 import { classLabel, fetchResults, formatDate, gradeLetter } from "@/lib/portal";
@@ -79,8 +80,16 @@ export default function ResultsPage() {
             <Card>
               {/* header: stamp grade + totals */}
               <div className="flex flex-col items-center gap-5 border-b border-hairline pb-5 sm:flex-row sm:items-center">
-                <span className="grid h-28 w-28 shrink-0 -rotate-6 place-items-center rounded-full border-[3px] border-[var(--redpen)] text-center">
-                  <span>
+                <span className="relative grid h-32 w-32 shrink-0 place-items-center">
+                  <Image
+                    src="/grade-circle.webp"
+                    alt=""
+                    aria-hidden="true"
+                    fill
+                    sizes="128px"
+                    className="-rotate-6 object-contain"
+                  />
+                  <span className="relative z-10 text-center">
                     <span className="block font-[family-name:var(--font-display)] text-4xl font-bold leading-none text-[var(--redpen)]">
                       {active.grade ?? gradeLetter(active.percentage)}
                     </span>

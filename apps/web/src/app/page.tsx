@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@eis/i18n";
 import { useAuth } from "@/lib/auth";
@@ -377,57 +378,79 @@ export default function LandingPage() {
           </div>
 
           <div className="mt-12 grid gap-6 lg:grid-cols-2">
-            <div className="surface-card flex flex-col rounded-2xl border border-border-secondary p-7">
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-foreground">
-                <Icon name="idCard" className="h-6 w-6" />
-              </span>
-              <h3 className="mt-4 text-lg font-semibold text-foreground">
-                {t("landing.apps.staff.title")}
-              </h3>
-              <p className="mt-2 flex-1 text-sm text-muted">
-                {t("landing.apps.staff.body")}
-              </p>
-              <div className="mt-6 flex flex-wrap items-center gap-3">
-                <Link
-                  href={STAFF_DOWNLOAD_HREF}
-                  className="rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground transition-opacity hover:opacity-90"
-                >
-                  {t("landing.apps.staff.cta")}
-                </Link>
-                <Link
-                  href={MAIN_APP_HREF}
-                  className="rounded-xl border border-border-secondary px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-surface-tertiary"
-                >
-                  {t("landing.nav.mainApp")}
-                </Link>
+            <div className="surface-card flex flex-col overflow-hidden rounded-2xl border border-border-secondary">
+              <div className="relative aspect-[4/3] w-full">
+                <Image
+                  src="/brand/staff-teacher.webp"
+                  alt={t("landing.apps.staff.imageAlt")}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                />
+              </div>
+              <div className="flex flex-1 flex-col p-7">
+                <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-foreground">
+                  <Icon name="idCard" className="h-6 w-6" />
+                </span>
+                <h3 className="mt-4 text-lg font-semibold text-foreground">
+                  {t("landing.apps.staff.title")}
+                </h3>
+                <p className="mt-2 flex-1 text-sm text-muted">
+                  {t("landing.apps.staff.body")}
+                </p>
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  <Link
+                    href={STAFF_DOWNLOAD_HREF}
+                    className="rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground transition-opacity hover:opacity-90"
+                  >
+                    {t("landing.apps.staff.cta")}
+                  </Link>
+                  <Link
+                    href={MAIN_APP_HREF}
+                    className="rounded-xl border border-border-secondary px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-surface-tertiary"
+                  >
+                    {t("landing.nav.mainApp")}
+                  </Link>
+                </div>
               </div>
             </div>
 
-            <div className="surface-card flex flex-col rounded-2xl border border-border-secondary p-7">
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-foreground">
-                <Icon name="users" className="h-6 w-6" />
-              </span>
-              <h3 className="mt-4 text-lg font-semibold text-foreground">
-                {t("landing.apps.family.title")}
-              </h3>
-              <p className="mt-2 flex-1 text-sm text-muted">
-                {t("landing.apps.family.body")}
-              </p>
-              <div className="mt-6 flex flex-wrap items-center gap-3">
-                <Link
-                  href={FAMILY_DOWNLOAD_HREF}
-                  className="rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground transition-opacity hover:opacity-90"
-                >
-                  {t("landing.apps.family.cta")}
-                </Link>
-                <a
-                  href={PARENT_PORTAL_URL}
-                  target="_blank"
-                  rel="noopener"
-                  className="rounded-xl border border-border-secondary px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-surface-tertiary"
-                >
-                  {t("landing.nav.parentPortal")}
-                </a>
+            <div className="surface-card flex flex-col overflow-hidden rounded-2xl border border-border-secondary">
+              <div className="relative aspect-[4/3] w-full">
+                <Image
+                  src="/brand/family-students.webp"
+                  alt={t("landing.apps.family.imageAlt")}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                />
+              </div>
+              <div className="flex flex-1 flex-col p-7">
+                <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-foreground">
+                  <Icon name="users" className="h-6 w-6" />
+                </span>
+                <h3 className="mt-4 text-lg font-semibold text-foreground">
+                  {t("landing.apps.family.title")}
+                </h3>
+                <p className="mt-2 flex-1 text-sm text-muted">
+                  {t("landing.apps.family.body")}
+                </p>
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  <Link
+                    href={FAMILY_DOWNLOAD_HREF}
+                    className="rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground transition-opacity hover:opacity-90"
+                  >
+                    {t("landing.apps.family.cta")}
+                  </Link>
+                  <a
+                    href={PARENT_PORTAL_URL}
+                    target="_blank"
+                    rel="noopener"
+                    className="rounded-xl border border-border-secondary px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-surface-tertiary"
+                  >
+                    {t("landing.nav.parentPortal")}
+                  </a>
+                </div>
               </div>
             </div>
           </div>

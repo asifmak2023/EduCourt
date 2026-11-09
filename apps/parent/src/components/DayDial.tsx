@@ -2,46 +2,66 @@
 
 import type { TimetableSlot } from "@/lib/types";
 
-interface DialSegment {
-  key: string;
-  label: string;
-  subject?: string;
-  teacher?: string;
-  start?: string;
-  end?: string;
-  periodName?: string;
-  isBreak: boolean;
-}
+const SCHOOL_START = toMinutes("07:45");
+const SCHOOL_END = toMinutes("13:30");
+const SWEEP = 330;
+const START_ANGLE = 15;
 
-function toMinutes(value?: string): number | null {
+function toMinutes(value?: string | null): number {
   if (!value) {
-    return null;
+    return 0;
   }
-  const parts = value.split(":");
-  const h = Number(parts[0]);
-  const m = Number(parts[1]);
+  const [h, m] = value.split(":").map(Number);
   if (Number.isNaN(h) || Number.isNaN(m)) {
-    return null;
+    return 0;
   }
   return h * 60 + m;
 }
 
-function polar(cx: number, cy: number, r: number, angleDeg: number) {
-  const rad = ((angleDeg - 90) * Math.PI) / 180;
-  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+function angleFor(minutes: number, start: number, end: number): number {
+  const clamped = Math.min(Math.max(minutes, start), end);
+  const span = end - start || 1;
+  return START_ANGLE + ((clamped - start) / span) * SWEEP;
 }
 
-function arcPath(
-  cx: number,
-  cy: number,
-  r: number,
-  startDeg: number,
-  endDeg: number
-) {
-  const start = polar(cx, cy, r, startDeg);
-  const end = polar(cx, cy, r, endDeg);
-  const large = endDeg - startDeg > 180 ? 1 : 0;
-  return `M ${start.x} ${start.y} A ${r} ${r} 0 ${large} 1 ${end.x} ${end.y}`;
+function polar(cx: number, cy: number, radius: number, angleDeg: number): [number, number] {
+  const rad = ((angleDeg - 90) * Math.PI) / 180;
+  return [cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)];
+}
+
+function arc(cx: number, cy: number, radius: number, startDeg: number, endDeg: number): string {
+  const [x1, y1] = polar(cx, cy, radius, startDeg);
+  const [x2, y2] = polar(cx, cy, radius, endDeg);
+  return `M ${x1} ${y1} A ${radius} ${radius} 0 ${endDeg - startDeg > 180 ? 1 : 0} 1 ${x2} ${y2}`;
+}
+
+interface RingPeriod {
+  key: string;
+  name: string;
+  starts: number;
+  ends: number;
+  isBreak: boolean;
+}
+
+function buildRing(slots: TimetableSlot[]): RingPeriod[] {
+  const byId = new Map<number, RingPeriod>();
+  slots.forEach((slot) => {
+    const period = slot.period;
+    if (!period) {
+      return;
+    }
+    if (byId.has(period.id)) {
+      return;
+    }
+    byId.set(period.id, {
+      key: String(period.id),
+      name: period.name ?? "P",
+      starts: toMinutes(period.starts_at),
+      ends: toMinutes(period.ends_at),
+      isBreak: Boolean(period.is_break),
+    });
+  });
+  return [...byId.values()].sort((a, b) => a.starts - b.starts);
 }
 
 export function DayDial({
@@ -51,142 +71,179 @@ export function DayDial({
   slots: TimetableSlot[];
   now?: Date;
 }) {
-  const size = 260;
-  const cx = size / 2;
-  const cy = size / 2;
-  const r = size / 2 - 26;
-
-  const ordered = [...slots].sort(
-    (a, b) =>
-      (toMinutes(a.period?.starts_at) ?? 0) -
-      (toMinutes(b.period?.starts_at) ?? 0)
-  );
-
-  const segments: DialSegment[] = ordered.map((slot, index) => ({
-    key: String(slot.id ?? index),
-    label: String(index + 1),
-    subject: slot.subject?.name,
-    teacher: slot.teacher?.name,
-    start: slot.period?.starts_at?.slice(0, 5),
-    end: slot.period?.ends_at?.slice(0, 5),
-    periodName: slot.period?.name,
-    isBreak: Boolean(slot.period?.is_break),
-  }));
-
-  if (segments.length === 0) {
-    return (
-      <div className="grid place-items-center" style={{ width: size, height: size }}>
-        <div className="text-center text-board-dim">
-          <p className="font-[family-name:var(--font-display)] text-lg">
-            No classes today
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  const gap = segments.length > 1 ? 2.5 : 0;
-  const sweep = 360 / segments.length;
+  const ring = buildRing(slots);
 
-  let activeIndex = -1;
-  segments.forEach((seg, i) => {
-    const start = toMinutes(seg.start);
-    const end = toMinutes(seg.end);
-    if (start !== null && end !== null && nowMinutes >= start && nowMinutes < end) {
-      activeIndex = i;
-    }
-  });
+  const windowStart = ring.length ? Math.min(...ring.map((p) => p.starts)) : SCHOOL_START;
+  const windowEnd = ring.length ? Math.max(...ring.map((p) => p.ends)) : SCHOOL_END;
 
-  const active = activeIndex >= 0 ? segments[activeIndex] : null;
-  const handAngle = (nowMinutes / (24 * 60)) * 360;
+  const currentPeriod =
+    ring.find((p) => nowMinutes >= p.starts && nowMinutes < p.ends) ?? null;
+  const currentSlot =
+    currentPeriod && !currentPeriod.isBreak
+      ? slots.find(
+          (s) => s.day_of_week === now.getDay() && s.period?.id === Number(currentPeriod.key)
+        ) ?? null
+      : null;
+  const currentSubject = currentPeriod
+    ? (currentSlot?.subject?.name ?? null)
+    : null;
+
+  const inSession = nowMinutes >= windowStart && nowMinutes <= windowEnd;
+  const handAngle = angleFor(nowMinutes, windowStart, windowEnd);
+  const [tipX, tipY] = polar(150, 150, 126, handAngle);
+  const [baseX, baseY] = polar(150, 150, 92, handAngle);
+
+  const centerTitle = currentPeriod
+    ? currentPeriod.isBreak
+      ? "Break"
+      : (currentPeriod.name.match(/\d+/)?.[0]
+          ? `P${currentPeriod.name.match(/\d+/)?.[0]}`
+          : currentPeriod.name)
+    : nowMinutes > windowEnd
+      ? "Home"
+      : "Soon";
+  const centerSubtitle = currentPeriod
+    ? currentPeriod.isBreak
+      ? "Lunch & play"
+      : (currentSubject ?? "")
+    : nowMinutes > windowEnd
+      ? "School day is over"
+      : "Gates open 7:30";
+
+  const ariaLabel = currentPeriod
+    ? `Now: ${currentPeriod.isBreak ? "break" : `${currentPeriod.name}, ${currentSubject ?? "class"}`}, until ${formatMinutes(currentPeriod.ends)}`
+    : "School day is over";
 
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {segments.map((seg, i) => {
-          const startDeg = i * sweep + gap / 2;
-          const endDeg = (i + 1) * sweep - gap / 2;
-          const mid = (startDeg + endDeg) / 2;
-          const isActive = i === activeIndex;
-          const isPast =
-            activeIndex >= 0 &&
-            i < activeIndex &&
-            !isActive;
-          const labelPos = polar(cx, cy, r + 15, mid);
+    <div
+      className="relative mx-auto aspect-square w-full max-w-[300px]"
+      role="img"
+      aria-label={ariaLabel}
+    >
+      <svg viewBox="0 0 300 300" className="h-full w-full overflow-visible">
+        {/* outer boundary */}
+        <circle
+          cx={150}
+          cy={150}
+          r={144}
+          fill="none"
+          stroke="var(--board-dim)"
+          strokeOpacity={0.25}
+          strokeWidth={1}
+        />
+
+        {/* period ring */}
+        {ring.map((period) => {
+          const start = angleFor(period.starts, windowStart, windowEnd) + 1.2;
+          const end = angleFor(period.ends, windowStart, windowEnd) - 1.2;
+          const isPast = nowMinutes >= period.ends;
+          const isActive = currentPeriod?.key === period.key;
+          const [labelX, labelY] = polar(150, 150, 156, (start + end) / 2);
+          const label = period.isBreak
+            ? "\u2615"
+            : period.name.match(/\d+/)?.[0] ?? period.name.slice(0, 2);
 
           return (
-            <g key={seg.key}>
+            <g key={period.key}>
               <path
-                d={arcPath(cx, cy, r, startDeg, endDeg)}
+                d={arc(150, 150, 126, start, end)}
                 fill="none"
-                stroke={
-                  isActive
-                    ? "var(--marigold)"
-                    : isPast
-                      ? "rgba(233,243,236,0.28)"
-                      : "rgba(233,243,236,0.85)"
-                }
-                strokeWidth={isActive ? 15 : 11}
-                strokeLinecap="round"
+                stroke={isActive ? "var(--marigold)" : "var(--board-ink)"}
+                strokeOpacity={isActive ? 1 : isPast ? 0.85 : 0.18}
+                strokeWidth={period.isBreak ? 4 : isActive ? 16 : 12}
+                strokeLinecap="butt"
+                className={isActive ? "dial-now" : undefined}
               />
               <text
-                x={labelPos.x}
-                y={labelPos.y}
+                x={labelX}
+                y={labelY}
                 textAnchor="middle"
                 dominantBaseline="central"
-                className="fill-[var(--board-dim)]"
-                style={{ fontSize: 12, fontWeight: 600 }}
+                className="font-[family-name:var(--font-display)]"
+                fontSize={14}
+                fontWeight={600}
+                fill="var(--board-ink)"
+                fillOpacity={isActive ? 1 : 0.55}
               >
-                {seg.label}
+                {label}
               </text>
             </g>
           );
         })}
 
-        {/* clock hand */}
-        <line
-          x1={cx}
-          y1={cy}
-          x2={polar(cx, cy, r - 6, handAngle).x}
-          y2={polar(cx, cy, r - 6, handAngle).y}
-          stroke="var(--marigold)"
-          strokeWidth={2}
-          strokeLinecap="round"
-          className="dial-now"
-        />
-        <circle cx={cx} cy={cy} r={4} fill="var(--marigold)" />
+        {/* school-day label */}
+        <text
+          x={150}
+          y={22}
+          textAnchor="middle"
+          fontSize={12}
+          fill="var(--board-dim)"
+        >
+          {compactTime(windowStart)} &middot; {compactTime(windowEnd)}
+        </text>
+
+        {/* live hand */}
+        {inSession ? (
+          <g style={{ transition: "all 1s linear" }}>
+            <line
+              x1={baseX}
+              y1={baseY}
+              x2={tipX}
+              y2={tipY}
+              stroke="var(--marigold)"
+              strokeWidth={3}
+              strokeLinecap="round"
+            />
+            <circle
+              cx={tipX}
+              cy={tipY}
+              r={7}
+              fill="var(--marigold)"
+              stroke="var(--board)"
+              strokeWidth={3}
+            />
+          </g>
+        ) : null}
       </svg>
 
-      <div className="pointer-events-none absolute inset-0 grid place-items-center">
-        <div className="max-w-[62%] text-center">
-          {active ? (
+      {/* centre readout */}
+      <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
+        <div className="px-6">
+          {currentPeriod ? (
             <>
-              <p className="font-[family-name:var(--font-display)] text-3xl font-bold leading-none text-[var(--marigold)]">
-                {active.periodName?.match(/\d+/)?.[0]
-                  ? `P${active.periodName.match(/\d+/)?.[0]}`
-                  : active.label}
+              <p className="font-[family-name:var(--font-display)] text-[56px] font-bold leading-none text-marigold">
+                {centerTitle}
               </p>
-              <p className="mt-1 truncate font-[family-name:var(--font-display)] text-sm font-semibold uppercase tracking-wide text-board-ink">
-                {active.subject ?? active.periodName ?? "Class"}
+              <p className="mt-1 font-[family-name:var(--font-display)] text-xl font-semibold uppercase tracking-wide text-board-ink">
+                {centerSubtitle}
               </p>
-              {active.end ? (
-                <p className="mt-0.5 text-xs text-board-dim">until {active.end}</p>
-              ) : null}
+              <p className="text-sm text-board-dim">
+                until {formatMinutes(currentPeriod.ends)}
+              </p>
             </>
           ) : (
             <>
-              <p className="font-[family-name:var(--font-display)] text-2xl font-bold text-board-ink/80">
-                {now.toLocaleTimeString("en-GB", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+              <p className="font-[family-name:var(--font-display)] text-5xl font-bold leading-none text-board-ink">
+                {centerTitle}
               </p>
-              <p className="mt-1 text-xs text-board-dim">No class right now</p>
+              <p className="mt-1 text-sm text-board-dim">{centerSubtitle}</p>
             </>
           )}
         </div>
       </div>
     </div>
   );
+}
+
+function formatMinutes(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function compactTime(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${h}:${String(m).padStart(2, "0")}`;
 }

@@ -27,52 +27,54 @@
 }
 
 :root {
-  --primary: #1d5c46;
-  --primary-foreground: #ffffff;
-  --background: #f3f5ec;
-  --paper: #fbfcf6;
-  --card: #fbfcf6;
-  --foreground: #1f2b3d;
-  --muted-foreground: #5c6b7d;
+  --primary: oklch(0.44 0.1 152);
+  --primary-foreground: oklch(1 0 none);
+  --background: oklch(0.975 0.007 165);
+  --paper: oklch(0.995 0.003 165);
+  --card: oklch(0.975 0.007 165);
+  --foreground: oklch(0.25 0.045 262);
+  --muted-foreground: oklch(0.4965 0.0523 229.02);
 
-  --sidebar: #0f3d2e;
-  --board: #1d5c46;
-  --board-ink: #eaf3ec;
-  --board-dim: #a9c6b8;
+  --sidebar: oklch(0.31 0.055 158);
+  --board: oklch(0.31 0.055 158);
+  --board-ink: oklch(0.95 0.025 150);
+  --board-dim: oklch(0.8 0.035 155);
 
-  --redpen: #c0392b;
-  --marigold: #e8a020;
-  --marigold-ink: #6b4300;
-  --rule: #cfdcda;
-  --hairline: #e2e8d8;
+  --redpen: oklch(0.57 0.21 20);
+  --marigold: oklch(0.8 0.15 75);
+  --marigold-ink: oklch(0.3 0.06 60);
+  --rule: oklch(0.85 0.045 235);
+  --hairline: oklch(0.25 0.045 262 / 0.1);
 
-  --success: #2e7d5b;
-  --warning: #c98a12;
-  --danger: #c0392b;
+  --success: oklch(0.45 0.1 145);
+  --warning: oklch(0.78 0.1 75);
+  --danger: oklch(0.45 0.1 25);
 }
 
 html.dark,
 html[data-theme="dark"] {
-  --background: #0e1814;
-  --paper: #131f1a;
-  --card: #16241e;
-  --foreground: #e8f0ea;
-  --muted-foreground: #94a8a0;
+  --primary: oklch(0.8108 0.11 152);
+  --primary-foreground: oklch(0 0 none);
+  --background: oklch(0.22 0.045 262);
+  --paper: oklch(0.23 0.02 200);
+  --card: oklch(0.2766 0.0484 254.73);
+  --foreground: oklch(0.975 0.007 165);
+  --muted-foreground: oklch(0.8542 0.0252 180.52);
 
-  --sidebar: #0a130f;
-  --board: #163027;
-  --board-ink: #e8f0ea;
-  --board-dim: #7fa596;
+  --sidebar: oklch(0.27 0.045 158);
+  --board: oklch(0.27 0.045 158);
+  --board-ink: oklch(0.95 0.025 150);
+  --board-dim: oklch(0.8 0.035 155);
 
-  --redpen: #e57a6c;
-  --marigold: #f0b44a;
-  --marigold-ink: #ffdfa0;
-  --rule: #2a3d36;
-  --hairline: #24352e;
+  --redpen: oklch(0.8199 0.1011 20);
+  --marigold: oklch(0.836 0.1424 75);
+  --marigold-ink: oklch(0.3 0.06 60);
+  --rule: oklch(0.38 0.04 235);
+  --hairline: oklch(0.975 0.007 165 / 0.1);
 
-  --success: #6cc79b;
-  --warning: #f0b44a;
-  --danger: #e57a6c;
+  --success: oklch(0.8115 0.11 145);
+  --warning: oklch(0.8346 0.11 75);
+  --danger: oklch(0.8115 0.1065 25);
 }
 
 * {
@@ -119,8 +121,8 @@ body {
 .chalk-board {
   background-color: var(--board);
   background-image:
-    radial-gradient(40rem 18rem at 85% 8%, oklch(1 0 0 / 0.06), transparent 70%),
-    radial-gradient(30rem 14rem at 8% 100%, oklch(1 0 0 / 0.05), transparent 70%);
+    radial-gradient(40rem 18rem at 85% 10%, oklch(1 0 0 / 0.05), transparent 70%),
+    radial-gradient(30rem 14rem at 10% 100%, oklch(1 0 0 / 0.04), transparent 70%);
 }
 
 /* Ruled paper: horizontal notebook lines used behind lists. */

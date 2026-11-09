@@ -147,7 +147,7 @@ export default function PortalDashboardPage() {
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-marigold border-t-transparent" />
               </div>
             ) : (
-              <DayDial slots={todays} now={now} />
+              <DayDial slots={slots} now={now} />
             )}
           </div>
         </div>

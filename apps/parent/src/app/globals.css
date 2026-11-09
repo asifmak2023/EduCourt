@@ -1,0 +1,167 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-canvas: var(--canvas);
+  --color-panel: var(--panel);
+  --color-panel-muted: var(--panel-muted);
+  --color-hairline: var(--hairline);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-soft: var(--brand-soft);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-exo-2), var(--font-jakarta), sans-serif;
+  --font-urdu: var(--font-urdu), serif;
+  --shadow-soft: var(--shadow-soft);
+  --shadow-lift: var(--shadow-lift);
+  --radius-xl2: 1.75rem;
+}
+
+:root {
+  --background: #f7f8fc;
+  --canvas: #eef1f9;
+  --foreground: #14182b;
+  --muted: #667085;
+  --panel: #ffffff;
+  --panel-muted: #f3f5fb;
+  --hairline: #e6e9f2;
+  --brand: #4f46e5;
+  --brand-foreground: #ffffff;
+  --brand-soft: #eef0ff;
+  --accent: #0ea5e9;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --shadow-soft: 0 1px 2px rgb(20 24 43 / 0.04), 0 10px 30px -12px rgb(20 24 43 / 0.10);
+  --shadow-lift: 0 24px 60px -24px rgb(79 70 229 / 0.28), 0 2px 6px rgb(20 24 43 / 0.05);
+}
+
+html[data-theme="dark"] {
+  --background: #080a13;
+  --canvas: #0b0e1a;
+  --foreground: #eef0ff;
+  --muted: #98a2b3;
+  --panel: #121526;
+  --panel-muted: #1a1e33;
+  --hairline: rgb(255 255 255 / 0.08);
+  --brand: #7c74ff;
+  --brand-foreground: #ffffff;
+  --brand-soft: rgb(124 116 255 / 0.14);
+  --accent: #38bdf8;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 30px -12px rgb(0 0 0 / 0.6);
+  --shadow-lift: 0 24px 60px -24px rgb(0 0 0 / 0.7), 0 2px 6px rgb(0 0 0 / 0.4);
+}
+
+* {
+  border-color: var(--hairline);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand) 22%, transparent);
+}
+
+/* Ambient app background: soft radial glows behind the whole portal. */
+.portal-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60rem 42rem at 12% -8%, color-mix(in srgb, var(--brand) 16%, transparent), transparent 60%),
+    radial-gradient(52rem 40rem at 100% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 55%),
+    radial-gradient(48rem 36rem at 50% 110%, color-mix(in srgb, var(--brand) 10%, transparent), transparent 60%);
+  pointer-events: none;
+}
+
+.glass {
+  background: color-mix(in srgb, var(--panel) 78%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--panel-muted) 25%,
+    color-mix(in srgb, var(--panel-muted) 55%, var(--panel)) 50%,
+    var(--panel-muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise {
+    animation: none;
+  }
+  .skeleton {
+    animation: none;
+  }
+}

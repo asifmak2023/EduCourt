@@ -11,7 +11,7 @@ import type { MessagingAudience } from "@/lib/types";
 
 export default function NewMessagingAudiencePage() {
   return (
-    <PermissionGate permission="integration.edit">
+    <PermissionGate permission="integration.view">
       <NewMessagingAudience />
     </PermissionGate>
   );

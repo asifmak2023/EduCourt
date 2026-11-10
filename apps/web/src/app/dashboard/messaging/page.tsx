@@ -49,7 +49,7 @@ function MessagingView() {
         title="Groups & broadcast"
         description="Send WhatsApp messages to a campus group or broadcast list. Every recipient still gets an individual, consent-checked message."
         actions={
-          can("integration.edit") ? (
+          can("integration.view") ? (
             <Link
               href="/dashboard/messaging/new"
               className={buttonClasses("primary")}

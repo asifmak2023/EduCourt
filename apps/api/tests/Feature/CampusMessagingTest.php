@@ -375,6 +375,36 @@ class CampusMessagingTest extends TestCase
             ->assertJsonPath('data.whatsapp_self_service', false);
     }
 
+    public function test_an_institution_head_can_manage_audiences_without_the_edit_permission(): void
+    {
+        $head = $this->actor(RoleName::InstitutionHead);
+
+        $this->assertFalse($head->hasPermissionTo('integration.edit'));
+        $this->assertTrue($head->hasPermissionTo('integration.view'));
+
+        $created = $this->as($head)
+            ->postJson('/api/v1/messaging/audiences', [
+                'campus_id' => $this->campusA->id,
+                'kind' => 'group',
+                'name' => 'Head Office Group',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.name', 'Head Office Group');
+
+        $id = $created->json('data.id');
+
+        $this->as($head)
+            ->postJson('/api/v1/messaging/audiences/'.$id.'/segments', [
+                'segment_type' => MessagingSegmentType::Campus->value,
+                'segment_ref' => $this->campusA->id,
+            ])
+            ->assertCreated();
+
+        $this->as($head)
+            ->getJson('/api/v1/messaging/audiences/'.$id.'/preview')
+            ->assertOk();
+    }
+
     public function test_a_campus_admin_cannot_manage_audiences_when_self_service_is_off(): void
     {
         CampusIntegrationPolicy::create([

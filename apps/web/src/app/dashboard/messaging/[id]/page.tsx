@@ -69,7 +69,7 @@ function AudienceDetail() {
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
 
-  const canEdit = can("integration.edit");
+  const canEdit = can("integration.view");
 
   const run = async (fn: () => Promise<unknown>, message: string) => {
     setBusy(true);

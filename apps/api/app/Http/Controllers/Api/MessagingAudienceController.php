@@ -193,12 +193,12 @@ class MessagingAudienceController extends Controller
     /**
      * Preview the recipients an audience currently resolves to.
      */
-    public function preview(Request $request, MessagingAudience $audience, BroadcastService $broadcast): JsonResponse
+    public function preview(Request $request, MessagingAudience $audience): JsonResponse
     {
         $this->authoriseTenant($request, $audience);
         $audience->load('members', 'segments');
 
-        $recipients = $broadcast->recipients($audience);
+        $recipients = BroadcastService::make()->recipients($audience);
 
         return response()->json([
             'data' => [
@@ -208,7 +208,7 @@ class MessagingAudienceController extends Controller
         ]);
     }
 
-    public function broadcast(Request $request, MessagingAudience $audience, BroadcastService $broadcast): JsonResponse
+    public function broadcast(Request $request, MessagingAudience $audience): JsonResponse
     {
         $this->authoriseTenant($request, $audience);
         $this->authoriseWrite($request, (int) $audience->institution_id, $audience->campus_id !== null ? (int) $audience->campus_id : null);
@@ -230,7 +230,7 @@ class MessagingAudienceController extends Controller
             'status' => 'queued',
         ]);
 
-        $result = $broadcast->send($record, $audience, $request->user()?->id);
+        $result = BroadcastService::make()->send($record, $audience, $request->user()?->id);
 
         return response()->json([
             'data' => [

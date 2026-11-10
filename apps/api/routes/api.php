@@ -229,25 +229,25 @@ Route::prefix('v1')->group(function () {
             Route::get('audiences', [MessagingAudienceController::class, 'index'])
                 ->middleware('permission:integration.view');
             Route::post('audiences', [MessagingAudienceController::class, 'store'])
-                ->middleware('permission:integration.edit');
+                ->middleware('permission:integration.view');
             Route::get('audiences/{audience}', [MessagingAudienceController::class, 'show'])
                 ->middleware('permission:integration.view');
             Route::put('audiences/{audience}', [MessagingAudienceController::class, 'update'])
-                ->middleware('permission:integration.edit');
+                ->middleware('permission:integration.view');
             Route::delete('audiences/{audience}', [MessagingAudienceController::class, 'destroy'])
-                ->middleware('permission:integration.edit');
+                ->middleware('permission:integration.view');
             Route::post('audiences/{audience}/members', [MessagingAudienceController::class, 'addMembers'])
-                ->middleware('permission:integration.edit');
+                ->middleware('permission:integration.view');
             Route::delete('audiences/{audience}/members/{member}', [MessagingAudienceController::class, 'removeMember'])
-                ->middleware('permission:integration.edit');
+                ->middleware('permission:integration.view');
             Route::post('audiences/{audience}/segments', [MessagingAudienceController::class, 'addSegment'])
-                ->middleware('permission:integration.edit');
+                ->middleware('permission:integration.view');
             Route::delete('audiences/{audience}/segments/{segment}', [MessagingAudienceController::class, 'removeSegment'])
-                ->middleware('permission:integration.edit');
+                ->middleware('permission:integration.view');
             Route::get('audiences/{audience}/preview', [MessagingAudienceController::class, 'preview'])
                 ->middleware('permission:integration.view');
             Route::post('audiences/{audience}/broadcast', [MessagingAudienceController::class, 'broadcast'])
-                ->middleware('permission:integration.edit');
+                ->middleware('permission:integration.view');
             Route::get('broadcasts', [MessagingAudienceController::class, 'broadcasts'])
                 ->middleware('permission:integration.view');
             Route::get('directory', [MessagingAudienceController::class, 'directory'])

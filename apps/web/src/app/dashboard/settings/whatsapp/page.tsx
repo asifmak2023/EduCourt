@@ -19,6 +19,7 @@ import {
   StatCard,
   SuccessNotice,
 } from "@/components/ui";
+import { CampusNumbersSection } from "@/components/CampusNumbersSection";
 import type { WhatsAppIntegration, WhatsAppUsageSummary } from "@/lib/types";
 
 export default function WhatsAppIntegrationPage() {
@@ -239,6 +240,8 @@ function WhatsAppIntegrationPanel() {
       {sender && !sender.is_active ? (
         <ErrorNotice message="The assigned sender is inactive, so messages will not be sent." />
       ) : null}
+
+      <CampusNumbersSection />
 
       <Card className="p-6">
         <h2 className="text-base font-semibold text-foreground">Messaging quota</h2>

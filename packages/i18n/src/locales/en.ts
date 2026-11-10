@@ -184,6 +184,7 @@ export const en = {
   "navigation.complaints": "Complaints",
   "navigation.circulars": "Circulars",
   "navigation.notifications": "Notifications",
+  "navigation.messaging": "Groups & broadcast",
   "navigation.users": "Users",
   "navigation.roles": "Roles & scopes",
   "navigation.settings": "Settings",

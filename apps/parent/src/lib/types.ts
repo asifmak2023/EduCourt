@@ -146,3 +146,24 @@ export interface PortalFees {
   totals: { billed: string; paid: string; outstanding: string };
   data: FeeVoucher[];
 }
+
+export interface WhatsAppConsent {
+  phone: string;
+  category: string | null;
+  status: string | null;
+  opted_in_at: string | null;
+  opted_out_at: string | null;
+}
+
+export interface PortalWhatsAppConsentState {
+  phones: string[];
+  consents: WhatsAppConsent[];
+}
+
+export interface PortalWhatsAppMessage {
+  id: number;
+  recipient: string;
+  delivery_status: string | null;
+  created_at: string | null;
+  delivered_at: string | null;
+}

@@ -128,6 +128,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "navigation.complaints", href: "/dashboard/student-affairs/complaints", icon: "message", permission: "complaint.view", ready: true },
       { label: "navigation.circulars", href: "/dashboard/circulars", icon: "megaphone", permission: "circular.view", ready: true },
       { label: "navigation.notifications", href: "/dashboard/notifications", icon: "bell", permission: "notification.view", ready: true },
+      { label: "navigation.messaging", href: "/dashboard/messaging", icon: "message", permission: "integration.view", ready: true },
     ],
   },
   {

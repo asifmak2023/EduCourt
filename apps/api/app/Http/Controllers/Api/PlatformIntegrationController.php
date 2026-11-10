@@ -7,6 +7,8 @@ use App\Enums\WhatsAppManagedBy;
 use App\Enums\WhatsAppTokenExpiryMode;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\WhatsAppSenderResource;
+use App\Models\Campus;
+use App\Models\CampusIntegrationPolicy;
 use App\Models\Institution;
 use App\Models\IntegrationPolicy;
 use App\Models\MetaAppConnection;
@@ -34,6 +36,8 @@ class PlatformIntegrationController extends Controller
         $senders = WhatsAppSender::query()
             ->when($request->filled('institution_id'), fn ($query) => $query
                 ->where('owner_institution_id', $request->integer('institution_id')))
+            ->when($request->filled('campus_id'), fn ($query) => $query
+                ->where('owner_campus_id', $request->integer('campus_id')))
             ->orderBy('label')
             ->paginate($request->integer('per_page', 50));
 
@@ -162,6 +166,41 @@ class PlatformIntegrationController extends Controller
         return response()->json(['data' => $this->policyPayload($policy->refresh())]);
     }
 
+    public function campusPolicy(Campus $campus): JsonResponse
+    {
+        $policy = CampusIntegrationPolicy::query()
+            ->where('campus_id', $campus->id)
+            ->first();
+
+        return response()->json([
+            'data' => $this->campusPolicyPayload($policy, $campus),
+        ]);
+    }
+
+    public function updateCampusPolicy(Request $request, Campus $campus): JsonResponse
+    {
+        $data = $request->validate([
+            'whatsapp_enabled' => ['sometimes', 'boolean'],
+            'whatsapp_self_service' => ['sometimes', 'boolean'],
+            'whatsapp_sender_id' => [
+                'nullable', 'integer',
+                Rule::exists('whatsapp_senders', 'id')->whereNull('deleted_at'),
+            ],
+            'monthly_message_limit' => ['nullable', 'integer', 'min:0', 'max:1000000'],
+        ]);
+
+        $policy = CampusIntegrationPolicy::updateOrCreate(
+            ['campus_id' => $campus->id],
+            array_merge($data, [
+                'institution_id' => $campus->institution_id,
+            ]),
+        );
+
+        return response()->json([
+            'data' => $this->campusPolicyPayload($policy->refresh(), $campus),
+        ]);
+    }
+
     public function metaApps(Request $request): JsonResponse
     {
         $apps = MetaAppConnection::query()
@@ -201,6 +240,10 @@ class PlatformIntegrationController extends Controller
                 'nullable', 'integer',
                 Rule::exists('institutions', 'id')->whereNull('deleted_at'),
             ],
+            'owner_campus_id' => [
+                'nullable', 'integer',
+                Rule::exists('campuses', 'id')->whereNull('deleted_at'),
+            ],
             'meta_app_connection_id' => [
                 'nullable', 'integer',
                 Rule::exists('meta_app_connections', 'id'),
@@ -220,6 +263,21 @@ class PlatformIntegrationController extends Controller
             'default_country_code' => ['sometimes', 'string', 'max:4'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function campusPolicyPayload(?CampusIntegrationPolicy $policy, Campus $campus): array
+    {
+        return [
+            'campus_id' => $campus->id,
+            'institution_id' => $campus->institution_id,
+            'whatsapp_enabled' => (bool) ($policy?->whatsapp_enabled ?? true),
+            'whatsapp_self_service' => (bool) ($policy?->whatsapp_self_service ?? false),
+            'whatsapp_sender_id' => $policy?->whatsapp_sender_id,
+            'monthly_message_limit' => $policy?->monthly_message_limit,
+        ];
     }
 
     private function policyFor(Institution $institution): ?IntegrationPolicy

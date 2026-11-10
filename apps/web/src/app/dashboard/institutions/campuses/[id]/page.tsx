@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
+import { CampusPolicyEditor } from "@/components/CampusNumbersSection";
 import { PermissionGate } from "@/components/PermissionGate";
 import { InstitutionsTabs } from "@/components/InstitutionsTabs";
 import { buttonClasses } from "@/components/Form";
@@ -17,7 +18,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
-import type { Campus } from "@/lib/types";
+import type { Campus, CampusIntegrationPolicy } from "@/lib/types";
 
 export default function CampusDetailPage() {
   return (
@@ -33,6 +34,11 @@ function CampusDetail() {
   const { can } = useAuth();
   const { data, loading, error } = useResource<Campus>(
     id ? `/v1/campuses/${id}` : null
+  );
+  const { data: policy, reload: reloadPolicy } = useResource<CampusIntegrationPolicy>(
+    id && can("integration.manage")
+      ? `/v1/platform/campuses/${id}/integration-policy`
+      : null
   );
 
   if (loading) return <Spinner />;
@@ -99,6 +105,23 @@ function CampusDetail() {
           </p>
         ) : null}
       </Card>
+
+      {can("integration.manage") && policy ? (
+        <Card className="p-6">
+          <h2 className="text-base font-semibold text-foreground">
+            WhatsApp integration
+          </h2>
+          <p className="mb-4 mt-1 text-sm text-muted">
+            Assign this campus its own WhatsApp number and control whether campus
+            admins can manage their own groups and broadcast lists.
+          </p>
+          <CampusPolicyEditor
+            policy={policy}
+            campusName={data.name}
+            onSaved={reloadPolicy}
+          />
+        </Card>
+      ) : null}
     </div>
   );
 }

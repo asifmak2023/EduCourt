@@ -5,6 +5,8 @@ import type {
   PortalAttendance,
   PortalFees,
   PortalResults,
+  PortalWhatsAppConsentState,
+  PortalWhatsAppMessage,
   TimetableSlot,
 } from "./types";
 
@@ -157,6 +159,31 @@ export async function fetchFees(
   studentId?: number | null
 ): Promise<PortalFees> {
   return apiFetch<PortalFees>(`/v1/me/fees${studentQuery(studentId)}`);
+}
+
+export async function fetchWhatsAppConsent(): Promise<PortalWhatsAppConsentState> {
+  const response = await apiFetch<{ data: PortalWhatsAppConsentState }>(
+    "/v1/me/whatsapp/consent"
+  );
+  return response.data;
+}
+
+export async function updateWhatsAppConsent(
+  status: "opted_in" | "opted_out",
+  category = "utility"
+): Promise<PortalWhatsAppConsentState> {
+  const response = await apiFetch<{ data: PortalWhatsAppConsentState }>(
+    "/v1/me/whatsapp/consent",
+    { method: "PUT", body: { status, category } }
+  );
+  return response.data;
+}
+
+export async function fetchWhatsAppMessages(): Promise<PortalWhatsAppMessage[]> {
+  const response = await apiFetch<{ data: PortalWhatsAppMessage[] }>(
+    "/v1/me/whatsapp/messages"
+  );
+  return response.data;
 }
 
 export const DAY_NAMES = [

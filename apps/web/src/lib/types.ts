@@ -3014,6 +3014,7 @@ export interface ReportHeadOffice {
 export interface WhatsAppSender {
   id: number;
   owner_institution_id: number | null;
+  owner_campus_id: number | null;
   meta_app_connection_id: number | null;
   managed_by: string | null;
   label: string;
@@ -3029,6 +3030,7 @@ export interface WhatsAppSender {
   last_error: string | null;
   has_access_token: boolean;
   is_platform_owned: boolean;
+  is_campus_owned: boolean;
   token_expired: boolean;
   created_at?: string | null;
   updated_at?: string | null;
@@ -3068,4 +3070,120 @@ export interface WhatsAppUsageSummary {
   monthly_message_limit: number | null;
   estimated_cost?: string;
   billed_cost?: string;
+}
+
+export type MessagingAudienceKind = "group" | "broadcast";
+
+export type MessagingMemberType = "guardian" | "student" | "staff" | "phone";
+
+export type MessagingSegmentType =
+  | "section"
+  | "class_room"
+  | "role"
+  | "campus";
+
+export interface MessagingAudienceMember {
+  id: number;
+  type: MessagingMemberType;
+  member_id: number | null;
+  name: string | null;
+  phone: string | null;
+}
+
+export interface MessagingAudienceSegment {
+  id: number;
+  type: MessagingSegmentType;
+  ref: number | null;
+  value: string | null;
+}
+
+export interface MessagingAudience {
+  id: number;
+  institution_id: number;
+  campus_id: number | null;
+  kind: MessagingAudienceKind;
+  name: string;
+  description: string | null;
+  is_active: boolean;
+  members_count: number;
+  segments_count: number;
+  created_at: string | null;
+  members?: MessagingAudienceMember[];
+  segments?: MessagingAudienceSegment[];
+}
+
+export interface MessagingRecipientPreview {
+  name: string;
+  phone: string;
+}
+
+export interface MessagingAudiencePreview {
+  total: number;
+  sample: MessagingRecipientPreview[];
+}
+
+export interface MessagingBroadcast {
+  id: number;
+  institution_id: number;
+  campus_id: number | null;
+  audience_id: number | null;
+  audience?: { id: number; name: string } | null;
+  title: string;
+  body: string;
+  recipients_total: number;
+  recipients_sent: number;
+  recipients_failed: number;
+  status: string;
+  created_at: string | null;
+}
+
+export interface MessagingBroadcastResult {
+  broadcast_id: number;
+  total: number;
+  sent: number;
+  failed: number;
+}
+
+export interface MessagingDirectoryEntry {
+  type: MessagingMemberType;
+  id: number;
+  name: string;
+  phone: string | null;
+}
+
+export interface MessagingDirectory {
+  guardians: MessagingDirectoryEntry[];
+  students: MessagingDirectoryEntry[];
+  staff: MessagingDirectoryEntry[];
+}
+
+export interface CampusIntegrationPolicy {
+  campus_id: number;
+  institution_id: number;
+  whatsapp_enabled: boolean;
+  whatsapp_self_service: boolean;
+  whatsapp_sender_id: number | null;
+  monthly_message_limit: number | null;
+  sender?: WhatsAppSender | null;
+}
+
+export interface PortalWhatsAppConsent {
+  phone: string;
+  category: string | null;
+  status: string | null;
+  opted_in_at: string | null;
+  opted_out_at: string | null;
+}
+
+export interface PortalWhatsAppConsentState {
+  phones: string[];
+  consents: PortalWhatsAppConsent[];
+}
+
+export interface PortalWhatsAppMessage {
+  id: number;
+  recipient: string;
+  delivery_status: string | null;
+  created_at: string | null;
+  delivered_at: string | null;
 }

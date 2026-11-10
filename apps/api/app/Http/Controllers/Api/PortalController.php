@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\VoucherStatus;
+use App\Enums\WhatsAppConsentStatus;
+use App\Enums\WhatsAppMessageCategory;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\FeeVoucherResource;
 use App\Http\Resources\StudentAttendanceResource;
@@ -11,10 +13,13 @@ use App\Http\Resources\TimetableSlotResource;
 use App\Models\Exam;
 use App\Models\FeeVoucher;
 use App\Models\Guardian;
+use App\Models\IntegrationPolicy;
 use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Models\StudentEnrollment;
 use App\Models\TimetableSlot;
+use App\Models\WhatsAppConsent;
+use App\Models\WhatsAppUsage;
 use App\Services\Attendance\AttendanceService;
 use App\Services\Exams\ResultService;
 use Illuminate\Database\Eloquent\Collection;
@@ -155,6 +160,136 @@ class PortalController extends Controller
     }
 
     /**
+     * WhatsApp consent for the acting guardian/student, one row per category.
+     */
+    public function whatsappConsent(Request $request): JsonResponse
+    {
+        $phones = $this->actingPhones($request);
+
+        $consents = WhatsAppConsent::query()
+            ->whereIn('phone', $phones)
+            ->get()
+            ->map(fn (WhatsAppConsent $consent) => [
+                'phone' => $consent->phone,
+                'category' => $consent->message_category?->value,
+                'status' => $consent->status?->value,
+                'opted_in_at' => $consent->opted_in_at,
+                'opted_out_at' => $consent->opted_out_at,
+            ]);
+
+        return response()->json([
+            'data' => [
+                'phones' => array_values($phones),
+                'consents' => $consents,
+            ],
+        ]);
+    }
+
+    /**
+     * Opt in or out of proactive WhatsApp messaging for the acting user's phone
+     * numbers. History is preserved by the consent model.
+     */
+    public function updateWhatsappConsent(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'status' => ['required', 'in:opted_in,opted_out'],
+            'category' => ['sometimes', 'string', 'max:24'],
+        ]);
+
+        $phones = $this->actingPhones($request);
+
+        if ($phones === []) {
+            abort(422, 'No phone number is linked to your account.');
+        }
+
+        $category = WhatsAppMessageCategory::tryFrom($data['category'] ?? 'utility') ?? WhatsAppMessageCategory::Utility;
+        $institutionId = (int) $request->user()->institution_id;
+        $sender = IntegrationPolicy::query()->where('institution_id', $institutionId)->first()?->whatsappSender;
+        $businessAccountId = (string) ($sender?->business_account_id ?? 'default');
+
+        foreach ($phones as $phone) {
+            $consent = WhatsAppConsent::firstOrNew([
+                'institution_id' => $institutionId,
+                'business_account_id' => $businessAccountId,
+                'phone' => $phone,
+                'message_category' => $category->value,
+            ]);
+
+            if ($data['status'] === 'opted_in') {
+                $consent->fill([
+                    'status' => WhatsAppConsentStatus::OptedIn,
+                    'source' => 'portal',
+                    'opted_in_at' => now(),
+                ]);
+            } else {
+                $consent->fill([
+                    'status' => WhatsAppConsentStatus::OptedOut,
+                    'source' => 'portal',
+                    'opted_out_at' => now(),
+                ]);
+            }
+
+            $consent->save();
+        }
+
+        return $this->whatsappConsent($request);
+    }
+
+    /**
+     * WhatsApp messages delivered to the acting guardian/student's phones.
+     */
+    public function whatsappMessages(Request $request): JsonResponse
+    {
+        $phones = $this->actingPhones($request);
+
+        $messages = WhatsAppUsage::query()
+            ->whereIn('recipient', $phones)
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get()
+            ->map(fn (WhatsAppUsage $usage) => [
+                'id' => $usage->id,
+                'recipient' => $usage->recipient,
+                'delivery_status' => $usage->delivery_status?->value,
+                'created_at' => $usage->created_at,
+                'delivered_at' => $usage->delivered_at,
+            ]);
+
+        return response()->json(['data' => $messages]);
+    }
+
+    /**
+     * Normalised phone numbers linked to the acting user through guardians.
+     *
+     * @return array<int, string>
+     */
+    private function actingPhones(Request $request): array
+    {
+        $user = $request->user();
+        $phones = [];
+
+        $guardians = Guardian::query()->where('user_id', $user->id)->get();
+
+        foreach ($guardians as $guardian) {
+            foreach ([$guardian->phone, $guardian->alternate_phone] as $raw) {
+                $normalised = WhatsAppConsent::normalisePhone((string) $raw);
+
+                if ($normalised !== null) {
+                    $phones[$normalised] = $normalised;
+                }
+            }
+        }
+
+        $normalisedOwn = WhatsAppConsent::normalisePhone((string) ($user->phone ?? ''));
+
+        if ($normalisedOwn !== null) {
+            $phones[$normalisedOwn] = $normalisedOwn;
+        }
+
+        return array_values($phones);
+    }
+
+    /**
      * Students linked to the acting user: the user's own student record, or the
      * children of a parent/guardian account.
      *
@@ -173,7 +308,7 @@ class PortalController extends Controller
         $guardianIds = Guardian::query()->where('user_id', $user->id)->pluck('id');
 
         if ($guardianIds->isEmpty()) {
-            return new Collection();
+            return new Collection;
         }
 
         return Student::query()

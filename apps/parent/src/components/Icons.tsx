@@ -217,3 +217,12 @@ export function IconTrend(props: IconProps) {
     </svg>
   );
 }
+
+export function IconChat(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 5h16v11H9l-4 3.5V5Z" />
+      <path d="M8 9h8M8 12h5" />
+    </svg>
+  );
+}

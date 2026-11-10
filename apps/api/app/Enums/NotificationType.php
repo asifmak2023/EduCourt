@@ -7,6 +7,7 @@ enum NotificationType: string
     case Absence = 'absence';
     case FeeReminder = 'fee_reminder';
     case General = 'general';
+    case Broadcast = 'broadcast';
 
     public function label(): string
     {
@@ -14,6 +15,7 @@ enum NotificationType: string
             self::Absence => 'Absence',
             self::FeeReminder => 'Fee Reminder',
             self::General => 'General',
+            self::Broadcast => 'Broadcast',
         };
     }
 }

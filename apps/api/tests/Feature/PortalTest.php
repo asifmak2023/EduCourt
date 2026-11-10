@@ -22,6 +22,7 @@ use App\Models\StudentAttendance;
 use App\Models\StudentEnrollment;
 use App\Models\Subject;
 use App\Models\User;
+use App\Models\WhatsAppUsage;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -303,6 +304,56 @@ class PortalTest extends TestCase
         $this->as($teacher)
             ->getJson('/api/v1/me/attendance')
             ->assertStatus(403);
+    }
+
+    public function test_a_parent_can_opt_in_and_out_of_whatsapp(): void
+    {
+        $consent = $this->as($this->parentUser)
+            ->putJson('/api/v1/me/whatsapp/consent', ['status' => 'opted_in'])
+            ->assertOk()
+            ->assertJsonPath('data.phones.0', '923000000000');
+
+        $this->assertSame('opted_in', $consent->json('data.consents.0.status'));
+
+        $this->as($this->parentUser)
+            ->putJson('/api/v1/me/whatsapp/consent', ['status' => 'opted_out'])
+            ->assertOk()
+            ->assertJsonPath('data.consents.0.status', 'opted_out');
+    }
+
+    public function test_a_parent_without_a_phone_cannot_set_consent(): void
+    {
+        $guardian = Guardian::query()->where('user_id', $this->parentUser->id)->firstOrFail();
+        $guardian->update(['phone' => 'n/a', 'alternate_phone' => null]);
+        $this->parentUser->forceFill(['phone' => null])->save();
+
+        $this->as($this->parentUser)
+            ->putJson('/api/v1/me/whatsapp/consent', ['status' => 'opted_in'])
+            ->assertStatus(422);
+    }
+
+    public function test_a_parent_only_sees_their_own_whatsapp_messages(): void
+    {
+        WhatsAppUsage::create([
+            'institution_id' => $this->institution->id,
+            'delivery_intent_key' => 'intent-own',
+            'idempotency_key' => 'idem-own',
+            'recipient' => '923000000000',
+            'period' => now()->format('Y-m'),
+        ]);
+        WhatsAppUsage::create([
+            'institution_id' => $this->institution->id,
+            'delivery_intent_key' => 'intent-other',
+            'idempotency_key' => 'idem-other',
+            'recipient' => '923009999999',
+            'period' => now()->format('Y-m'),
+        ]);
+
+        $this->as($this->parentUser)
+            ->getJson('/api/v1/me/whatsapp/messages')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.recipient', '923000000000');
     }
 
     private function student(string $admissionNo, string $first, string $last, ?User $user): Student

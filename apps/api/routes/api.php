@@ -92,6 +92,7 @@ use App\Http\Controllers\Api\LeaveRequestController;
 use App\Http\Controllers\Api\LessonPlanController;
 use App\Http\Controllers\Api\LiabilityController;
 use App\Http\Controllers\Api\LibraryReportController;
+use App\Http\Controllers\Api\MessagingAudienceController;
 use App\Http\Controllers\Api\MetaController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OnlinePaymentController;
@@ -204,6 +205,9 @@ Route::prefix('v1')->group(function () {
             Route::get('attendance', [PortalController::class, 'attendance']);
             Route::get('results', [PortalController::class, 'results']);
             Route::get('fees', [PortalController::class, 'fees']);
+            Route::get('whatsapp/consent', [PortalController::class, 'whatsappConsent']);
+            Route::put('whatsapp/consent', [PortalController::class, 'updateWhatsappConsent']);
+            Route::get('whatsapp/messages', [PortalController::class, 'whatsappMessages']);
         });
 
         Route::get('sso-providers', [SsoProviderController::class, 'index'])->middleware('permission:setting.view');
@@ -217,7 +221,37 @@ Route::prefix('v1')->group(function () {
             Route::put('/', [IntegrationController::class, 'update'])->middleware('permission:integration.edit');
             Route::post('verify', [IntegrationController::class, 'verify'])->middleware('permission:integration.test');
             Route::post('test-send', [IntegrationController::class, 'testSend'])->middleware('permission:integration.test');
+            Route::get('campuses', [IntegrationController::class, 'campuses'])->middleware('permission:integration.view');
             Route::get('usage', [IntegrationController::class, 'usage'])->middleware('permission:integration.view');
+        });
+
+        Route::prefix('messaging')->group(function () {
+            Route::get('audiences', [MessagingAudienceController::class, 'index'])
+                ->middleware('permission:integration.view');
+            Route::post('audiences', [MessagingAudienceController::class, 'store'])
+                ->middleware('permission:integration.edit');
+            Route::get('audiences/{audience}', [MessagingAudienceController::class, 'show'])
+                ->middleware('permission:integration.view');
+            Route::put('audiences/{audience}', [MessagingAudienceController::class, 'update'])
+                ->middleware('permission:integration.edit');
+            Route::delete('audiences/{audience}', [MessagingAudienceController::class, 'destroy'])
+                ->middleware('permission:integration.edit');
+            Route::post('audiences/{audience}/members', [MessagingAudienceController::class, 'addMembers'])
+                ->middleware('permission:integration.edit');
+            Route::delete('audiences/{audience}/members/{member}', [MessagingAudienceController::class, 'removeMember'])
+                ->middleware('permission:integration.edit');
+            Route::post('audiences/{audience}/segments', [MessagingAudienceController::class, 'addSegment'])
+                ->middleware('permission:integration.edit');
+            Route::delete('audiences/{audience}/segments/{segment}', [MessagingAudienceController::class, 'removeSegment'])
+                ->middleware('permission:integration.edit');
+            Route::get('audiences/{audience}/preview', [MessagingAudienceController::class, 'preview'])
+                ->middleware('permission:integration.view');
+            Route::post('audiences/{audience}/broadcast', [MessagingAudienceController::class, 'broadcast'])
+                ->middleware('permission:integration.edit');
+            Route::get('broadcasts', [MessagingAudienceController::class, 'broadcasts'])
+                ->middleware('permission:integration.view');
+            Route::get('directory', [MessagingAudienceController::class, 'directory'])
+                ->middleware('permission:integration.view');
         });
 
         Route::prefix('platform')->group(function () {
@@ -244,6 +278,11 @@ Route::prefix('v1')->group(function () {
             Route::get('meta-apps', [PlatformIntegrationController::class, 'metaApps'])
                 ->middleware('permission:integration.manage');
             Route::get('whatsapp-rate-cards', [PlatformIntegrationController::class, 'rateCards'])
+                ->middleware('permission:integration.manage');
+
+            Route::get('campuses/{campus}/integration-policy', [PlatformIntegrationController::class, 'campusPolicy'])
+                ->middleware('permission:integration.manage');
+            Route::put('campuses/{campus}/integration-policy', [PlatformIntegrationController::class, 'updateCampusPolicy'])
                 ->middleware('permission:integration.manage');
         });
 

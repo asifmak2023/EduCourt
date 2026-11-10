@@ -61,6 +61,7 @@ class WhatsAppDeliveryService
 
         return $this->deliver(
             institutionId: (int) $reminder->institution_id,
+            campusId: $reminder->campus_id !== null ? (int) $reminder->campus_id : null,
             intentKey: $intentKey,
             recipient: (string) $reminder->recipient_phone,
             body: (string) $reminder->message,
@@ -93,6 +94,7 @@ class WhatsAppDeliveryService
 
         return $this->deliver(
             institutionId: (int) $notification->institution_id,
+            campusId: $notification->campus_id !== null ? (int) $notification->campus_id : null,
             intentKey: $intentKey,
             recipient: (string) $notification->recipient_phone,
             body: $body,
@@ -105,6 +107,7 @@ class WhatsAppDeliveryService
 
     private function deliver(
         int $institutionId,
+        ?int $campusId,
         string $intentKey,
         string $recipient,
         string $body,
@@ -114,7 +117,9 @@ class WhatsAppDeliveryService
         ?AppNotification $notification = null,
         array $templateContext = [],
     ): bool {
-        $resolved = $this->resolver->resolve($institutionId);
+        $resolved = $campusId !== null
+            ? $this->resolver->resolveForCampus($institutionId, $campusId)
+            : $this->resolver->resolve($institutionId);
 
         if (! $resolved->ready) {
             $this->fail($reminder, $notification, $resolved->failureReason ?? 'not_ready');

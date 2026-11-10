@@ -20,6 +20,7 @@ class WhatsAppSenderResource extends JsonResource
         return [
             'id' => $sender->id,
             'owner_institution_id' => $sender->owner_institution_id,
+            'owner_campus_id' => $sender->owner_campus_id,
             'meta_app_connection_id' => $sender->meta_app_connection_id,
             'managed_by' => $sender->managed_by?->value,
             'label' => $sender->label,
@@ -35,6 +36,7 @@ class WhatsAppSenderResource extends JsonResource
             'last_error' => $sender->last_error,
             'has_access_token' => $sender->access_token !== null,
             'is_platform_owned' => $sender->isPlatformOwned(),
+            'is_campus_owned' => $sender->isCampusOwned(),
             'token_expired' => $sender->tokenExpired(),
             'token_expiry_warning' => $this->expiryWarning($sender),
             'created_at' => $sender->created_at,

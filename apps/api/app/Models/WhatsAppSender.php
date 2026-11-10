@@ -30,7 +30,7 @@ class WhatsAppSender extends Model
     protected $table = 'whatsapp_senders';
 
     protected $fillable = [
-        'owner_institution_id', 'meta_app_connection_id', 'managed_by', 'label',
+        'owner_institution_id', 'owner_campus_id', 'meta_app_connection_id', 'managed_by', 'label',
         'connection_mode', 'phone_number_id', 'business_account_id',
         'display_phone_number', 'access_token', 'token_expiry_mode',
         'token_expires_at', 'default_country_code', 'is_active',
@@ -55,6 +55,11 @@ class WhatsAppSender extends Model
     public function ownerInstitution(): BelongsTo
     {
         return $this->belongsTo(Institution::class, 'owner_institution_id');
+    }
+
+    public function ownerCampus(): BelongsTo
+    {
+        return $this->belongsTo(Campus::class, 'owner_campus_id');
     }
 
     public function metaAppConnection(): BelongsTo
@@ -83,6 +88,15 @@ class WhatsAppSender extends Model
     }
 
     /**
+     * Whether this sender belongs to a single campus rather than the whole
+     * institution.
+     */
+    public function isCampusOwned(): bool
+    {
+        return $this->owner_campus_id !== null;
+    }
+
+    /**
      * Whether the sender has the credentials needed to reach the Cloud API.
      */
     public function hasCredentials(): bool
@@ -101,7 +115,7 @@ class WhatsAppSender extends Model
     {
         return LogOptions::defaults()
             ->logOnly([
-                'owner_institution_id', 'meta_app_connection_id', 'managed_by',
+                'owner_institution_id', 'owner_campus_id', 'meta_app_connection_id', 'managed_by',
                 'label', 'connection_mode', 'phone_number_id',
                 'business_account_id', 'token_expiry_mode', 'default_country_code',
                 'is_active',

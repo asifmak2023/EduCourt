@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Enums\WhatsAppQuotaStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\WhatsAppSenderResource;
+use App\Models\Campus;
+use App\Models\CampusIntegrationPolicy;
 use App\Models\IntegrationPolicy;
 use App\Models\IntegrationTemplate;
 use App\Models\WhatsAppUsage;
@@ -154,6 +156,60 @@ class IntegrationController extends Controller
             'reason' => $result['error'],
             'message_id' => $result['message_id'],
         ], $result['ok'] ? 200 : 422);
+    }
+
+    /**
+     * Per-campus WhatsApp numbers and policies for the current institution.
+     *
+     * Read-only for institution users: the platform assigns campus senders and
+     * toggles self-service. Shows which number each campus sends from so an
+     * institution head can see the whole picture without being able to change
+     * credentials.
+     */
+    public function campuses(Request $request): JsonResponse
+    {
+        $institutionId = $this->institutionId($request);
+
+        $campuses = Campus::query()
+            ->where('institution_id', $institutionId)
+            ->orderBy('name')
+            ->get();
+
+        $policies = CampusIntegrationPolicy::query()
+            ->with('whatsappSender')
+            ->where('institution_id', $institutionId)
+            ->get()
+            ->keyBy('campus_id');
+
+        $resolver = new SenderResolver;
+
+        $data = $campuses->map(function (Campus $campus) use ($policies, $resolver, $institutionId): array {
+            /** @var CampusIntegrationPolicy|null $policy */
+            $policy = $policies->get($campus->id);
+            $resolved = $resolver->resolveForCampus($institutionId, (int) $campus->id);
+            $sender = $resolved->sender;
+
+            return [
+                'campus_id' => $campus->id,
+                'campus_name' => $campus->name,
+                'whatsapp_enabled' => (bool) ($policy?->whatsapp_enabled ?? true),
+                'whatsapp_self_service' => (bool) ($policy?->whatsapp_self_service ?? false),
+                'whatsapp_sender_id' => $policy?->whatsapp_sender_id,
+                'monthly_message_limit' => $policy?->monthly_message_limit,
+                'uses_own_number' => $sender !== null && $sender->owner_campus_id === $campus->id,
+                'ready' => $resolved->ready,
+                'reason' => $resolved->failureReason,
+                'sender' => $sender !== null ? [
+                    'id' => $sender->id,
+                    'label' => $sender->label,
+                    'display_phone_number' => $sender->display_phone_number,
+                    'phone_number_id' => $sender->phone_number_id,
+                    'is_active' => (bool) $sender->is_active,
+                ] : null,
+            ];
+        })->values();
+
+        return response()->json(['data' => $data]);
     }
 
     public function usage(Request $request): JsonResponse

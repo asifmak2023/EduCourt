@@ -198,6 +198,7 @@ export type MessageKey =
   | "navigation.complaints"
   | "navigation.circulars"
   | "navigation.notifications"
+  | "navigation.messaging"
   | "navigation.users"
   | "navigation.roles"
   | "navigation.settings"

@@ -10,6 +10,7 @@ import { useTheme } from "@/lib/theme";
 import {
   IconCalendar,
   IconCap,
+  IconChat,
   IconClipboard,
   IconHome,
   IconLogout,
@@ -25,6 +26,7 @@ const NAV = [
   { href: "/portal/attendance", label: "Attendance", icon: IconClipboard },
   { href: "/portal/results", label: "Results", icon: IconCap },
   { href: "/portal/fees", label: "Fees", icon: IconReceipt },
+  { href: "/portal/messages", label: "Messages", icon: IconChat },
   { href: "/portal/profile", label: "Profile", icon: IconUser },
 ];
 

@@ -78,6 +78,22 @@ export const staffSalaryItemsSection: DetailSection = {
   ),
 };
 
+export const salaryStructureItemsSection: DetailSection = {
+  title: "Components",
+  render: (item) => (
+    <RecordList
+      item={item}
+      rowsKey="items"
+      emptyMessage="No salary components."
+      columns={[
+        { label: "Component", key: "component.name" },
+        { label: "Amount", key: "amount", format: "money" },
+        { label: "Percentage", key: "percentage" },
+      ]}
+    />
+  ),
+};
+
 export const payrollPayslipsSection: DetailSection = {
   title: "Payslips",
   render: (item) => (

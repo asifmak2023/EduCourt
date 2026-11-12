@@ -17,8 +17,8 @@ class StaffSalary extends Model
     use BelongsToCampus, BelongsToInstitution, HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-        'institution_id', 'campus_id', 'staff_member_id', 'basic_salary',
-        'currency', 'effective_from', 'effective_to', 'is_active', 'notes',
+        'institution_id', 'campus_id', 'staff_member_id', 'salary_structure_id',
+        'basic_salary', 'currency', 'effective_from', 'effective_to', 'is_active', 'notes',
     ];
 
     protected function casts(): array
@@ -44,6 +44,11 @@ class StaffSalary extends Model
     public function staffMember(): BelongsTo
     {
         return $this->belongsTo(StaffMember::class);
+    }
+
+    public function salaryStructure(): BelongsTo
+    {
+        return $this->belongsTo(SalaryStructure::class);
     }
 
     public function items(): HasMany

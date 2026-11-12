@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\SalaryIncrementType;
 use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\StaffSalaryResource;
 use App\Models\StaffSalary;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class StaffSalaryController extends Controller
 {
@@ -69,6 +72,76 @@ class StaffSalaryController extends Controller
         $staffSalary->delete();
 
         return response()->json(['message' => 'Salary structure removed.']);
+    }
+
+    /**
+     * Applies a per-staff increment by inserting a new effective-dated salary
+     * row (the previous row is closed the day before). History is preserved and
+     * payroll picks up the new basic from its effective date.
+     */
+    public function increment(Request $request, StaffSalary $staffSalary): JsonResponse
+    {
+        $data = $request->validate([
+            'increment_type' => ['required', Rule::enum(SalaryIncrementType::class)],
+            'increment_value' => ['required', 'numeric', 'min:0'],
+            'effective_from' => ['required', 'date'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $effectiveFrom = Carbon::parse($data['effective_from'])->toDateString();
+        $dayBefore = Carbon::parse($effectiveFrom)->subDay()->toDateString();
+
+        if ($staffSalary->effective_from !== null && $staffSalary->effective_from->toDateString() >= $effectiveFrom) {
+            throw ValidationException::withMessages([
+                'effective_from' => ['The increment date must be after the current salary start date.'],
+            ]);
+        }
+
+        $incrementType = SalaryIncrementType::from($data['increment_type']);
+
+        $next = DB::transaction(function () use ($staffSalary, $data, $effectiveFrom, $dayBefore, $incrementType) {
+            $staffSalary->load('items');
+
+            $nextBasic = $incrementType->applyTo((float) $staffSalary->basic_salary, (float) $data['increment_value']);
+
+            $carryEffectiveTo = $staffSalary->effective_to?->toDateString();
+
+            if ($carryEffectiveTo !== null && $carryEffectiveTo < $effectiveFrom) {
+                $carryEffectiveTo = null;
+            }
+
+            $staffSalary->forceFill(['effective_to' => $dayBefore])->save();
+
+            $next = StaffSalary::create([
+                'institution_id' => $staffSalary->institution_id,
+                'campus_id' => $staffSalary->campus_id,
+                'staff_member_id' => $staffSalary->staff_member_id,
+                'salary_structure_id' => $staffSalary->salary_structure_id,
+                'basic_salary' => $nextBasic,
+                'currency' => $staffSalary->currency,
+                'effective_from' => $effectiveFrom,
+                'effective_to' => $carryEffectiveTo,
+                'is_active' => true,
+                'notes' => $data['notes'] ?? sprintf(
+                    'Increment: %s %s',
+                    $incrementType === SalaryIncrementType::Percent ? '%' : 'fixed',
+                    number_format((float) $data['increment_value'], 2)
+                ),
+            ]);
+
+            foreach ($staffSalary->items as $item) {
+                $next->items()->create([
+                    'salary_component_id' => $item->salary_component_id,
+                    'amount' => $item->amount,
+                    'percentage' => $item->percentage,
+                ]);
+            }
+
+            return $next;
+        });
+
+        return (new StaffSalaryResource($next->load(['items.component', 'staffMember'])))
+            ->response()->setStatusCode(201);
     }
 
     /**

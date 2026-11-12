@@ -112,6 +112,7 @@ use App\Http\Controllers\Api\ReferenceDataController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\SalaryComponentController;
+use App\Http\Controllers\Api\SalaryStructureController;
 use App\Http\Controllers\Api\ScholarshipAwardController;
 use App\Http\Controllers\Api\ScholarshipController;
 use App\Http\Controllers\Api\ScopeAssignmentController;
@@ -896,6 +897,11 @@ Route::prefix('v1')->group(function () {
             };
 
             $payroll('salary-components', SalaryComponentController::class, 'salaryComponent', true);
+            Route::get('salary-structures/resolve', [SalaryStructureController::class, 'resolve'])->middleware('permission:payroll.view');
+            $payroll('salary-structures', SalaryStructureController::class, 'salaryStructure');
+            Route::post('salary-structures/{salaryStructure}/revise', [SalaryStructureController::class, 'revise'])->middleware('permission:payroll.edit');
+            Route::post('salary-structures/{salaryStructure}/apply', [SalaryStructureController::class, 'apply'])->middleware('permission:payroll.edit');
+            Route::post('staff-salaries/{staffSalary}/increment', [StaffSalaryController::class, 'increment'])->middleware('permission:payroll.edit');
             $payroll('staff-salaries', StaffSalaryController::class, 'staffSalary');
             $payroll('payroll-adjustments', PayrollAdjustmentController::class, 'payrollAdjustment');
 

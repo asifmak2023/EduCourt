@@ -14,6 +14,7 @@ class StaffSalaryResource extends JsonResource
             'institution_id' => $this->institution_id,
             'campus_id' => $this->campus_id,
             'staff_member_id' => $this->staff_member_id,
+            'salary_structure_id' => $this->salary_structure_id,
             'basic_salary' => $this->basic_salary,
             'currency' => $this->currency,
             'effective_from' => $this->effective_from?->toDateString(),

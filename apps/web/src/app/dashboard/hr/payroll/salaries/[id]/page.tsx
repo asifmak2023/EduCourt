@@ -8,7 +8,8 @@ import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
-import { Button, buttonClasses } from "@/components/Form";
+import { Button, Field, Select, TextInput, buttonClasses } from "@/components/Form";
+import { SALARY_INCREMENT_TYPE_OPTIONS } from "@/lib/payrollOptions";
 import {
   Badge,
   Card,
@@ -142,8 +143,114 @@ function SalaryDetailView() {
         )}
       </Card>
 
+      {can("payroll.edit") ? <IncrementCard id={data.id} /> : null}
       {can("payroll.delete") ? <DeleteAction id={data.id} /> : null}
     </div>
+  );
+}
+
+function IncrementCard({ id }: { id: number }) {
+  const router = useRouter();
+  const [incrementType, setIncrementType] = useState("percent");
+  const [incrementValue, setIncrementValue] = useState("");
+  const [effectiveFrom, setEffectiveFrom] = useState("");
+  const [notes, setNotes] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const apply = async () => {
+    setBusy(true);
+    setError(null);
+
+    try {
+      const created = await apiFetch<{ data: StaffSalary }>(
+        `/v1/staff-salaries/${id}/increment`,
+        {
+          method: "POST",
+          body: {
+            increment_type: incrementType,
+            increment_value: Number(incrementValue),
+            effective_from: effectiveFrom,
+            ...(notes ? { notes } : {}),
+          },
+        }
+      );
+
+      router.push(`/dashboard/hr/payroll/salaries/${created.data.id}`);
+      router.refresh();
+    } catch (err: unknown) {
+      setError(err instanceof ApiError ? err.message : "Unable to increment.");
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card className="p-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">
+            Give increment
+          </h2>
+          <p className="mt-0.5 text-xs text-muted">
+            Creates a new effective-dated salary row with the incremented basic.
+            This row is closed the day before the new one starts.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-end gap-2">
+          <Field label="Type" htmlFor="inc_type">
+            <Select
+              id="inc_type"
+              value={incrementType}
+              onChange={(event) => setIncrementType(event.target.value)}
+            >
+              {SALARY_INCREMENT_TYPE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Value" htmlFor="inc_value">
+            <TextInput
+              id="inc_value"
+              type="number"
+              min="0"
+              step="0.01"
+              value={incrementValue}
+              onChange={(event) => setIncrementValue(event.target.value)}
+            />
+          </Field>
+          <Field label="Effective from" htmlFor="inc_from" required>
+            <TextInput
+              id="inc_from"
+              type="date"
+              value={effectiveFrom}
+              onChange={(event) => setEffectiveFrom(event.target.value)}
+            />
+          </Field>
+          <Field label="Notes" htmlFor="inc_notes">
+            <TextInput
+              id="inc_notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+            />
+          </Field>
+          <Button
+            type="button"
+            loading={busy}
+            disabled={incrementValue === "" || effectiveFrom === ""}
+            onClick={() => void apply()}
+          >
+            Apply increment
+          </Button>
+        </div>
+      </div>
+      {error ? (
+        <div className="mt-4">
+          <ErrorNotice message={error} />
+        </div>
+      ) : null}
+    </Card>
   );
 }
 

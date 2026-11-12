@@ -14,6 +14,7 @@ import {
 } from "./accountingSections";
 import {
   payrollPayslipsSection,
+  salaryStructureItemsSection,
   staffSalaryItemsSection,
 } from "./peopleSections";
 
@@ -250,6 +251,11 @@ const SALARY_COMPONENT_TYPE: SelectOption[] = [
 const SALARY_CALCULATION: SelectOption[] = [
   { value: "fixed", label: "Fixed" },
   { value: "percentage_of_basic", label: "Percentage of basic" },
+];
+
+const SALARY_INCREMENT_TYPE: SelectOption[] = [
+  { value: "percent", label: "Percentage of basic" },
+  { value: "fixed", label: "Fixed amount" },
 ];
 
 const PAYROLL_ADJUSTMENT_TYPE: SelectOption[] = [
@@ -2319,6 +2325,83 @@ export const MODULES: ModuleConfig[] = [
     deleteMessage: "Delete this salary component?",
   },
   {
+    key: "salary-structures",
+    section: SECTIONS.people,
+    label: "Salary structures",
+    endpoint: "/v1/salary-structures",
+    permissions: PAYROLL,
+    filters: [{ param: "is_active", label: "Status", options: BOOL_STATUS }],
+    columns: [
+      { key: "name", label: "Name" },
+      { key: "designation.name", label: "Designation" },
+      { key: "version", label: "Version" },
+      { key: "basic_salary", label: "Basic", format: "money", align: "right" },
+      { key: "currency", label: "Currency" },
+      { key: "is_active", label: "Active", format: "badge" },
+    ],
+    fields: [
+      { name: "designation_id", label: "Designation", type: "lookup", lookup: "designations", required: true, displayKey: "designation.name" },
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "basic_salary", label: "Basic salary", type: "number", required: true, min: 0, step: 0.01 },
+      { name: "currency", label: "Currency", type: "text" },
+      { name: "effective_from", label: "Effective from", type: "date" },
+      { name: "effective_to", label: "Effective to", type: "date" },
+      { name: "is_active", label: "Active", type: "checkbox", defaultValue: true },
+      { name: "increment_type", label: "Default increment type", type: "select", options: SALARY_INCREMENT_TYPE },
+      { name: "increment_value", label: "Increment value", type: "number", min: 0, step: 0.01 },
+      { name: "increment_every_months", label: "Increment cadence (months)", type: "number", min: 1 },
+      { name: "notes", label: "Notes", type: "textarea" },
+      {
+        name: "items",
+        label: "Components",
+        type: "repeater",
+        addLabel: "Add component",
+        emptyItem: () => ({ salary_component_id: "", amount: "", percentage: "" }),
+        itemFields: [
+          { name: "salary_component_id", label: "Component", type: "lookup", lookup: "salaryComponents", required: true },
+          { name: "amount", label: "Amount", type: "number", min: 0, step: 0.01 },
+          { name: "percentage", label: "Percentage", type: "number", min: 0, max: 100 },
+        ],
+        rowFromItem: (item) => ({
+          salary_component_id: item.salary_component_id,
+          amount: item.amount,
+          percentage: item.percentage,
+        }),
+        mapItem: (row) => ({
+          salary_component_id: row.salary_component_id ? Number(row.salary_component_id) : null,
+          amount: row.amount === "" ? undefined : Number(row.amount),
+          percentage: row.percentage === "" ? undefined : Number(row.percentage),
+        }),
+      },
+    ],
+    detailSections: [salaryStructureItemsSection],
+    deleteMessage: "Delete this salary structure?",
+    actions: [
+      {
+        label: "Create revised version",
+        path: (item) => `/v1/salary-structures/${item.id}/revise`,
+        permission: "payroll.edit",
+        confirm: "Supersede this version with a revised (incremented) one?",
+        fields: [
+          { name: "increment_type", label: "Type", type: "select", options: SALARY_INCREMENT_TYPE, required: true },
+          { name: "increment_value", label: "Value", type: "number", min: 0, step: 0.01, required: true },
+          { name: "effective_from", label: "Effective from", type: "date" },
+        ],
+        submitLabel: "Revise",
+        successMessage: "Revised salary structure created.",
+      },
+      {
+        label: "Apply to staff",
+        path: (item) => `/v1/salary-structures/${item.id}/apply`,
+        permission: "payroll.edit",
+        confirm: "Copy this structure into staff salaries for its designation?",
+        fields: [{ name: "effective_from", label: "Effective from", type: "date" }],
+        submitLabel: "Apply",
+        successMessage: "Salary structure applied.",
+      },
+    ],
+  },
+  {
     key: "staff-salaries",
     section: SECTIONS.people,
     label: "Staff salaries",
@@ -2366,6 +2449,22 @@ export const MODULES: ModuleConfig[] = [
     ],
     detailSections: [staffSalaryItemsSection],
     deleteMessage: "Delete this salary structure?",
+    actions: [
+      {
+        label: "Give increment",
+        path: (item) => `/v1/staff-salaries/${item.id}/increment`,
+        permission: "payroll.edit",
+        confirm: "Create a new incremented salary row effective from the chosen date?",
+        fields: [
+          { name: "increment_type", label: "Type", type: "select", options: SALARY_INCREMENT_TYPE, required: true },
+          { name: "increment_value", label: "Value", type: "number", min: 0, step: 0.01, required: true },
+          { name: "effective_from", label: "Effective from", type: "date", required: true },
+          { name: "notes", label: "Notes", type: "textarea" },
+        ],
+        submitLabel: "Apply increment",
+        successMessage: "Increment applied.",
+      },
+    ],
   },
   {
     key: "payroll-adjustments",

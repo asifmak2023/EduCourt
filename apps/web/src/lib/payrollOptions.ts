@@ -8,6 +8,11 @@ export const SALARY_CALCULATION_OPTIONS = [
   { value: "percentage_of_basic", label: "Percentage of basic" },
 ];
 
+export const SALARY_INCREMENT_TYPE_OPTIONS = [
+  { value: "percent", label: "Percentage of basic" },
+  { value: "fixed", label: "Fixed amount" },
+];
+
 export const PAYROLL_ADJUSTMENT_TYPE_OPTIONS = [
   { value: "incentive", label: "Incentive" },
   { value: "reward", label: "Reward" },

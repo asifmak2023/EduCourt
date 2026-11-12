@@ -13,6 +13,7 @@ use App\Enums\StaffStatus;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\SalaryComponent;
+use App\Models\SalaryStructure;
 use App\Models\ScopeAssignment;
 use App\Models\StaffDocument;
 use App\Models\StaffMember;
@@ -396,18 +397,26 @@ class UatOrgSeeder extends UatSeederBase
             ->get()
             ->keyBy('code');
 
-        $i = 0;
-        foreach ($ctx->staff as $staff) {
-            $i++;
-            $designationName = $staff->designation?->name ?? 'Teacher';
-            $basic = static::DESIGNATIONS[$designationName][2] ?? 60000;
+        $structures = [];
 
-            $salary = $this->first(StaffSalary::class, [
-                'staff_member_id' => $staff->id,
-                'effective_from' => '2026-07-01',
+        foreach (static::DESIGNATIONS as $name => [, , $basic]) {
+            $designation = Designation::query()
+                ->where('campus_id', $ctx->campus->id)
+                ->where('name', $name)
+                ->first();
+
+            if ($designation === null) {
+                continue;
+            }
+
+            $structure = $this->first(SalaryStructure::class, [
+                'campus_id' => $ctx->campus->id,
+                'designation_id' => $designation->id,
             ], $tenant + [
+                'name' => "{$name} salary",
                 'basic_salary' => $basic,
                 'currency' => 'PKR',
+                'effective_from' => '2026-07-01',
                 'is_active' => true,
             ]);
 
@@ -424,11 +433,44 @@ class UatOrgSeeder extends UatSeederBase
                     default => null,
                 };
 
-                StaffSalaryItem::firstOrCreate(
-                    ['staff_salary_id' => $salary->id, 'salary_component_id' => $component->id],
+                $structure->items()->firstOrCreate(
+                    ['salary_component_id' => $component->id],
                     [
                         'amount' => $amount,
                         'percentage' => $component->default_percentage,
+                        'sort_order' => $component->sort_order,
+                    ]
+                );
+            }
+
+            $structures[$name] = $structure;
+        }
+
+        foreach ($ctx->staff as $staff) {
+            $designationName = $staff->designation?->name ?? 'Teacher';
+            $structure = $structures[$designationName] ?? null;
+
+            if ($structure === null) {
+                continue;
+            }
+
+            $salary = $this->first(StaffSalary::class, [
+                'staff_member_id' => $staff->id,
+                'effective_from' => '2026-07-01',
+            ], $tenant + [
+                'salary_structure_id' => $structure->id,
+                'basic_salary' => $structure->basic_salary,
+                'currency' => 'PKR',
+                'is_active' => true,
+                'notes' => "Applied from structure: {$structure->name}",
+            ]);
+
+            foreach ($structure->items as $item) {
+                StaffSalaryItem::firstOrCreate(
+                    ['staff_salary_id' => $salary->id, 'salary_component_id' => $item->salary_component_id],
+                    [
+                        'amount' => $item->amount,
+                        'percentage' => $item->percentage,
                     ]
                 );
             }

@@ -1843,6 +1843,7 @@ export interface StaffSalary {
   id: number;
   campus_id?: number;
   staff_member_id: number;
+  salary_structure_id?: number | null;
   basic_salary: string;
   currency: string;
   effective_from: string | null;
@@ -1851,6 +1852,39 @@ export interface StaffSalary {
   notes: string | null;
   items: StaffSalaryItem[];
   staff_member?: StaffMember | null;
+  created_at?: string | null;
+}
+
+export interface SalaryStructureItem {
+  id: number;
+  salary_structure_id: number;
+  salary_component_id: number;
+  amount: string | null;
+  percentage: string | null;
+  sort_order: number;
+  component?: SalaryComponent | null;
+}
+
+export interface SalaryStructure {
+  id: number;
+  campus_id?: number;
+  designation_id: number;
+  name: string;
+  version: number;
+  is_current: boolean;
+  superseded_by_id: number | null;
+  basic_salary: string;
+  currency: string;
+  effective_from: string | null;
+  effective_to: string | null;
+  is_active: boolean;
+  increment_type: string | null;
+  increment_type_label?: string | null;
+  increment_value: string | null;
+  increment_every_months: number | null;
+  notes: string | null;
+  items: SalaryStructureItem[];
+  designation?: Designation | null;
   created_at?: string | null;
 }
 

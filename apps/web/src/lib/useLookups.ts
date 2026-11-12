@@ -37,6 +37,7 @@ import type {
   RoleModuleMeta,
   RoleOption,
   SalaryComponent,
+  SalaryStructure,
   Scholarship,
   Section,
   Sport,
@@ -342,6 +343,14 @@ export function useSalaryComponents(
 ): ListLookupState<SalaryComponent> {
   return useCollection<SalaryComponent>(
     enabled ? "/v1/salary-components?per_page=200" : null
+  );
+}
+
+export function useSalaryStructures(
+  enabled = true
+): ListLookupState<SalaryStructure> {
+  return useCollection<SalaryStructure>(
+    enabled ? "/v1/salary-structures?per_page=200" : null
   );
 }
 

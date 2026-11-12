@@ -12,9 +12,15 @@ const SECTIONS: HubSection[] = [
   },
   {
     href: "/dashboard/hr/payroll/salaries",
-    title: "Salary structures",
-    description: "Basic salary and component lines per staff member.",
+    title: "Staff salaries",
+    description: "Effective-dated basic salary and component lines per staff member.",
     icon: "wallet",
+  },
+  {
+    href: "/dashboard/hr/payroll/salary-structures",
+    title: "Salary structures",
+    description: "Reusable salary templates by designation, applied to staff.",
+    icon: "clipboard",
   },
   {
     href: "/dashboard/hr/payroll/components",

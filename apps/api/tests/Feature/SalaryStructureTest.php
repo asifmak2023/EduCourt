@@ -218,6 +218,53 @@ class SalaryStructureTest extends TestCase
             ->assertJsonPath('data.0.id', $this->designation->id);
     }
 
+    public function test_staff_salaries_can_be_filtered_by_structure(): void
+    {
+        $staff = $this->staff('EMP-0001', $this->designation);
+        $structure = $this->structure();
+
+        $this->as($this->finance)
+            ->postJson("/api/v1/salary-structures/{$structure->id}/apply", [
+                'effective_from' => '2026-07-01',
+            ])
+            ->assertOk();
+
+        $lecturer = Designation::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'name' => 'Lecturer', 'code' => 'LEC',
+        ]);
+        $otherStaff = $this->staff('EMP-0002', $lecturer);
+
+        $other = SalaryStructure::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'designation_id' => $lecturer->id,
+            'name' => 'Lecturer salary',
+            'basic_salary' => 60000,
+            'currency' => 'PKR',
+            'effective_from' => '2026-07-01',
+            'is_active' => true,
+        ]);
+
+        $this->as($this->finance)
+            ->postJson("/api/v1/salary-structures/{$other->id}/apply", [
+                'effective_from' => '2026-07-01',
+            ])
+            ->assertOk();
+
+        $filtered = $this->as($this->finance)
+            ->getJson("/api/v1/staff-salaries?salary_structure_id={$structure->id}")
+            ->assertOk()
+            ->json('data');
+
+        $this->assertCount(1, $filtered);
+        $this->assertSame($structure->id, $filtered[0]['salary_structure_id']);
+        $this->assertSame($staff->id, $filtered[0]['staff_member_id']);
+        $this->assertSame('Ayesha Malik', $filtered[0]['staff_member']['full_name']);
+        $this->assertNotSame($otherStaff->id, $filtered[0]['staff_member_id']);
+    }
+
     public function test_resolve_and_apply_use_the_latest_revision(): void
     {
         $staff = $this->staff('EMP-0001', $this->designation);

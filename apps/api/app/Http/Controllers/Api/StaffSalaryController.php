@@ -24,6 +24,7 @@ class StaffSalaryController extends Controller
         $salaries = StaffSalary::query()
             ->with(['items.component', 'staffMember'])
             ->when($request->filled('staff_member_id'), fn ($q) => $q->where('staff_member_id', $request->integer('staff_member_id')))
+            ->when($request->filled('salary_structure_id'), fn ($q) => $q->where('salary_structure_id', $request->integer('salary_structure_id')))
             ->when($request->has('is_active'), fn ($q) => $q->where('is_active', $request->boolean('is_active')))
             ->orderByDesc('effective_from')
             ->paginate($request->integer('per_page', 50));

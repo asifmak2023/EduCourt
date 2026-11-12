@@ -22,7 +22,7 @@ import {
   SuccessNotice,
 } from "@/components/ui";
 import { formatCurrency } from "@/lib/format";
-import type { SalaryStructure } from "@/lib/types";
+import type { SalaryStructure, StaffSalary } from "@/lib/types";
 
 export default function SalaryStructureDetailPage() {
   return (
@@ -173,12 +173,98 @@ function StructureDetailView() {
         <ReviseCard id={data.id} />
       ) : null}
       {can("payroll.edit") ? <ApplyCard id={data.id} /> : null}
+      <AppliedStaffSection id={data.id} />
       <VersionHistory
         designationId={data.designation_id}
         currentId={data.id}
       />
       {can("payroll.delete") ? <DeleteAction id={data.id} /> : null}
     </div>
+  );
+}
+
+function AppliedStaffSection({ id }: { id: number }) {
+  const { data, loading, error } = useResource<StaffSalary[]>(
+    `/v1/staff-salaries?salary_structure_id=${id}&per_page=200`
+  );
+
+  const salaries = data ?? [];
+
+  return (
+    <Card>
+      <div className="border-b border-border-secondary px-5 py-4">
+        <h2 className="text-sm font-semibold text-foreground">
+          Applied staff ({salaries.length})
+        </h2>
+        <p className="mt-0.5 text-xs text-muted">
+          Staff salaries created from this structure. Open a row to view or give
+          an increment.
+        </p>
+      </div>
+      {loading ? (
+        <div className="p-6">
+          <Spinner />
+        </div>
+      ) : error ? (
+        <div className="p-6">
+          <ErrorNotice message={error} />
+        </div>
+      ) : salaries.length === 0 ? (
+        <div className="p-6">
+          <EmptyState message="Not applied to any staff member yet." />
+        </div>
+      ) : (
+        <Table variant="secondary">
+          <Table.ScrollContainer>
+            <Table.Content aria-label="Staff salaries from this structure">
+              <Table.Header>
+                <Table.Column isRowHeader>Staff</Table.Column>
+                <Table.Column>Employee no.</Table.Column>
+                <Table.Column className="text-right">Basic</Table.Column>
+                <Table.Column>Effective from</Table.Column>
+                <Table.Column>Effective to</Table.Column>
+                <Table.Column>Status</Table.Column>
+                <Table.Column />
+              </Table.Header>
+              <Table.Body>
+                {salaries.map((salary) => (
+                  <Table.Row key={salary.id} id={salary.id}>
+                    <Table.Cell className="font-medium text-foreground">
+                      {salary.staff_member?.full_name ??
+                        `Staff #${salary.staff_member_id}`}
+                    </Table.Cell>
+                    <Table.Cell className="text-muted">
+                      {salary.staff_member?.employee_no ?? "-"}
+                    </Table.Cell>
+                    <Table.Cell className="text-right text-muted">
+                      {formatCurrency(Number(salary.basic_salary))}{" "}
+                      {salary.currency}
+                    </Table.Cell>
+                    <Table.Cell className="text-muted">
+                      {salary.effective_from ?? "-"}
+                    </Table.Cell>
+                    <Table.Cell className="text-muted">
+                      {salary.effective_to ?? "-"}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Badge value={salary.is_active ? "active" : "inactive"} />
+                    </Table.Cell>
+                    <Table.Cell className="text-right">
+                      <Link
+                        href={`/dashboard/hr/payroll/salaries/${salary.id}`}
+                        className={buttonClasses("secondary")}
+                      >
+                        View
+                      </Link>
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+        </Table>
+      )}
+    </Card>
   );
 }
 

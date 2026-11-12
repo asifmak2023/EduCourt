@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use Illuminate\Console\Events\CommandStarting;
-use Illuminate\Support\Facades\Artisan;
 use RuntimeException;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;

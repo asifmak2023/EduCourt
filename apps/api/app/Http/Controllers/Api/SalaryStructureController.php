@@ -10,6 +10,7 @@ use App\Http\Resources\SalaryStructureResource;
 use App\Models\SalaryStructure;
 use App\Models\StaffMember;
 use App\Models\StaffSalary;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -264,8 +265,28 @@ class SalaryStructureController extends Controller
 
         $created = DB::transaction(function () use ($salaryStructure, $members, $effectiveFrom) {
             $applied = [];
+            $dayBefore = Carbon::parse($effectiveFrom)->subDay()->toDateString();
+            $structureEffectiveTo = $salaryStructure->effective_to?->toDateString();
 
             foreach ($members as $member) {
+                $nextStart = StaffSalary::query()
+                    ->where('staff_member_id', $member->id)
+                    ->where('effective_from', '>', $effectiveFrom)
+                    ->min('effective_from');
+
+                $effectiveTo = $structureEffectiveTo;
+
+                if ($nextStart !== null) {
+                    $cap = Carbon::parse($nextStart)->subDay()->toDateString();
+                    $effectiveTo = $effectiveTo === null || $cap < $effectiveTo ? $cap : $effectiveTo;
+                }
+
+                StaffSalary::query()
+                    ->where('staff_member_id', $member->id)
+                    ->where('effective_from', '<', $effectiveFrom)
+                    ->where(fn ($q) => $q->whereNull('effective_to')->orWhereDate('effective_to', '>=', $effectiveFrom))
+                    ->update(['effective_to' => $dayBefore]);
+
                 $salary = StaffSalary::updateOrCreate(
                     [
                         'staff_member_id' => $member->id,
@@ -277,7 +298,7 @@ class SalaryStructureController extends Controller
                         'salary_structure_id' => $salaryStructure->id,
                         'basic_salary' => $salaryStructure->basic_salary,
                         'currency' => $salaryStructure->currency,
-                        'effective_to' => $salaryStructure->effective_to,
+                        'effective_to' => $effectiveTo,
                         'is_active' => true,
                         'notes' => "Applied from structure: {$salaryStructure->name}",
                     ]

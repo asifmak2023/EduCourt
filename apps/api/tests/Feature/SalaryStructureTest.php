@@ -218,6 +218,35 @@ class SalaryStructureTest extends TestCase
             ->assertJsonPath('data.0.id', $this->designation->id);
     }
 
+    public function test_reapplying_with_a_later_date_closes_the_previous_row(): void
+    {
+        $staff = $this->staff('EMP-0001', $this->designation);
+        $structure = $this->structure();
+
+        $first = $this->as($this->finance)
+            ->postJson("/api/v1/salary-structures/{$structure->id}/apply", [
+                'effective_from' => '2026-11-01',
+            ])
+            ->assertOk()
+            ->json('data.salary_ids.0');
+
+        $second = $this->as($this->finance)
+            ->postJson("/api/v1/salary-structures/{$structure->id}/apply", [
+                'effective_from' => '2026-11-02',
+            ])
+            ->assertOk()
+            ->json('data.salary_ids.0');
+
+        $this->assertNotSame($first, $second);
+        $this->assertSame(2, StaffSalary::query()->where('staff_member_id', $staff->id)->count());
+
+        $previous = StaffSalary::query()->findOrFail($first);
+        $this->assertSame('2026-11-01', $previous->effective_to->toDateString());
+
+        $current = StaffSalary::query()->findOrFail($second);
+        $this->assertSame('2026-11-02', $current->effective_from->toDateString());
+    }
+
     public function test_staff_salaries_can_be_filtered_by_structure(): void
     {
         $staff = $this->staff('EMP-0001', $this->designation);

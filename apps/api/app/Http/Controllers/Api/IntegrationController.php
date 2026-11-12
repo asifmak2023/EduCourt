@@ -15,6 +15,7 @@ use App\Services\WhatsApp\WhatsAppClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 
 /**
  * Institution-scoped WhatsApp integration management.
@@ -238,6 +239,119 @@ class IntegrationController extends Controller
         }
 
         return response()->json(['data' => $summary]);
+    }
+
+    /**
+     * List approved/registered templates for the institution.
+     */
+    public function templates(Request $request): JsonResponse
+    {
+        $institutionId = $this->institutionId($request);
+
+        $templates = IntegrationTemplate::query()
+            ->where('institution_id', $institutionId)
+            ->orderBy('purpose')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (IntegrationTemplate $template) => $this->templatePayload($template))
+            ->values();
+
+        return response()->json(['data' => $templates]);
+    }
+
+    /**
+     * Register a template that has already been approved in the institution's
+     * WABA. EduCourt stores only the mapping (name, language, ordered params).
+     */
+    public function storeTemplate(Request $request): JsonResponse
+    {
+        $institutionId = $this->institutionId($request);
+        $this->authoriseWrite($request, $institutionId);
+
+        $data = $request->validate([
+            'sender_id' => [
+                'nullable', 'integer',
+                Rule::exists('whatsapp_senders', 'id')
+                    ->whereNull('deleted_at')
+                    ->where('owner_institution_id', $institutionId),
+            ],
+            'purpose' => ['required', 'string', 'max:32'],
+            'name' => ['required', 'string', 'max:64'],
+            'language' => ['required', 'string', 'max:8'],
+            'approval_status' => ['sometimes', Rule::in(['pending', 'approved', 'rejected'])],
+            'parameters' => ['nullable', 'array'],
+            'parameters.*' => ['nullable', 'string', 'max:64'],
+        ]);
+
+        $senderId = $data['sender_id'] ?? $this->defaultSenderId($institutionId);
+
+        if ($senderId === null) {
+            return response()->json([
+                'message' => 'Assign a WhatsApp sender to this institution before registering templates.',
+            ], 422);
+        }
+
+        $template = IntegrationTemplate::updateOrCreate(
+            [
+                'sender_id' => $senderId,
+                'name' => $data['name'],
+                'language' => $data['language'],
+            ],
+            [
+                'institution_id' => $institutionId,
+                'purpose' => $data['purpose'],
+                'approval_status' => $data['approval_status'] ?? 'approved',
+                'parameters' => array_values($data['parameters'] ?? []),
+            ],
+        );
+
+        return response()->json(['data' => $this->templatePayload($template->refresh())], 201);
+    }
+
+    public function destroyTemplate(Request $request, IntegrationTemplate $template): JsonResponse
+    {
+        $institutionId = $this->institutionId($request);
+        $this->authoriseWrite($request, $institutionId);
+
+        if ((int) $template->institution_id !== $institutionId) {
+            abort(404);
+        }
+
+        $template->delete();
+
+        return response()->json(['data' => ['deleted' => true]]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function templatePayload(IntegrationTemplate $template): array
+    {
+        return [
+            'id' => $template->id,
+            'sender_id' => $template->sender_id,
+            'purpose' => $template->purpose,
+            'name' => $template->name,
+            'language' => $template->language,
+            'approval_status' => $template->approval_status,
+            'parameters' => $template->parameters ?? [],
+        ];
+    }
+
+    private function defaultSenderId(int $institutionId): ?int
+    {
+        $assigned = $this->policy($institutionId)?->whatsapp_sender_id;
+
+        if ($assigned !== null) {
+            return (int) $assigned;
+        }
+
+        $campusSender = CampusIntegrationPolicy::query()
+            ->where('institution_id', $institutionId)
+            ->whereNotNull('whatsapp_sender_id')
+            ->value('whatsapp_sender_id');
+
+        return $campusSender === null ? null : (int) $campusSender;
     }
 
     private function policy(int $institutionId): ?IntegrationPolicy

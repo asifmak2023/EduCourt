@@ -130,10 +130,15 @@ class NotificationService
 
         $delivered = $this->gateway->send($notification);
 
+        // Preserve the gateway's precise failure reason; do not overwrite it
+        // with a generic message.
+        $fresh = $notification->fresh();
+        $reason = $delivered ? null : ($fresh?->failure_reason ?? 'Gateway rejected the delivery.');
+
         $notification->update([
             'status' => $delivered ? NotificationStatus::Sent : NotificationStatus::Failed,
             'sent_at' => $delivered ? now() : null,
-            'failure_reason' => $delivered ? null : 'Gateway rejected the delivery.',
+            'failure_reason' => $reason,
         ]);
 
         return $notification->refresh();

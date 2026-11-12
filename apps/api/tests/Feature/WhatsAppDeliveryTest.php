@@ -259,9 +259,12 @@ class WhatsAppDeliveryTest extends TestCase
         ]);
 
         $this->gateway()->send($reminder);
-        $this->gateway()->send($reminder->fresh());
+        $second = $this->gateway()->send($reminder->fresh());
 
         $this->assertSame(1, WhatsAppUsage::query()->count());
+        // A retry must not submit a duplicate message to the provider.
+        $this->assertTrue($second);
+        Http::assertSentCount(1);
     }
 
     public function test_a_connection_timeout_marks_submission_unknown_and_does_not_retry(): void

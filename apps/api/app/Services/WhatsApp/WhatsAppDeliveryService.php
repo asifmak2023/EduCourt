@@ -161,6 +161,33 @@ class WhatsAppDeliveryService
             return false;
         }
 
+        // A retry under the same delivery intent must never submit twice. If a
+        // previous attempt already reached the provider, reflect that outcome
+        // instead of sending a duplicate message.
+        if (! $usage->wasRecentlyCreated) {
+            $alreadySubmitted = $usage->provider_message_id !== null
+                || in_array($usage->delivery_status, [
+                    WhatsAppDeliveryStatus::Submitted,
+                    WhatsAppDeliveryStatus::Accepted,
+                    WhatsAppDeliveryStatus::Sent,
+                    WhatsAppDeliveryStatus::Delivered,
+                    WhatsAppDeliveryStatus::Read,
+                ], true);
+
+            if ($alreadySubmitted) {
+                $this->markSubmitted($reminder, $notification, $usage);
+
+                return true;
+            }
+
+            if ($usage->delivery_status === WhatsAppDeliveryStatus::SubmissionUnknown) {
+                $this->fail($reminder, $notification, 'submission_unknown');
+                $usage->forceFill(['quota_status' => WhatsAppQuotaStatus::Consumed])->save();
+
+                return false;
+            }
+        }
+
         $windowOpen = WhatsAppMessageEvent::windowOpen(
             (int) $sender?->id,
             $normalised,
@@ -168,7 +195,7 @@ class WhatsAppDeliveryService
 
         $result = $windowOpen
             ? $client->sendText($normalised, $body)
-            : $this->sendViaTemplate($institutionId, $sender?->id, $normalised, $body, $purpose, $templateContext);
+            : $this->sendViaTemplate($client, $resolved, $institutionId, $normalised, $purpose, $templateContext);
 
         if ($result['ok']) {
             $usage->update([
@@ -217,19 +244,23 @@ class WhatsAppDeliveryService
     }
 
     /**
+     * Send the out-of-window template through the sender that was already
+     * resolved for this delivery. Re-resolving here would silently switch from
+     * a campus number to the institution number outside the 24h window.
+     *
      * @param  array<int, string>  $parameters
      * @return array{ok: bool, message_id: ?string, error: ?string, uncertain: bool}
      */
     private function sendViaTemplate(
+        WhatsAppClient $client,
+        ResolvedSender $resolved,
         int $institutionId,
-        ?int $senderId,
         string $recipient,
-        string $body,
         string $purpose,
         array $templateContext,
     ): array {
         $selector = $this->templates ?? new TemplateSelector;
-        $template = $selector->select($institutionId, $senderId, $purpose);
+        $template = $selector->select($institutionId, $resolved->senderId(), $purpose);
 
         if ($template === null) {
             return [
@@ -240,15 +271,35 @@ class WhatsAppDeliveryService
             ];
         }
 
-        $resolved = $this->resolver->resolve($institutionId);
-        $client = new WhatsAppClient($resolved, $this->baseUrl, $this->timeout);
-
         return $client->sendTemplate(
             $recipient,
             $template->name,
             $template->language,
             $selector->parameters($template, $templateContext),
         );
+    }
+
+    /**
+     * Reflect an already-submitted intent without sending a duplicate.
+     */
+    private function markSubmitted(
+        ?FeeReminder $reminder,
+        ?AppNotification $notification,
+        WhatsAppUsage $usage,
+    ): void {
+        if ($reminder !== null) {
+            $reminder->forceFill([
+                'provider_message_id' => $usage->provider_message_id,
+                'provider_status' => $usage->delivery_status?->value,
+            ])->save();
+        }
+
+        if ($notification !== null) {
+            $notification->forceFill([
+                'provider_message_id' => $usage->provider_message_id,
+                'provider_status' => $usage->delivery_status?->value,
+            ])->save();
+        }
     }
 
     private function policyFor(int $institutionId): ?IntegrationPolicy

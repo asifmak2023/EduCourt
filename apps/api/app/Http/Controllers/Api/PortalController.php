@@ -11,6 +11,7 @@ use App\Http\Resources\StudentAttendanceResource;
 use App\Http\Resources\StudentResource;
 use App\Http\Resources\TimetableSlotResource;
 use App\Models\Exam;
+use App\Models\CampusIntegrationPolicy;
 use App\Models\FeeVoucher;
 use App\Models\Guardian;
 use App\Models\IntegrationPolicy;
@@ -204,35 +205,81 @@ class PortalController extends Controller
 
         $category = WhatsAppMessageCategory::tryFrom($data['category'] ?? 'utility') ?? WhatsAppMessageCategory::Utility;
         $institutionId = (int) $request->user()->institution_id;
-        $sender = IntegrationPolicy::query()->where('institution_id', $institutionId)->first()?->whatsappSender;
-        $businessAccountId = (string) ($sender?->business_account_id ?? 'default');
 
-        foreach ($phones as $phone) {
-            $consent = WhatsAppConsent::firstOrNew([
-                'institution_id' => $institutionId,
-                'business_account_id' => $businessAccountId,
-                'phone' => $phone,
-                'message_category' => $category->value,
-            ]);
+        // Consent is matched per business account (WABA) at delivery time, and a
+        // campus may send from its own number. Record the choice against every
+        // business account the institution can actually send from, otherwise a
+        // portal opt-in would never match the sender used for the message.
+        $businessAccountIds = $this->businessAccountIds($institutionId);
 
-            if ($data['status'] === 'opted_in') {
-                $consent->fill([
-                    'status' => WhatsAppConsentStatus::OptedIn,
-                    'source' => 'portal',
-                    'opted_in_at' => now(),
+        foreach ($businessAccountIds as $businessAccountId) {
+            foreach ($phones as $phone) {
+                $consent = WhatsAppConsent::firstOrNew([
+                    'institution_id' => $institutionId,
+                    'business_account_id' => $businessAccountId,
+                    'phone' => $phone,
+                    'message_category' => $category->value,
                 ]);
-            } else {
-                $consent->fill([
-                    'status' => WhatsAppConsentStatus::OptedOut,
-                    'source' => 'portal',
-                    'opted_out_at' => now(),
-                ]);
+
+                if ($data['status'] === 'opted_in') {
+                    $consent->fill([
+                        'status' => WhatsAppConsentStatus::OptedIn,
+                        'source' => 'portal',
+                        'opted_in_at' => now(),
+                    ]);
+                } else {
+                    $consent->fill([
+                        'status' => WhatsAppConsentStatus::OptedOut,
+                        'source' => 'portal',
+                        'opted_out_at' => now(),
+                    ]);
+                }
+
+                $consent->save();
             }
-
-            $consent->save();
         }
 
         return $this->whatsappConsent($request);
+    }
+
+    /**
+     * Business account ids (WABAs) the institution may send from: the assigned
+     * institution sender plus any campus-assigned senders. Falls back to a
+     * placeholder when no sender is configured yet so consent can still be
+     * recorded before the platform provisions a number.
+     *
+     * @return array<int, string>
+     */
+    private function businessAccountIds(int $institutionId): array
+    {
+        $ids = [];
+
+        $institutionAccount = IntegrationPolicy::query()
+            ->where('institution_id', $institutionId)
+            ->first()?->whatsappSender?->business_account_id;
+
+        if (is_string($institutionAccount) && $institutionAccount !== '') {
+            $ids[$institutionAccount] = $institutionAccount;
+        }
+
+        $campusAccounts = CampusIntegrationPolicy::query()
+            ->with('whatsappSender')
+            ->where('institution_id', $institutionId)
+            ->get();
+
+        foreach ($campusAccounts as $policy) {
+            $account = $policy->whatsappSender?->business_account_id;
+
+            if (is_string($account) && $account !== '') {
+                $ids[$account] = $account;
+            }
+        }
+
+        if ($ids === []) {
+            $ids['default'] = 'default';
+        }
+
+        return array_values($ids);
     }
 
     /**

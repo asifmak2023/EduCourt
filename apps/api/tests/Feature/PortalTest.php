@@ -6,6 +6,7 @@ use App\Enums\CampusType;
 use App\Enums\RoleName;
 use App\Models\AcademicYear;
 use App\Models\Campus;
+use App\Models\CampusIntegrationPolicy;
 use App\Models\ClassRoom;
 use App\Models\Exam;
 use App\Models\ExamMark;
@@ -15,6 +16,7 @@ use App\Models\FeePlan;
 use App\Models\FeeVoucher;
 use App\Models\Guardian;
 use App\Models\Institution;
+use App\Models\IntegrationPolicy;
 use App\Models\Section;
 use App\Models\Stage;
 use App\Models\Student;
@@ -22,6 +24,7 @@ use App\Models\StudentAttendance;
 use App\Models\StudentEnrollment;
 use App\Models\Subject;
 use App\Models\User;
+use App\Models\WhatsAppSender;
 use App\Models\WhatsAppUsage;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -319,6 +322,60 @@ class PortalTest extends TestCase
             ->putJson('/api/v1/me/whatsapp/consent', ['status' => 'opted_out'])
             ->assertOk()
             ->assertJsonPath('data.consents.0.status', 'opted_out');
+    }
+
+    public function test_consent_is_recorded_for_every_business_account_the_institution_sends_from(): void
+    {
+        $institutionSender = WhatsAppSender::create([
+            'owner_institution_id' => $this->institution->id,
+            'managed_by' => 'institution',
+            'label' => 'Institution',
+            'connection_mode' => 'institution_managed',
+            'phone_number_id' => '111',
+            'business_account_id' => 'WABA-INST',
+            'access_token' => 'token',
+        ]);
+
+        $campusSender = WhatsAppSender::create([
+            'owner_institution_id' => $this->institution->id,
+            'owner_campus_id' => $this->campus->id,
+            'managed_by' => 'institution',
+            'label' => 'Campus',
+            'connection_mode' => 'institution_managed',
+            'phone_number_id' => '222',
+            'business_account_id' => 'WABA-CAMPUS',
+            'access_token' => 'token',
+        ]);
+
+        IntegrationPolicy::create([
+            'institution_id' => $this->institution->id,
+            'whatsapp_allowed' => true,
+            'whatsapp_sender_id' => $institutionSender->id,
+        ]);
+
+        CampusIntegrationPolicy::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'whatsapp_enabled' => true,
+            'whatsapp_sender_id' => $campusSender->id,
+        ]);
+
+        $this->as($this->parentUser)
+            ->putJson('/api/v1/me/whatsapp/consent', ['status' => 'opted_in'])
+            ->assertOk();
+
+        $this->assertDatabaseHas('whatsapp_consents', [
+            'institution_id' => $this->institution->id,
+            'business_account_id' => 'WABA-INST',
+            'phone' => '923000000000',
+            'status' => 'opted_in',
+        ]);
+        $this->assertDatabaseHas('whatsapp_consents', [
+            'institution_id' => $this->institution->id,
+            'business_account_id' => 'WABA-CAMPUS',
+            'phone' => '923000000000',
+            'status' => 'opted_in',
+        ]);
     }
 
     public function test_a_parent_without_a_phone_cannot_set_consent(): void

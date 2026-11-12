@@ -277,12 +277,14 @@ class BroadcastService
         return array_values($recipients);
     }
 
-    private function defaultCampusId(int $institutionId): int
+    private function defaultCampusId(int $institutionId): ?int
     {
-        return (int) Campus::query()
+        $id = Campus::query()
             ->where('institution_id', $institutionId)
             ->orderBy('id')
             ->value('id');
+
+        return $id === null ? null : (int) $id;
     }
 
     private function normalise(string $phone): ?string
@@ -294,7 +296,8 @@ class BroadcastService
         }
 
         if (str_starts_with($digits, '0')) {
-            $digits = '92'.substr($digits, 1);
+            $countryCode = (string) config('reminders.whatsapp.default_country_code', '92');
+            $digits = $countryCode.substr($digits, 1);
         }
 
         return strlen($digits) >= 8 && strlen($digits) <= 15 ? $digits : null;

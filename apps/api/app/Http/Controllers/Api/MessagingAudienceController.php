@@ -430,7 +430,9 @@ class MessagingAudienceController extends Controller
                 ->where('campus_id', $campusId)
                 ->first();
 
-            if ($policy !== null && ! $policy->whatsapp_self_service) {
+            // Fail closed: a campus with no policy row is not implicitly
+            // allowed to send. The migration default for self-service is off.
+            if ($policy === null || ! $policy->whatsapp_self_service) {
                 abort(403, 'Campus self-service messaging is disabled.');
             }
         }

@@ -9,6 +9,7 @@ use App\Enums\WhatsAppManagedBy;
 use App\Models\Campus;
 use App\Models\Institution;
 use App\Models\IntegrationPolicy;
+use App\Models\IntegrationTemplate;
 use App\Models\User;
 use App\Models\WhatsAppSender;
 use Database\Seeders\RbacSeeder;
@@ -244,6 +245,69 @@ class IntegrationApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.consumed', 0)
             ->assertJsonPath('data.monthly_message_limit', null);
+    }
+
+    public function test_a_template_can_be_registered_listed_and_removed(): void
+    {
+        $admin = $this->actor(RoleName::CampusAdmin);
+
+        $created = $this->as($admin)
+            ->postJson('/api/v1/integrations/whatsapp/templates', [
+                'purpose' => 'reminder',
+                'name' => 'fee_due_reminder',
+                'language' => 'en_US',
+                'parameters' => ['student_name', 'amount'],
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.name', 'fee_due_reminder')
+            ->assertJsonPath('data.sender_id', $this->sender->id)
+            ->assertJsonPath('data.approval_status', 'approved');
+
+        $this->as($admin)
+            ->getJson('/api/v1/integrations/whatsapp/templates')
+            ->assertOk()
+            ->assertJsonFragment(['name' => 'fee_due_reminder']);
+
+        $this->as($admin)
+            ->deleteJson('/api/v1/integrations/whatsapp/templates/'.$created->json('data.id'))
+            ->assertOk();
+
+        $this->assertSame(0, IntegrationTemplate::query()->count());
+    }
+
+    public function test_registering_a_template_requires_a_sender(): void
+    {
+        IntegrationPolicy::where('institution_id', $this->institution->id)
+            ->update(['whatsapp_sender_id' => null]);
+
+        $this->as($this->actor(RoleName::CampusAdmin))
+            ->postJson('/api/v1/integrations/whatsapp/templates', [
+                'purpose' => 'reminder',
+                'name' => 'orphan',
+                'language' => 'en_US',
+            ])
+            ->assertStatus(422);
+    }
+
+    public function test_a_template_cannot_be_deleted_across_institutions(): void
+    {
+        $other = Institution::create(['name' => 'School B', 'code' => 'SB']);
+        $template = IntegrationTemplate::create([
+            'institution_id' => $other->id,
+            'sender_id' => $this->sender->id,
+            'purpose' => 'reminder',
+            'name' => 'foreign',
+            'language' => 'en_US',
+            'approval_status' => 'approved',
+            'parameters' => [],
+        ]);
+
+        $this->as($this->actor(RoleName::CampusAdmin))
+            ->deleteJson('/api/v1/integrations/whatsapp/templates/'.$template->id)
+            ->assertNotFound();
+
+        // The foreign template must survive; bypass the tenant scope to check it.
+        $this->assertSame(1, IntegrationTemplate::withoutGlobalScopes()->count());
     }
 
     public function test_it_administrator_requires_two_factor(): void

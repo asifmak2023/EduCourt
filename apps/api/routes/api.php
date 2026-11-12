@@ -190,9 +190,9 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:sensitive');
 
     Route::get('webhooks/whatsapp/{appKey}', [WhatsAppWebhookController::class, 'verify'])
-        ->middleware('throttle:sensitive');
+        ->middleware('throttle:whatsapp-webhook');
     Route::post('webhooks/whatsapp/{appKey}', [WhatsAppWebhookController::class, 'handle'])
-        ->middleware('throttle:sensitive');
+        ->middleware('throttle:whatsapp-webhook');
 
     Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
         Route::get('auth/me', [ProfileController::class, 'show']);
@@ -223,6 +223,9 @@ Route::prefix('v1')->group(function () {
             Route::post('test-send', [IntegrationController::class, 'testSend'])->middleware('permission:integration.test');
             Route::get('campuses', [IntegrationController::class, 'campuses'])->middleware('permission:integration.view');
             Route::get('usage', [IntegrationController::class, 'usage'])->middleware('permission:integration.view');
+            Route::get('templates', [IntegrationController::class, 'templates'])->middleware('permission:integration.view');
+            Route::post('templates', [IntegrationController::class, 'storeTemplate'])->middleware('permission:integration.edit');
+            Route::delete('templates/{template}', [IntegrationController::class, 'destroyTemplate'])->middleware('permission:integration.edit');
         });
 
         Route::prefix('messaging')->group(function () {

@@ -317,8 +317,48 @@ class CampusMessagingTest extends TestCase
         Http::assertSentCount(2);
     }
 
+    public function test_a_broadcast_with_no_campus_fails_cleanly_instead_of_crashing(): void
+    {
+        $audience = $this->audience($this->campusA);
+        $audience->forceFill(['campus_id' => null])->save();
+
+        Campus::query()->where('institution_id', $this->institution->id)->delete();
+
+        MessagingAudienceMember::create([
+            'audience_id' => $audience->id,
+            'member_type' => MessagingMemberType::Phone->value,
+            'member_id' => null,
+            'display_name' => 'Direct',
+            'phone' => '03001112222',
+        ]);
+
+        $broadcast = MessagingBroadcast::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => null,
+            'audience_id' => $audience->id,
+            'title' => 'Notice',
+            'body' => 'Hello.',
+            'status' => 'queued',
+        ]);
+
+        $result = BroadcastService::make()->send($broadcast, $audience->fresh()->load('members', 'segments'));
+
+        $this->assertSame(1, $result['total']);
+        $this->assertSame(0, $result['sent']);
+        $this->assertSame(1, $result['failed']);
+        $this->assertSame('failed', $broadcast->fresh()->status);
+        Http::assertNothingSent();
+    }
+
     public function test_an_audience_can_be_created_and_listed_via_the_api(): void
     {
+        CampusIntegrationPolicy::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campusA->id,
+            'whatsapp_enabled' => true,
+            'whatsapp_self_service' => true,
+        ]);
+
         $admin = $this->actor(RoleName::CampusAdmin);
 
         $created = $this->as($admin)

@@ -203,10 +203,16 @@ class ReminderService
 
         $delivered = $this->gateway->send($reminder);
 
+        // The WhatsApp gateway records a precise reason (no_whatsapp_consent,
+        // template_required, quota_exceeded, ...). Preserve it instead of
+        // overwriting it with a generic message, so operators can act on it.
+        $fresh = $reminder->fresh();
+        $reason = $delivered ? null : ($fresh?->failure_reason ?? 'Gateway rejected the delivery.');
+
         $reminder->update([
             'status' => $delivered ? ReminderStatus::Sent : ReminderStatus::Failed,
             'sent_at' => $delivered ? now() : null,
-            'failure_reason' => $delivered ? null : 'Gateway rejected the delivery.',
+            'failure_reason' => $reason,
         ]);
 
         return $reminder->refresh();

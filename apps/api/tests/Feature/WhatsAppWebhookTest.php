@@ -3,11 +3,14 @@
 namespace Tests\Feature;
 
 use App\Enums\WhatsAppConnectionMode;
+use App\Enums\WhatsAppConsentStatus;
 use App\Enums\WhatsAppDeliveryStatus;
 use App\Enums\WhatsAppManagedBy;
+use App\Enums\WhatsAppMessageCategory;
 use App\Enums\WhatsAppQuotaStatus;
 use App\Models\Institution;
 use App\Models\MetaAppConnection;
+use App\Models\WhatsAppConsent;
 use App\Models\WhatsAppMessageEvent;
 use App\Models\WhatsAppSender;
 use App\Models\WhatsAppUsage;
@@ -259,5 +262,78 @@ class WhatsAppWebhookTest extends TestCase
         $this->assertTrue(
             WhatsAppMessageEvent::windowOpen($this->sender->id, '923001234567')
         );
+    }
+
+    public function test_a_stop_reply_opts_the_contact_out_for_the_sender_waba(): void
+    {
+        $sender = WhatsAppSender::create([
+            'owner_institution_id' => $this->institution->id,
+            'meta_app_connection_id' => $this->metaApp->id,
+            'managed_by' => WhatsAppManagedBy::Institution->value,
+            'label' => 'Institution number',
+            'connection_mode' => WhatsAppConnectionMode::InstitutionManaged->value,
+            'phone_number_id' => '777',
+            'business_account_id' => 'WABA-I',
+            'access_token' => 'token',
+        ]);
+
+        $consent = WhatsAppConsent::create([
+            'institution_id' => $this->institution->id,
+            'business_account_id' => 'WABA-I',
+            'phone' => '923001234567',
+            'message_category' => WhatsAppMessageCategory::Utility->value,
+            'status' => WhatsAppConsentStatus::OptedIn,
+            'source' => 'portal',
+            'opted_in_at' => now(),
+        ]);
+
+        $body = json_encode($this->inboundPayload('777'));
+
+        $this->call('POST', '/api/v1/webhooks/whatsapp/default', [], [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_X_HUB_SIGNATURE_256' => $this->signature($body),
+        ], $body)->assertOk();
+
+        $consent->refresh();
+        $this->assertSame(WhatsAppConsentStatus::OptedOut, $consent->status);
+        $this->assertSame('whatsapp_reply', $consent->source);
+        $this->assertNotNull($consent->opted_out_at);
+        $this->assertSame($sender->id, $sender->fresh()->id);
+    }
+
+    public function test_an_ordinary_reply_does_not_change_consent(): void
+    {
+        $sender = WhatsAppSender::create([
+            'owner_institution_id' => $this->institution->id,
+            'meta_app_connection_id' => $this->metaApp->id,
+            'managed_by' => WhatsAppManagedBy::Institution->value,
+            'label' => 'Institution number',
+            'connection_mode' => WhatsAppConnectionMode::InstitutionManaged->value,
+            'phone_number_id' => '888',
+            'business_account_id' => 'WABA-I',
+            'access_token' => 'token',
+        ]);
+
+        $consent = WhatsAppConsent::create([
+            'institution_id' => $this->institution->id,
+            'business_account_id' => 'WABA-I',
+            'phone' => '923001234567',
+            'message_category' => WhatsAppMessageCategory::Utility->value,
+            'status' => WhatsAppConsentStatus::OptedIn,
+            'source' => 'portal',
+            'opted_in_at' => now(),
+        ]);
+
+        $payload = $this->inboundPayload('888');
+        $payload['entry'][0]['changes'][0]['value']['messages'][0]['text']['body'] = 'Thank you';
+        $body = json_encode($payload);
+
+        $this->call('POST', '/api/v1/webhooks/whatsapp/default', [], [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_X_HUB_SIGNATURE_256' => $this->signature($body),
+        ], $body)->assertOk();
+
+        $this->assertSame(WhatsAppConsentStatus::OptedIn, $consent->fresh()->status);
+        $this->assertSame($sender->id, $sender->fresh()->id);
     }
 }

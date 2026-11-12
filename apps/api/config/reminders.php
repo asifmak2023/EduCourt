@@ -66,6 +66,9 @@ return [
         'base_url' => env('WHATSAPP_BASE_URL', 'https://graph.facebook.com/v21.0'),
         'timeout' => (int) env('WHATSAPP_TIMEOUT', 15),
         'default_country_code' => env('WHATSAPP_DEFAULT_COUNTRY_CODE', '92'),
+        // Pricing market used to look up WhatsApp rate cards (see
+        // WhatsAppRateCard::for). Meta prices messages per market.
+        'market' => env('WHATSAPP_MARKET', 'PK'),
     ],
 
 ];

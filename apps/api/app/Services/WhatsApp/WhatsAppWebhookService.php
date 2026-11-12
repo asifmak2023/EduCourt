@@ -2,9 +2,11 @@
 
 namespace App\Services\WhatsApp;
 
+use App\Enums\WhatsAppConsentStatus;
 use App\Enums\WhatsAppDeliveryStatus;
 use App\Models\FeeReminder;
 use App\Models\MetaAppConnection;
+use App\Models\WhatsAppConsent;
 use App\Models\WhatsAppMessageEvent;
 use App\Models\WhatsAppSender;
 use App\Models\WhatsAppUsage;
@@ -152,6 +154,53 @@ class WhatsAppWebhookService
                 'event_meta' => ['type' => $message['type'] ?? null],
             ],
         );
+
+        // Replies are not surfaced in an inbox, but an inbound opt-out keyword
+        // is a compliance signal that must still be honoured so we stop sending
+        // to this number.
+        $body = (string) ($message['text']['body'] ?? '');
+
+        if ($this->isOptOutKeyword($body)) {
+            $this->recordOptOut($sender, $from);
+        }
+    }
+
+    private function isOptOutKeyword(string $body): bool
+    {
+        $normalised = strtolower(trim($body));
+
+        return in_array($normalised, [
+            'stop', 'stop all', 'unsubscribe', 'opt out', 'optout', 'cancel',
+            'end', 'quit', 'وداعا', 'إلغاء', 'رک', 'بند کریں',
+        ], true);
+    }
+
+    /**
+     * Withdraw consent for the sender's business account across every message
+     * category, preserving history (the row is updated, not deleted).
+     */
+    private function recordOptOut(WhatsAppSender $sender, string $contactWaId): void
+    {
+        if ($sender->owner_institution_id === null) {
+            return;
+        }
+
+        $businessAccountId = (string) ($sender->business_account_id ?? '');
+
+        if ($businessAccountId === '') {
+            return;
+        }
+
+        WhatsAppConsent::query()
+            ->where('institution_id', $sender->owner_institution_id)
+            ->where('business_account_id', $businessAccountId)
+            ->where('phone', $contactWaId)
+            ->where('status', '!=', WhatsAppConsentStatus::OptedOut->value)
+            ->update([
+                'status' => WhatsAppConsentStatus::OptedOut->value,
+                'source' => 'whatsapp_reply',
+                'opted_out_at' => now(),
+            ]);
     }
 
     /**

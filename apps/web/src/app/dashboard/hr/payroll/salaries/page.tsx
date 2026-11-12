@@ -11,14 +11,14 @@ export default function StaffSalariesPage() {
 
   return (
     <MasterList<StaffSalary>
-      title="Salary structures"
+      title="Staff salaries"
       description="Basic salary and component lines per staff member."
       endpoint="/v1/staff-salaries"
       searchable={false}
       createHref={
         can("payroll.create") ? "/dashboard/hr/payroll/salaries/new" : undefined
       }
-      createLabel="New structure"
+      createLabel="New salary"
       editHref={(item) => `/dashboard/hr/payroll/salaries/${item.id}`}
       filters={[
         {

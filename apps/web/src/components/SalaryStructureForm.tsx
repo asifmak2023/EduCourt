@@ -45,10 +45,16 @@ export function SalaryStructureForm({
   const router = useRouter();
   const isEdit = Boolean(salaryStructure);
 
-  const { items: designations, loading: designationsLoading } =
-    useDesignations();
-  const { items: components, loading: componentsLoading } =
-    useSalaryComponents();
+  const {
+    items: designations,
+    loading: designationsLoading,
+    error: designationsError,
+  } = useDesignations();
+  const {
+    items: components,
+    loading: componentsLoading,
+    error: componentsError,
+  } = useSalaryComponents();
 
   const [designationId, setDesignationId] = useState(
     salaryStructure?.designation_id ? String(salaryStructure.designation_id) : ""
@@ -215,6 +221,19 @@ export function SalaryStructureForm({
       />
 
       {error ? <ErrorNotice message={error} /> : null}
+      {designationsError ? (
+        <ErrorNotice
+          message={`Unable to load designations: ${designationsError}`}
+        />
+      ) : null}
+      {!designationsLoading && !designationsError && designations.length === 0 ? (
+        <ErrorNotice message="No designations exist for this campus yet. Ask an HR Officer or Campus Admin to add a designation under HR > Designations, then create the salary structure." />
+      ) : null}
+      {componentsError ? (
+        <ErrorNotice
+          message={`Unable to load salary components: ${componentsError}`}
+        />
+      ) : null}
 
       <Card>
         <form

@@ -871,7 +871,7 @@ Route::prefix('v1')->group(function () {
             };
 
             $hr('departments', DepartmentController::class, 'department', 'hr.view', true);
-            $hr('designations', DesignationController::class, 'designation', 'hr.view', true);
+            $hr('designations', DesignationController::class, 'designation', 'hr.view|payroll.view', true);
             $hr('staff', StaffMemberController::class, 'staffMember', 'hr.view|payroll.view');
 
             Route::post('staff/{staffMember}/terminate', [StaffMemberController::class, 'terminate'])->middleware('permission:hr.approve');

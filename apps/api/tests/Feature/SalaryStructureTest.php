@@ -210,6 +210,14 @@ class SalaryStructureTest extends TestCase
             ->assertJsonPath('data.id', $structure->id);
     }
 
+    public function test_finance_head_can_read_designations_for_the_structure_form(): void
+    {
+        $this->as($this->finance)
+            ->getJson('/api/v1/designations')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $this->designation->id);
+    }
+
     public function test_resolve_and_apply_use_the_latest_revision(): void
     {
         $staff = $this->staff('EMP-0001', $this->designation);

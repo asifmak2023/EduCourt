@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ExamPaperController extends Controller
 {
@@ -41,6 +42,12 @@ class ExamPaperController extends Controller
         $data = $request->validate($this->rules($tenant['campus_id']));
         $data += $tenant;
 
+        $this->assertSlotAvailable(
+            (int) $data['exam_id'],
+            (int) $data['class_room_id'],
+            (int) $data['subject_id'],
+        );
+
         $paper = ExamPaper::create($data);
 
         return (new ExamPaperResource($paper->load(['subject', 'classRoom', 'room'])))
@@ -59,6 +66,13 @@ class ExamPaperController extends Controller
     {
         $data = $request->validate($this->rules($examPaper->campus_id, $examPaper->id, false));
 
+        $this->assertSlotAvailable(
+            (int) ($data['exam_id'] ?? $examPaper->exam_id),
+            (int) ($data['class_room_id'] ?? $examPaper->class_room_id),
+            (int) ($data['subject_id'] ?? $examPaper->subject_id),
+            $examPaper->id,
+        );
+
         $examPaper->update($data);
 
         return new ExamPaperResource($examPaper->load(['subject', 'classRoom', 'room']));
@@ -69,6 +83,28 @@ class ExamPaperController extends Controller
         $examPaper->delete();
 
         return response()->json(['message' => 'Exam paper removed.']);
+    }
+
+    /**
+     * Reject a duplicate slot with a validation error instead of letting the
+     * database's unique index surface as a 500. The unique key is
+     * (exam_id, class_room_id, subject_id). The check uses withTrashed() to
+     * mirror the database index, which also covers soft-deleted rows.
+     */
+    private function assertSlotAvailable(int $examId, int $classRoomId, int $subjectId, ?int $ignoreId = null): void
+    {
+        $exists = ExamPaper::withTrashed()
+            ->where('exam_id', $examId)
+            ->where('class_room_id', $classRoomId)
+            ->where('subject_id', $subjectId)
+            ->when($ignoreId !== null, fn ($q) => $q->whereKeyNot($ignoreId))
+            ->exists();
+
+        if ($exists) {
+            throw ValidationException::withMessages([
+                'exam_id' => 'This subject already has a paper for that class in the selected exam.',
+            ]);
+        }
     }
 
     /**

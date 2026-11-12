@@ -209,6 +209,25 @@ class ExamTest extends TestCase
         $this->assertSame('pass', $card['result']);
     }
 
+    public function test_duplicate_exam_paper_slot_is_rejected_with_a_validation_error(): void
+    {
+        $payload = [
+            'exam_id' => $this->exam->id,
+            'class_room_id' => $this->class->id,
+            'subject_id' => $this->subject->id,
+            'exam_date' => '2026-09-02',
+            'max_marks' => 100,
+            'pass_marks' => 40,
+        ];
+
+        $this->api($this->admin)->postJson('/api/v1/exam-papers', $payload)->assertStatus(201);
+
+        $this->api($this->admin)
+            ->postJson('/api/v1/exam-papers', $payload)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('exam_id');
+    }
+
     public function test_marks_above_paper_maximum_are_rejected(): void
     {
         $paper = $this->api($this->admin)->postJson('/api/v1/exam-papers', [

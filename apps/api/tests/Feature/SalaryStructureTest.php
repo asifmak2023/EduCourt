@@ -210,6 +210,37 @@ class SalaryStructureTest extends TestCase
             ->assertJsonPath('data.id', $structure->id);
     }
 
+    public function test_resolve_and_apply_use_the_latest_revision(): void
+    {
+        $staff = $this->staff('EMP-0001', $this->designation);
+        $structure = $this->structure();
+
+        $revised = $this->as($this->finance)
+            ->postJson("/api/v1/salary-structures/{$structure->id}/revise", [
+                'increment_type' => 'percent',
+                'increment_value' => 10,
+            ])
+            ->assertStatus(201)
+            ->json('data');
+
+        $resolved = $this->as($this->finance)
+            ->getJson("/api/v1/salary-structures/resolve?designation_id={$this->designation->id}")
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame($revised['id'], $resolved['id']);
+
+        $this->as($this->finance)
+            ->postJson("/api/v1/salary-structures/{$revised['id']}/apply", [
+                'effective_from' => '2027-01-01',
+            ])
+            ->assertOk();
+
+        $salary = StaffSalary::query()->where('staff_member_id', $staff->id)->firstOrFail();
+        $this->assertSame('88000.00', $salary->basic_salary);
+        $this->assertSame($revised['id'], $salary->salary_structure_id);
+    }
+
     public function test_revising_with_percent_increment_supersedes_and_raises_basic(): void
     {
         $structure = $this->structure();

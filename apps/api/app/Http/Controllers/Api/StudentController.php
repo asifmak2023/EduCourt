@@ -48,7 +48,7 @@ class StudentController extends Controller
             ->orderBy('first_name')
             ->orderBy('last_name');
 
-        $this->teacherScope->applyTo($students, $request->user(), 'student_id');
+        $this->teacherScope->applyToStudents($students, $request->user());
 
         $students = $students->paginate($request->integer('per_page', 25));
 

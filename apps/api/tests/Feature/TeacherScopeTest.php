@@ -131,6 +131,21 @@ class TeacherScopeTest extends TestCase
             ->assertJsonCount(0, 'data');
     }
 
+    public function test_teacher_student_index_filters_on_the_students_primary_key(): void
+    {
+        $teacher = $this->teacher();
+        $this->assign($teacher, $this->classA, $this->sectionA);
+
+        $allowed = $this->student($this->classA, $this->sectionA, 'ADM-A');
+        $blocked = $this->student($this->classB, $this->sectionB, 'ADM-B');
+
+        $response = $this->as($teacher)->getJson('/api/v1/students')
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
+
+        $this->assertSame($allowed->id, $response->json('data.0.id'));
+    }
+
     public function test_teacher_cannot_open_a_student_outside_assigned_classes(): void
     {
         $teacher = $this->teacher();

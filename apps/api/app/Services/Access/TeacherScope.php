@@ -167,6 +167,20 @@ class TeacherScope
         return $query->whereIn($column, $ids);
     }
 
+    /**
+     * Apply the teacher's allowed student set directly to a students query.
+     * The students table keys on its own primary key (`id`) rather than a
+     * `student_id` column, so it needs a distinct entry point from applyTo().
+     */
+    public function applyToStudents(Builder $query, User $user, string $keyColumn = 'id'): Builder
+    {
+        if (! $this->isTeacherScoped($user)) {
+            return $query;
+        }
+
+        return $query->whereIn($keyColumn, $this->studentIds($user));
+    }
+
     public function allowsStudent(User $user, int $studentId): bool
     {
         if (! $this->isTeacherScoped($user)) {

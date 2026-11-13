@@ -75,8 +75,10 @@ class HrTest extends TestCase
             'first_name' => 'Ayesha', 'last_name' => 'Malik',
             'gender' => 'female', 'joining_date' => '2026-09-01',
             'employment_type' => 'permanent', 'phone' => '0300-1234567',
+            'basic_salary' => 45000,
         ])->assertStatus(201)
             ->assertJsonPath('data.employee_no', 'EMP-0001')
+            ->assertJsonPath('data.current_salary.basic_salary', '45000.00')
             ->assertJsonPath('data.status', StaffStatus::Active->value)
             ->json('data');
 

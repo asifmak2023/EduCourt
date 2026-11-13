@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -65,6 +66,16 @@ class StaffMember extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(StaffDocument::class);
+    }
+
+    public function salaries(): HasMany
+    {
+        return $this->hasMany(StaffSalary::class);
+    }
+
+    public function currentSalary(): HasOne
+    {
+        return $this->hasOne(StaffSalary::class)->latestOfMany('effective_from');
     }
 
     public function fullName(): string

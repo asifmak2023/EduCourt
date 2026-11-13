@@ -48,6 +48,18 @@ payslips + payslip_items -> ledger accrual/payment
    `staff_member_ids` list. Re-applying for the same `effective_from` updates the
    existing row (`updateOrCreate`) instead of duplicating it.
 
+6. **Staff appointment.** Creating a staff member requires a `basic_salary`
+   amount and immediately creates an effective-dated `staff_salaries` row
+   starting on the joining date. The amount is entered manually (templates do
+   not pre-fill it) and the row is not linked to a structure. Salary creation
+   at appointment is allowed for anyone with `hr.create`, regardless of payroll
+   permissions, so Campus Admins can onboard staff. The staff list shows the
+   current basic salary and the detail page renders a salary summary. When an
+   edit changes the designation, the form offers to re-assign the salary from
+   the new designation's current structure (`reassign_salary` +
+   `salary_effective_from`), which closes the previous row using the same
+   overlap rules as apply.
+
 ## Schema
 
 **`salary_structures`**

@@ -2240,6 +2240,7 @@ export const MODULES: ModuleConfig[] = [
       { key: "department.name", label: "Department" },
       { key: "designation.name", label: "Designation" },
       { key: "employment_type_label", label: "Type" },
+      { key: "current_salary.basic_salary", label: "Salary", format: "money", align: "right" },
       { key: "status_label", label: "Status", format: "badge" },
     ],
     fields: [
@@ -2260,6 +2261,7 @@ export const MODULES: ModuleConfig[] = [
       { name: "employment_type", label: "Employment type", type: "select", options: EMPLOYMENT_TYPE },
       { name: "status", label: "Status", type: "select", options: STAFF_STATUS },
       { name: "joining_date", label: "Joining date", type: "date", required: true },
+      { name: "basic_salary", label: "Monthly basic salary", type: "number", required: true, createOnly: true },
       { name: "leaving_date", label: "Leaving date", type: "date" },
       { name: "bank_name", label: "Bank name", type: "text" },
       { name: "bank_account_no", label: "Bank account no", type: "text" },

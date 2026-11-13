@@ -40,6 +40,7 @@ class StaffMemberResource extends JsonResource
             'designation' => DesignationResource::make($this->whenLoaded('designation')),
             'user' => UserResource::make($this->whenLoaded('user')),
             'documents' => StaffDocumentResource::collection($this->whenLoaded('documents')),
+            'current_salary' => StaffSalaryResource::make($this->whenLoaded('currentSalary')),
             'created_at' => $this->created_at,
         ];
     }

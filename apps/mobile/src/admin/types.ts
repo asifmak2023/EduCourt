@@ -13,6 +13,7 @@ export interface BaseFieldConfig {
   hint?: string;
   readOnly?: boolean;
   readOnlyOnEdit?: boolean;
+  createOnly?: boolean;
   span?: 1 | 2;
   displayKey?: string;
 }

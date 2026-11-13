@@ -23,6 +23,11 @@ class StaffSalaryResource extends JsonResource
             'notes' => $this->notes,
             'items' => StaffSalaryItemResource::collection($this->whenLoaded('items')),
             'staff_member' => StaffMemberResource::make($this->whenLoaded('staffMember')),
+            'salary_structure' => $this->whenLoaded('salaryStructure', fn () => $this->salaryStructure === null ? null : [
+                'id' => $this->salaryStructure->id,
+                'name' => $this->salaryStructure->name,
+                'version' => $this->salaryStructure->version,
+            ]),
             'created_at' => $this->created_at,
         ];
     }

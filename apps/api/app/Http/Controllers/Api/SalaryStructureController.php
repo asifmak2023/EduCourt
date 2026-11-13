@@ -10,7 +10,7 @@ use App\Http\Resources\SalaryStructureResource;
 use App\Models\SalaryStructure;
 use App\Models\StaffMember;
 use App\Models\StaffSalary;
-use Carbon\Carbon;
+use App\Services\SalaryAssignmentService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -314,55 +314,10 @@ class SalaryStructureController extends Controller
 
         $created = DB::transaction(function () use ($salaryStructure, $members, $effectiveFrom) {
             $applied = [];
-            $dayBefore = Carbon::parse($effectiveFrom)->subDay()->toDateString();
-            $structureEffectiveTo = $salaryStructure->effective_to?->toDateString();
+            $service = app(SalaryAssignmentService::class);
 
             foreach ($members as $member) {
-                $nextStart = StaffSalary::query()
-                    ->where('staff_member_id', $member->id)
-                    ->where('effective_from', '>', $effectiveFrom)
-                    ->min('effective_from');
-
-                $effectiveTo = $structureEffectiveTo;
-
-                if ($nextStart !== null) {
-                    $cap = Carbon::parse($nextStart)->subDay()->toDateString();
-                    $effectiveTo = $effectiveTo === null || $cap < $effectiveTo ? $cap : $effectiveTo;
-                }
-
-                StaffSalary::query()
-                    ->where('staff_member_id', $member->id)
-                    ->where('effective_from', '<', $effectiveFrom)
-                    ->where(fn ($q) => $q->whereNull('effective_to')->orWhereDate('effective_to', '>=', $effectiveFrom))
-                    ->update(['effective_to' => $dayBefore]);
-
-                $salary = StaffSalary::updateOrCreate(
-                    [
-                        'staff_member_id' => $member->id,
-                        'effective_from' => $effectiveFrom,
-                    ],
-                    [
-                        'institution_id' => $salaryStructure->institution_id,
-                        'campus_id' => $salaryStructure->campus_id,
-                        'salary_structure_id' => $salaryStructure->id,
-                        'basic_salary' => $salaryStructure->basic_salary,
-                        'currency' => $salaryStructure->currency,
-                        'effective_to' => $effectiveTo,
-                        'is_active' => true,
-                        'notes' => "Applied from structure: {$salaryStructure->name}",
-                    ]
-                );
-
-                $salary->items()->delete();
-
-                foreach ($salaryStructure->items as $item) {
-                    $salary->items()->create([
-                        'salary_component_id' => $item->salary_component_id,
-                        'amount' => $item->amount,
-                        'percentage' => $item->percentage,
-                    ]);
-                }
-
+                $salary = $service->assignFromStructure($member, $salaryStructure, $effectiveFrom);
                 $applied[] = $salary->id;
             }
 

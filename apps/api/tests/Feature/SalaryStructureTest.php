@@ -550,6 +550,139 @@ class SalaryStructureTest extends TestCase
         $this->assertSame('62500.00', $next['basic_salary']);
     }
 
+    public function test_staff_creation_assigns_a_manual_salary_at_joining(): void
+    {
+        $staff = $this->as($this->actor(RoleName::HrOfficer))->postJson('/api/v1/staff', [
+            'first_name' => 'Ayesha',
+            'last_name' => 'Malik',
+            'designation_id' => $this->designation->id,
+            'joining_date' => '2026-11-01',
+            'basic_salary' => 52000,
+        ])->assertStatus(201)
+            ->assertJsonPath('data.current_salary.basic_salary', '52000.00')
+            ->assertJsonPath('data.current_salary.effective_from', '2026-11-01')
+            ->json('data');
+
+        $salary = StaffSalary::query()->where('staff_member_id', $staff['id'])->sole();
+
+        $this->assertSame('52000.00', $salary->basic_salary);
+        $this->assertSame('2026-11-01', $salary->effective_from->toDateString());
+        $this->assertSame('PKR', $salary->currency);
+        $this->assertNull($salary->salary_structure_id);
+        $this->assertSame($this->campus->id, $salary->campus_id);
+        $this->assertSame($this->institution->id, $salary->institution_id);
+    }
+
+    public function test_staff_creation_requires_a_basic_salary(): void
+    {
+        $this->as($this->actor(RoleName::HrOfficer))->postJson('/api/v1/staff', [
+            'first_name' => 'Ayesha',
+            'designation_id' => $this->designation->id,
+            'joining_date' => '2026-11-01',
+        ])->assertStatus(422)
+            ->assertJsonValidationErrors('basic_salary');
+    }
+
+    public function test_campus_admin_without_payroll_write_can_still_assign_a_salary(): void
+    {
+        $admin = $this->actor(RoleName::CampusAdmin);
+
+        $staff = $this->as($admin)->postJson('/api/v1/staff', [
+            'first_name' => 'Bilal',
+            'designation_id' => $this->designation->id,
+            'joining_date' => '2026-11-01',
+            'basic_salary' => 41000,
+        ])->assertStatus(201)->json('data');
+
+        $this->assertDatabaseHas('staff_salaries', [
+            'staff_member_id' => $staff['id'],
+            'basic_salary' => 41000,
+        ]);
+    }
+
+    public function test_designation_change_with_reassign_applies_the_new_structure(): void
+    {
+        $staff = $this->staff('EMP-0100', $this->designation);
+        $this->as($this->actor(RoleName::HrOfficer))->postJson('/api/v1/staff-salaries', [
+            'staff_member_id' => $staff->id,
+            'basic_salary' => 50000,
+            'currency' => 'PKR',
+            'effective_from' => '2026-01-01',
+        ])->assertStatus(201);
+
+        $newDesignation = Designation::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'name' => 'Head of Department', 'code' => 'HOD',
+        ]);
+
+        $structure = SalaryStructure::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'designation_id' => $newDesignation->id,
+            'name' => 'HOD salary',
+            'basic_salary' => 90000,
+            'currency' => 'PKR',
+            'effective_from' => '2026-07-01',
+            'is_active' => true,
+        ]);
+        $structure->items()->create([
+            'salary_component_id' => $this->allowance->id,
+            'amount' => 5000,
+        ]);
+
+        $this->as($this->actor(RoleName::HrOfficer))->putJson("/api/v1/staff/{$staff->id}", [
+            'designation_id' => $newDesignation->id,
+            'reassign_salary' => true,
+            'salary_effective_from' => '2026-11-01',
+        ])->assertOk()
+            ->assertJsonPath('data.current_salary.basic_salary', '90000.00')
+            ->assertJsonPath('data.current_salary.salary_structure.id', $structure->id);
+
+        $this->assertDatabaseHas('staff_salaries', [
+            'staff_member_id' => $staff->id,
+            'effective_from' => '2026-01-01',
+            'effective_to' => '2026-10-31',
+        ]);
+        $this->assertDatabaseHas('staff_salaries', [
+            'staff_member_id' => $staff->id,
+            'effective_from' => '2026-11-01',
+            'basic_salary' => 90000,
+            'salary_structure_id' => $structure->id,
+        ]);
+        $this->assertDatabaseHas('staff_salary_items', [
+            'salary_component_id' => $this->allowance->id,
+            'amount' => 5000,
+        ]);
+    }
+
+    public function test_designation_change_without_prompt_keeps_the_existing_salary(): void
+    {
+        $staff = $this->staff('EMP-0101', $this->designation);
+        $salary = StaffSalary::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'staff_member_id' => $staff->id,
+            'basic_salary' => 50000,
+            'currency' => 'PKR',
+            'effective_from' => '2026-01-01',
+            'is_active' => true,
+        ]);
+
+        $newDesignation = Designation::create([
+            'institution_id' => $this->institution->id,
+            'campus_id' => $this->campus->id,
+            'name' => 'Coordinator', 'code' => 'COORD',
+        ]);
+
+        $this->as($this->actor(RoleName::HrOfficer))->putJson("/api/v1/staff/{$staff->id}", [
+            'designation_id' => $newDesignation->id,
+        ])->assertOk();
+
+        $this->assertSame(1, StaffSalary::query()->where('staff_member_id', $staff->id)->count());
+        $this->assertSame('50000.00', $salary->refresh()->basic_salary);
+    }
+
     private function structure(): SalaryStructure
     {
         $structure = SalaryStructure::create([

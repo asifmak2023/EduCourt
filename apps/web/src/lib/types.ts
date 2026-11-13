@@ -1778,6 +1778,7 @@ export interface StaffMember {
   designation?: Designation | null;
   user?: User | null;
   documents?: StaffDocument[];
+  current_salary?: StaffSalary | null;
   created_at?: string | null;
 }
 
@@ -1852,6 +1853,11 @@ export interface StaffSalary {
   notes: string | null;
   items: StaffSalaryItem[];
   staff_member?: StaffMember | null;
+  salary_structure?: {
+    id: number;
+    name: string;
+    version: number;
+  } | null;
   created_at?: string | null;
 }
 

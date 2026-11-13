@@ -8,10 +8,13 @@ use App\Http\Controllers\Api\Concerns\StampsAcademicTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\StaffMemberResource;
 use App\Models\StaffMember;
+use App\Services\SalaryAssignmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class StaffMemberController extends Controller
 {
@@ -20,7 +23,7 @@ class StaffMemberController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $staff = StaffMember::query()
-            ->with(['department', 'designation', 'user'])
+            ->with(['department', 'designation', 'user', 'currentSalary'])
             ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->integer('department_id')))
             ->when($request->filled('designation_id'), fn ($q) => $q->where('designation_id', $request->integer('designation_id')))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
@@ -43,32 +46,76 @@ class StaffMemberController extends Controller
     public function store(Request $request): JsonResponse
     {
         $tenant = $this->academicTenantAttributes();
-        $data = $request->validate($this->rules($tenant['campus_id']));
+        $data = $request->validate($this->rules($tenant['campus_id']) + [
+            'basic_salary' => ['required', 'numeric', 'min:0'],
+        ]);
 
         $data['employee_no'] ??= $this->nextEmployeeNo($tenant['campus_id']);
         $data['status'] ??= StaffStatus::Active->value;
 
-        $staff = StaffMember::create($data + $tenant);
+        $basicSalary = (string) $data['basic_salary'];
+        unset($data['basic_salary']);
+
+        $staff = DB::transaction(function () use ($data, $tenant, $basicSalary) {
+            $staff = StaffMember::create($data + $tenant);
+
+            app(SalaryAssignmentService::class)->assignManual(
+                $staff,
+                $basicSalary,
+                $staff->joining_date->toDateString(),
+                notes: 'Set at staff appointment',
+            );
+
+            return $staff;
+        });
 
         return (new StaffMemberResource(
-            $staff->load(['department', 'designation', 'user'])
+            $staff->load(['department', 'designation', 'user', 'currentSalary.salaryStructure'])
         ))->response()->setStatusCode(201);
     }
 
     public function show(StaffMember $staffMember): StaffMemberResource
     {
         return new StaffMemberResource(
-            $staffMember->load(['department', 'designation', 'user', 'documents'])
+            $staffMember->load(['department', 'designation', 'user', 'documents', 'currentSalary.salaryStructure'])
         );
     }
 
     public function update(Request $request, StaffMember $staffMember): StaffMemberResource
     {
-        $data = $request->validate($this->rules($staffMember->campus_id, $staffMember->id, false));
+        $data = $request->validate($this->rules($staffMember->campus_id, $staffMember->id, false) + [
+            'reassign_salary' => ['sometimes', 'boolean'],
+            'salary_effective_from' => ['nullable', 'date'],
+        ]);
 
-        $staffMember->update($data);
+        $reassign = (bool) ($data['reassign_salary'] ?? false);
+        $effectiveFrom = $data['salary_effective_from'] ?? now()->toDateString();
+        unset($data['reassign_salary'], $data['salary_effective_from']);
 
-        return new StaffMemberResource($staffMember->load(['department', 'designation', 'user']));
+        DB::transaction(function () use ($staffMember, $data, $reassign, $effectiveFrom) {
+            $staffMember->update($data);
+
+            if (! $reassign) {
+                return;
+            }
+
+            $service = app(SalaryAssignmentService::class);
+            $structure = $service->currentStructure(
+                $staffMember->campus_id,
+                $staffMember->designation_id,
+                $effectiveFrom,
+            );
+
+            if ($structure === null) {
+                throw ValidationException::withMessages([
+                    'reassign_salary' => ['No salary structure is available for the new designation.'],
+                ]);
+            }
+
+            $service->assignFromStructure($staffMember, $structure, $effectiveFrom);
+        });
+
+        return new StaffMemberResource($staffMember->load(['department', 'designation', 'user', 'currentSalary.salaryStructure']));
     }
 
     public function terminate(Request $request, StaffMember $staffMember): StaffMemberResource

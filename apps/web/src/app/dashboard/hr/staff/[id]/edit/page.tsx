@@ -1,6 +1,8 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import { apiFetch } from "@/lib/api";
 import { MasterForm } from "@/components/MasterForm";
 import { PermissionGate } from "@/components/PermissionGate";
 import { useResource } from "@/lib/useResource";
@@ -11,11 +13,23 @@ import {
   STAFF_STATUS_OPTIONS,
 } from "@/lib/staffOptions";
 import { ErrorNotice, Spinner } from "@/components/ui";
+import { formatCurrency } from "@/lib/format";
 import type { StaffMember } from "@/lib/types";
+
+interface ResolvedStructure {
+  name: string;
+  basic_salary: string;
+  currency: string;
+}
 
 export default function EditStaffPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id ? Number(params.id) : undefined;
+
+  const [designationChanged, setDesignationChanged] = useState(false);
+  const [matchedStructure, setMatchedStructure] =
+    useState<ResolvedStructure | null>(null);
+  const resolveToken = useRef(0);
 
   const { data, loading, error } = useResource<StaffMember>(
     id ? `/v1/staff/${id}` : null
@@ -31,6 +45,37 @@ export default function EditStaffPage() {
   if (error) return <ErrorNotice message={error} />;
   if (!data) return <ErrorNotice message="Staff member not found." />;
 
+  const originalDesignationId = data.designation?.id
+    ? String(data.designation.id)
+    : "";
+
+  const handleFieldChange = (name: string, value: string | boolean) => {
+    if (name !== "designation_id") return;
+
+    const next = String(value);
+    const changed = next !== "" && next !== originalDesignationId;
+
+    setDesignationChanged(changed);
+    setMatchedStructure(null);
+
+    const token = ++resolveToken.current;
+    if (!changed) return;
+
+    void apiFetch<{ data: ResolvedStructure | null }>(
+      `/v1/salary-structures/resolve?designation_id=${next}`
+    )
+      .then((payload) => {
+        if (resolveToken.current === token) {
+          setMatchedStructure(payload.data);
+        }
+      })
+      .catch(() => {
+        if (resolveToken.current === token) {
+          setMatchedStructure(null);
+        }
+      });
+  };
+
   return (
     <PermissionGate permission="hr.edit">
       <MasterForm
@@ -39,6 +84,7 @@ export default function EditStaffPage() {
         endpoint="/v1/staff"
         recordId={data.id}
         redirectTo={`/dashboard/hr/staff/${data.id}`}
+        onFieldChange={handleFieldChange}
         initial={{
           first_name: data.first_name,
           last_name: data.last_name ?? "",
@@ -118,6 +164,23 @@ export default function EditStaffPage() {
             type: "date",
             required: true,
           },
+          ...(designationChanged && matchedStructure
+            ? [
+                {
+                  name: "reassign_salary",
+                  label: `Update the salary to the ${matchedStructure.name} structure (${formatCurrency(
+                    Number(matchedStructure.basic_salary)
+                  )} ${matchedStructure.currency})`,
+                  type: "checkbox" as const,
+                },
+                {
+                  name: "salary_effective_from",
+                  label: "Salary effective from",
+                  type: "date" as const,
+                  hint: "Defaults to today when left blank.",
+                },
+              ]
+            : []),
           { name: "date_of_birth", label: "Date of birth", type: "date" },
           { name: "gender", label: "Gender", type: "select", options: GENDER_OPTIONS },
           { name: "cnic", label: "CNIC", type: "text" },

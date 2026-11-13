@@ -48,6 +48,7 @@ export function MasterForm({
   cancelHref,
   nextCodeQueryFields,
   academicYears,
+  onFieldChange,
 }: {
   title: string;
   description?: string;
@@ -60,6 +61,11 @@ export function MasterForm({
   cancelHref?: string;
   nextCodeQueryFields?: string[];
   academicYears?: readonly AcademicYear[];
+  onFieldChange?: (
+    name: string,
+    value: string | boolean,
+    setValue: (name: string, value: string | boolean) => void
+  ) => void;
 }) {
   const router = useRouter();
   const isEdit = recordId !== undefined;
@@ -143,6 +149,7 @@ export function MasterForm({
 
   const setValue = (name: string, value: string | boolean) => {
     setValues((current) => ({ ...current, [name]: value }));
+    onFieldChange?.(name, value, setValue);
   };
 
   const visibleFields = fields.filter(

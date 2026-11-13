@@ -24,8 +24,8 @@ import {
   Spinner,
   SuccessNotice,
 } from "@/components/ui";
-import type { StaffDocument, StaffMember } from "@/lib/types";
-import { formatDate } from "@/lib/format";
+import type { StaffDocument, StaffMember, StaffSalary } from "@/lib/types";
+import { formatCurrency, formatDate } from "@/lib/format";
 
 export default function StaffDetailPage() {
   return (
@@ -123,6 +123,11 @@ function StaffDetailView() {
           </p>
         ) : null}
       </Card>
+
+      <SalarySection
+        salary={data.current_salary ?? null}
+        canViewPayroll={can("payroll.view")}
+      />
 
       <DocumentsSection
         staffId={data.id}
@@ -515,6 +520,69 @@ function TerminateAction({
           Record offboarding
         </Button>
       </div>
+    </Card>
+  );
+}
+
+function SalarySection({
+  salary,
+  canViewPayroll,
+}: {
+  salary: StaffSalary | null;
+  canViewPayroll: boolean;
+}) {
+  return (
+    <Card className="p-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">Salary</h2>
+          <p className="mt-0.5 text-xs text-muted">
+            The basic salary and component lines used when payroll runs.
+          </p>
+        </div>
+        {canViewPayroll ? (
+          <Link
+            href={
+              salary
+                ? `/dashboard/hr/payroll/salaries/${salary.id}`
+                : "/dashboard/hr/payroll/salaries"
+            }
+            className={buttonClasses("secondary")}
+          >
+            {salary ? "View salary" : "Assign salary"}
+          </Link>
+        ) : null}
+      </div>
+      {salary ? (
+        <div className="mt-4">
+          <DataList>
+            <DataItem
+              label="Basic salary"
+              value={`${formatCurrency(Number(salary.basic_salary))} ${salary.currency}`}
+            />
+            <DataItem
+              label="Effective from"
+              value={formatDate(salary.effective_from)}
+            />
+            <DataItem
+              label="Effective to"
+              value={formatDate(salary.effective_to)}
+            />
+            <DataItem
+              label="Source"
+              value={
+                salary.salary_structure
+                  ? `${salary.salary_structure.name} (v${salary.salary_structure.version})`
+                  : "Manual"
+              }
+            />
+          </DataList>
+        </div>
+      ) : (
+        <p className="mt-4 text-sm text-muted">
+          No salary has been assigned to this staff member yet.
+        </p>
+      )}
     </Card>
   );
 }

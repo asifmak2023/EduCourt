@@ -10,7 +10,7 @@ import { MasterList } from "@/components/MasterList";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Badge } from "@/components/ui";
 import type { StaffMember } from "@/lib/types";
-import { formatDate } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 
 export default function StaffPage() {
   const { can } = useAuth();
@@ -72,6 +72,13 @@ export default function StaffPage() {
               item.employment_type_label ?? item.employment_type ?? "-",
           },
           { header: "Joining", render: (item) => formatDate(item.joining_date) },
+          {
+            header: "Salary",
+            render: (item) =>
+              item.current_salary
+                ? formatCurrency(Number(item.current_salary.basic_salary))
+                : "Not set",
+          },
           {
             header: "Status",
             render: (item) => (

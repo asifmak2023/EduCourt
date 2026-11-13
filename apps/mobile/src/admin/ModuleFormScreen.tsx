@@ -47,8 +47,11 @@ export function ModuleFormScreen({
   const [saving, setSaving] = useState(false);
 
   const inputFields = useMemo(
-    () => config.fields.filter(isPlainField),
-    [config.fields]
+    () =>
+      config.fields
+        .filter(isPlainField)
+        .filter((field) => !(editing && field.createOnly)),
+    [config.fields, editing]
   );
   const repeaterFields = useMemo(
     () => config.fields.filter((field) => field.type === "repeater"),

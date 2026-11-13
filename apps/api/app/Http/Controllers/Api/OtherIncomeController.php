@@ -26,6 +26,14 @@ class OtherIncomeController extends Controller
             ->with(['source', 'journalEntry'])
             ->when($request->filled('income_source_id'), fn ($q) => $q->where('income_source_id', $request->integer('income_source_id')))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = trim($request->string('search')->toString());
+                $q->where(function ($inner) use ($search) {
+                    $inner->where('receipt_no', 'like', "%{$search}%")
+                        ->orWhere('payer_name', 'like', "%{$search}%")
+                        ->orWhere('reference', 'like', "%{$search}%");
+                });
+            })
             ->when($request->filled('from'), fn ($q) => $q->whereDate('received_on', '>=', $request->date('from')))
             ->when($request->filled('to'), fn ($q) => $q->whereDate('received_on', '<=', $request->date('to')))
             ->orderByDesc('received_on')

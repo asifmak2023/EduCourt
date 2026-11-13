@@ -165,6 +165,8 @@ export const ROUTE_PATHS: readonly string[] = [
   "/dashboard/finance/journal",
   "/dashboard/finance/journal/_",
   "/dashboard/finance/journal/new",
+  "/dashboard/finance/other-income",
+  "/dashboard/finance/other-income/new",
   "/dashboard/finance/trial-balance",
   "/dashboard/finance/vendors",
   "/dashboard/finance/vendors/_/edit",

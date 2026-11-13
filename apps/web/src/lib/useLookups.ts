@@ -29,6 +29,7 @@ import type {
   Hostel,
   HostelRoom,
   Institution,
+  IncomeSource,
   InventoryCategory,
   Lab,
   Paginated,
@@ -301,6 +302,12 @@ export function useStudents(enabled = true): ListLookupState<Student> {
 export function useSyllabusUnits(enabled = true): ListLookupState<SyllabusUnit> {
   return useCollection<SyllabusUnit>(
     enabled ? "/v1/syllabus-units?per_page=200" : null
+  );
+}
+
+export function useIncomeSources(enabled = true): ListLookupState<IncomeSource> {
+  return useCollection<IncomeSource>(
+    enabled ? "/v1/income-sources?is_active=1&per_page=200" : null
   );
 }
 

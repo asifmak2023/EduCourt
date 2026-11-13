@@ -49,6 +49,13 @@ const LINKS: (HubSection & { permission: string | string[] })[] = [
     icon: "banknote",
   },
   {
+    title: "Other income",
+    description: "Non-fee income such as donations, rent and grants.",
+    href: "/dashboard/finance/other-income",
+    permission: "finance.view",
+    icon: "banknote",
+  },
+  {
     title: "Vendors",
     description: "Supplier directory for purchases and payables.",
     href: "/dashboard/finance/vendors",

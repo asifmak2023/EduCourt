@@ -101,6 +101,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "navigation.journal", href: "/dashboard/finance/journal", icon: "list", permission: "finance.view", ready: true },
       { label: "navigation.trialBalance", href: "/dashboard/finance/trial-balance", icon: "chart", permission: "finance.view", ready: true },
       { label: "navigation.expenses", href: "/dashboard/finance/expenses", icon: "banknote", permission: "finance.view", ready: true },
+      { label: "navigation.otherIncome", href: "/dashboard/finance/other-income", icon: "banknote", permission: "finance.view", ready: true },
       { label: "navigation.vendors", href: "/dashboard/finance/vendors", icon: "building", permission: "finance.view", ready: true },
       { label: "navigation.expenseCategories", href: "/dashboard/finance/expense-categories", icon: "list", permission: "finance.view", ready: true },
       { label: "navigation.budgets", href: "/dashboard/finance/budgets", icon: "chart", permission: "finance.view", ready: true },

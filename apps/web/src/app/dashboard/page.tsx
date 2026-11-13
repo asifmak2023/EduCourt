@@ -23,6 +23,7 @@ import {
   formatNumber,
 } from "@/lib/format";
 import { visibleSections } from "@/lib/nav";
+import { AR_VIEW } from "@/lib/permissions";
 import { roleSummary } from "@/lib/roles";
 import { useTr } from "@/lib/i18n";
 import {
@@ -741,7 +742,7 @@ function InstitutionView({ overview }: { overview: InstitutionOverview }) {
 
 function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
   const { t } = useTranslation();
-  const { can } = useAuth();
+  const { can, canAny } = useAuth();
   const colors = useChartColors();
 
   // The API omits any section the caller has no report permission for, so
@@ -752,6 +753,9 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
   const canResults = can("report.results");
   const canPayroll = can("report.payroll");
   const canCampus = can("report.campus");
+  const canGenerateVoucher = canAny(AR_VIEW);
+  const canEnterIncome = can("finance.create");
+  const showQuickEntry = canGenerateVoucher || canEnterIncome;
 
   const analyticsCards = (canFinance ? 2 : 0) + (canStudents ? 1 : 0);
   const analyticsSpan =
@@ -867,6 +871,71 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
           />
         ) : null}
       </section>
+
+      {showQuickEntry ? (
+        <Card>
+          <div className="grid gap-5 px-6 py-5 sm:grid-cols-2 sm:divide-x sm:divide-border-secondary">
+            <div className="space-y-3 sm:pr-6">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-muted">
+                  Money in
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  Record fee or other income directly.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {canGenerateVoucher ? (
+                  <Link
+                    href="/dashboard/finance/accounts-receivable/generate-voucher"
+                    className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground transition hover:opacity-90"
+                  >
+                    <Icon name="receipt" className="h-3.5 w-3.5" />
+                    Generate voucher
+                  </Link>
+                ) : null}
+                {canEnterIncome ? (
+                  <Link
+                    href="/dashboard/finance/other-income/new"
+                    className="inline-flex items-center gap-2 rounded-full bg-surface-secondary px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-accent-soft hover:text-accent-soft-foreground"
+                  >
+                    <Icon name="banknote" className="h-3.5 w-3.5" />
+                    Record other income
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+
+            {canEnterIncome ? (
+              <div className="space-y-3 sm:pl-6">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted">
+                    Money out
+                  </p>
+                  <p className="mt-1 text-xs text-muted">
+                    Enter an expense or open the expense register.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    href="/dashboard/finance/expenses/new"
+                    className="inline-flex items-center gap-2 rounded-full bg-surface-secondary px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-[var(--surface-secondary)]"
+                  >
+                    <Icon name="wallet" className="h-3.5 w-3.5" />
+                    New expense
+                  </Link>
+                  <Link
+                    href="/dashboard/finance/expenses"
+                    className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold text-muted transition hover:text-foreground"
+                  >
+                    View expenses
+                  </Link>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </Card>
+      ) : null}
 
       {/* Analytics anchor: collection trend or admissions pipeline, per role. */}
       {canFinance || canStudents ? (

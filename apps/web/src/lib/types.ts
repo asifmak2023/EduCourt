@@ -854,6 +854,31 @@ export interface Expense {
   payments?: ExpensePayment[];
 }
 
+export interface IncomeSource {
+  id: number;
+  name: string;
+  code: string | null;
+  category: string | null;
+  description: string | null;
+  is_active: boolean;
+  income_account_id?: number | null;
+}
+
+export interface OtherIncome {
+  id: number;
+  income_source_id: number;
+  receipt_no: string;
+  received_on: string | null;
+  amount: string;
+  method: string | null;
+  payer_name: string | null;
+  reference: string | null;
+  remarks: string | null;
+  status: string | null;
+  voided_at: string | null;
+  source?: IncomeSource | null;
+}
+
 export interface BudgetLine {
   id: number;
   chart_of_account_id: number;

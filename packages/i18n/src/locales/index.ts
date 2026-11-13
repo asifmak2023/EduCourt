@@ -171,6 +171,7 @@ export type MessageKey =
   | "navigation.feePlans"
   | "navigation.feeStructure"
   | "navigation.generateVoucher"
+  | "navigation.otherIncome"
   | "navigation.receipts"
   | "navigation.financeOverview"
   | "navigation.accountsReceivable"

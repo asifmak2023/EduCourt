@@ -39,8 +39,8 @@ use App\Models\StaffMember;
 use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Models\StudentEnrollment;
-use App\Models\User;
 use App\Models\TeachingAssignment;
+use App\Models\User;
 use App\Support\ReportPeriod;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -76,6 +76,11 @@ class ReportService
             ->sum('amount');
 
         $postedPayments = FeePayment::query()->where('status', PaymentStatus::Posted->value);
+
+        $billedTotal = FeeVoucher::query()
+            ->whereNotIn('status', [VoucherStatus::Void->value])
+            ->sum('amount');
+        $collectedTotal = (clone $postedPayments)->sum('amount');
 
         $collectionsByMonth = collect(range(5, 0))->map(function (int $monthsBack) use ($today, $postedPayments) {
             $month = $today->subMonths($monthsBack);
@@ -122,6 +127,8 @@ class ReportService
                 ])->count(),
             'unpaid_vouchers' => (int) (clone $unpaid)->count(),
             'outstanding_fees' => round((float) (clone $unpaid)->sum('amount') - (float) (clone $unpaid)->sum('paid_amount'), 2),
+            'fees_billed' => round((float) $billedTotal, 2),
+            'fees_collected' => round((float) $collectedTotal, 2),
             'fees_collected_this_month' => round((float) $collectedThisMonth, 2),
             'collections_by_month' => $collectionsByMonth,
             'vouchers_by_status' => $vouchersByStatus,
@@ -166,6 +173,8 @@ class ReportService
             'payroll_draft_runs' => 'report.payroll',
             'unpaid_vouchers' => 'report.finance',
             'outstanding_fees' => 'report.finance',
+            'fees_billed' => 'report.finance',
+            'fees_collected' => 'report.finance',
             'fees_collected_this_month' => 'report.finance',
             'collections_by_month' => 'report.finance',
             'vouchers_by_status' => 'report.finance',

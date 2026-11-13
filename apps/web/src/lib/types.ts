@@ -647,6 +647,8 @@ export interface CampusDashboard {
   admissions_pending?: number;
   unpaid_vouchers?: number;
   outstanding_fees?: number;
+  fees_billed?: number;
+  fees_collected?: number;
   fees_collected_this_month?: number;
   collections_by_month?: MonthlyTotal[];
   vouchers_by_status?: Record<string, number>;

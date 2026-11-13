@@ -776,10 +776,11 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
     0
   );
   const latestCollection = collections.at(-1)?.value ?? 0;
-  const collected = dashboard.fees_collected_this_month ?? 0;
+  const collected = dashboard.fees_collected ?? dashboard.fees_collected_this_month ?? 0;
   const outstandingFees = dashboard.outstanding_fees ?? 0;
-  const billed = collected + outstandingFees;
-  const recoveryRate = billed > 0 ? Math.round((collected / billed) * 100) : 0;
+  const billed = dashboard.fees_billed ?? collected + outstandingFees;
+  const recoveryRate =
+    billed > 0 ? Math.min(100, Math.round((collected / billed) * 100)) : 0;
   const collectionValues = collections.map((point) => point.value);
   const hasCollectionMovement = collectionValues.some((value) => value > 0);
 
@@ -979,7 +980,10 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
                     size={64}
                   />
                 </div>
-                <div className="relative mt-4 grid grid-cols-2 gap-2">
+                <div className="relative mt-4">
+                  <FeeRecoveryChart data={collections} />
+                </div>
+                <div className="relative mt-3 grid grid-cols-2 gap-2">
                   <AmberMetric
                     label={t("dashboard.collected")}
                     value={formatCurrency(collected)}
@@ -1078,6 +1082,63 @@ function AmberMetric({ label, value }: { label: string; value: string }) {
       <p className="mt-0.5 truncate text-sm font-bold tabular-nums text-amber-foreground">
         {value}
       </p>
+    </div>
+  );
+}
+
+/**
+ * Compact pill-column chart for the amber fee card. Always renders the empty
+ * grid so the card keeps its shape before any fee data exists.
+ */
+function FeeRecoveryChart({
+  data,
+}: {
+  data: { label: string; value: number }[];
+}) {
+  const points =
+    data.length > 0
+      ? data
+      : Array.from({ length: 6 }, () => ({ label: "", value: 0 }));
+  const max = Math.max(...points.map((point) => point.value), 1);
+  const segments = 5;
+
+  return (
+    <div
+      className="flex h-[92px] w-full items-end justify-between gap-2"
+      role="img"
+      aria-label="Fee collection by month"
+    >
+      {points.map((point, index) => {
+        const lit =
+          point.value > 0
+            ? Math.max(1, Math.round((point.value / max) * segments))
+            : 0;
+
+        return (
+          <div
+            key={`${point.label}-${index}`}
+            className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5"
+            title={`${point.label}: ${formatCurrency(point.value)}`}
+          >
+            <div className="flex w-full flex-col-reverse items-center gap-[3px]">
+              {Array.from({ length: segments }).map((_, segment) => (
+                <span
+                  key={segment}
+                  className="w-full max-w-[14px] rounded-full"
+                  style={{
+                    height: 6,
+                    backgroundColor:
+                      segment < lit ? "#11141f" : "rgb(17 20 31 / 0.15)",
+                  }}
+                />
+              ))}
+            </div>
+            <span className="min-h-[14px] w-full truncate text-center text-[10px] font-semibold uppercase text-amber-foreground/60">
+              {point.label || "\u00a0"}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }

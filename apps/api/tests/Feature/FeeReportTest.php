@@ -227,6 +227,34 @@ class FeeReportTest extends TestCase
             ->assertJsonPath('by_day.0.total', '5000.00');
     }
 
+    public function test_student_report_includes_legacy_vouchers_and_payments(): void
+    {
+        $voucher = FeeVoucher::query()
+            ->where('student_id', $this->ali->id)
+            ->where('sequence', 1)
+            ->firstOrFail();
+
+        $this->as($this->admin)->postJson('/api/v1/fee-payments', [
+            'student_id' => $this->ali->id,
+            'fee_voucher_id' => $voucher->id,
+            'payment_date' => '2026-07-15',
+            'amount' => 5000,
+            'method' => 'cash',
+        ])->assertStatus(201);
+
+        $this->as($this->admin)
+            ->getJson("/api/v1/fee-reports/students?academic_year_id={$this->year->id}&as_of=2026-08-15")
+            ->assertOk()
+            ->assertJsonPath('summary.students', 2)
+            ->assertJsonPath('summary.billed', '60000.00')
+            ->assertJsonPath('summary.received', '5000.00')
+            ->assertJsonPath('summary.receivable', '55000.00')
+            ->assertJsonPath('summary.overdue', '19000.00')
+            ->assertJsonPath('data.1.admission_no', 'ADM-1')
+            ->assertJsonPath('data.1.received', '5000.00')
+            ->assertJsonPath('data.1.last_payment_date', '2026-07-15');
+    }
+
     public function test_teacher_cannot_view_fee_reports(): void
     {
         $this->as($this->teacher)

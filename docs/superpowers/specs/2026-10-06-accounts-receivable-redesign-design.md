@@ -261,8 +261,9 @@ APIs: extend `FeeReportController` with `ar` (paginated, filters, totals) and
 
 **Student-wise fee report** (`.../accounts-receivable/students`) — one row per
 student with the accrued totals for the filtered set. Filters: academic year,
-class, section, student search, as-of date and status tabs (All / Outstanding /
-Overdue / Cleared). Columns: Student, Class, Section, Charges, Billed,
+class, section, a student picker, fee type (`billing_kind`), due-from / due-to
+dates, text search, as-of date and status tabs (All / Outstanding / Overdue /
+Cleared). Columns: Student, Class, Section, Charges, Billed,
 Received, Receivable, Overdue, Last payment, Status. Header stats and the
 table footer show the sums for **all students matching the filters**, not just
 the current page, and CSV/print export the same rows plus a total line.
@@ -274,6 +275,12 @@ Definitions (per student, non-void charges only):
 - Receivable = max(Billed - Received, 0).
 - Overdue = Receivable on charges whose `due_date` is before the as-of date.
 - Collection rate = Received ÷ Billed.
+
+Legacy installments still held in `fee_vouchers` (rows whose `voucher_no` has
+not yet been promoted into `fee_charges` for the same campus) are merged into
+the per-student totals so previously generated dues and payments remain
+visible. When a `billing_kind` filter is supplied, legacy rows are included
+only for `legacy_installment`.
 
 API: `GET /v1/fee-reports/students` (paginated; `academic_year_id`,
 `class_room_id`, `section_id`, `student_id`, `billing_kind`, `due_from`,

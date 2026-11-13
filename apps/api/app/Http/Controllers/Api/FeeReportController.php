@@ -503,57 +503,141 @@ class FeeReportController extends Controller
 
     /**
      * Student-wise fee ledger: one row per student with billed, received,
-     * receivable and overdue totals for the filtered set.
+     * receivable and overdue totals for the filtered set. Reads the counter
+     * charges plus any legacy voucher that has not been promoted yet, so
+     * previously paid fees stay visible.
      */
     public function students(Request $request): JsonResponse
     {
         $asOf = $request->filled('as_of') ? Carbon::parse($request->input('as_of')) : Carbon::today();
         $asOfStr = $asOf->toDateString();
         $academicYearId = $request->filled('academic_year_id') ? $request->integer('academic_year_id') : null;
+        $classRoomId = $request->filled('class_room_id') ? $request->integer('class_room_id') : null;
+        $sectionId = $request->filled('section_id') ? $request->integer('section_id') : null;
+        $studentId = $request->filled('student_id') ? $request->integer('student_id') : null;
+        $billingKind = $request->filled('billing_kind') ? $request->string('billing_kind')->toString() : null;
+        $dueFrom = $request->filled('due_from') ? $request->date('due_from')?->toDateString() : null;
+        $dueTo = $request->filled('due_to') ? $request->date('due_to')?->toDateString() : null;
+        $search = trim($request->string('search')->toString());
         $perPage = min(max($request->integer('per_page', 50), 1), 500);
         $status = $request->string('status')->toString();
 
         $overdueExpr = 'SUM(CASE WHEN due_date IS NOT NULL AND due_date < ? AND paid_amount < amount THEN amount - paid_amount ELSE 0 END)';
 
-        $grouped = FeeCharge::query()
+        $applyStudentSearch = function (Builder $query) use ($search): void {
+            if ($search === '') {
+                return;
+            }
+
+            $query->whereHas('student', function ($student) use ($search) {
+                $student->where('admission_no', 'like', "%{$search}%")
+                    ->orWhere('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhereRaw("CONCAT(first_name, ' ', IFNULL(last_name, '')) LIKE ?", ["%{$search}%"]);
+            });
+        };
+
+        $charges = FeeCharge::query()
             ->selectRaw(
                 "student_id, COUNT(*) as charges, SUM(amount) as billed, SUM(paid_amount) as received, {$overdueExpr} as overdue",
                 [$asOfStr]
             )
             ->where('status', '!=', VoucherStatus::Void->value)
             ->when($academicYearId !== null, fn ($q) => $q->where('academic_year_id', $academicYearId))
-            ->when($request->filled('class_room_id'), fn ($q) => $q->where('class_room_id', $request->integer('class_room_id')))
-            ->when($request->filled('section_id'), fn ($q) => $q->where('section_id', $request->integer('section_id')))
-            ->when($request->filled('student_id'), fn ($q) => $q->where('student_id', $request->integer('student_id')))
-            ->when($request->filled('billing_kind'), fn ($q) => $q->where('billing_kind', $request->string('billing_kind')->toString()))
-            ->when($request->filled('due_from'), fn ($q) => $q->whereDate('due_date', '>=', $request->date('due_from')))
-            ->when($request->filled('due_to'), fn ($q) => $q->whereDate('due_date', '<=', $request->date('due_to')))
-            ->when(trim($request->string('search')->toString()) !== '', function ($q) use ($request) {
-                $search = trim($request->string('search')->toString());
-                $q->whereHas('student', function ($s) use ($search) {
-                    $s->where('admission_no', 'like', "%{$search}%")
-                        ->orWhere('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%")
-                        ->orWhereRaw("CONCAT(first_name, ' ', IFNULL(last_name, '')) LIKE ?", ["%{$search}%"]);
-                });
-            })
+            ->when($classRoomId !== null, fn ($q) => $q->where('class_room_id', $classRoomId))
+            ->when($sectionId !== null, fn ($q) => $q->where('section_id', $sectionId))
+            ->when($studentId !== null, fn ($q) => $q->where('student_id', $studentId))
+            ->when($billingKind !== null, fn ($q) => $q->where('billing_kind', $billingKind))
+            ->when($dueFrom !== null, fn ($q) => $q->whereDate('due_date', '>=', $dueFrom))
+            ->when($dueTo !== null, fn ($q) => $q->whereDate('due_date', '<=', $dueTo))
+            ->tap($applyStudentSearch)
             ->groupBy('student_id')
-            ->when($status === 'outstanding', fn ($q) => $q->havingRaw('SUM(amount) - SUM(paid_amount) > 0'))
-            ->when($status === 'cleared', fn ($q) => $q->havingRaw('SUM(amount) - SUM(paid_amount) <= 0'))
-            ->when($status === 'overdue', fn ($q) => $q->havingRaw("{$overdueExpr} > 0", [$asOfStr]))
-            ->when($status === 'paid', fn ($q) => $q->havingRaw('SUM(amount) - SUM(paid_amount) <= 0'));
+            ->get();
 
-        $summary = DB::query()
-            ->fromSub((clone $grouped)->toBase(), 'agg')
-            ->selectRaw('COUNT(*) as students, COALESCE(SUM(charges), 0) as charges, COALESCE(SUM(billed), 0) as billed, COALESCE(SUM(received), 0) as received, COALESCE(SUM(overdue), 0) as overdue')
-            ->first();
+        $legacy = collect();
 
-        $charges = (clone $grouped)
-            ->orderByRaw('SUM(amount) - SUM(paid_amount) DESC')
-            ->orderBy('student_id')
-            ->paginate($perPage);
+        if ($billingKind === null || $billingKind === BillingKind::LegacyInstallment->value) {
+            $legacy = FeeVoucher::query()
+                ->selectRaw(
+                    "student_id, COUNT(*) as charges, SUM(amount) as billed, SUM(paid_amount) as received, {$overdueExpr} as overdue",
+                    [$asOfStr]
+                )
+                ->where('status', '!=', VoucherStatus::Void->value)
+                ->whereNotExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('fee_charges')
+                        ->whereColumn('fee_charges.voucher_no', 'fee_vouchers.voucher_no')
+                        ->whereColumn('fee_charges.campus_id', 'fee_vouchers.campus_id')
+                        ->whereNull('fee_charges.deleted_at');
+                })
+                ->when($academicYearId !== null, fn ($q) => $q->where('academic_year_id', $academicYearId))
+                ->when($classRoomId !== null, fn ($q) => $q->whereHas('student.enrollments', fn ($e) => $e
+                    ->where('class_room_id', $classRoomId)
+                    ->when($academicYearId !== null, fn ($inner) => $inner->where('academic_year_id', $academicYearId))))
+                ->when($sectionId !== null, fn ($q) => $q->whereHas('student.enrollments', fn ($e) => $e
+                    ->where('section_id', $sectionId)
+                    ->when($academicYearId !== null, fn ($inner) => $inner->where('academic_year_id', $academicYearId))))
+                ->when($studentId !== null, fn ($q) => $q->where('student_id', $studentId))
+                ->when($dueFrom !== null, fn ($q) => $q->whereDate('due_date', '>=', $dueFrom))
+                ->when($dueTo !== null, fn ($q) => $q->whereDate('due_date', '<=', $dueTo))
+                ->tap($applyStudentSearch)
+                ->groupBy('student_id')
+                ->get();
+        }
 
-        $studentIds = collect($charges->items())->pluck('student_id')->map(fn ($id) => (int) $id);
+        $merged = [];
+
+        foreach ($charges as $row) {
+            $id = (int) $row->student_id;
+
+            $merged[$id] = [
+                'student_id' => $id,
+                'charges' => (int) $row->charges,
+                'billed' => (float) $row->billed,
+                'received' => (float) $row->received,
+                'overdue' => (float) $row->overdue,
+            ];
+        }
+
+        foreach ($legacy as $row) {
+            $id = (int) $row->student_id;
+            $current = $merged[$id] ?? [
+                'student_id' => $id,
+                'charges' => 0,
+                'billed' => 0.0,
+                'received' => 0.0,
+                'overdue' => 0.0,
+            ];
+
+            $current['charges'] += (int) $row->charges;
+            $current['billed'] += (float) $row->billed;
+            $current['received'] += (float) $row->received;
+            $current['overdue'] += (float) $row->overdue;
+
+            $merged[$id] = $current;
+        }
+
+        $rows = collect($merged);
+
+        $rows = match ($status) {
+            'outstanding' => $rows->filter(fn (array $row) => $row['billed'] - $row['received'] > 0),
+            'cleared', 'paid' => $rows->filter(fn (array $row) => $row['billed'] - $row['received'] <= 0),
+            'overdue' => $rows->filter(fn (array $row) => $row['overdue'] > 0),
+            default => $rows,
+        };
+
+        $sorted = $rows->sort(function (array $a, array $b) {
+            $comparison = ($b['billed'] - $b['received']) <=> ($a['billed'] - $a['received']);
+
+            return $comparison !== 0 ? $comparison : $a['student_id'] <=> $b['student_id'];
+        })->values();
+
+        $total = $sorted->count();
+        $lastPage = max((int) ceil($total / $perPage), 1);
+        $currentPage = min(max($request->integer('page', 1), 1), $lastPage);
+        $pageRows = $sorted->slice(($currentPage - 1) * $perPage, $perPage)->values();
+
+        $studentIds = $pageRows->pluck('student_id');
 
         $studentModels = Student::query()
             ->with(['enrollments.classRoom:id,name', 'enrollments.section:id,name'])
@@ -577,57 +661,57 @@ class FeeReportController extends Controller
             ->get()
             ->keyBy('student_id');
 
-        $rows = collect($charges->items())->map(function ($row) use ($studentModels, $receiptDates, $paymentDates, $academicYearId) {
-            $student = $studentModels->get((int) $row->student_id);
+        $data = $pageRows->map(function (array $row) use ($studentModels, $receiptDates, $paymentDates, $academicYearId) {
+            $student = $studentModels->get($row['student_id']);
             $enrollment = $this->enrollmentFor($student?->enrollments ?? collect(), $academicYearId);
 
-            $billed = round((float) $row->billed, 2);
-            $received = round((float) $row->received, 2);
+            $billed = round($row['billed'], 2);
+            $received = round($row['received'], 2);
             $receivable = max(round($billed - $received, 2), 0.0);
 
-            $receiptDate = $receiptDates->get((int) $row->student_id)?->last_payment_date;
-            $paymentDate = $paymentDates->get((int) $row->student_id)?->last_payment_date;
+            $receiptDate = $receiptDates->get($row['student_id'])?->last_payment_date;
+            $paymentDate = $paymentDates->get($row['student_id'])?->last_payment_date;
             $lastPayment = collect([$receiptDate, $paymentDate])->filter()->max();
 
             return [
-                'student_id' => (int) $row->student_id,
+                'student_id' => $row['student_id'],
                 'admission_no' => $student?->admission_no,
                 'student_name' => $student?->full_name,
                 'class_room_id' => $enrollment?->class_room_id,
                 'class' => $enrollment?->classRoom?->name,
                 'section' => $enrollment?->section?->name,
-                'charges' => (int) $row->charges,
+                'charges' => $row['charges'],
                 'billed' => $this->money($billed),
                 'received' => $this->money($received),
                 'receivable' => $this->money($receivable),
-                'overdue' => $this->money((float) $row->overdue),
+                'overdue' => $this->money(round($row['overdue'], 2)),
                 'last_payment_date' => $lastPayment,
                 'status' => $receivable > 0 ? 'outstanding' : 'cleared',
                 'status_label' => $receivable > 0 ? 'Outstanding' : 'Cleared',
             ];
         });
 
-        $billed = (float) ($summary->billed ?? 0);
-        $received = (float) ($summary->received ?? 0);
+        $billed = round((float) $sorted->sum('billed'), 2);
+        $received = round((float) $sorted->sum('received'), 2);
 
         return response()->json([
             'as_of' => $asOfStr,
             'summary' => [
-                'students' => (int) ($summary->students ?? 0),
-                'charges' => (int) ($summary->charges ?? 0),
+                'students' => $total,
+                'charges' => (int) $sorted->sum('charges'),
                 'billed' => $this->money($billed),
                 'received' => $this->money($received),
                 'receivable' => $this->money(max($billed - $received, 0)),
-                'overdue' => $this->money((float) ($summary->overdue ?? 0)),
+                'overdue' => $this->money(round((float) $sorted->sum('overdue'), 2)),
                 'collection_rate' => $billed > 0 ? round($received / $billed * 100, 2) : 0.0,
             ],
             'meta' => [
-                'current_page' => $charges->currentPage(),
-                'last_page' => $charges->lastPage(),
-                'per_page' => $charges->perPage(),
-                'total' => $charges->total(),
+                'current_page' => $currentPage,
+                'last_page' => $lastPage,
+                'per_page' => $perPage,
+                'total' => $total,
             ],
-            'data' => $rows,
+            'data' => $data,
         ]);
     }
 

@@ -7,6 +7,7 @@ import {
   useAcademicYears,
   useClassRooms,
   useSections,
+  useStudents,
 } from "@/lib/useLookups";
 import { useJson } from "@/lib/useJson";
 import { useAuth } from "@/lib/auth";
@@ -26,6 +27,14 @@ import {
 } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/format";
 import type { StudentFeeReport } from "@/lib/types";
+
+const BILLING_KINDS = [
+  { value: "monthly", label: "Monthly Fee" },
+  { value: "exam", label: "Examination Fee" },
+  { value: "one_time", label: "One-time Fee" },
+  { value: "other", label: "Other Charge" },
+  { value: "legacy_installment", label: "Legacy Installment" },
+];
 
 const TABS = [
   { value: "", label: "All students" },
@@ -51,11 +60,16 @@ function StudentFeeReportView() {
   const { items: years } = useAcademicYears();
   const { items: classes } = useClassRooms();
   const { items: sections } = useSections();
+  const { items: students } = useStudents();
 
   const [academicYearId, setAcademicYearId] = useState("");
   useAcademicYearDefault(years, academicYearId, setAcademicYearId);
   const [classId, setClassId] = useState("");
   const [sectionId, setSectionId] = useState("");
+  const [studentId, setStudentId] = useState("");
+  const [billingKind, setBillingKind] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const [status, setStatus] = useState("");
   const [asOf, setAsOf] = useState(today);
   const [search, setSearch] = useState("");
@@ -66,13 +80,17 @@ function StudentFeeReportView() {
     if (academicYearId) query.set("academic_year_id", academicYearId);
     if (classId) query.set("class_room_id", classId);
     if (sectionId) query.set("section_id", sectionId);
+    if (studentId) query.set("student_id", studentId);
+    if (billingKind) query.set("billing_kind", billingKind);
+    if (from) query.set("due_from", from);
+    if (to) query.set("due_to", to);
     if (status) query.set("status", status);
     if (asOf) query.set("as_of", asOf);
     if (search.trim()) query.set("search", search.trim());
     query.set("page", String(page));
     query.set("per_page", "50");
     return query;
-  }, [academicYearId, classId, sectionId, status, asOf, search, page]);
+  }, [academicYearId, classId, sectionId, studentId, billingKind, from, to, status, asOf, search, page]);
 
   const { data: report, loading, error } = useJson<StudentFeeReport>(
     `/v1/fee-reports/students?${params.toString()}`
@@ -270,6 +288,51 @@ function StudentFeeReportView() {
                 </option>
               ))}
             </Select>
+          </Field>
+          <Field label="Student" htmlFor="sfr_student">
+            <Select
+              id="sfr_student"
+              value={studentId}
+              onChange={(event) => update(setStudentId)(event.target.value)}
+            >
+              <option value="">All students</option>
+              {students.map((student) => (
+                <option key={student.id} value={student.id}>
+                  {student.full_name}
+                  {student.admission_no ? ` (${student.admission_no})` : ""}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Fee type" htmlFor="sfr_kind">
+            <Select
+              id="sfr_kind"
+              value={billingKind}
+              onChange={(event) => update(setBillingKind)(event.target.value)}
+            >
+              <option value="">All fee types</option>
+              {BILLING_KINDS.map((kind) => (
+                <option key={kind.value} value={kind.value}>
+                  {kind.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Due from" htmlFor="sfr_from">
+            <TextInput
+              id="sfr_from"
+              type="date"
+              value={from}
+              onChange={(event) => update(setFrom)(event.target.value)}
+            />
+          </Field>
+          <Field label="Due to" htmlFor="sfr_to">
+            <TextInput
+              id="sfr_to"
+              type="date"
+              value={to}
+              onChange={(event) => update(setTo)(event.target.value)}
+            />
           </Field>
           <Field label="As of" htmlFor="sfr_as_of">
             <TextInput

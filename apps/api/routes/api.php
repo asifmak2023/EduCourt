@@ -900,6 +900,7 @@ Route::prefix('v1')->group(function () {
             Route::get('salary-structures/resolve', [SalaryStructureController::class, 'resolve'])->middleware('permission:payroll.view');
             $payroll('salary-structures', SalaryStructureController::class, 'salaryStructure');
             Route::post('salary-structures/{salaryStructure}/revise', [SalaryStructureController::class, 'revise'])->middleware('permission:payroll.edit');
+            Route::get('salary-structures/{salaryStructure}/apply-preview', [SalaryStructureController::class, 'applyPreview'])->middleware('permission:payroll.view');
             Route::post('salary-structures/{salaryStructure}/apply', [SalaryStructureController::class, 'apply'])->middleware('permission:payroll.edit');
             Route::post('staff-salaries/{staffSalary}/increment', [StaffSalaryController::class, 'increment'])->middleware('permission:payroll.edit');
             $payroll('staff-salaries', StaffSalaryController::class, 'staffSalary');

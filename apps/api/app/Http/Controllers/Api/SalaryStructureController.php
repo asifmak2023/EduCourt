@@ -11,6 +11,7 @@ use App\Models\SalaryStructure;
 use App\Models\StaffMember;
 use App\Models\StaffSalary;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -224,6 +225,64 @@ class SalaryStructureController extends Controller
     }
 
     /**
+     * Previews the impact of applying a structure without writing anything.
+     * Lets the UI warn before an accidental re-apply creates or supersedes rows.
+     */
+    public function applyPreview(Request $request, SalaryStructure $salaryStructure): JsonResponse
+    {
+        $data = $request->validate([
+            'staff_member_ids' => ['nullable', 'array'],
+            'staff_member_ids.*' => [
+                'integer',
+                Rule::exists('staff_members', 'id')
+                    ->where('campus_id', $salaryStructure->campus_id)
+                    ->whereNull('deleted_at'),
+            ],
+            'effective_from' => ['nullable', 'date'],
+        ]);
+
+        $effectiveFrom = $this->applyEffectiveFrom($salaryStructure, $data['effective_from'] ?? null);
+        $members = $this->targetMembers($salaryStructure, $data['staff_member_ids'] ?? []);
+        $memberIds = $members->pluck('id');
+
+        $alreadyFromThisStructure = StaffSalary::query()
+            ->whereIn('staff_member_id', $memberIds)
+            ->where('salary_structure_id', $salaryStructure->id)
+            ->distinct()
+            ->count('staff_member_id');
+
+        $willSupersede = StaffSalary::query()
+            ->whereIn('staff_member_id', $memberIds)
+            ->where('effective_from', '<', $effectiveFrom)
+            ->where(fn ($q) => $q->whereNull('effective_to')->orWhereDate('effective_to', '>=', $effectiveFrom))
+            ->distinct()
+            ->count('staff_member_id');
+
+        $alreadyOnThisDate = StaffSalary::query()
+            ->whereIn('staff_member_id', $memberIds)
+            ->whereDate('effective_from', $effectiveFrom)
+            ->count();
+
+        return response()->json([
+            'data' => [
+                'effective_from' => $effectiveFrom,
+                'matched_staff' => $memberIds->count(),
+                'already_from_this_structure' => $alreadyFromThisStructure,
+                'will_supersede' => $willSupersede,
+                'already_on_this_date' => $alreadyOnThisDate,
+                'requires_confirmation' => $willSupersede > 0 || $alreadyFromThisStructure > 0,
+                'basic_salary' => $salaryStructure->basic_salary,
+                'currency' => $salaryStructure->currency,
+                'staff' => $members->take(50)->map(fn (StaffMember $member) => [
+                    'id' => $member->id,
+                    'full_name' => $member->full_name,
+                    'employee_no' => $member->employee_no,
+                ])->values(),
+            ],
+        ]);
+    }
+
+    /**
      * Copies the structure into effective-dated staff salaries. When no staff
      * ids are supplied, every employed staff member holding the structure's
      * designation is included.
@@ -241,19 +300,9 @@ class SalaryStructureController extends Controller
             'effective_from' => ['nullable', 'date'],
         ]);
 
-        $effectiveFrom = $data['effective_from']
-            ?? $salaryStructure->effective_from?->toDateString()
-            ?? now()->toDateString();
+        $effectiveFrom = $this->applyEffectiveFrom($salaryStructure, $data['effective_from'] ?? null);
 
-        $members = StaffMember::query()
-            ->where('campus_id', $salaryStructure->campus_id)
-            ->when(
-                ! empty($data['staff_member_ids']),
-                fn ($q) => $q->whereIn('id', $data['staff_member_ids']),
-                fn ($q) => $q->where('designation_id', $salaryStructure->designation_id)
-                    ->whereIn('status', $this->employedStatuses())
-            )
-            ->get();
+        $members = $this->targetMembers($salaryStructure, $data['staff_member_ids'] ?? []);
 
         if ($members->isEmpty()) {
             throw ValidationException::withMessages([
@@ -336,6 +385,31 @@ class SalaryStructureController extends Controller
                 'structure' => ['This version has been superseded. Edit the current version instead.'],
             ]);
         }
+    }
+
+    private function applyEffectiveFrom(SalaryStructure $structure, ?string $effectiveFrom): string
+    {
+        return $effectiveFrom
+            ?? $structure->effective_from?->toDateString()
+            ?? now()->toDateString();
+    }
+
+    /**
+     * @param  array<int, int>  $staffMemberIds
+     * @return Collection<int, StaffMember>
+     */
+    private function targetMembers(SalaryStructure $structure, array $staffMemberIds): Collection
+    {
+        return StaffMember::query()
+            ->where('campus_id', $structure->campus_id)
+            ->when(
+                ! empty($staffMemberIds),
+                fn ($q) => $q->whereIn('id', $staffMemberIds),
+                fn ($q) => $q->where('designation_id', $structure->designation_id)
+                    ->whereIn('status', $this->employedStatuses())
+            )
+            ->orderBy('first_name')
+            ->get();
     }
 
     /**

@@ -1888,6 +1888,22 @@ export interface SalaryStructure {
   created_at?: string | null;
 }
 
+export interface SalaryStructureApplyPreview {
+  effective_from: string;
+  matched_staff: number;
+  already_from_this_structure: number;
+  will_supersede: number;
+  already_on_this_date: number;
+  requires_confirmation: boolean;
+  basic_salary: string;
+  currency: string;
+  staff: {
+    id: number;
+    full_name: string;
+    employee_no: string | null;
+  }[];
+}
+
 export interface PayrollAdjustment {
   id: number;
   campus_id?: number;

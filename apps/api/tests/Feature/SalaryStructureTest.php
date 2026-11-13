@@ -218,6 +218,47 @@ class SalaryStructureTest extends TestCase
             ->assertJsonPath('data.0.id', $this->designation->id);
     }
 
+    public function test_apply_preview_reports_impact_without_writing(): void
+    {
+        $staff = $this->staff('EMP-0001', $this->designation);
+        $structure = $this->structure();
+
+        $preview = $this->as($this->finance)
+            ->getJson("/api/v1/salary-structures/{$structure->id}/apply-preview?effective_from=2026-11-02")
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame(1, $preview['matched_staff']);
+        $this->assertSame(0, $preview['already_from_this_structure']);
+        $this->assertSame(0, $preview['will_supersede']);
+        $this->assertFalse($preview['requires_confirmation']);
+        $this->assertSame($staff->id, $preview['staff'][0]['id']);
+        $this->assertSame(0, StaffSalary::query()->count());
+    }
+
+    public function test_apply_preview_flags_reapply_and_superseded_rows(): void
+    {
+        $staff = $this->staff('EMP-0001', $this->designation);
+        $structure = $this->structure();
+
+        $this->as($this->finance)
+            ->postJson("/api/v1/salary-structures/{$structure->id}/apply", [
+                'effective_from' => '2026-11-01',
+            ])
+            ->assertOk();
+
+        $preview = $this->as($this->finance)
+            ->getJson("/api/v1/salary-structures/{$structure->id}/apply-preview?effective_from=2026-11-02")
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame(1, $preview['matched_staff']);
+        $this->assertSame(1, $preview['already_from_this_structure']);
+        $this->assertSame(1, $preview['will_supersede']);
+        $this->assertTrue($preview['requires_confirmation']);
+        $this->assertSame(1, StaffSalary::query()->where('staff_member_id', $staff->id)->count());
+    }
+
     public function test_reapplying_with_a_later_date_closes_the_previous_row(): void
     {
         $staff = $this->staff('EMP-0001', $this->designation);

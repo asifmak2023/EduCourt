@@ -8,7 +8,7 @@ import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
-import { Button, Field, Select, TextInput, buttonClasses } from "@/components/Form";
+import { Button, Checkbox, Field, Select, TextInput, buttonClasses } from "@/components/Form";
 import { SALARY_INCREMENT_TYPE_OPTIONS } from "@/lib/payrollOptions";
 import {
   Badge,
@@ -22,7 +22,11 @@ import {
   SuccessNotice,
 } from "@/components/ui";
 import { formatCurrency } from "@/lib/format";
-import type { SalaryStructure, StaffSalary } from "@/lib/types";
+import type {
+  SalaryStructure,
+  SalaryStructureApplyPreview,
+  StaffSalary,
+} from "@/lib/types";
 
 export default function SalaryStructureDetailPage() {
   return (
@@ -450,9 +454,22 @@ function VersionHistory({
 
 function ApplyCard({ id }: { id: number }) {
   const [effectiveFrom, setEffectiveFrom] = useState("");
+  const [acknowledged, setAcknowledged] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  const previewPath = `/v1/salary-structures/${id}/apply-preview${
+    effectiveFrom ? `?effective_from=${effectiveFrom}` : ""
+  }`;
+  const {
+    data: preview,
+    loading: previewLoading,
+    error: previewError,
+    reload: reloadPreview,
+  } = useResource<SalaryStructureApplyPreview>(previewPath);
+
+  const needsConfirmation = Boolean(preview?.requires_confirmation);
 
   const apply = async () => {
     setBusy(true);
@@ -470,6 +487,8 @@ function ApplyCard({ id }: { id: number }) {
       setMessage(
         `Applied to ${response.data.staff_count} staff member(s).`
       );
+      setAcknowledged(false);
+      reloadPreview();
     } catch (err: unknown) {
       setError(err instanceof ApiError ? err.message : "Unable to apply.");
     } finally {
@@ -486,8 +505,8 @@ function ApplyCard({ id }: { id: number }) {
           </h2>
           <p className="mt-0.5 text-xs text-muted">
             Copies the basic salary and component lines into each staff member
-            with this designation. Existing salaries for the same effective date
-            are replaced.
+            with this designation. An earlier salary row is closed the day
+            before the new effective date.
           </p>
         </div>
         <div className="flex items-end gap-2">
@@ -496,14 +515,92 @@ function ApplyCard({ id }: { id: number }) {
               id="apply_from"
               type="date"
               value={effectiveFrom}
-              onChange={(event) => setEffectiveFrom(event.target.value)}
+              onChange={(event) => {
+                setEffectiveFrom(event.target.value);
+                setAcknowledged(false);
+                setMessage(null);
+              }}
             />
           </Field>
-          <Button type="button" loading={busy} onClick={() => void apply()}>
+          <Button
+            type="button"
+            loading={busy}
+            disabled={
+              previewLoading ||
+              !preview ||
+              preview.matched_staff === 0 ||
+              (needsConfirmation && !acknowledged)
+            }
+            onClick={() => void apply()}
+          >
             Apply
           </Button>
         </div>
       </div>
+
+      {previewError ? (
+        <div className="mt-4">
+          <ErrorNotice message={previewError} />
+        </div>
+      ) : null}
+
+      {preview && !previewError ? (
+        <div className="mt-4 space-y-2 rounded-lg border border-border-secondary bg-surface-secondary/40 p-4 text-sm">
+          <p className="text-foreground">
+            Will apply <strong>{preview.matched_staff}</strong> staff member(s)
+            effective <strong>{preview.effective_from}</strong> at{" "}
+            <strong>
+              {formatCurrency(Number(preview.basic_salary))} {preview.currency}
+            </strong>
+            .
+          </p>
+          {preview.matched_staff === 0 ? (
+            <p className="text-muted">
+              No staff members currently hold this designation, so nothing can
+              be applied yet.
+            </p>
+          ) : null}
+          {preview.already_from_this_structure > 0 ? (
+            <p className="text-muted">
+              {preview.already_from_this_structure} staff member(s) already have
+              a salary from this structure.
+            </p>
+          ) : null}
+          {preview.already_on_this_date > 0 ? (
+            <p className="text-muted">
+              {preview.already_on_this_date} salary row(s) already start on this
+              date and will be replaced.
+            </p>
+          ) : null}
+          {preview.will_supersede > 0 ? (
+            <p className="text-muted">
+              {preview.will_supersede} earlier salary row(s) will be closed the
+              day before this date.
+            </p>
+          ) : null}
+          {preview.staff.length > 0 ? (
+            <p className="text-muted">
+              Staff:{" "}
+              {preview.staff
+                .map((member) => member.full_name)
+                .join(", ")}
+              {preview.matched_staff > preview.staff.length
+                ? ` and ${preview.matched_staff - preview.staff.length} more`
+                : ""}
+            </p>
+          ) : null}
+          {needsConfirmation ? (
+            <div className="pt-2">
+              <Checkbox
+                label="I understand this will update or close existing salary rows."
+                checked={acknowledged}
+                onChange={(event) => setAcknowledged(event.target.checked)}
+              />
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       {message ? (
         <div className="mt-4">
           <SuccessNotice message={message} />

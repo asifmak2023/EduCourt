@@ -960,7 +960,7 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
 
             {/* Amber capsule: the one warm surface on the page. */}
             {canFinance ? (
-              <div className={`lw-amber relative overflow-hidden rounded-3xl p-5 ${analyticsSpan}`}>
+              <div className={`lw-amber relative flex h-full flex-col overflow-hidden rounded-3xl p-5 ${analyticsSpan}`}>
                 <div
                   aria-hidden="true"
                   className="pointer-events-none absolute -right-8 -bottom-10 h-32 w-32 rounded-full bg-white/25 blur-2xl"
@@ -985,7 +985,7 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
                     size={64}
                   />
                 </div>
-                <div className="relative mt-4">
+                <div className="relative mt-4 flex min-h-[92px] flex-1 flex-col">
                   <FeeRecoveryChart data={collections} />
                 </div>
                 <div className="relative mt-3 grid grid-cols-2 gap-2">
@@ -1108,7 +1108,7 @@ function FeeRecoveryChart({
 
   return (
     <div
-      className="flex h-[92px] w-full items-end justify-between gap-2"
+      className="flex h-full min-h-[92px] w-full items-end justify-between gap-2"
       role="img"
       aria-label="Fee collection by month"
     >
@@ -1124,13 +1124,12 @@ function FeeRecoveryChart({
             className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5"
             title={`${point.label}: ${formatCurrency(point.value)}`}
           >
-            <div className="flex w-full flex-col-reverse items-center gap-[3px]">
+            <div className="flex w-full flex-1 flex-col-reverse items-center justify-end gap-[3px]">
               {Array.from({ length: segments }).map((_, segment) => (
                 <span
                   key={segment}
-                  className="w-full max-w-[14px] rounded-full"
+                  className="w-full max-w-[14px] flex-1 rounded-full"
                   style={{
-                    height: 6,
                     backgroundColor:
                       segment < lit ? "#11141f" : "rgb(17 20 31 / 0.15)",
                   }}

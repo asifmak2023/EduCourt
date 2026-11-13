@@ -104,6 +104,7 @@ All routes sit in the payroll block and are guarded by `payroll.*`:
 | PUT | `/v1/salary-structures/{id}` | `payroll.edit` |
 | DELETE | `/v1/salary-structures/{id}` | `payroll.delete` |
 | POST | `/v1/salary-structures/{id}/revise` | `payroll.edit` |
+| GET | `/v1/salary-structures/{id}/apply-preview` | `payroll.view` |
 | POST | `/v1/salary-structures/{id}/apply` | `payroll.edit` |
 | POST | `/v1/staff-salaries/{id}/increment` | `payroll.edit` |
 
@@ -114,6 +115,11 @@ versions.
 `revise` body: `increment_type` (`percent`/`fixed`), `increment_value`, or an
 explicit `basic_salary`; optional `effective_from`, `effective_to`, `notes`,
 `items`, `currency`, `is_active`. Returns `201` with the new version.
+
+`apply-preview` query: `effective_from?` and optional `staff_member_ids[]`.
+Response: `{ data: { effective_from, matched_staff, already_from_this_structure,
+will_supersede, already_on_this_date, requires_confirmation, basic_salary,
+currency, staff: [{ id, full_name, employee_no }] } }` (staff capped at 50).
 
 `apply` body: `staff_member_ids?` (array), `effective_from?` (date; defaults to
 the structure's `effective_from`, else today). Response:

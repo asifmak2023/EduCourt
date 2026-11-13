@@ -100,6 +100,7 @@ function BulkDialogFrame({
   );
   const [month, setMonth] = useState(currentMonthValue());
   const [dueDate, setDueDate] = useState("");
+  const [lateFee, setLateFee] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BulkResult | null>(null);
@@ -200,6 +201,7 @@ function BulkDialogFrame({
           period_year: Number(yearPart),
           period_month: Number(monthPart),
           due_date: dueDate || null,
+          late_fee_amount: Number(lateFee) || 0,
         },
       });
 
@@ -409,6 +411,21 @@ function BulkDialogFrame({
                 type="date"
                 value={dueDate}
                 onChange={(event) => setDueDate(event.target.value)}
+              />
+            </Field>
+            <Field
+              label="Late fee"
+              htmlFor="bulk_late_fee"
+              hint="Optional. Added to every voucher as a late fee charge."
+            >
+              <TextInput
+                id="bulk_late_fee"
+                type="number"
+                min={0}
+                step="0.01"
+                value={lateFee}
+                onChange={(event) => setLateFee(event.target.value)}
+                placeholder="0.00"
               />
             </Field>
           </div>

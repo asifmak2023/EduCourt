@@ -8,6 +8,7 @@ enum BillingKind: string
     case Exam = 'exam';
     case OneTime = 'one_time';
     case Other = 'other';
+    case LateFee = 'late_fee';
     case LegacyInstallment = 'legacy_installment';
 
     public function label(): string
@@ -17,6 +18,7 @@ enum BillingKind: string
             self::Exam => 'Examination Fee',
             self::OneTime => 'One-time Fee',
             self::Other => 'Other Charge',
+            self::LateFee => 'Late Fee',
             self::LegacyInstallment => 'Legacy Installment',
         };
     }

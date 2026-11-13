@@ -67,6 +67,7 @@ class FeeCounterController extends Controller
             'period_year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'period_month' => ['required', 'integer', 'between:1,12'],
             'due_date' => ['nullable', 'date'],
+            'late_fee_amount' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $summary = $this->counter->generateMonthlyBulk(
@@ -77,6 +78,7 @@ class FeeCounterController extends Controller
             (int) $data['period_month'],
             $data['due_date'] ?? null,
             $request->user()->id,
+            isset($data['late_fee_amount']) ? (float) $data['late_fee_amount'] : null,
         );
 
         return response()->json([
@@ -111,7 +113,7 @@ class FeeCounterController extends Controller
             'discount_amount' => ['sometimes', 'numeric', 'min:0'],
             'discount_note' => ['nullable', 'string', 'max:500'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.billing_kind' => ['required', Rule::in(['monthly', 'exam', 'one_time', 'other'])],
+            'items.*.billing_kind' => ['required', Rule::in(['monthly', 'exam', 'one_time', 'other', 'late_fee'])],
             'items.*.period_year' => ['nullable', 'integer', 'min:2000', 'max:2100'],
             'items.*.period_month' => ['nullable', 'integer', 'between:1,12'],
             'items.*.exam_term' => ['nullable', Rule::in(['first', 'second', 'third', 'final', 'monthly_test'])],

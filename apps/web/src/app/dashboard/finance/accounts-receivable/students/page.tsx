@@ -33,6 +33,7 @@ const BILLING_KINDS = [
   { value: "exam", label: "Examination Fee" },
   { value: "one_time", label: "One-time Fee" },
   { value: "other", label: "Other Charge" },
+  { value: "late_fee", label: "Late Fee" },
   { value: "legacy_installment", label: "Legacy Installment" },
 ];
 

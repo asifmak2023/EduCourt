@@ -226,6 +226,7 @@ class FeeCounterService
         int $periodMonth,
         ?string $dueDate,
         int $userId,
+        ?float $lateFeeAmount = null,
     ): array {
         $enrollments = StudentEnrollment::query()
             ->with(['student', 'classRoom:id,name', 'section:id,name'])
@@ -297,10 +298,30 @@ class FeeCounterService
                     ])->all(),
                 ];
 
-                $result = $this->generate($student, ['academic_year_id' => $academicYearId], [$item], null, $userId);
-                $charge = collect($result['charges'])->first();
+                $items = [$item];
 
-                if ($charge !== null && $charge->wasRecentlyCreated && $charge->source !== 'legacy') {
+                if ($lateFeeAmount !== null && $lateFeeAmount > 0) {
+                    $items[] = [
+                        'billing_kind' => BillingKind::LateFee->value,
+                        'period_year' => $periodYear,
+                        'period_month' => $periodMonth,
+                        'title' => 'Late Fee',
+                        'amount' => round($lateFeeAmount, 2),
+                        'source' => 'manual',
+                        'due_date' => $dueDate ?: now()->toDateString(),
+                        'lines' => [[
+                            'description' => 'Late Fee',
+                            'amount' => round($lateFeeAmount, 2),
+                        ]],
+                    ];
+                }
+
+                $result = $this->generate($student, ['academic_year_id' => $academicYearId], $items, null, $userId);
+                $newCharges = collect($result['charges'])
+                    ->filter(fn (FeeCharge $charge) => $charge->wasRecentlyCreated && $charge->source !== 'legacy');
+                $charge = $newCharges->first() ?? collect($result['charges'])->first();
+
+                if ($newCharges->isNotEmpty()) {
                     $created++;
                     $results[] = $base + ['status' => 'created', 'voucher_no' => $charge->voucher_no, 'charge_id' => $charge->id];
                 } else {
@@ -677,7 +698,7 @@ class FeeCounterService
                 ->first();
         }
 
-        if (in_array($billingKind, [BillingKind::OneTime->value, BillingKind::Other->value], true)) {
+        if (in_array($billingKind, [BillingKind::OneTime->value, BillingKind::Other->value, BillingKind::LateFee->value], true)) {
             return $query
                 ->where('period_year', $periodYear)
                 ->where('period_month', $periodMonth)

@@ -69,6 +69,45 @@ class FeeVoucherDuplicateTest extends TestCase
         $this->assertSame(2, FeeCharge::query()->where('student_id', $this->ali->id)->count());
     }
 
+    public function test_single_generation_accepts_late_fee_and_custom_charges(): void
+    {
+        $response = $this->asAdmin()
+            ->postJson('/api/v1/fee-counter/generate', [
+                'student_id' => $this->ali->id,
+                'academic_year_id' => $this->year->id,
+                'items' => [
+                    [
+                        'billing_kind' => 'monthly',
+                        'period_year' => 2026,
+                        'period_month' => 7,
+                        'title' => 'Monthly Fee',
+                        'amount' => 12000,
+                        'due_date' => '2026-07-10',
+                    ],
+                    [
+                        'billing_kind' => 'late_fee',
+                        'title' => 'Late Fee',
+                        'amount' => 500,
+                        'due_date' => '2026-07-20',
+                    ],
+                    [
+                        'billing_kind' => 'other',
+                        'title' => 'Uniform',
+                        'amount' => 1500,
+                        'due_date' => '2026-07-20',
+                    ],
+                ],
+            ])
+            ->assertStatus(201)
+            ->json();
+
+        $this->assertSame(3, $response['created']);
+        $this->assertSame('late_fee', $response['charges'][1]['billing_kind']);
+        $this->assertSame('Late Fee', $response['charges'][1]['billing_kind_label']);
+        $this->assertSame('other', $response['charges'][2]['billing_kind']);
+        $this->assertSame(3, FeeCharge::query()->where('student_id', $this->ali->id)->count());
+    }
+
     public function test_bulk_generation_returns_existing_vouchers_without_voiding_them(): void
     {
         $payload = [
@@ -98,6 +137,34 @@ class FeeVoucherDuplicateTest extends TestCase
 
         $this->assertSame(2, FeeCharge::query()->count());
         $this->assertSame(0, FeeCharge::query()->where('status', VoucherStatus::Void->value)->count());
+    }
+
+    public function test_bulk_generation_can_add_a_late_fee_to_every_voucher(): void
+    {
+        $payload = [
+            'academic_year_id' => $this->year->id,
+            'class_room_id' => $this->classRoom->id,
+            'section_id' => $this->section->id,
+            'period_year' => 2026,
+            'period_month' => 7,
+            'late_fee_amount' => 250,
+        ];
+
+        $this->asAdmin()
+            ->postJson('/api/v1/fee-counter/generate-bulk', $payload)
+            ->assertStatus(201)
+            ->assertJsonPath('created', 2);
+
+        $this->assertSame(2, FeeCharge::query()->where('billing_kind', 'late_fee')->count());
+        $this->assertSame(500.0, (float) FeeCharge::query()->where('billing_kind', 'late_fee')->sum('amount'));
+
+        $this->asAdmin()
+            ->postJson('/api/v1/fee-counter/generate-bulk', $payload)
+            ->assertStatus(201)
+            ->assertJsonPath('created', 0)
+            ->assertJsonPath('skipped', 2);
+
+        $this->assertSame(2, FeeCharge::query()->where('billing_kind', 'late_fee')->count());
     }
 
     public function test_bulk_generation_flags_missing_monthly_structure(): void

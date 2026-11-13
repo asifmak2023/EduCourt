@@ -310,6 +310,7 @@ export type BillingKind =
   | "exam"
   | "one_time"
   | "other"
+  | "late_fee"
   | "legacy_installment";
 
 export type ExamTerm = "first" | "second" | "third" | "final" | "monthly_test";

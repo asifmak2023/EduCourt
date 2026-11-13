@@ -157,6 +157,7 @@ export function FeeVoucherGenerator({
   const [examItemId, setExamItemId] = useState("");
   const [otherTitle, setOtherTitle] = useState("");
   const [otherAmount, setOtherAmount] = useState("");
+  const [lateFeeAmount, setLateFeeAmount] = useState("");
   const [dueDate, setDueDate] = useState(todayIso());
 
   const [cart, setCart] = useState<VoucherItem[]>([]);
@@ -216,7 +217,8 @@ export function FeeVoucherGenerator({
 
   const subtotal = cart.reduce((sum, item) => sum + item.amount, 0);
   const discountValue = Number(discount) || 0;
-  const netTotal = Math.max(subtotal - discountValue, 0);
+  const lateFeeValue = Number(lateFeeAmount) || 0;
+  const netTotal = Math.max(subtotal + lateFeeValue - discountValue, 0);
 
   const resetEntry = () => {
     setMonthKey(currentMonthValue());
@@ -224,6 +226,7 @@ export function FeeVoucherGenerator({
     setExamItemId("");
     setOtherTitle("");
     setOtherAmount("");
+    setLateFeeAmount("");
   };
 
   const selectStudent = (student: CounterStudent) => {
@@ -348,12 +351,12 @@ export function FeeVoucherGenerator({
       return;
     }
 
-    if (cart.length === 0) {
+    if (cart.length === 0 && lateFeeValue <= 0) {
       setError("Add at least one charge to the voucher.");
       return;
     }
 
-    if (discountValue > subtotal) {
+    if (discountValue > subtotal + lateFeeValue) {
       setError("Discount cannot exceed the total amount.");
       return;
     }
@@ -364,11 +367,7 @@ export function FeeVoucherGenerator({
     setError(null);
 
     try {
-      const body: Record<string, unknown> = {
-        student_id: selected.id,
-        academic_year_id: dues.student.academic_year_id,
-        discount_amount: discountValue,
-        items: cart.map((item) => ({
+      const items = cart.map((item) => ({
           billing_kind: item.billing_kind,
           period_year: item.period_year ?? null,
           period_month: item.period_month ?? null,
@@ -380,7 +379,29 @@ export function FeeVoucherGenerator({
           due_date: dueDate || null,
           source: item.source,
           lines: item.lines,
-        })),
+        }));
+
+      if (lateFeeValue > 0) {
+        items.push({
+          billing_kind: "late_fee",
+          period_year: null,
+          period_month: null,
+          exam_term: null,
+          title: "Late Fee",
+          fee_head_id: null,
+          fee_structure_item_id: null,
+          amount: lateFeeValue,
+          due_date: dueDate || null,
+          source: "manual",
+          lines: [{ description: "Late Fee", amount: lateFeeValue }],
+        });
+      }
+
+      const body: Record<string, unknown> = {
+        student_id: selected.id,
+        academic_year_id: dues.student.academic_year_id,
+        discount_amount: discountValue,
+        items,
       };
 
       if (discountNote) {
@@ -405,6 +426,7 @@ export function FeeVoucherGenerator({
       setCart([]);
       setDiscount("");
       setDiscountNote("");
+      setLateFeeAmount("");
       setPayAmount("");
       setPayReference("");
       reloadDues();
@@ -871,7 +893,18 @@ export function FeeVoucherGenerator({
                     </p>
                   )}
 
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <Field label="Late fee" htmlFor="cv_late_fee">
+                      <TextInput
+                        id="cv_late_fee"
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={lateFeeAmount}
+                        onChange={(event) => setLateFeeAmount(event.target.value)}
+                        placeholder="0.00"
+                      />
+                    </Field>
                     <Field label="Discount" htmlFor="cv_discount">
                       <TextInput
                         id="cv_discount"
@@ -892,7 +925,10 @@ export function FeeVoucherGenerator({
                   </div>
 
                   <div className="flex items-center justify-between rounded-xl bg-[var(--surface-secondary)] px-4 py-3 text-sm">
-                    <span className="text-muted">Voucher total</span>
+                    <span className="text-muted">
+                      Voucher total
+                      {lateFeeValue > 0 ? ` (incl. ${formatCurrency(lateFeeValue)} late fee)` : ""}
+                    </span>
                     <span className="text-lg font-semibold text-foreground">
                       {formatCurrency(netTotal)}
                     </span>
@@ -953,15 +989,16 @@ export function FeeVoucherGenerator({
                         setCart([]);
                         setDiscount("");
                         setDiscountNote("");
+                        setLateFeeAmount("");
                       }}
-                      disabled={!cart.length}
+                      disabled={!cart.length && lateFeeValue <= 0}
                     >
                       Clear
                     </Button>
                     <Button
                       type="button"
                       loading={busy}
-                      disabled={!cart.length}
+                      disabled={!cart.length && lateFeeValue <= 0}
                       onClick={() => void generate()}
                     >
                       Generate voucher

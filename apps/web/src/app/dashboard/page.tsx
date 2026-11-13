@@ -753,6 +753,14 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
   const canPayroll = can("report.payroll");
   const canCampus = can("report.campus");
 
+  const analyticsCards = (canFinance ? 2 : 0) + (canStudents ? 1 : 0);
+  const analyticsSpan =
+    analyticsCards >= 3
+      ? "xl:col-span-4"
+      : analyticsCards === 2
+        ? "xl:col-span-6"
+        : "xl:col-span-12";
+
   const students = dashboard.students_by_gender ?? [];
   const girls = students.find((item) => item.gender === "female")?.total ?? 0;
   const boys = students.find((item) => item.gender === "male")?.total ?? 0;
@@ -867,7 +875,7 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
             <ChartCard
               title="dashboard.feeCollectionTrend"
               description="dashboard.collectionTrendHint"
-              className="xl:col-span-8"
+              className={`h-full ${analyticsSpan}`}
               action={
                 <Link
                   href="/dashboard/reports/financial"
@@ -924,12 +932,9 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
             </ChartCard>
           ) : null}
 
-          <div
-            className={`flex flex-col gap-3 ${canFinance ? "xl:col-span-4" : "xl:col-span-12"}`}
-          >
-            {canStudents ? (
+          {canStudents ? (
               <TelemetryTile
-                className="flex-1"
+                className={`h-full ${analyticsSpan}`}
                 title={t("dashboard.admissionsPipeline")}
                 value={formatNumber(admissionTotal)}
                 caption={t("dashboard.totalAdmissions")}
@@ -955,7 +960,7 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
 
             {/* Amber capsule: the one warm surface on the page. */}
             {canFinance ? (
-              <div className="lw-amber relative overflow-hidden rounded-3xl p-5">
+              <div className={`lw-amber relative overflow-hidden rounded-3xl p-5 ${analyticsSpan}`}>
                 <div
                   aria-hidden="true"
                   className="pointer-events-none absolute -right-8 -bottom-10 h-32 w-32 rounded-full bg-white/25 blur-2xl"
@@ -1003,7 +1008,6 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
                 </div>
               </div>
             ) : null}
-          </div>
         </section>
       ) : null}
 

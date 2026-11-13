@@ -138,6 +138,7 @@ export const ROUTE_PATHS: readonly string[] = [
   "/dashboard/finance/accounts-receivable/receipts",
   "/dashboard/finance/accounts-receivable/receipts/_",
   "/dashboard/finance/accounts-receivable/reports",
+  "/dashboard/finance/accounts-receivable/students",
   "/dashboard/finance/accounts-receivable/vouchers/_",
   "/dashboard/finance/accounts-receivable/vouchers/bulk-print",
   "/dashboard/finance/accounts/_",

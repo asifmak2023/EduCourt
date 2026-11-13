@@ -989,6 +989,14 @@ function CampusView({ dashboard }: { dashboard: CampusDashboard }) {
                     value={formatCurrency(outstandingFees)}
                   />
                 </div>
+                <div className="relative mt-3 flex justify-end text-[11px]">
+                  <Link
+                    href="/dashboard/finance/accounts-receivable/students"
+                    className="font-semibold text-amber-foreground hover:underline"
+                  >
+                    {t("common.manage")}
+                  </Link>
+                </div>
               </div>
             ) : null}
           </div>

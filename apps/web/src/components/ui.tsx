@@ -108,6 +108,8 @@ const BADGE_COLORS: Record<string, BadgeColor> = {
   overdue: "danger",
   current: "accent",
   superseded: "warning",
+  cleared: "success",
+  outstanding: "warning",
   default: "default",
 };
 

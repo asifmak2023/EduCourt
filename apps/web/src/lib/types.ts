@@ -534,6 +534,43 @@ export interface ArReport {
   data: ArChargeRow[];
 }
 
+export interface StudentFeeRow {
+  student_id: number;
+  admission_no: string | null;
+  student_name: string | null;
+  class_room_id: number | null;
+  class: string | null;
+  section: string | null;
+  charges: number;
+  billed: string;
+  received: string;
+  receivable: string;
+  overdue: string;
+  last_payment_date: string | null;
+  status: "outstanding" | "cleared";
+  status_label: string;
+}
+
+export interface StudentFeeReport {
+  as_of: string;
+  summary: {
+    students: number;
+    charges: number;
+    billed: string;
+    received: string;
+    receivable: string;
+    overdue: string;
+    collection_rate: number;
+  };
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+  data: StudentFeeRow[];
+}
+
 export interface ArSummary {
   as_of: string;
   totals: {

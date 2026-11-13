@@ -739,6 +739,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('fee-reminders/{reminder}', [FeeReminderController::class, 'destroy'])->middleware('permission:reminder.delete');
 
             Route::get('fee-reports/defaulters', [FeeReportController::class, 'defaulters'])->middleware('permission:fee.view|finance.view');
+            Route::get('fee-reports/students', [FeeReportController::class, 'students'])->middleware('permission:fee.view|finance.view');
             Route::get('fee-reports/students/{student}/statement', [FeeReportController::class, 'studentStatement'])->middleware('permission:fee.view|finance.view');
             Route::get('fee-reports/classes/summary', [FeeReportController::class, 'classSummary'])->middleware('permission:fee.view|finance.view');
             Route::get('fee-reports/collection', [FeeReportController::class, 'collection'])->middleware('permission:fee.view|finance.view');

@@ -259,6 +259,27 @@ Overdue Amount; each links to the relevant report.
 APIs: extend `FeeReportController` with `ar` (paginated, filters, totals) and
 `ar-summary`.
 
+**Student-wise fee report** (`.../accounts-receivable/students`) — one row per
+student with the accrued totals for the filtered set. Filters: academic year,
+class, section, student search, as-of date and status tabs (All / Outstanding /
+Overdue / Cleared). Columns: Student, Class, Section, Charges, Billed,
+Received, Receivable, Overdue, Last payment, Status. Header stats and the
+table footer show the sums for **all students matching the filters**, not just
+the current page, and CSV/print export the same rows plus a total line.
+
+Definitions (per student, non-void charges only):
+
+- Billed = sum of `fee_charges.amount` (already net of charge-level discounts).
+- Received = sum of `fee_charges.paid_amount`.
+- Receivable = max(Billed - Received, 0).
+- Overdue = Receivable on charges whose `due_date` is before the as-of date.
+- Collection rate = Received ÷ Billed.
+
+API: `GET /v1/fee-reports/students` (paginated; `academic_year_id`,
+`class_room_id`, `section_id`, `student_id`, `billing_kind`, `due_from`,
+`due_to`, `search`, `status`, `as_of`, `page`, `per_page`; returns `summary`,
+`meta`, `data`). The dashboard Fee Recovery card links here via Manage.
+
 ### 2.9 Permissions
 
 Reuse `fee.view` (read/search/reports), `fee.create`

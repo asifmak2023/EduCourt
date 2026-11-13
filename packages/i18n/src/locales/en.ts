@@ -162,6 +162,7 @@ export const en = {
   "navigation.accountsReceivable": "Accounts receivable",
   "navigation.accountsPayable": "Accounts payable",
   "navigation.arReports": "AR reports",
+  "navigation.studentFeeReport": "Student fee report",
   "navigation.chartOfAccounts": "Chart of accounts",
   "navigation.journal": "Journal",
   "navigation.trialBalance": "Trial balance",

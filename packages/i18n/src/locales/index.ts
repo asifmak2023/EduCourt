@@ -176,6 +176,7 @@ export type MessageKey =
   | "navigation.accountsReceivable"
   | "navigation.accountsPayable"
   | "navigation.arReports"
+  | "navigation.studentFeeReport"
   | "navigation.chartOfAccounts"
   | "navigation.journal"
   | "navigation.trialBalance"

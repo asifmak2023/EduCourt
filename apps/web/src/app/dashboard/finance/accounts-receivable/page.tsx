@@ -57,6 +57,12 @@ function AccountsReceivableOverview() {
               Reports
             </Link>
             <Link
+              href="/dashboard/finance/accounts-receivable/students"
+              className={buttonClasses("secondary")}
+            >
+              Student report
+            </Link>
+            <Link
               href="/dashboard/finance/accounts-receivable/generate-voucher"
               className={buttonClasses()}
             >

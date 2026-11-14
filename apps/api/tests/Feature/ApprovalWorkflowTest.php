@@ -12,6 +12,7 @@ use App\Models\Institution;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Services\Accounting\DefaultChartOfAccounts;
+use Database\Seeders\ExpenseApprovalHierarchySeeder;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
@@ -145,6 +146,37 @@ class ApprovalWorkflowTest extends TestCase
         $this->as($this->admin)->postJson("/api/v1/expenses/{$expenseId}/approve")
             ->assertStatus(422)
             ->assertJsonValidationErrors('approval');
+    }
+
+    public function test_expense_approval_hierarchy_routes_by_amount_and_role(): void
+    {
+        $this->seed(ExpenseApprovalHierarchySeeder::class);
+
+        $accountant = $this->actor(RoleName::Accountant);
+        $institutionHead = $this->actor(RoleName::InstitutionHead);
+
+        $tiers = [
+            [500, $accountant],
+            [5000, $this->financeHead],
+            [150000, $institutionHead],
+        ];
+
+        foreach ($tiers as [$amount, $approver]) {
+            $expenseId = $this->expense($amount);
+
+            $requestId = $this->as($this->admin)->postJson('/api/v1/approvals', [
+                'entity_type' => 'expense',
+                'entity_id' => $expenseId,
+            ])->assertStatus(201)->json('data.id');
+
+            $this->as($approver)->postJson("/api/v1/approvals/{$requestId}/approve")
+                ->assertOk()
+                ->assertJsonPath('data.status', 'approved');
+
+            $this->as($this->admin)->postJson("/api/v1/expenses/{$expenseId}/approve")
+                ->assertOk()
+                ->assertJsonPath('data.status', 'approved');
+        }
     }
 
     private function workflow(float $minAmount): int

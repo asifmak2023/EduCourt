@@ -124,7 +124,7 @@ return [
             'timetable.view',
             'scholarship.view',
             'curriculum.view',
-            'finance.view', 'finance.export',
+            'finance.view', 'finance.export', 'finance.approve',
             'fee.view', 'fee.export',
             'concession.view',
             'fine.view',
@@ -178,7 +178,7 @@ return [
 
         RoleName::Accountant->value => [
             'academic.view', 'student.view',
-            'finance.view', 'finance.create', 'finance.edit', 'finance.export',
+            'finance.view', 'finance.create', 'finance.edit', 'finance.export', 'finance.approve',
             'fee.view', 'fee.create', 'fee.edit', 'fee.export',
             'report.finance', 'report.students', 'scholarship.view', 'concession.view',
             'fine.view', 'fine.create', 'fine.edit',

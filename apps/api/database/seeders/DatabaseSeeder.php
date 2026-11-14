@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RbacSeeder::class,
             DemoSeeder::class,
+            ExpenseApprovalHierarchySeeder::class,
         ]);
     }
 }

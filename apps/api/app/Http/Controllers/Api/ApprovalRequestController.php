@@ -33,6 +33,7 @@ class ApprovalRequestController extends Controller
 
                 return $q->where('approvable_type', (new $class)->getMorphClass());
             })
+            ->when($request->filled('entity_id'), fn ($q) => $q->where('approvable_id', $request->integer('entity_id')))
             ->orderByDesc('id')
             ->paginate($request->integer('per_page', 25));
 

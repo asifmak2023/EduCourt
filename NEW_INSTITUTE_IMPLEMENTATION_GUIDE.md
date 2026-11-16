@@ -1043,9 +1043,13 @@ Expected: three workflows, each with one step.
 
 ### 8.6 Approval workflow reality check
 
-- There is no approvals UI in the staff web application.
+- The expense detail page in the staff web app has an **Approval** panel. It
+  lists the latest request, its workflow and steps, and lets permitted users
+  submit a request, approve or reject the current step, or cancel a pending
+  request.
 - Creating an expense draft is allowed without approval.
 - Posting or approving the expense calls `ApprovalService::assertMayProceed`.
+  The post action is hidden while a request is pending or rejected.
 - If a workflow matches and no approved request exists, the API returns a
   validation error containing:
   `This operation requires approval under workflow [Expense Approval - Finance Head]. Submit an approval request first.`
@@ -1097,8 +1101,11 @@ curl -sS -X POST "$API/expenses/$EXPENSE_ID/approve" \
   -H "X-Campus-Id: $CAMPUS_ID"
 ```
 
-Until an approvals UI is added, finance staff need API access or an operations
-engineer to submit approval requests. Plan for this in the go-live runbook.
+The same sequence works from the UI: open the draft expense, use **Submit for
+approval** in the Approval panel, approve the current step as the required
+approver, then use **Approve expense** in the Actions panel to post it. The API
+sequence above remains useful for automation and for entity types that do not
+yet have a UI.
 
 ### 8.7 Opening balances
 
@@ -1883,7 +1890,7 @@ configuration mistakes.
 |---|---|---|---|
 | No campus-created provisioning event | New campus has no chart of accounts, expense workflows, or fee defaults; missing workflows silently bypass approval | Run the manual steps in sections 8.2 and 8.5 | Add an observer or provisioning command |
 | No settings API | Cannot set logo, academic metadata, or branding from the UI | Tinker or SQL | Add settings endpoints |
-| No approvals UI | Finance cannot submit or approve expense approvals from the web app | Use the API | Add approval screens |
+| Approvals UI covers expenses only | Fee refunds, other income, tax returns, payroll runs and payment vouchers still need the API | Use the API | Extend the approval panel to the other approvable screens |
 | No 2FA enrolment UI | Enforcing 2FA can lock out privileged users | Enrol through the API before enforcing | Add profile enrolment |
 | Counter fees do not post journals | Trial balance omits counter receipts | Use fee plans/vouchers or post manual journals | Add journal posting to the counter service |
 | Portal reads legacy vouchers | Counter charges are invisible to parents | Use fee plans/vouchers or update the portal query | Point the portal at `fee_charges` |

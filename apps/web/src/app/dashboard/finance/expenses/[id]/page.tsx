@@ -7,6 +7,7 @@ import { Table } from "@heroui/react";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/useResource";
 import { PermissionGate } from "@/components/PermissionGate";
+import { ApprovalPanel } from "@/components/ApprovalPanel";
 import { ApiError, apiFetch } from "@/lib/api";
 import {
   Button,
@@ -52,6 +53,7 @@ function ExpenseDetailView() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
   const { can } = useAuth();
+  const [approvalStatus, setApprovalStatus] = useState<string | null>(null);
 
   const { data, loading, error, reload } = useResource<Expense>(
     id ? `/v1/expenses/${id}` : null
@@ -246,12 +248,26 @@ function ExpenseDetailView() {
       </SectionCard>
 
       {!isVoid ? (
+        <ApprovalPanel
+          entityType="expense"
+          entityId={data.id}
+          amount={data.total}
+          canSubmit={isDraft && can("finance.create")}
+          canApprove={can("finance.approve")}
+          canCancel={can("finance.edit")}
+          onChanged={reload}
+          onStatusChange={setApprovalStatus}
+        />
+      ) : null}
+
+      {!isVoid ? (
         <ExpenseActions
           expense={data}
           canApprove={can("finance.approve")}
           canCreate={can("finance.create")}
           canDelete={can("finance.delete")}
           canPay={canPay}
+          approvalStatus={approvalStatus}
           onChanged={reload}
         />
       ) : null}
@@ -290,6 +306,7 @@ function ExpenseActions({
   canCreate,
   canDelete,
   canPay,
+  approvalStatus,
   onChanged,
 }: {
   expense: Expense;
@@ -297,6 +314,7 @@ function ExpenseActions({
   canCreate: boolean;
   canDelete: boolean;
   canPay: boolean;
+  approvalStatus: string | null;
   onChanged: () => void;
 }) {
   const router = useRouter();
@@ -351,7 +369,9 @@ function ExpenseActions({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {canApprove && isDraft ? (
+          {canApprove &&
+          isDraft &&
+          (approvalStatus === null || approvalStatus === "approved") ? (
             <Button
               type="button"
               loading={busy}

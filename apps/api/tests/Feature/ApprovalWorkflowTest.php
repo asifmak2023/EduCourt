@@ -148,6 +148,26 @@ class ApprovalWorkflowTest extends TestCase
             ->assertJsonValidationErrors('approval');
     }
 
+    public function test_approvals_can_be_filtered_by_entity(): void
+    {
+        $this->workflow(minAmount: 0);
+        $firstExpenseId = $this->expense(1000);
+        $secondExpenseId = $this->expense(2000);
+
+        foreach ([$firstExpenseId, $secondExpenseId] as $expenseId) {
+            $this->as($this->admin)->postJson('/api/v1/approvals', [
+                'entity_type' => 'expense',
+                'entity_id' => $expenseId,
+            ])->assertStatus(201);
+        }
+
+        $this->as($this->admin)
+            ->getJson("/api/v1/approvals?entity_type=expense&entity_id={$secondExpenseId}")
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.approvable_id', $secondExpenseId);
+    }
+
     public function test_expense_approval_hierarchy_routes_by_amount_and_role(): void
     {
         $this->seed(ExpenseApprovalHierarchySeeder::class);

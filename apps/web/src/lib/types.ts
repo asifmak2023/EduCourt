@@ -854,6 +854,56 @@ export interface Expense {
   payments?: ExpensePayment[];
 }
 
+export interface ApprovalWorkflowStep {
+  id: number;
+  approval_workflow_id: number;
+  sequence: number;
+  label: string;
+  required_role: string | null;
+  required_permission: string | null;
+  approver_user_id: number | null;
+}
+
+export interface ApprovalWorkflow {
+  id: number;
+  name: string;
+  code: string;
+  entity_type: string;
+  min_amount: string | null;
+  max_amount: string | null;
+  is_active: boolean;
+  description: string | null;
+  steps?: ApprovalWorkflowStep[];
+}
+
+export interface ApprovalAction {
+  id: number;
+  sequence: number;
+  user_id: number | null;
+  action: string | null;
+  comment: string | null;
+  acted_at: string | null;
+}
+
+export interface ApprovalRequest {
+  id: number;
+  institution_id: number;
+  campus_id: number;
+  approval_workflow_id: number;
+  approvable_type: string;
+  approvable_id: number;
+  amount: string;
+  requested_by: number | null;
+  decided_by: number | null;
+  status: string | null;
+  current_sequence: number | null;
+  notes: string | null;
+  decided_at: string | null;
+  workflow?: ApprovalWorkflow | null;
+  actions?: ApprovalAction[];
+  created_at: string | null;
+}
+
 export interface IncomeSource {
   id: number;
   name: string;

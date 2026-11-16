@@ -25,8 +25,9 @@ export function ReportDocument({
   title,
   subtitle,
   scope,
+  footerNote,
   children,
-}: ReportPrintMeta & { children: ReactNode }) {
+}: ReportPrintMeta & { footerNote?: string; children: ReactNode }) {
   const { user } = useAuth();
 
   const campus = (user?.campus as unknown as Campus | undefined) ?? null;
@@ -67,8 +68,8 @@ export function ReportDocument({
 
       <div className="mt-8 flex items-end justify-between border-t border-black/30 pt-3 text-[11px] text-black/60">
         <p>
-          {institution?.name ?? campus?.name ?? "EduCourt"} - confidential
-          management report
+          {footerNote ??
+            `${institution?.name ?? campus?.name ?? "EduCourt"} - confidential management report`}
         </p>
         <p>{title}</p>
       </div>

@@ -7,7 +7,8 @@ import { Table } from "@heroui/react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useClassRooms, useExams } from "@/lib/useLookups";
 import { PermissionGate } from "@/components/PermissionGate";
-import { Field, Select, buttonClasses } from "@/components/Form";
+import { Button, Field, Select, buttonClasses } from "@/components/Form";
+import { ResultCardDocument } from "@/components/ResultCardDocument";
 import {
   Badge,
   Card,
@@ -119,19 +120,36 @@ function ResultCardView() {
 
   useEffect(() => loadCard(), [loadCard]);
 
+  const selectedExam = exams.find((exam) => String(exam.id) === examId) ?? null;
+  const selectedClass = classes.find((room) => String(room.id) === classId) ?? null;
+  const selectedStudent =
+    students.find((student) => String(student.id) === studentId) ?? null;
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Result card"
-        description="Per-student subject breakdown with grade."
-        actions={
-          <Link href="/dashboard/exams" className={buttonClasses("secondary")}>
-            Back
-          </Link>
-        }
-      />
+      <div className="print:hidden">
+        <PageHeader
+          title="Result card"
+          description="Per-student subject breakdown with grade."
+          actions={
+            <>
+              {card ? (
+                <Button type="button" onClick={() => window.print()}>
+                  Print / Save PDF
+                </Button>
+              ) : null}
+              <Link
+                href="/dashboard/exams"
+                className={buttonClasses("secondary")}
+              >
+                Back
+              </Link>
+            </>
+          }
+        />
+      </div>
 
-      <Card className="p-5">
+      <Card className="p-5 print:hidden">
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Exam" htmlFor="rc_exam" required>
             <Select
@@ -188,18 +206,22 @@ function ResultCardView() {
         </div>
       </Card>
 
-      {error ? <ErrorNotice message={error} /> : null}
+      {error ? (
+        <div className="print:hidden">
+          <ErrorNotice message={error} />
+        </div>
+      ) : null}
 
       {!examId || !studentId ? (
-        <Card>
+        <Card className="print:hidden">
           <EmptyState message="Choose an exam and student to view the result card." />
         </Card>
       ) : loadingCard ? (
-        <Card>
+        <Card className="print:hidden">
           <Spinner />
         </Card>
       ) : card ? (
-        <>
+        <div className="space-y-6 print:hidden">
           <Card className="p-6">
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <Badge value={card.result} />
@@ -282,7 +304,18 @@ function ResultCardView() {
               </Table>
             )}
           </Card>
-        </>
+        </div>
+      ) : null}
+
+      {card ? (
+        <div className="hidden print:block">
+          <ResultCardDocument
+            card={card}
+            student={selectedStudent}
+            exam={selectedExam}
+            classRoom={selectedClass}
+          />
+        </div>
       ) : null}
     </div>
   );

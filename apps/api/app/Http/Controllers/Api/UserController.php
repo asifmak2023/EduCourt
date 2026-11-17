@@ -6,6 +6,7 @@ use App\Enums\RoleName;
 use App\Enums\ScopeType;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
+use App\Models\Campus;
 use App\Models\ScopeAssignment;
 use App\Models\User;
 use App\Support\RoleCatalog;
@@ -108,12 +109,9 @@ class UserController extends Controller
 
         $this->authorizeRoleAssignment($request, $roles);
         $this->applyTenantScope($request, $data);
+        $this->assertTenantSelection($request, $data, $roles);
 
         if (in_array(RoleName::InstitutionHead->value, $roles, true)) {
-            if (empty($data['institution_id'])) {
-                abort(422, 'An institution is required for an institution head.');
-            }
-
             $data['campus_id'] = null;
         }
 
@@ -240,6 +238,47 @@ class UserController extends Controller
 
         $data['institution_id'] = $this->context->institutionId();
         $data['campus_id'] = $this->context->campusId();
+    }
+
+    /**
+     * Enforce the tenant selection rules for platform administrators. Campus
+     * users are scoped from the request tenant context in applyTenantScope().
+     *
+     * @param  array<string, mixed>  $data
+     * @param  array<int, string>  $roles
+     */
+    private function assertTenantSelection(Request $request, array $data, array $roles): void
+    {
+        if (! $request->user()->isPlatformAdmin()) {
+            return;
+        }
+
+        $tenantRoles = array_values(array_diff($roles, [RoleName::PlatformAdmin->value]));
+        $campusRoles = array_values(array_diff($roles, [
+            RoleName::PlatformAdmin->value,
+            RoleName::InstitutionHead->value,
+        ]));
+
+        if ($tenantRoles !== [] && empty($data['institution_id'])) {
+            abort(422, 'An institution is required for this account.');
+        }
+
+        if ($campusRoles !== [] && empty($data['campus_id'])) {
+            abort(422, 'A campus is required for campus roles.');
+        }
+
+        if (empty($data['campus_id']) || empty($data['institution_id'])) {
+            return;
+        }
+
+        $belongs = Campus::withoutGlobalScopes()
+            ->whereKey($data['campus_id'])
+            ->where('institution_id', $data['institution_id'])
+            ->exists();
+
+        if (! $belongs) {
+            abort(422, 'The selected campus does not belong to the selected institution.');
+        }
     }
 
     /**

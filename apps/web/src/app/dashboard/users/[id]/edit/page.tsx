@@ -38,6 +38,8 @@ export default function EditUserPage() {
           phone: data.phone ?? "",
           employee_code: data.employee_code ?? "",
           job_title: data.job_title ?? "",
+          institution_id: data.institution_id ? String(data.institution_id) : "",
+          campus_id: data.campus_id ? String(data.campus_id) : "",
           is_active: data.is_active ?? true,
           roles: data.roles ?? [],
         }}

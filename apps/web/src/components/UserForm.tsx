@@ -4,12 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { useCampuses, useInstitutions } from "@/lib/useLookups";
 import {
   Button,
   buttonClasses,
   Checkbox,
   Field,
   PasswordInput,
+  Select,
   TextInput,
 } from "@/components/Form";
 import { Card, ErrorNotice, PageHeader } from "@/components/ui";
@@ -22,6 +25,8 @@ export interface UserFormInitial {
   phone: string;
   employee_code: string;
   job_title: string;
+  institution_id: string;
+  campus_id: string;
   is_active: boolean;
   roles: string[];
 }
@@ -46,7 +51,12 @@ export function UserForm({
   canManagePhoto?: boolean;
 }) {
   const router = useRouter();
+  const { user } = useAuth();
   const isEdit = recordId !== undefined;
+  const isPlatformAdmin = Boolean(user?.roles?.includes("platform_admin"));
+  const showTenantSelectors = isPlatformAdmin && !isEdit;
+  const { items: institutions } = useInstitutions(showTenantSelectors);
+  const { items: campuses } = useCampuses(showTenantSelectors);
 
   const [values, setValues] = useState<UserFormInitial>(initial);
   const [photoUrl, setPhotoUrl] = useState<string | null>(initialPhotoUrl);
@@ -60,16 +70,49 @@ export function UserForm({
     value: UserFormInitial[K]
   ) => setValues((current) => ({ ...current, [key]: value }));
 
+  const hasInstitutionHeadRole = values.roles.includes("institution_head");
+  const needsInstitution = values.roles.some((role) => role !== "platform_admin");
+  const needsCampus = values.roles.some(
+    (role) => role !== "platform_admin" && role !== "institution_head"
+  );
+  const institutionCampuses = values.institution_id
+    ? campuses.filter(
+        (campus) => String(campus.institution_id) === values.institution_id
+      )
+    : campuses;
+
   const toggleRole = (role: string) => {
-    setValues((current) => ({
-      ...current,
-      roles: current.roles.includes(role)
+    setValues((current) => {
+      const roles = current.roles.includes(role)
         ? current.roles.filter((item) => item !== role)
-        : [...current.roles, role],
-    }));
+        : [...current.roles, role];
+      const campusNeeded = roles.some(
+        (item) => item !== "platform_admin" && item !== "institution_head"
+      );
+
+      return {
+        ...current,
+        roles,
+        campus_id: roles.includes("institution_head") && !campusNeeded
+          ? ""
+          : current.campus_id,
+      };
+    });
   };
 
   const submit = async () => {
+    if (showTenantSelectors && needsInstitution && !values.institution_id) {
+      setError("Select an institution for this account.");
+      setFieldErrors({ institution_id: ["Institution is required."] });
+      return;
+    }
+
+    if (showTenantSelectors && needsCampus && !values.campus_id) {
+      setError("Select a campus for this account.");
+      setFieldErrors({ campus_id: ["Campus is required."] });
+      return;
+    }
+
     setBusy(true);
     setError(null);
     setFieldErrors({});
@@ -86,6 +129,12 @@ export function UserForm({
     }
     if (values.job_title.trim()) body.job_title = values.job_title.trim();
     if (password.trim()) body.password = password.trim();
+    if (showTenantSelectors && values.institution_id) {
+      body.institution_id = Number(values.institution_id);
+    }
+    if (showTenantSelectors && values.campus_id && !hasInstitutionHeadRole) {
+      body.campus_id = Number(values.campus_id);
+    }
 
     try {
       if (isEdit) {
@@ -142,6 +191,77 @@ export function UserForm({
           }}
         >
           <div className="grid gap-4 px-6 py-5 sm:grid-cols-2">
+            {showTenantSelectors ? (
+              <>
+                <Field
+                  label="Institution"
+                  htmlFor="user_institution"
+                  required={needsInstitution}
+                  hint="Required for every account except a platform super user."
+                  error={errorFor("institution_id")}
+                >
+                  <Select
+                    id="user_institution"
+                    value={values.institution_id}
+                    onChange={(event) => {
+                      const institutionId = event.target.value;
+                      setValues((current) => {
+                        const campusStillValid = campuses.some(
+                          (campus) =>
+                            String(campus.id) === current.campus_id &&
+                            String(campus.institution_id) === institutionId
+                        );
+
+                        return {
+                          ...current,
+                          institution_id: institutionId,
+                          campus_id: campusStillValid ? current.campus_id : "",
+                        };
+                      });
+                    }}
+                  >
+                    <option value="">Select institution</option>
+                    {institutions.map((institution) => (
+                      <option key={institution.id} value={institution.id}>
+                        {institution.name}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field
+                  label="Campus"
+                  htmlFor="user_campus"
+                  required={needsCampus}
+                  hint={
+                    hasInstitutionHeadRole && !needsCampus
+                      ? "Institution heads are not tied to one campus."
+                      : "Only campuses in the selected institution are shown."
+                  }
+                  error={errorFor("campus_id")}
+                >
+                  <Select
+                    id="user_campus"
+                    value={values.campus_id}
+                    disabled={
+                      !values.institution_id ||
+                      (hasInstitutionHeadRole && !needsCampus)
+                    }
+                    onChange={(event) => setValue("campus_id", event.target.value)}
+                  >
+                    <option value="">
+                      {values.institution_id
+                        ? "Select campus"
+                        : "Select institution first"}
+                    </option>
+                    {institutionCampuses.map((campus) => (
+                      <option key={campus.id} value={campus.id}>
+                        {campus.name}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              </>
+            ) : null}
             <Field label="Name" htmlFor="user_name" required error={errorFor("name")}>
               <TextInput
                 id="user_name"

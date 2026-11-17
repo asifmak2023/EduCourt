@@ -106,6 +106,65 @@ class RbacTest extends TestCase
             ->assertJsonPath('data.campus_id', $this->campus->id);
     }
 
+    public function test_product_owner_must_select_an_institution_for_tenant_users(): void
+    {
+        $owner = User::factory()->create();
+        $owner->syncRoles([RoleName::PlatformAdmin->value]);
+
+        $this->withToken($owner->createToken('t')->plainTextToken)
+            ->postJson('/api/v1/users', [
+                'name' => 'Tenantless Teacher',
+                'email' => 'tenantless-teacher@example.test',
+                'password' => 'secret-password',
+                'roles' => [RoleName::Teacher->value],
+            ])
+            ->assertStatus(422);
+    }
+
+    public function test_product_owner_must_select_a_campus_for_campus_roles(): void
+    {
+        $owner = User::factory()->create();
+        $owner->syncRoles([RoleName::PlatformAdmin->value]);
+
+        $this->withToken($owner->createToken('t')->plainTextToken)
+            ->postJson('/api/v1/users', [
+                'name' => 'Campusless Teacher',
+                'email' => 'campusless-teacher@example.test',
+                'password' => 'secret-password',
+                'institution_id' => $this->institution->id,
+                'roles' => [RoleName::Teacher->value],
+            ])
+            ->assertStatus(422);
+    }
+
+    public function test_product_owner_cannot_use_a_campus_from_another_institution(): void
+    {
+        $owner = User::factory()->create();
+        $owner->syncRoles([RoleName::PlatformAdmin->value]);
+
+        $otherInstitution = Institution::create([
+            'name' => 'Other Trust',
+            'code' => 'OT',
+        ]);
+        $otherCampus = Campus::create([
+            'institution_id' => $otherInstitution->id,
+            'name' => 'Other Campus',
+            'code' => 'OC',
+            'type' => CampusType::School->value,
+        ]);
+
+        $this->withToken($owner->createToken('t')->plainTextToken)
+            ->postJson('/api/v1/users', [
+                'name' => 'Mismatched Teacher',
+                'email' => 'mismatched-teacher@example.test',
+                'password' => 'secret-password',
+                'institution_id' => $this->institution->id,
+                'campus_id' => $otherCampus->id,
+                'roles' => [RoleName::Teacher->value],
+            ])
+            ->assertStatus(422);
+    }
+
     public function test_campus_admin_can_create_a_local_account(): void
     {
         $admin = User::factory()->create([

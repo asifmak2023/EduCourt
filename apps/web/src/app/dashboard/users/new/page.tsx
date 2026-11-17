@@ -20,6 +20,8 @@ export default function NewUserPage() {
           phone: "",
           employee_code: "",
           job_title: "",
+          institution_id: "",
+          campus_id: "",
           is_active: true,
           roles: [],
         }}

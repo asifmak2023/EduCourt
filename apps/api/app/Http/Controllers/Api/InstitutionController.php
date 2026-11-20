@@ -9,6 +9,7 @@ use App\Support\Codes\CodeGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Validation\ValidationException;
 
 class InstitutionController extends Controller
 {
@@ -38,8 +39,11 @@ class InstitutionController extends Controller
             'phone' => ['nullable', 'string', 'max:32'],
             'website' => ['nullable', 'url', 'max:255'],
             'address' => ['nullable', 'string', 'max:1000'],
+            'currency' => ['sometimes', 'nullable', 'string', 'size:3', 'regex:/^[A-Za-z]{3}$/'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
+
+        $data['currency'] = strtoupper((string) ($data['currency'] ?? config('currencies.default', 'PKR')));
 
         if (blank($data['code'] ?? null)) {
             $data['code'] = app(CodeGenerator::class)->next('institutions');
@@ -74,8 +78,19 @@ class InstitutionController extends Controller
             'phone' => ['nullable', 'string', 'max:32'],
             'website' => ['nullable', 'url', 'max:255'],
             'address' => ['nullable', 'string', 'max:1000'],
+            'currency' => ['sometimes', 'string', 'size:3', 'regex:/^[A-Za-z]{3}$/'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
+
+        if (array_key_exists('currency', $data)) {
+            $data['currency'] = strtoupper($data['currency']);
+
+            if ($data['currency'] !== $institution->currency && $institution->hasFinancialPostings()) {
+                throw ValidationException::withMessages([
+                    'currency' => ['Currency cannot be changed after financial records exist.'],
+                ]);
+            }
+        }
 
         if (array_key_exists('code', $data) && blank($data['code'])) {
             unset($data['code']);

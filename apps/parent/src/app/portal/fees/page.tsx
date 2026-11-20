@@ -7,7 +7,6 @@ import {
   fetchFees,
   formatDate,
   formatMoney,
-  formatRupees,
   voucherTone,
 } from "@/lib/portal";
 import { Card, EmptyState, ErrorNotice, PageTitle, Pill, Skeleton } from "@/components/ui";
@@ -75,7 +74,7 @@ function VoucherStub({ voucher }: { voucher: FeeVoucher }) {
       <div className="shrink-0 text-right">
         {balance > 0 ? (
           <p className="numeric font-[family-name:var(--font-display)] text-lg font-bold leading-none text-foreground">
-            Rs {formatRupees(balance)}
+            {formatMoney(balance)}
           </p>
         ) : (
           <p className="font-[family-name:var(--font-display)] text-lg font-bold uppercase leading-none text-[var(--success)]">
@@ -124,17 +123,17 @@ export default function FeesPage() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-            <StatBlock label="Billed" value={`Rs ${formatRupees(billed)}`} tone="brand" />
+            <StatBlock label="Billed" value={formatMoney(billed)} tone="brand" />
             <StatBlock
               label="Paid"
-              value={`Rs ${formatRupees(paid)}`}
+              value={formatMoney(paid)}
               hint={`${paidRatio}% of billed`}
               tone="success"
             />
             <div className="col-span-2 lg:col-span-1">
               <StatBlock
                 label="Outstanding"
-                value={`Rs ${formatRupees(outstanding)}`}
+                value={formatMoney(outstanding)}
                 hint={outstanding > 0 ? "payment due" : "all settled"}
                 tone={outstanding > 0 ? "danger" : "success"}
               />

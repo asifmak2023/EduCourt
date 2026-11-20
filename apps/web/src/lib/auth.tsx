@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { apiFetch } from "./api";
+import { setActiveCurrency } from "./format";
 
 export interface AuthUser {
   id: number;
@@ -24,7 +25,7 @@ export interface AuthUser {
   two_factor_enabled: boolean;
   photo_url?: string | null;
   campus?: { id: number; name: string } | null;
-  institution?: { id: number; name: string } | null;
+  institution?: { id: number; name: string; currency?: string | null } | null;
 }
 
 interface SessionResponse {
@@ -61,8 +62,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadProfile = useCallback(async () => {
     try {
       const response = await apiFetch<{ data: AuthUser }>("/v1/auth/me");
+      setActiveCurrency(response.data.institution?.currency);
       setUser(response.data);
     } catch {
+      setActiveCurrency(null);
       setUser(null);
     } finally {
       setLoading(false);
@@ -105,6 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // The session cookie is set HttpOnly by the BFF route, so no credential
       // ever reaches client-side JavaScript.
+      setActiveCurrency(response.user.institution?.currency);
       setUser(response.user);
 
       return { status: "authenticated" };
@@ -119,6 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: { challenge_token: challengeToken, code },
       });
 
+      setActiveCurrency(response.user.institution?.currency);
       setUser(response.user);
     },
     []
@@ -130,6 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Ignore network errors on logout; the cookie is cleared by the BFF regardless.
     }
+    setActiveCurrency(null);
     setUser(null);
   }, []);
 

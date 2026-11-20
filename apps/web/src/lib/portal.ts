@@ -1,4 +1,5 @@
 import { apiFetch } from "./api";
+import { formatCurrency } from "./format";
 
 export interface PortalStudent {
   id: number;
@@ -119,9 +120,7 @@ export function portalAttendanceRange(): { from: string; to: string } {
 }
 
 export function formatMoney(value: number | string | null | undefined): string {
-  const amount = typeof value === "string" ? Number(value) : (value ?? 0);
-  const safe = Number.isFinite(amount) ? amount : 0;
-  return `PKR ${safe.toLocaleString("en-PK")}`;
+  return formatCurrency(value);
 }
 
 export function formatDate(value?: string | null): string {

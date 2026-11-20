@@ -78,6 +78,7 @@ function InstitutionDetail() {
           <DataItem label="Email" value={data.email ?? "-"} />
           <DataItem label="Phone" value={data.phone ?? "-"} />
           <DataItem label="Website" value={data.website ?? "-"} />
+          <DataItem label="Currency" value={data.currency ?? "-"} />
           <DataItem label="Campuses" value={data.campuses_count ?? "-"} />
         </DataList>
         {data.address ? (

@@ -85,7 +85,7 @@ class SalaryStructureController extends Controller
                 'name' => $data['name'],
                 'version' => 1,
                 'basic_salary' => $data['basic_salary'],
-                'currency' => $data['currency'] ?? 'PKR',
+                'currency' => $data['currency'] ?? $this->institutionCurrency($tenant['institution_id']),
                 'effective_from' => $data['effective_from'] ?? null,
                 'effective_to' => $data['effective_to'] ?? null,
                 'is_active' => $data['is_active'] ?? true,

@@ -42,16 +42,61 @@ export function rollingYearRange(): { from: string; to: string } {
   return { from: iso(from), to: iso(to) };
 }
 
-export function formatMoney(value: number | string | null | undefined): string {
-  return `Rs ${formatRupees(value)}`;
+const DEFAULT_CURRENCY = "PKR";
+
+let activeCurrency = DEFAULT_CURRENCY;
+let currencyFormatter = createCurrencyFormatter(activeCurrency);
+
+function createCurrencyFormatter(currency: string): Intl.NumberFormat {
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    });
+  } catch {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: DEFAULT_CURRENCY,
+      maximumFractionDigits: 0,
+    });
+  }
 }
 
-export function formatRupees(value: number | string | null | undefined): string {
+export function setActiveCurrency(currency: string | null | undefined): void {
+  const next = String(currency ?? "").trim().toUpperCase();
+
+  if (next === activeCurrency) {
+    return;
+  }
+
+  if (!/^[A-Z]{3}$/.test(next)) {
+    activeCurrency = DEFAULT_CURRENCY;
+    currencyFormatter = createCurrencyFormatter(DEFAULT_CURRENCY);
+    return;
+  }
+
+  try {
+    currencyFormatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: next,
+      maximumFractionDigits: 0,
+    });
+    activeCurrency = next;
+  } catch {
+    activeCurrency = DEFAULT_CURRENCY;
+    currencyFormatter = createCurrencyFormatter(DEFAULT_CURRENCY);
+  }
+}
+
+export function getActiveCurrency(): string {
+  return activeCurrency;
+}
+
+export function formatMoney(value: number | string | null | undefined): string {
   const amount = typeof value === "string" ? Number(value) : (value ?? 0);
-  const safe = Number.isFinite(amount) ? Math.round(amount) : 0;
-  return new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: 0,
-  }).format(safe);
+  const safe = Number.isFinite(amount) ? amount : 0;
+  return currencyFormatter.format(safe);
 }
 
 export function formatDate(value?: string | null): string {

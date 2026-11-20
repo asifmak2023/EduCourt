@@ -134,6 +134,7 @@ class DemoSeeder extends Seeder
                 'email' => 'info@demo-eis.test',
                 'phone' => '+92-000-0000000',
                 'website' => 'https://demo-eis.test',
+                'currency' => (string) config('currencies.default', 'PKR'),
                 'plan' => 'standard',
                 'status' => 'active',
                 'is_active' => true,
@@ -762,7 +763,7 @@ class DemoSeeder extends Seeder
             'gateway' => 'manual',
             'reference' => 'PAY-000001',
             'amount' => round((float) $voucher->amount - (float) $voucher->paid_amount, 2),
-            'currency' => (string) config('payments.currency', 'PKR'),
+            'currency' => (string) ($campus->institution?->currency ?: config('currencies.default', 'PKR')),
             'status' => PaymentIntentStatus::Pending,
             'created_by' => $campusAdmin->id,
         ]);
@@ -943,7 +944,7 @@ class DemoSeeder extends Seeder
             'account_no' => 'PK36-DEMO-0001',
             'bank_name' => 'Demo Bank',
             'branch' => 'Main Branch',
-            'currency' => 'PKR',
+            'currency' => (string) ($institution->currency ?: config('currencies.default', 'PKR')),
             'opening_balance' => 0,
             'is_active' => true,
         ]);
@@ -953,7 +954,7 @@ class DemoSeeder extends Seeder
             'code' => 'PC-MAIN',
             'name' => 'Petty Cash',
             'type' => BankAccountType::PettyCash,
-            'currency' => 'PKR',
+            'currency' => (string) ($institution->currency ?: config('currencies.default', 'PKR')),
             'opening_balance' => 0,
             'is_active' => true,
         ]);

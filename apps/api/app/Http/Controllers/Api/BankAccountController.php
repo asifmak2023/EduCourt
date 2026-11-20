@@ -44,6 +44,7 @@ class BankAccountController extends Controller
         $tenant = $this->academicTenantAttributes();
 
         $data = $request->validate($this->rules($tenant['campus_id']));
+        $data['currency'] = $data['currency'] ?? $this->institutionCurrency($tenant['institution_id']);
 
         $this->applyGeneratedCode($data, $tenant);
 

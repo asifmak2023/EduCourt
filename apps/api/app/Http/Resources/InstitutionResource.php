@@ -18,6 +18,7 @@ class InstitutionResource extends JsonResource
             'phone' => $this->phone,
             'website' => $this->website,
             'address' => $this->address,
+            'currency' => $this->currency,
             'is_active' => $this->is_active,
             'campuses_count' => $this->whenCounted('campuses'),
             'created_at' => $this->created_at,

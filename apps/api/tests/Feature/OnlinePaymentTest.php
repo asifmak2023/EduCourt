@@ -57,7 +57,6 @@ class OnlinePaymentTest extends TestCase
         parent::setUp();
 
         config()->set('payments.webhook_secret', 'test-secret');
-        config()->set('payments.currency', 'PKR');
 
         $this->seed(RbacSeeder::class);
 
@@ -147,6 +146,18 @@ class OnlinePaymentTest extends TestCase
             'fee_voucher_id' => $this->voucher->id,
             'status' => 'pending',
         ]);
+    }
+
+    public function test_checkout_uses_the_institution_currency(): void
+    {
+        $this->institution->update(['currency' => 'AED']);
+
+        $this->as($this->admin)->postJson('/api/v1/online-payments', [
+            'student_id' => $this->student->id,
+            'fee_voucher_id' => $this->voucher->id,
+            'amount' => 12000,
+        ])->assertStatus(201)
+            ->assertJsonPath('data.currency', 'AED');
     }
 
     public function test_initiate_rejects_amount_over_the_voucher_balance(): void

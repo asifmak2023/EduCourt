@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { apiFetch } from "./api";
+import { setActiveCurrency } from "./portal";
 import type { PortfolioUser } from "./types";
 
 export const PORTAL_ROLES = new Set(["student", "parent_guardian"]);
@@ -52,8 +53,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadProfile = useCallback(async () => {
     try {
       const response = await apiFetch<{ data: PortfolioUser }>("/v1/auth/me");
+      setActiveCurrency(response.data.institution?.currency);
       setUser(response.data);
     } catch {
+      setActiveCurrency(null);
       setUser(null);
     } finally {
       setLoading(false);
@@ -94,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
+      setActiveCurrency(response.user.institution?.currency);
       setUser(response.user);
       return { status: "authenticated" };
     },
@@ -114,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       );
 
+      setActiveCurrency(response.user.institution?.currency);
       setUser(response.user);
     },
     []
@@ -125,6 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Ignore network failures; the cookie is cleared server-side anyway.
     } finally {
+      setActiveCurrency(null);
       setUser(null);
     }
   }, []);

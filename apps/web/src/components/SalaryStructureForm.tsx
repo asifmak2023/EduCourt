@@ -15,6 +15,7 @@ import {
 } from "@/components/Form";
 import { Repeater } from "@/components/Repeater";
 import { Card, ErrorNotice, PageHeader, Spinner } from "@/components/ui";
+import { getActiveCurrency } from "@/lib/format";
 import { SALARY_INCREMENT_TYPE_OPTIONS } from "@/lib/payrollOptions";
 import type { SalaryStructure } from "@/lib/types";
 
@@ -63,7 +64,7 @@ export function SalaryStructureForm({
   const [basicSalary, setBasicSalary] = useState(
     salaryStructure?.basic_salary ?? ""
   );
-  const [currency, setCurrency] = useState(salaryStructure?.currency ?? "PKR");
+  const [currency, setCurrency] = useState(salaryStructure?.currency ?? getActiveCurrency());
   const [effectiveFrom, setEffectiveFrom] = useState(
     salaryStructure?.effective_from ?? ""
   );

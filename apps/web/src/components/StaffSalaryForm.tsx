@@ -7,6 +7,7 @@ import { ApiError, apiFetch } from "@/lib/api";
 import { useSalaryComponents, useStaffMembers } from "@/lib/useLookups";
 import { Button, buttonClasses, Field, Select, TextInput } from "@/components/Form";
 import { Card, ErrorNotice, PageHeader, Spinner } from "@/components/ui";
+import { getActiveCurrency } from "@/lib/format";
 import type { StaffSalary } from "@/lib/types";
 
 interface ItemRow {
@@ -40,7 +41,7 @@ export function StaffSalaryForm({
     initial ? String(initial.staff_member_id) : ""
   );
   const [basicSalary, setBasicSalary] = useState(initial?.basic_salary ?? "");
-  const [currency, setCurrency] = useState(initial?.currency ?? "PKR");
+  const [currency, setCurrency] = useState(initial?.currency ?? getActiveCurrency());
   const [effectiveFrom, setEffectiveFrom] = useState(
     initial?.effective_from ?? ""
   );

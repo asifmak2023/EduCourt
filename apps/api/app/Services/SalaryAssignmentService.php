@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Institution;
 use App\Models\SalaryStructure;
 use App\Models\StaffMember;
 use App\Models\StaffSalary;
@@ -69,7 +70,8 @@ class SalaryAssignmentService
             staff: $staff,
             effectiveFrom: $effectiveFrom,
             basicSalary: $basicSalary,
-            currency: $currency ?? 'PKR',
+            currency: $currency ?? (string) (Institution::query()->whereKey($staff->institution_id)->value('currency')
+                ?: config('currencies.default', 'PKR')),
             structure: null,
             items: collect(),
             notes: $notes ?? 'Set at staff appointment',

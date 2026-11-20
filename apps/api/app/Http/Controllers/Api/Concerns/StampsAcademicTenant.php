@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Concerns;
 
 use App\Models\Campus;
+use App\Models\Institution;
 use App\Support\TenantContext;
 
 /**
@@ -32,5 +33,16 @@ trait StampsAcademicTenant
             'institution_id' => (int) $institutionId,
             'campus_id' => $campusId,
         ];
+    }
+
+    protected function institutionCurrency(?int $institutionId = null): string
+    {
+        $institutionId ??= app(TenantContext::class)->institutionId();
+
+        $currency = $institutionId === null
+            ? null
+            : Institution::query()->whereKey($institutionId)->value('currency');
+
+        return (string) ($currency ?: config('currencies.default', 'PKR'));
     }
 }

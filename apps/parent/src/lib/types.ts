@@ -10,7 +10,7 @@ export interface PortfolioUser {
   two_factor_enabled: boolean;
   photo_url?: string | null;
   campus?: { id: number; name: string } | null;
-  institution?: { id: number; name: string } | null;
+  institution?: { id: number; name: string; currency?: string | null } | null;
 }
 
 export interface AcademicYear {

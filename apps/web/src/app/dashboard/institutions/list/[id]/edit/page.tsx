@@ -5,6 +5,7 @@ import { useResource } from "@/lib/useResource";
 import { MasterForm } from "@/components/MasterForm";
 import { PermissionGate } from "@/components/PermissionGate";
 import { InstitutionsTabs } from "@/components/InstitutionsTabs";
+import { currencyOptions } from "@/lib/currencies";
 import { ErrorNotice, Spinner } from "@/components/ui";
 import type { Institution } from "@/lib/types";
 
@@ -19,6 +20,8 @@ export default function EditInstitutionPage() {
   if (loading) return <Spinner />;
   if (error) return <ErrorNotice message={error} />;
   if (!data) return <ErrorNotice message="Institution not found." />;
+
+  const currencies = currencyOptions();
 
   return (
     <PermissionGate permission="institution.edit">
@@ -38,6 +41,7 @@ export default function EditInstitutionPage() {
             phone: data.phone ?? "",
             website: data.website ?? "",
             address: data.address ?? "",
+            currency: data.currency ?? "",
             is_active: data.is_active ?? true,
           }}
           fields={[
@@ -52,6 +56,14 @@ export default function EditInstitutionPage() {
               label: "Address",
               type: "textarea",
               span: 2,
+            },
+            {
+              name: "currency",
+              label: "Currency",
+              type: "select",
+              placeholder: "Use deployment default",
+              options: currencies,
+              hint: "Used for fee vouchers, payments and payroll defaults. Locked once financial records exist.",
             },
             { name: "is_active", label: "Active", type: "checkbox" },
           ]}

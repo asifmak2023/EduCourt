@@ -24,6 +24,7 @@ export interface Institution {
   phone?: string | null;
   website?: string | null;
   address?: string | null;
+  currency?: string | null;
   is_active?: boolean;
   campuses_count?: number;
   created_at?: string;

@@ -36,6 +36,7 @@ class StaffSalaryController extends Controller
     {
         $tenant = $this->academicTenantAttributes();
         $data = $request->validate($this->rules($tenant['campus_id']));
+        $data['currency'] = $data['currency'] ?? $this->institutionCurrency($tenant['institution_id']);
 
         $salary = DB::transaction(function () use ($data, $tenant) {
             $salary = StaffSalary::create(collect($data)->except('items')->all() + $tenant);

@@ -17,8 +17,6 @@ return [
 
     'webhook_secret' => env('PAYMENT_WEBHOOK_SECRET'),
 
-    'currency' => env('PAYMENT_CURRENCY', 'PKR'),
-
     'gateways' => [
         'manual' => [
             'driver' => 'manual',

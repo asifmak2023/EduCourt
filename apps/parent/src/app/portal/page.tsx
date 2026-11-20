@@ -12,8 +12,8 @@ import {
   fetchFees,
   fetchResults,
   fetchTimetable,
+  formatMoney,
   currentEnrollment,
-  formatRupees,
   gradeLetter,
   todaySlots,
 } from "@/lib/portal";
@@ -221,7 +221,7 @@ export default function PortalDashboardPage() {
           ) : (
             <>
               <p className="font-[family-name:var(--font-display)] text-3xl font-bold leading-none text-foreground">
-                Rs {formatRupees(outstanding)}
+                {formatMoney(outstanding)}
               </p>
               <p className="mt-1 text-xs text-muted">
                 {outstanding > 0 ? "outstanding balance" : "all fees settled"}

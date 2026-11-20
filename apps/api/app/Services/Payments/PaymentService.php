@@ -7,6 +7,7 @@ use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Models\FeePayment;
 use App\Models\FeeVoucher;
+use App\Models\Institution;
 use App\Models\PaymentIntent;
 use App\Models\Student;
 use App\Services\Accounting\FeeBillingService;
@@ -63,7 +64,8 @@ class PaymentService
             'gateway' => $gatewayName,
             'reference' => $this->nextReference($tenant['campus_id']),
             'amount' => $amount,
-            'currency' => (string) config('payments.currency', 'PKR'),
+            'currency' => (string) (Institution::query()->whereKey($tenant['institution_id'])->value('currency')
+                ?: config('currencies.default', 'PKR')),
             'status' => PaymentIntentStatus::Pending,
             'created_by' => $userId,
         ]);

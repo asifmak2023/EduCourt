@@ -61,6 +61,11 @@ function responseHeaders(upstream: Response): Headers {
     headers.set(key, value);
   });
 
+  // API responses are session-scoped. Never let a browser or CDN cache them.
+  headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  headers.set("CDN-Cache-Control", "no-store");
+  headers.set("Pragma", "no-cache");
+
   return headers;
 }
 

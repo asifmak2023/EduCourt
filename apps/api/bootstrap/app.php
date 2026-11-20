@@ -21,6 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Nginx runs on the same host and sets X-Forwarded-*; trust only the
+        // local proxy so rate limiting and audit logs see the real client IP.
+        $middleware->trustProxies(at: ['127.0.0.1', '::1']);
+
         $middleware->append(SecurityHeaders::class);
         $middleware->api(prepend: [ForceJsonResponse::class]);
 

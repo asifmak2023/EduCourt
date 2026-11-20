@@ -183,7 +183,32 @@ pm2 restart educourt-queue 2>/dev/null || true
 pm2 save
 
 # ------------------------------------------------------------
-# 11. Health check
+# 11. Purge Cloudflare cache (optional)
+# ------------------------------------------------------------
+# Create /root/.cloudflare.env with:
+#   CLOUDFLARE_ZONE_ID=...
+#   CLOUDFLARE_API_TOKEN=...
+# The token only needs the "Cache Purge" permission for this zone.
+if [ -f /root/.cloudflare.env ]; then
+    # shellcheck disable=SC1091
+    . /root/.cloudflare.env
+    if [ -n "${CLOUDFLARE_ZONE_ID:-}" ] && [ -n "${CLOUDFLARE_API_TOKEN:-}" ]; then
+        log "Purging Cloudflare cache"
+        if curl -fsS -X POST "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/purge_cache" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}' > /dev/null; then
+            log "Cloudflare cache purged"
+        else
+            warn "Cloudflare cache purge failed (site is still up)"
+        fi
+    else
+        warn "Cloudflare credentials incomplete in /root/.cloudflare.env - skipping purge"
+    fi
+fi
+
+# ------------------------------------------------------------
+# 12. Health check
 # ------------------------------------------------------------
 log "Checking app health"
 sleep 3
